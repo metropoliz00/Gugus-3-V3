@@ -1844,6 +1844,9 @@ function AdminSekolahForm() {
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Google Maps Embed URL</label>
                   <input className="w-full border-gray-200 border p-2.5 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors" value={school.map_embed_url || ''} onChange={e => handleUpdate(school.id, { map_embed_url: e.target.value })} />
+                  {(school.map_embed_url && !school.map_embed_url.includes('google.com/maps/embed')) && (
+                    <p className="text-red-500 text-[10px] mt-1">URL harus dalam format "Embed". Silakan gunakan fitur "Share" &gt; "Embed a map" di Google Maps.</p>
+                  )}
                 </div>
               </div>
             </div>
