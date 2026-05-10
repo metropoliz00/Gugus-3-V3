@@ -10,7 +10,8 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Lazy initialization for Supabase Admin client
 let _supabaseAdmin: any = null;
@@ -279,9 +280,9 @@ app.post("/api/admin/update-user", async (req, res) => {
     
     // Update Auth
     const authUpdates: any = {
-      email,
       user_metadata: { role, nama, school: sekolah }
     };
+    if (email) authUpdates.email = email;
     if (password) {
       authUpdates.password = password;
       authUpdates.user_metadata.password_text = password;
