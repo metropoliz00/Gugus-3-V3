@@ -78,7 +78,7 @@ export default function Schools() {
                 key={school.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
+                viewport={{ once: true, margin: "0px" }}
                 transition={{ delay: i * 0.1, duration: 0.6 }}
                 whileHover={{ y: -10 }}
                 className="bg-white rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 border border-main-orange/20 group flex flex-col"

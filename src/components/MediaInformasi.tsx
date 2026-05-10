@@ -59,7 +59,7 @@ export default function MediaInformasi() {
                 key={item.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
+                viewport={{ once: true, margin: "0px" }}
                 transition={{ delay: i * 0.1 }}
                 className="bg-white/80 border border-main-orange/20 backdrop-blur-md rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all group flex flex-col hover:border-main-orange/40"
               >

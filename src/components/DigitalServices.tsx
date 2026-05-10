@@ -46,7 +46,7 @@ export default function DigitalServices({ onLoginClick, user }: { onLoginClick: 
                 key={srv.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
+                viewport={{ once: true, margin: "0px" }}
                 transition={{ delay: i * 0.1 }}
                 className="p-8 rounded-3xl border border-gray-100 bg-white transition-all group cursor-pointer shadow-sm hover:shadow-xl hover:shadow-main-blue/5"
                 onClick={() => {

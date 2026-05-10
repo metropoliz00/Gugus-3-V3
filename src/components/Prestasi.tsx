@@ -59,7 +59,7 @@ export default function Prestasi() {
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
+                viewport={{ once: true, margin: "0px" }}
                 transition={{ delay: i * 0.2 }}
                 whileHover={{ y: -10 }}
                 className={`relative bg-white/80 backdrop-blur-md rounded-[2rem] p-8 border ${item.border} shadow-sm hover:shadow-xl transition-all overflow-hidden group flex flex-col`}

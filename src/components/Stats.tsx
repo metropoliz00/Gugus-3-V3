@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabase";
 function Counter({ end, suffix = "", duration = 2 }: { end: number, suffix?: string, duration?: number }) {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "0px" });
 
   useEffect(() => {
     if (isInView) {
@@ -42,15 +42,17 @@ export default function Stats() {
           { data: schoolsData },
           { count: teacherCount }
         ] = await Promise.all([
-          supabase.from('schools').select('student_count, teacher_count, jenis_sekolah'),
-          supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('role', 'guru')
+          supabase.from('schools').select('student_count, teacher_count, jenis_sekolah').throwOnError(),
+          supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('role', 'guru').throwOnError()
         ]);
 
-        const totalStudents = schoolsData?.reduce((acc: number, curr: any) => acc + (Number(curr.student_count) || 0), 0) || 0;
-        const schoolIntiCount = schoolsData?.filter((s: any) => s.jenis_sekolah === 'Sekolah Inti').length || 0;
-        const schoolImbasCount = schoolsData?.filter((s: any) => s.jenis_sekolah !== 'Sekolah Inti').length || 0;
+        if (!schoolsData) return; // If null, skip setting dynamic stats, fallback will trigger
+
+        const totalStudents = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.student_count) || 0), 0);
+        const schoolIntiCount = schoolsData.filter((s: any) => s.jenis_sekolah === 'Sekolah Inti').length;
+        const schoolImbasCount = schoolsData.filter((s: any) => s.jenis_sekolah !== 'Sekolah Inti').length;
         
-        const totalTeachers = schoolsData?.reduce((acc: number, curr: any) => acc + (Number(curr.teacher_count) || 0), 0) || 0;
+        const totalTeachers = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.teacher_count) || 0), 0);
 
         setDynamicStats([
           { label: 'Sekolah Inti', value: schoolIntiCount, suffix: "", color: 'text-main-blue' },
@@ -79,7 +81,7 @@ export default function Stats() {
               key={stat.label}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
+              viewport={{ once: true, margin: "0px" }}
               transition={{ delay: index * 0.1, duration: 0.6 }}
               whileHover={{ y: -5 }}
               className="bg-white/80 border border-main-orange/20 p-6 rounded-3xl flex flex-col justify-center shadow-sm relative overflow-hidden group hover:border-main-orange/40 transition-colors"
@@ -96,7 +98,7 @@ export default function Stats() {
           <motion.div
              initial={{ opacity: 0, y: 30 }}
              whileInView={{ opacity: 1, y: 0 }}
-             viewport={{ once: true, margin: "-50px" }}
+             viewport={{ once: true, margin: "0px" }}
              transition={{ delay: 0.3, duration: 0.6 }}
              whileHover={{ y: -5 }}
              className="bg-soft-black text-white p-6 rounded-3xl flex items-center justify-between shadow-xl"
