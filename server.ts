@@ -296,28 +296,54 @@ app.get("/api/debug/list-users", async (req, res) => {
     const supabaseAdmin = getSupabaseAdmin();
     // 1. Fetch from Auth
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers();
-    if (authError) throw authError;
+    if (authError) {
+      console.error("[LIST] Auth Error:", authError);
+      throw authError;
+    }
 
     // 2. Fetch from Profiles
     const { data: profiles, error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .select('*')
       .order('created_at', { ascending: false });
-    if (profileError) throw profileError;
+    
+    if (profileError) {
+      console.error("[LIST] Profile Error:", profileError);
+      // We continue with Auth data if profile fetch fails
+    }
 
-    // Merge data, prefer profile but mix in auth metadata for password/email
-    const merged = (profiles || []).map(p => {
-       const authUser = authData.users.find(u => u.id === p.id);
+    const profilesList = profiles || [];
+    
+    // Merge data: Iterate over Auth users to ensure everyone is listed
+    const merged = authData.users.map(authUser => {
+       const p = profilesList.find(profile => profile.id === authUser.id);
+       
+       // Fallback to metadata if profile is missing
+       const metadata = authUser.user_metadata || {};
+       
        return {
-          ...p,
-          foto: p.foto || p.avatar_url, // Handle both column names
-          password_text: authUser?.user_metadata?.password_text || p.password_text,
-          email: authUser?.email || p.email
+          id: authUser.id,
+          username: p?.username || metadata.username || authUser.email?.split('@')[0] || "unknown",
+          email: authUser.email || p?.email || "",
+          role: p?.role || metadata.role || "guru",
+          nama: p?.nama || metadata.nama || metadata.full_name || "",
+          nip: p?.nip || metadata.nip || "",
+          kepegawaian: p?.kepegawaian || metadata.kepegawaian || "",
+          pangkat: p?.pangkat || metadata.pangkat || "",
+          jabatan: p?.jabatan || metadata.jabatan || "",
+          sekolah: p?.sekolah || metadata.sekolah || "",
+          foto: p?.foto || p?.avatar_url || metadata.foto || metadata.avatar_url || "",
+          password_text: metadata.password_text || p?.password_text || "",
+          created_at: p?.created_at || authUser.created_at
        };
     });
 
+    // Sort merged list by created_at descending
+    merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
     res.json(merged);
   } catch (err: any) {
+    console.error("[LIST] Fatal Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
