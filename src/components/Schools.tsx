@@ -57,7 +57,7 @@ export default function Schools() {
                 onClick={() => setFilter(f)}
                 className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${
                   filter === f
-                    ? 'bg-main-blue text-white shadow-lg shadow-blue-500/20'
+                    ? 'bg-main-blue text-white shadow-lg shadow-main-blue/20'
                     : 'bg-white text-gray-500 hover:bg-gray-100'
                 }`}
               >
@@ -188,7 +188,7 @@ export default function Schools() {
                   alt={selectedSchool.name} 
                   className="w-full h-full object-cover" 
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
                 
                 {/* Detail Modal Logo */}
                 <div className="absolute top-4 left-6 w-16 h-16 bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-2xl border border-white/50 z-10 hidden sm:block">
@@ -201,13 +201,13 @@ export default function Schools() {
 
                 <button 
                   onClick={() => setSelectedSchool(null)}
-                  className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-colors"
+                  className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-colors cursor-pointer"
                 >
                   <X className="w-6 h-6" />
                 </button>
-                <div className="absolute bottom-6 left-6 right-6 text-white">
-                  <h3 className="text-3xl sm:text-4xl font-heading font-bold mb-2">{selectedSchool.name}</h3>
-                  <div className="flex flex-wrap items-center gap-4 text-sm font-medium opacity-90 overflow-x-auto no-scrollbar">
+                <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
+                  <h3 className="text-2xl sm:text-4xl font-heading font-bold mb-2 break-words leading-tight">{selectedSchool.name}</h3>
+                  <div className="flex flex-wrap items-center gap-4 text-sm font-medium opacity-90 overflow-x-auto no-scrollbar pointer-events-auto">
                     <span className="flex items-center gap-2 shrink-0">
                        {selectedSchool.principal_image_url ? 
                          <img src={selectedSchool.principal_image_url} className="w-5 h-5 rounded-full object-cover border border-white/50" alt="" /> :
@@ -217,7 +217,7 @@ export default function Schools() {
                     </span>
                     <span className="flex items-center gap-1 shrink-0"><BookOpen className="w-4 h-4" /> {selectedSchool.student_count || 0} Siswa</span>
                     <span className="flex items-center gap-1 shrink-0"><Star className="w-4 h-4" /> {selectedSchool.teacher_count || 0} Guru</span>
-                    <span className="px-2 py-0.5 bg-white/20 rounded uppercase text-[10px] tracking-widest shrink-0 border border-white/20">{selectedSchool.jenis_sekolah || 'Sekolah Imbas'}</span>
+                    <span className="px-2 py-0.5 bg-white/20 text-white rounded uppercase text-[10px] tracking-widest shrink-0 border border-white/20">{selectedSchool.jenis_sekolah || 'Sekolah Imbas'}</span>
                   </div>
                 </div>
               </div>
@@ -235,7 +235,7 @@ export default function Schools() {
                   <div className="space-y-8">
                     <div>
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-blue-50 text-main-blue rounded-xl flex items-center justify-center">
+                        <div className="w-10 h-10 bg-main-blue/10 text-main-blue rounded-xl flex items-center justify-center">
                           <Target className="w-5 h-5" />
                         </div>
                         <h4 className="text-xl font-bold font-heading">Visi</h4>
@@ -249,7 +249,7 @@ export default function Schools() {
                       
                       <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
                         <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 bg-gray-200 text-dark-gray rounded-xl flex items-center justify-center">
+                          <div className="w-10 h-10 bg-main-blue/10 text-main-blue rounded-xl flex items-center justify-center">
                             <Navigation className="w-5 h-5" />
                           </div>
                           <h4 className="text-lg font-bold font-heading">Lokasi Sekolah</h4>
