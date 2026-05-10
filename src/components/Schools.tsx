@@ -188,7 +188,7 @@ export default function Schools() {
                   alt={selectedSchool.name} 
                   className="w-full h-full object-cover" 
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
                 
                 {/* Detail Modal Logo */}
                 <div className="absolute top-4 left-6 w-16 h-16 bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-2xl border border-white/50 z-10 hidden sm:block">
@@ -200,13 +200,13 @@ export default function Schools() {
                 </div>
 
                 <button 
-                  onClick={() => setSelectedSchool(null)}
-                  className="absolute top-4 right-4 z-50 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-colors cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); setSelectedSchool(null); }}
+                  className="absolute top-4 right-4 z-50 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors cursor-pointer pointer-events-auto"
                 >
                   <X className="w-6 h-6" />
                 </button>
-                <div className="absolute bottom-6 left-6 right-6 text-white pointer-events-none">
-                  <h3 className="text-2xl sm:text-4xl font-heading font-bold mb-2 break-words leading-tight">{selectedSchool.name}</h3>
+                <div className="absolute bottom-6 left-6 right-6 text-gray-700 pointer-events-none">
+                  <h3 className="text-xl sm:text-3xl lg:text-4xl font-heading font-bold mb-2 break-normal leading-tight text-main-blue">{selectedSchool.name}</h3>
                   <div className="flex flex-wrap items-center gap-4 text-sm font-medium opacity-90 overflow-x-auto no-scrollbar pointer-events-auto">
                     <span className="flex items-center gap-2 shrink-0">
                        {selectedSchool.principal_image_url ? 
@@ -217,7 +217,7 @@ export default function Schools() {
                     </span>
                     <span className="flex items-center gap-1 shrink-0"><BookOpen className="w-4 h-4" /> {selectedSchool.student_count || 0} Siswa</span>
                     <span className="flex items-center gap-1 shrink-0"><Star className="w-4 h-4" /> {selectedSchool.teacher_count || 0} Guru</span>
-                    <span className="px-2 py-0.5 bg-white/20 text-white rounded uppercase text-[10px] tracking-widest shrink-0 border border-white/20">{selectedSchool.jenis_sekolah || 'Sekolah Imbas'}</span>
+                    <span className="px-2 py-0.5 bg-main-blue/10 text-main-blue rounded uppercase text-[10px] tracking-widest shrink-0 border border-main-blue/20">{selectedSchool.jenis_sekolah || 'Sekolah Imbas'}</span>
                   </div>
                 </div>
               </div>
