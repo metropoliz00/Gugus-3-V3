@@ -28,7 +28,7 @@ export default function AnggotaGugusPage() {
 
   return (
     <div className="min-h-screen bg-light-gray py-24">
-      <div className="container mx-auto px-6 max-w-full">
+      <div className="container mx-auto px-6 max-w-[90%]">
         <div className="mb-12 text-center">
             <h1 className="text-4xl font-heading font-extrabold text-soft-black mb-4">Anggota Gugus</h1>
             <p className="text-gray-600">Daftar tenaga pendidik profesional anggota Gugus 3 Melati.</p>
