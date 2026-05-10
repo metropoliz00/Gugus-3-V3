@@ -35,6 +35,7 @@ import {
   Wallet,
   Trash2,
   Globe,
+  AlertCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -772,9 +773,27 @@ function AdminUserManagement() {
     return searchStr.includes(searchTerm.toLowerCase());
   });
 
+  const [diagnosticResult, setDiagnosticResult] = useState<any>(null);
+  const [isDiagnosticRunning, setIsDiagnosticRunning] = useState(false);
+
+  const runDiagnostic = async () => {
+    setIsDiagnosticRunning(true);
+    setDiagnosticResult(null);
+    try {
+      const response = await fetch(`/api/debug/list-users?diagnostic=true&t=${Date.now()}`);
+      const data = await response.json();
+      setDiagnosticResult(data);
+    } catch (err: any) {
+      setDiagnosticResult({ error: err.message });
+    } finally {
+      setIsDiagnosticRunning(false);
+    }
+  };
+
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     setFormError("");
+    setDiagnosticResult(null);
     try {
       console.log("Fetching users from API...");
       const response = await fetch(`/api/debug/list-users?t=${Date.now()}`);
@@ -785,6 +804,11 @@ function AdminUserManagement() {
       const data = await response.json();
       console.log(`Fetched ${data?.length || 0} users`);
       setUserList(data || []);
+      
+      if (data && data.length === 0) {
+        console.warn("API returned empty user list. Running auto-diagnostic...");
+        runDiagnostic();
+      }
     } catch (err: any) {
       console.error("Error fetching users:", err);
       setFormError("Gagal memuat daftar user: " + err.message);
@@ -1349,11 +1373,46 @@ function AdminUserManagement() {
                   <tr>
                     <td
                       colSpan={8}
-                      className="px-6 py-10 text-center text-gray-400 italic"
+                      className="px-6 py-20 text-center text-gray-400"
                     >
-                      {searchTerm
-                        ? "Tidak ada user yang cocok dengan pencarian."
-                        : "Belum ada user yang terdaftar."}
+                      <div className="flex flex-col items-center gap-4">
+                        <Activity className="w-12 h-12 text-gray-100" />
+                        <div className="space-y-1">
+                          <p className="text-gray-500 font-medium">
+                            {searchTerm
+                              ? "Tidak ada user yang cocok dengan pencarian."
+                              : "Belum ada user yang terdaftar."}
+                          </p>
+                          {diagnosticResult && (
+                            <div className="mt-6 p-4 bg-orange-50 rounded-2xl border border-orange-100 text-left max-w-lg mx-auto not-italic">
+                              <h4 className="text-orange-800 font-bold text-sm mb-2 flex items-center gap-2">
+                                <AlertCircle className="w-4 h-4" />
+                                Diagnostic DB Status:
+                              </h4>
+                              <div className="text-[11px] font-mono text-orange-700/80 space-y-1 bg-white/50 p-3 rounded-xl">
+                                <p>Total Users: {diagnosticResult.count ?? '?'}</p>
+                                <p>Auth Records: {diagnosticResult.authCount ?? '?'}</p>
+                                <p>Profile Records: {diagnosticResult.profileCount ?? '?'}</p>
+                                {diagnosticResult.authError && (
+                                  <p className="text-red-500">Auth Error: {JSON.stringify(diagnosticResult.authError)}</p>
+                                )}
+                                {diagnosticResult.profileError && (
+                                  <p className="text-red-500">Profile Error: {JSON.stringify(diagnosticResult.profileError)}</p>
+                                )}
+                              </div>
+                              <p className="mt-3 text-[10px] text-orange-600 leading-relaxed">
+                                Tip: Jika "Profile Records" adalah 0 padahal di Supabase ada isinya, pastikan <b>SUPABASE_URL</b> & <b>SUPABASE_SERVICE_ROLE_KEY</b> sudah benar di panel <b>Settings &gt; Secrets</b>.
+                              </p>
+                              <button 
+                                onClick={runDiagnostic}
+                                className="mt-3 text-[10px] font-bold text-orange-700 hover:underline flex items-center gap-1"
+                              >
+                                {isDiagnosticRunning ? "Running..." : "Run Diagnostic Again"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 )}

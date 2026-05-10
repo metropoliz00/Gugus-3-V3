@@ -38,15 +38,21 @@ function getSupabaseAdmin() {
     const DEFAULT_URL = "https://mziqyqkmmmkccawzvojj.supabase.co";
     const DEFAULT_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16aXF5cWttbW1rY2Nhd3p2b2pqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODE2NDM3NiwiZXhwIjoyMDkzNzQwMzc2fQ.9BNcOFSbnV3_GaJFYIXTSqcFIpqrFjnvmPhWobpwKhQ";
 
-    let url = process.env.VITE_SUPABASE_URL;
+    let url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
     let key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     if (!url || url === "YOUR_SUPABASE_URL" || url === "" || url.startsWith('eyJ')) {
       url = DEFAULT_URL;
+      console.log(`[CONFIG] Using DEFAULT Supabase URL`);
+    } else {
+      console.log(`[CONFIG] Using CUSTOM Supabase URL: ${url.substring(0, 15)}...`);
     }
 
     if (!key || key === "YOUR_SUPABASE_SERVICE_ROLE_KEY" || key === "" || key.length < 50) {
       key = DEFAULT_KEY;
+      console.log(`[CONFIG] Using DEFAULT Service Role Key`);
+    } else {
+      console.log(`[CONFIG] Using CUSTOM Service Role Key`);
     }
     
     _supabaseAdmin = createClient(url, key);
@@ -295,24 +301,26 @@ app.get("/api/debug/list-users", async (req, res) => {
   console.log(`[LIST] Gathering all users...`);
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    // 1. Fetch from Auth
     let authUsers: any[] = [];
+    let authErrorDetails = null;
     try {
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers({
         perPage: 1000 
       });
       if (authError) {
         console.error("[LIST] Auth Error details:", authError);
+        authErrorDetails = authError;
       } else {
         authUsers = authData.users || [];
         console.log(`[LIST] Auth found ${authUsers.length} users`);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("[LIST] Auth Fetch Exception:", e);
+      authErrorDetails = { message: e.message };
     }
 
-    // 2. Fetch from Profiles
     let profilesList: any[] = [];
+    let profileErrorDetails = null;
     try {
       const { data: profiles, error: profileError } = await supabaseAdmin
         .from('user_profiles')
@@ -320,18 +328,17 @@ app.get("/api/debug/list-users", async (req, res) => {
       
       if (profileError) {
         console.error("[LIST] Profile Error details:", profileError);
+        profileErrorDetails = profileError;
       } else {
         profilesList = profiles || [];
         console.log(`[LIST] Profiles found ${profilesList.length} records`);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("[LIST] Profile Fetch Exception:", e);
+      profileErrorDetails = { message: e.message };
     }
 
-    // Merge data using a Map
     const mergedMap = new Map();
-
-    // Add Auth users first
     authUsers.forEach(authUser => {
       const metadata = authUser.user_metadata || {};
       mergedMap.set(authUser.id, {
@@ -351,7 +358,6 @@ app.get("/api/debug/list-users", async (req, res) => {
       });
     });
 
-    // Merge/Add from Profiles
     profilesList.forEach(p => {
        const existing = mergedMap.get(p.id) || {};
        mergedMap.set(p.id, {
@@ -372,6 +378,18 @@ app.get("/api/debug/list-users", async (req, res) => {
       const dateB = new Date(b.created_at || 0).getTime() || 0;
       return dateB - dateA;
     });
+
+    // If query string has diagnostic=true, return more info
+    if (req.query.diagnostic === 'true') {
+      return res.json({
+        count: merged.length,
+        authCount: authUsers.length,
+        profileCount: profilesList.length,
+        authError: authErrorDetails,
+        profileError: profileErrorDetails,
+        users: merged
+      });
+    }
 
     res.json(merged);
   } catch (err: any) {
