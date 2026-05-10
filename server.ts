@@ -159,7 +159,7 @@ app.get("/api/debug/init-admin", async (req, res) => {
 
 // Simplified route for user to create admin/guru easily
 app.post("/api/setup/create-user", async (req, res) => {
-  const { username, password, role, nama, sekolah, nip, kepegawaian, pangkat, jabatan, foto } = req.body;
+  const { username, password, role, nama, sekolah, nip, kepegawaian, pangkat, jabatan, foto, email } = req.body;
 
   if (!username || !password || !role) {
     return res.status(400).json({ error: "Username, password, and role (admin/guru) are required" });
@@ -167,12 +167,12 @@ app.post("/api/setup/create-user", async (req, res) => {
 
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    // Use a unique dummy email
-    const email = `${username.toLowerCase()}_${Date.now()}@gugus3melati.local`;
+    // Use provided email or generate a unique dummy email
+    const emailToUse = email || `${username.toLowerCase()}_${Date.now()}@gugus3melati.local`;
 
     // 1. Create Auth User
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: emailToUse,
       password,
       email_confirm: true,
       user_metadata: {
@@ -190,7 +190,7 @@ app.post("/api/setup/create-user", async (req, res) => {
 
     if (error) {
       if (error.message.includes("already registered")) {
-        return res.status(400).json({ error: `Username '${username}' kemungkinan sudah terdaftar di sistem Auth.` });
+        return res.status(400).json({ error: `User atau email '${username}' sudah terdaftar.` });
       }
       throw error;
     }
@@ -211,7 +211,7 @@ app.post("/api/setup/create-user", async (req, res) => {
         .insert([{
           id: userId,
           username,
-          email,
+          email: emailToUse,
           role: role === 'admin' ? 'admin' : 'guru',
           nama: nama || username,
           sekolah,

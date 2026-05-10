@@ -806,6 +806,7 @@ function AdminUserManagement() {
                        <tr className="text-gray-500 text-[10px] uppercase tracking-wider">
                            <th className="px-6 py-4 font-bold">Profil</th>
                            <th className="px-6 py-4 font-bold">Nama / Username</th>
+                           <th className="px-6 py-4 font-bold">Email</th>
                            <th className="px-6 py-4 font-bold">NIP / Jabatan</th>
 
                           <th className="px-6 py-4 font-bold">Role</th>
@@ -817,7 +818,7 @@ function AdminUserManagement() {
                     <tbody className="divide-y divide-gray-50">
                        {userList.length === 0 && !isLoadingUsers && (
                          <tr>
-                           <td colSpan={6} className="px-6 py-10 text-center text-gray-400 italic">Belum ada user yang terdaftar.</td>
+                           <td colSpan={8} className="px-6 py-10 text-center text-gray-400 italic">Belum ada user yang terdaftar.</td>
                          </tr>
                        )}
                        {userList.map((usr, i) => (
@@ -828,6 +829,9 @@ function AdminUserManagement() {
                             <td className="px-6 py-4">
                                <div className="font-bold text-soft-black text-sm">{usr.nama || '-'}</div>
                                <div className="text-xs text-main-blue font-mono">{usr.username}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                               <div className="text-xs font-bold text-gray-500 truncate max-w-[150px]" title={usr.email}>{usr.email || '-'}</div>
                             </td>
                             <td className="px-6 py-4">
                                <div className="text-xs font-bold text-gray-600">{usr.nip || '-'}</div>
