@@ -44,7 +44,12 @@ function getSupabaseAdmin() {
 }
 
 // API to Create Bulk Users (Admin only usually, but we check role or key)
-app.post("/api/admin/bulk-create-users", async (req, res) => {
+app.all("/api/v1/bulk-create-users", async (req, res) => {
+  console.log(`[BULK V1] ${req.method} ${req.url}`);
+  
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  if (req.method !== 'POST') return res.status(405).json({ error: "Method Not Allowed" });
+
   const { users } = req.body;
 
   if (!users || !Array.isArray(users)) {
@@ -164,21 +169,15 @@ app.get("/api/debug/init-admin", async (req, res) => {
 });
 
 // Simplified route for user to create admin/guru easily
-app.all("/api/setup/create-user", async (req, res) => {
-  console.log(`[CREATE] Request Method: ${req.method}, Path: ${req.url}`);
+app.all("/api/v1/create-user", async (req, res) => {
+  console.log(`[CREATE V1] ${req.method} ${req.url}`);
   
   if (req.method === 'OPTIONS') {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type");
     return res.sendStatus(200);
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ 
-      error: "Method Not Allowed", 
-      message: `Endpoint ini hanya mendukung POST. Anda mencoba menggunakan ${req.method}` 
-    });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   const { username, password, role, nama, sekolah, nip, kepegawaian, pangkat, jabatan, foto, email } = req.body;
@@ -295,24 +294,15 @@ app.get("/api/debug/list-users", async (req, res) => {
   }
 });
 
-app.all("/api/admin/update-user", async (req, res) => {
-  console.log(`[UPDATE] Request Method: ${req.method}, Path: ${req.url}`);
+app.all("/api/v1/update-user", async (req, res) => {
+  console.log(`[UPDATE V1] ${req.method} ${req.url}`);
   
-  // Explicitly handle CORS if needed
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type");
-
   if (req.method === 'OPTIONS') {
     return res.sendStatus(200);
   }
 
   if (req.method !== 'POST') {
-    console.error(`[UPDATE] Method ${req.method} not allowed on this endpoint`);
-    return res.status(405).json({ 
-      error: "Method Not Allowed", 
-      message: `Endpoint ini hanya mendukung POST. Anda mencoba menggunakan ${req.method}` 
-    });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   const { id, username, email, role, nama, nip, kepegawaian, pangkat, jabatan, sekolah, password, foto } = req.body;
@@ -398,8 +388,13 @@ app.all("/api/admin/update-user", async (req, res) => {
   }
 });
 
-app.delete("/api/admin/delete-user/:id", async (req, res) => {
+app.all("/api/v1/delete-user/:id", async (req, res) => {
   const { id } = req.params;
+  console.log(`[DELETE V1] ${req.method} ${req.url}, ID: ${id}`);
+  
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  if (req.method !== 'DELETE') return res.status(405).json({ error: "Method Not Allowed" });
+
   try {
     const supabaseAdmin = getSupabaseAdmin();
     // Delete from profiles first (referenced)
@@ -505,6 +500,18 @@ app.delete("/api/finance/records/:id", async (req, res) => {
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
+});
+
+app.use('/api', (req, res, next) => {
+  // If we reach here, it means no previous API route matched
+  console.log(`[API NOT FOUND] ${req.method} ${req.url}`);
+  if (req.method === 'OPTIONS') return res.sendStatus(200);
+  res.status(404).json({ 
+    error: "API Endpoint not found", 
+    method: req.method, 
+    url: req.url,
+    hint: "Check server.ts route definitions" 
+  });
 });
 
 async function startServer() {

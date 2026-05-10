@@ -423,8 +423,7 @@ function AdminUserManagement() {
     setFormError("");
 
     try {
-      const baseUrl = editId ? '/api/admin/update-user' : '/api/setup/create-user';
-      const endpoint = `${baseUrl}?t=${Date.now()}`;
+      const endpoint = editId ? '/api/v1/update-user' : '/api/v1/create-user';
       const body = editId ? { ...formData, id: editId } : formData;
 
       const response = await fetch(endpoint, {
@@ -510,7 +509,7 @@ function AdminUserManagement() {
     if (!isConfirmed) return;
     
     try {
-      const response = await fetch(`/api/admin/delete-user/${id}`, {
+      const response = await fetch(`/api/v1/delete-user/${id}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error("Gagal menghapus user");
@@ -572,7 +571,7 @@ function AdminUserManagement() {
           sekolah: row.Sekolah || row.sekolah
         }));
 
-        const response = await fetch('/api/admin/bulk-create-users', {
+        const response = await fetch('/api/v1/bulk-create-users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ users: formattedUsers })
