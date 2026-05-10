@@ -371,5 +371,18 @@ DO $$ BEGIN
   -- Allow public read of user profiles for username lookup (essential for username login)
   DROP POLICY IF EXISTS "Allow public read for username lookup" ON public.user_profiles;
   CREATE POLICY "Allow public read for username lookup" ON public.user_profiles FOR SELECT USING (true);
+
+  -- Allow authenticated users to update their own profile
+  DROP POLICY IF EXISTS "Users can update own profile" ON public.user_profiles;
+  CREATE POLICY "Users can update own profile" ON public.user_profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
+
+  -- Allow admins to manage all user profiles
+  DROP POLICY IF EXISTS "Admins can manage all profiles" ON public.user_profiles;
+  CREATE POLICY "Admins can manage all profiles" ON public.user_profiles FOR ALL TO authenticated USING (
+    EXISTS (
+      SELECT 1 FROM public.user_profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
 END $$;
 

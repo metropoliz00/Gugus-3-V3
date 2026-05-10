@@ -13,6 +13,17 @@ const PORT = 3000;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Global CORS Middleware
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Log all requests for debugging
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -47,7 +58,6 @@ function getSupabaseAdmin() {
 app.all("/api/v1/bulk-create-users", async (req, res) => {
   console.log(`[BULK V1] ${req.method} ${req.url}`);
   
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
   if (req.method !== 'POST') return res.status(405).json({ error: "Method Not Allowed" });
 
   const { users } = req.body;
@@ -172,10 +182,6 @@ app.get("/api/debug/init-admin", async (req, res) => {
 app.all("/api/v1/create-user", async (req, res) => {
   console.log(`[CREATE V1] ${req.method} ${req.url}`);
   
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
@@ -297,10 +303,6 @@ app.get("/api/debug/list-users", async (req, res) => {
 app.all("/api/v1/update-user", async (req, res) => {
   console.log(`[UPDATE V1] ${req.method} ${req.url}`);
   
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-
   if (req.method !== 'POST') {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
@@ -392,7 +394,6 @@ app.all("/api/v1/delete-user/:id", async (req, res) => {
   const { id } = req.params;
   console.log(`[DELETE V1] ${req.method} ${req.url}, ID: ${id}`);
   
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
   if (req.method !== 'DELETE') return res.status(405).json({ error: "Method Not Allowed" });
 
   try {
