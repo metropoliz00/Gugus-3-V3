@@ -774,13 +774,20 @@ function AdminUserManagement() {
 
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
+    setFormError("");
     try {
+      console.log("Fetching users from API...");
       const response = await fetch(`/api/debug/list-users?t=${Date.now()}`);
-      if (!response.ok) throw new Error("Gagal mengambil data user");
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Gagal mengambil data user");
+      }
       const data = await response.json();
+      console.log(`Fetched ${data?.length || 0} users`);
       setUserList(data || []);
     } catch (err: any) {
       console.error("Error fetching users:", err);
+      setFormError("Gagal memuat daftar user: " + err.message);
       setUserList([]);
     } finally {
       setIsLoadingUsers(false);
@@ -1295,7 +1302,12 @@ function AdminUserManagement() {
         {/* User List Table */}
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5 overflow-hidden">
           <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-            <h3 className="font-bold text-lg">Daftar Akun Sistem</h3>
+            <div className="flex items-center gap-3">
+              <h3 className="font-bold text-lg">Daftar Akun Sistem</h3>
+              <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-full">
+                {filteredUsers.length} User
+              </span>
+            </div>
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative flex-1 md:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -1347,7 +1359,7 @@ function AdminUserManagement() {
                 )}
                 {filteredUsers.map((usr, i) => (
                   <tr
-                    key={usr.id}
+                    key={usr.id || `user-${i}`}
                     className="hover:bg-gray-50/50 transition-colors"
                   >
                     <td className="px-6 py-4">

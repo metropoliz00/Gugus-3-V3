@@ -292,54 +292,86 @@ app.post("/api/v1/create-user", async (req, res) => {
 });
 
 app.get("/api/debug/list-users", async (req, res) => {
+  console.log(`[LIST] Gathering all users...`);
   try {
     const supabaseAdmin = getSupabaseAdmin();
     // 1. Fetch from Auth
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers();
-    if (authError) {
-      console.error("[LIST] Auth Error:", authError);
-      throw authError;
+    let authUsers: any[] = [];
+    try {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers({
+        perPage: 1000 
+      });
+      if (authError) {
+        console.error("[LIST] Auth Error details:", authError);
+      } else {
+        authUsers = authData.users || [];
+        console.log(`[LIST] Auth found ${authUsers.length} users`);
+      }
+    } catch (e) {
+      console.error("[LIST] Auth Fetch Exception:", e);
     }
 
     // 2. Fetch from Profiles
-    const { data: profiles, error: profileError } = await supabaseAdmin
-      .from('user_profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (profileError) {
-      console.error("[LIST] Profile Error:", profileError);
-      // We continue with Auth data if profile fetch fails
+    let profilesList: any[] = [];
+    try {
+      const { data: profiles, error: profileError } = await supabaseAdmin
+        .from('user_profiles')
+        .select('*');
+      
+      if (profileError) {
+        console.error("[LIST] Profile Error details:", profileError);
+      } else {
+        profilesList = profiles || [];
+        console.log(`[LIST] Profiles found ${profilesList.length} records`);
+      }
+    } catch (e) {
+      console.error("[LIST] Profile Fetch Exception:", e);
     }
 
-    const profilesList = profiles || [];
-    
-    // Merge data: Iterate over Auth users to ensure everyone is listed
-    const merged = authData.users.map(authUser => {
-       const p = profilesList.find(profile => profile.id === authUser.id);
-       
-       // Fallback to metadata if profile is missing
-       const metadata = authUser.user_metadata || {};
-       
-       return {
-          id: authUser.id,
-          username: p?.username || metadata.username || authUser.email?.split('@')[0] || "unknown",
-          email: authUser.email || p?.email || "",
-          role: p?.role || metadata.role || "guru",
-          nama: p?.nama || metadata.nama || metadata.full_name || "",
-          nip: p?.nip || metadata.nip || "",
-          kepegawaian: p?.kepegawaian || metadata.kepegawaian || "",
-          pangkat: p?.pangkat || metadata.pangkat || "",
-          jabatan: p?.jabatan || metadata.jabatan || "",
-          sekolah: p?.sekolah || metadata.sekolah || "",
-          foto: p?.foto || p?.avatar_url || metadata.foto || metadata.avatar_url || "",
-          password_text: metadata.password_text || p?.password_text || "",
-          created_at: p?.created_at || authUser.created_at
-       };
+    // Merge data using a Map
+    const mergedMap = new Map();
+
+    // Add Auth users first
+    authUsers.forEach(authUser => {
+      const metadata = authUser.user_metadata || {};
+      mergedMap.set(authUser.id, {
+        id: authUser.id,
+        username: p_get_username(authUser, null),
+        email: authUser.email || "",
+        role: metadata.role || "guru",
+        nama: metadata.nama || metadata.full_name || "",
+        nip: metadata.nip || "",
+        kepegawaian: metadata.kepegawaian || "",
+        pangkat: metadata.pangkat || "",
+        jabatan: metadata.jabatan || "",
+        sekolah: metadata.sekolah || "",
+        foto: metadata.foto || metadata.avatar_url || "",
+        password_text: metadata.password_text || "",
+        created_at: authUser.created_at
+      });
     });
 
-    // Sort merged list by created_at descending
-    merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    // Merge/Add from Profiles
+    profilesList.forEach(p => {
+       const existing = mergedMap.get(p.id) || {};
+       mergedMap.set(p.id, {
+          ...existing,
+          ...p,
+          id: p.id || existing.id,
+          username: p.username || existing.username || "unknown",
+          email: p.email || existing.email || "",
+          foto: p.foto || p.avatar_url || existing.foto || ""
+       });
+    });
+
+    const merged = Array.from(mergedMap.values());
+    console.log(`[LIST] Total merged users: ${merged.length}`);
+    
+    merged.sort((a, b) => {
+      const dateA = new Date(a.created_at || 0).getTime() || 0;
+      const dateB = new Date(b.created_at || 0).getTime() || 0;
+      return dateB - dateA;
+    });
 
     res.json(merged);
   } catch (err: any) {
@@ -347,6 +379,13 @@ app.get("/api/debug/list-users", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+function p_get_username(authUser: any, profile: any) {
+  if (profile?.username) return profile.username;
+  if (authUser?.user_metadata?.username) return authUser.user_metadata.username;
+  if (authUser?.email) return authUser.email.split('@')[0];
+  return "unknown";
+}
 
 app.post("/api/v1/update-user", async (req, res) => {
   console.log(`[UPDATE V1] POST ${req.url}`);
