@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS public.posts (
     content TEXT NOT NULL,
     featured_image_url TEXT,
     category post_category DEFAULT 'berita' NOT NULL,
-    author_id UUID REFERENCES public.user_profiles(id),
+    author_id UUID REFERENCES public.user_profiles(id) ON DELETE SET NULL,
     is_published BOOLEAN DEFAULT true,
     published_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -290,7 +290,7 @@ CREATE TABLE IF NOT EXISTS public.documents (
     description TEXT,
     file_url TEXT NOT NULL,
     file_type VARCHAR(50),
-    uploaded_by UUID REFERENCES public.user_profiles(id),
+    uploaded_by UUID REFERENCES public.user_profiles(id) ON DELETE SET NULL,
     is_public BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
