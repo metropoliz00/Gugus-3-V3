@@ -388,21 +388,21 @@ function AdminUserManagement() {
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     try {
-      const response = await fetch('/api/debug/list-users');
-      if (!response.ok) {
-         throw new Error("Gagal mengambil data user");
+      if (!supabase) throw new Error("Supabase client not initialized");
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+         throw error;
       }
       
-      const responseText = await response.text();
-      try {
-        const data = JSON.parse(responseText);
-        setUserList(data || []);
-      } catch (e) {
-        console.error("Non-JSON response from list-users:", responseText.substring(0, 50));
-        setUserList([]);
-      }
+      setUserList(data || []);
     } catch (err: any) {
       console.error("Error fetching users:", err);
+      // alert("Error fetching users: " + err.message);
+      setUserList([]);
     } finally {
       setIsLoadingUsers(false);
     }
@@ -611,13 +611,14 @@ function AdminUserManagement() {
                   setShowAddForm(true);
                 }
              }}
-             className="px-6 py-2.5 bg-main-blue text-white flex items-center gap-2 font-bold rounded-xl hover:bg-dark-blue transition-all shadow-lg shadow-main-blue/20"
+             title={showAddForm ? 'Tutup Form' : 'Tambah User Manual'}
+             className="p-3 bg-main-blue text-white flex items-center justify-center font-bold rounded-xl hover:bg-dark-blue transition-all shadow-lg shadow-main-blue/20"
            >
-             <PlusCircle className="w-5 h-5" /> {showAddForm ? 'Tutup Form' : 'Tambah User Manual'}
+             {showAddForm ? <X className="w-5 h-5" /> : <PlusCircle className="w-5 h-5" />}
            </button>
            
-           <label className="px-6 py-2.5 bg-green-600 text-white flex items-center gap-2 font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-500/20 cursor-pointer">
-             <UploadCloud className="w-5 h-5" /> {isUploading ? 'Mengunggah...' : 'Upload Excel Massal'}
+           <label title="Upload Excel Massal" className="p-3 bg-green-600 text-white flex items-center justify-center font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-500/20 cursor-pointer">
+             {isUploading ? <Activity className="w-5 h-5 animate-spin" /> : <UploadCloud className="w-5 h-5" />}
              <input 
                type="file" 
                accept=".xlsx, .xls" 
@@ -629,9 +630,10 @@ function AdminUserManagement() {
 
            <button 
              onClick={downloadTemplate}
-             className="px-6 py-2.5 bg-gray-100 text-gray-700 flex items-center gap-2 font-bold rounded-xl hover:bg-gray-200 transition-all font-sans"
+             title="Download Template Excel"
+             className="p-3 bg-gray-100 text-gray-700 flex items-center justify-center font-bold rounded-xl hover:bg-gray-200 transition-all font-sans"
            >
-             <Download className="w-5 h-5" /> Download Template Excel
+             <Download className="w-5 h-5" />
            </button>
          </div>
       </div>
