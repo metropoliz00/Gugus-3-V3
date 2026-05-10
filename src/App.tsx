@@ -85,48 +85,50 @@ export default function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!supabase) {
-      setIsInitialAuthLoading(false);
-      return;
-    }
-
-    const fetchUserProfile = async (userId: string) => {
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      setUser(profile);
-      setIsInitialAuthLoading(false);
-    };
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setIsInitialAuthLoading(false);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setUser(null);
-        setIsInitialAuthLoading(false);
-      }
-    });
-
-    // Add a minimum loading time for the splash screen effect
+    // Always start the timer for splash screen effect
     const timer = setTimeout(() => {
       setIsAppReady(true);
     }, 2000);
 
+    let authSubscription: any = null;
+
+    if (supabase) {
+      const fetchUserProfile = async (userId: string) => {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        
+        setUser(profile);
+        setIsInitialAuthLoading(false);
+      };
+
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          fetchUserProfile(session.user.id);
+        } else {
+          setIsInitialAuthLoading(false);
+        }
+      });
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session?.user) {
+          fetchUserProfile(session.user.id);
+        } else {
+          setUser(null);
+          setIsInitialAuthLoading(false);
+        }
+      });
+      authSubscription = subscription;
+    } else {
+      setIsInitialAuthLoading(false);
+    }
+
     return () => {
-      subscription.unsubscribe();
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
       clearTimeout(timer);
     };
   }, []);
