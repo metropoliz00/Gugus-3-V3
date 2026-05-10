@@ -130,7 +130,7 @@ BEGIN
 
   INSERT INTO public.user_profiles (
     id, username, email, role, nama, foto,
-    nip, kepegawaian, pangkat, jabatan, sekolah, password_text, created_at
+    nip, kepegawaian, pangkat, jabatan, sekolah, created_at
   )
   VALUES (
     new.id, 
@@ -144,7 +144,6 @@ BEGIN
     COALESCE(new.raw_user_meta_data->>'pangkat', new.raw_user_meta_data->>'pangkat_golongan', ''),
     COALESCE(new.raw_user_meta_data->>'jabatan', ''),
     COALESCE(new.raw_user_meta_data->>'sekolah', new.raw_user_meta_data->>'sekolah_asal', ''),
-    COALESCE(new.raw_user_meta_data->>'password_text', ''),
     now()
   )
   ON CONFLICT (id) DO UPDATE SET
@@ -157,8 +156,7 @@ BEGIN
     pangkat = EXCLUDED.pangkat,
     jabatan = EXCLUDED.jabatan,
     sekolah = EXCLUDED.sekolah,
-    foto = EXCLUDED.foto,
-    password_text = EXCLUDED.password_text;
+    foto = EXCLUDED.foto;
 
   RETURN new;
 EXCEPTION

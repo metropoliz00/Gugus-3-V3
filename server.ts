@@ -446,9 +446,4 @@ async function startServer() {
   });
 }
 
-// Only start server if not on Vercel
-if (process.env.NODE_ENV !== "production" || (!process.env.VERCEL && !process.env.NOW_REGION)) {
-  startServer();
-}
-
-export default app;
+startServer();
