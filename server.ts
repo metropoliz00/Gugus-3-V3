@@ -54,12 +54,9 @@ function getSupabaseAdmin() {
   return _supabaseAdmin;
 }
 
-// API to Create Bulk Users (Admin only usually, but we check role or key)
-app.all("/api/v1/bulk-create-users", async (req, res) => {
-  console.log(`[BULK V1] ${req.method} ${req.url}`);
-  
-  if (req.method !== 'POST') return res.status(405).json({ error: "Method Not Allowed" });
-
+// API to Create Bulk Users
+app.post("/api/v1/bulk-create-users", async (req, res) => {
+  console.log(`[BULK V1] POST ${req.url}`);
   const { users } = req.body;
 
   if (!users || !Array.isArray(users)) {
@@ -87,6 +84,7 @@ app.all("/api/v1/bulk-create-users", async (req, res) => {
             jabatan: user.jabatan,
             sekolah: user.sekolah,
             role: user.role || 'guru',
+            foto: user.foto || "",
             password_text: user.password || "Gugus3Melati123!"
           }
         });
@@ -118,7 +116,8 @@ app.all("/api/v1/bulk-create-users", async (req, res) => {
                 kepegawaian: user.kepegawaian,
                 pangkat: user.pangkat,
                 jabatan: user.jabatan,
-                password_text: user.password
+                password_text: user.password,
+                foto: user.foto || ""
               }]);
           }
 
@@ -179,13 +178,8 @@ app.get("/api/debug/init-admin", async (req, res) => {
 });
 
 // Simplified route for user to create admin/guru easily
-app.all("/api/v1/create-user", async (req, res) => {
-  console.log(`[CREATE V1] ${req.method} ${req.url}`);
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
-
+app.post("/api/v1/create-user", async (req, res) => {
+  console.log(`[CREATE V1] POST ${req.url}`);
   const { username, password, role, nama, sekolah, nip, kepegawaian, pangkat, jabatan, foto, email } = req.body;
 
   if (!username || !password || !role) {
@@ -211,6 +205,7 @@ app.all("/api/v1/create-user", async (req, res) => {
         kepegawaian,
         pangkat,
         jabatan,
+        foto,
         password_text: password
       }
     });
@@ -247,7 +242,7 @@ app.all("/api/v1/create-user", async (req, res) => {
           pangkat,
           jabatan,
           password_text: password,
-          avatar_url: foto
+          foto
         }]);
       
       if (profileError) {
@@ -300,13 +295,8 @@ app.get("/api/debug/list-users", async (req, res) => {
   }
 });
 
-app.all("/api/v1/update-user", async (req, res) => {
-  console.log(`[UPDATE V1] ${req.method} ${req.url}`);
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
-
+app.post("/api/v1/update-user", async (req, res) => {
+  console.log(`[UPDATE V1] POST ${req.url}`);
   const { id, username, email, role, nama, nip, kepegawaian, pangkat, jabatan, sekolah, password, foto } = req.body;
   
   if (!id) {
@@ -324,12 +314,13 @@ app.all("/api/v1/update-user", async (req, res) => {
       user_metadata: { 
         role, 
         nama, 
-        school: sekolah,
+        sekolah,
         username,
         nip,
         kepegawaian,
         pangkat,
         jabatan,
+        foto,
         password_text: password || undefined
       }
     };
@@ -369,7 +360,7 @@ app.all("/api/v1/update-user", async (req, res) => {
         pangkat,
         jabatan,
         sekolah,
-        avatar_url: foto,
+        foto,
         ...(password ? { password_text: password } : {})
       })
       .eq('id', id);
@@ -390,12 +381,9 @@ app.all("/api/v1/update-user", async (req, res) => {
   }
 });
 
-app.all("/api/v1/delete-user/:id", async (req, res) => {
+app.delete("/api/v1/delete-user/:id", async (req, res) => {
   const { id } = req.params;
-  console.log(`[DELETE V1] ${req.method} ${req.url}, ID: ${id}`);
-  
-  if (req.method !== 'DELETE') return res.status(405).json({ error: "Method Not Allowed" });
-
+  console.log(`[DELETE V1] DELETE ${req.url}, ID: ${id}`);
   try {
     const supabaseAdmin = getSupabaseAdmin();
     // Delete from profiles first (referenced)

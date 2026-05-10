@@ -423,7 +423,8 @@ function AdminUserManagement() {
     setFormError("");
 
     try {
-      const endpoint = editId ? '/api/v1/update-user' : '/api/v1/create-user';
+      const baseUrl = editId ? '/api/v1/update-user' : '/api/v1/create-user';
+      const endpoint = `${baseUrl}?t=${Date.now()}`;
       const body = editId ? { ...formData, id: editId } : formData;
 
       const response = await fetch(endpoint, {
@@ -509,7 +510,7 @@ function AdminUserManagement() {
     if (!isConfirmed) return;
     
     try {
-      const response = await fetch(`/api/v1/delete-user/${id}`, {
+      const response = await fetch(`/api/v1/delete-user/${id}?t=${Date.now()}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error("Gagal menghapus user");
@@ -1301,13 +1302,13 @@ function AdminSettingsForm({ heroForm, setHeroForm, profilForm, setProfilForm, f
               <label className="block text-sm font-semibold text-gray-700 mb-2">Jabatan Resmi</label>
               <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-leaf-green/20 outline-none transition-all" value={profilForm.role} onChange={e => setProfilForm({...profilForm, role: e.target.value})} />
             </div>
-             <div className="md:col-span-2">
+              <div className="md:col-span-2">
               <ImageUpload 
                 label="Foto Profil"
                 value={profilForm.image}
                 onChange={base64 => setProfilForm({...profilForm, image: base64})}
-                maxWidth={300}
-                maxHeight={400}
+                maxWidth={600}
+                maxHeight={800}
               />
             </div>
           </div>
