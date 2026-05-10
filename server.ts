@@ -274,13 +274,16 @@ app.get("/api/debug/list-users", async (req, res) => {
 });
 
 app.post("/api/admin/update-user", async (req, res) => {
+  console.log("[UPDATE] Request received at /api/admin/update-user");
   const { id, username, email, role, nama, nip, kepegawaian, pangkat, jabatan, sekolah, password, foto } = req.body;
-  console.log(`[UPDATE] Starting update for user: ${username} (${id})`);
   
   if (!id) {
+    console.error("[UPDATE] Missing user ID");
     return res.status(400).json({ error: "User ID is required" });
   }
 
+  console.log(`[UPDATE] Target User ID: ${id}, Username: ${username}`);
+  
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
@@ -300,25 +303,28 @@ app.post("/api/admin/update-user", async (req, res) => {
     };
     
     if (email && email.trim() !== "") {
+      console.log(`[UPDATE] Setting email to: ${email}`);
       authUpdates.email = email;
     }
     
     if (password) {
+      console.log(`[UPDATE] Updating password for ${username}`);
       authUpdates.password = password;
     }
 
-    console.log(`[UPDATE] Updating Auth for ${id}...`);
+    console.log(`[UPDATE] Calling supabaseAdmin.auth.admin.updateUserById for ${id}...`);
     const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
     
     if (authError) {
-      console.error("[UPDATE] Auth Error:", authError);
+      console.error("[UPDATE] Supabase Auth Error:", JSON.stringify(authError, null, 2));
       return res.status(400).json({ error: `Gagal update Auth: ${authError.message}` });
     }
 
-    const emailToSave = email || authUser.user?.email || "";
+    console.log("[UPDATE] Auth update success");
+    const emailToSave = email || authUser?.user?.email || "";
 
     // 2. Update Profile
-    console.log(`[UPDATE] Updating Profile for ${id}...`);
+    console.log(`[UPDATE] Updating Profile table for ${id}...`);
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .update({
@@ -337,16 +343,16 @@ app.post("/api/admin/update-user", async (req, res) => {
       .eq('id', id);
       
     if (profileError) {
-      console.error("[UPDATE] Profile Error:", profileError);
+      console.error("[UPDATE] Supabase Profile Error:", JSON.stringify(profileError, null, 2));
       return res.status(400).json({ error: `Gagal update Profile: ${profileError.message}` });
     }
     
-    console.log(`[UPDATE] Success for user: ${username}`);
-    return res.json({ success: true });
+    console.log(`[UPDATE] ALL SUCCESS for user: ${username}`);
+    return res.status(200).json({ success: true, message: "Update success" });
   } catch (err: any) {
-    console.error("[UPDATE] Fatal Catch:", err);
+    console.error("[UPDATE] Fatal Exception:", err);
     return res.status(500).json({ 
-      error: "Internal Server Error", 
+      error: "Sistem mengalami kendala saat memproses update", 
       message: err?.message || String(err) 
     });
   }
