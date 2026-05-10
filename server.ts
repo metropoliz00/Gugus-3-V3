@@ -309,6 +309,12 @@ app.post("/api/v1/update-user", async (req, res) => {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
+    // 0. Fetch current user data from Auth to check if email changed
+    const { data: currentAuthUser, error: fetchError } = await supabaseAdmin.auth.admin.getUserById(id);
+    if (fetchError) {
+       console.error("[UPDATE] Error fetching user to check email:", fetchError);
+    }
+    
     // 1. Update Auth
     const authUpdates: any = {
       user_metadata: { 
@@ -321,22 +327,24 @@ app.post("/api/v1/update-user", async (req, res) => {
         pangkat,
         jabatan,
         foto,
-        password_text: password || undefined
+        password_text: password || currentAuthUser?.user?.user_metadata?.password_text
       }
     };
     
-    if (email && email.trim() !== "") {
-      console.log(`[UPDATE] Setting email to: ${email}`);
+    // Only update email if it's provided and DIFFERENT from current email
+    if (email && email.trim() !== "" && email !== currentAuthUser?.user?.email) {
+      console.log(`[UPDATE] Email changed from ${currentAuthUser?.user?.email} to ${email}`);
       authUpdates.email = email;
+      authUpdates.email_confirm = true; // Auto confirm email change if needed
     }
     
-    if (password) {
+    if (password && password.trim() !== "") {
       console.log(`[UPDATE] Updating password for ${username}`);
       authUpdates.password = password;
     }
 
     console.log(`[UPDATE] Calling supabaseAdmin.auth.admin.updateUserById for ${id}...`);
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
+    const { data: updateResult, error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
     
     if (authError) {
       console.error("[UPDATE] Supabase Auth Error:", JSON.stringify(authError, null, 2));
@@ -344,7 +352,7 @@ app.post("/api/v1/update-user", async (req, res) => {
     }
 
     console.log("[UPDATE] Auth update success");
-    const emailToSave = email || authUser?.user?.email || "";
+    const finalEmail = email || updateResult?.user?.email || currentAuthUser?.user?.email || "";
 
     // 2. Update Profile
     console.log(`[UPDATE] Updating Profile table for ${id}...`);
@@ -352,7 +360,7 @@ app.post("/api/v1/update-user", async (req, res) => {
       .from('user_profiles')
       .update({
         username,
-        email: emailToSave,
+        email: finalEmail,
         role,
         nama,
         nip,
@@ -386,15 +394,25 @@ app.delete("/api/v1/delete-user/:id", async (req, res) => {
   console.log(`[DELETE V1] DELETE ${req.url}, ID: ${id}`);
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    // Delete from profiles first (referenced)
-    await supabaseAdmin.from('user_profiles').delete().eq('id', id);
-    // Delete from auth
+    
+    // Deleting from Auth will trigger CASCADE on user_profiles
+    console.log(`[DELETE] Calling auth.admin.deleteUser for ${id}`);
     const { error } = await supabaseAdmin.auth.admin.deleteUser(id);
-    if (error) throw error;
+    
+    if (error) {
+      console.error("[DELETE] Auth Error:", error);
+      // Try profile delete if auth fails (e.g. user already deleted from auth but profile remained)
+      const { error: profileError } = await supabaseAdmin.from('user_profiles').delete().eq('id', id);
+      if (profileError) {
+        throw new Error(error.message);
+      }
+    }
+    
+    console.log(`[DELETE] SUCCESS for ${id}`);
     res.json({ success: true });
   } catch (err: any) {
-    console.error("Delete User Error:", err);
-    res.status(500).json({ error: err.message });
+    console.error("[DELETE] Fatal Error:", err);
+    res.status(500).json({ error: err.message || "Gagal menghapus user" });
   }
 });
 
