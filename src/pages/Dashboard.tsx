@@ -388,18 +388,39 @@ function AdminUserManagement() {
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
     try {
-      const response = await fetch('/api/debug/list-users');
-      if (!response.ok) {
-         throw new Error("Gagal mengambil data user");
+      // Primary: Try Server API (might fail on Vercel if not configured as serverless)
+      const response = await fetch('/api/debug/list-users').catch(() => null);
+      
+      if (response && response.ok) {
+        const responseText = await response.text();
+        try {
+          const data = JSON.parse(responseText);
+          setUserList(data || []);
+          setIsLoadingUsers(false);
+          return;
+        } catch (e) {
+          console.error("Non-JSON response from list-users:", responseText.substring(0, 50));
+        }
       }
       
-      const responseText = await response.text();
-      try {
-        const data = JSON.parse(responseText);
-        setUserList(data || []);
-      } catch (e) {
-        console.error("Non-JSON response from list-users:", responseText.substring(0, 50));
-        setUserList([]);
+      // Fallback: Fetch directly from Supabase Client-side (Works on Vercel/Static hosting)
+      // Note: This relies on public SELECT policy for user_profiles
+      if (supabase) {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+        
+        if (!error && data) {
+          // Standardize fields if necessary (avatar_url vs foto)
+          const standardized = data.map(u => ({
+            ...u,
+            foto: u.foto || u.avatar_url
+          }));
+          setUserList(standardized);
+        } else {
+          console.error("Supabase direct fetch error:", error);
+        }
       }
     } catch (err: any) {
       console.error("Error fetching users:", err);
