@@ -781,6 +781,12 @@ function AdminUserManagement() {
     setDiagnosticResult(null);
     try {
       const response = await fetch(`/api/debug/list-users?diagnostic=true&t=${Date.now()}`);
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        setDiagnosticResult({ error: `Not JSON: ${text.substring(0, 100)}` });
+        return;
+      }
       const data = await response.json();
       setDiagnosticResult(data);
     } catch (err: any) {
@@ -797,10 +803,15 @@ function AdminUserManagement() {
     try {
       console.log("Fetching users from API...");
       const response = await fetch(`/api/debug/list-users?t=${Date.now()}`);
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "Gagal mengambil data user");
+      
+      const contentType = response.headers.get("content-type");
+      if (!response.ok || !contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        const snippet = text.substring(0, 200);
+        console.error("Non-JSON response from API:", snippet);
+        throw new Error(`API returned ${response.status} ${response.statusText} (${contentType}). Snippet: ${snippet}`);
       }
+      
       const data = await response.json();
       console.log(`Fetched ${data?.length || 0} users`);
       setUserList(data || []);
