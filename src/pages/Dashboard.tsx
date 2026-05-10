@@ -889,24 +889,30 @@ function AdminOverview() {
       setIsStatsLoading(true);
       try {
         const [
-          { count: postCount },
-          { count: docCount },
-          { count: eventCount },
-          { count: userCount },
-          { data: schoolsData }
+          postRes,
+          docRes,
+          eventRes,
+          userRes,
+          schoolRes
         ] = await Promise.all([
-          supabase.from('posts').select('*', { count: 'exact', head: true }),
-          supabase.from('documents').select('*', { count: 'exact', head: true }),
-          supabase.from('events').select('*', { count: 'exact', head: true }),
-          supabase.from('user_profiles').select('*', { count: 'exact', head: true }),
-          supabase.from('schools').select('student_count, teacher_count, jenis_sekolah')
+          supabase.from('posts').select('*', { count: 'exact', head: true }).throwOnError(),
+          supabase.from('documents').select('*', { count: 'exact', head: true }).throwOnError(),
+          supabase.from('events').select('*', { count: 'exact', head: true }).throwOnError(),
+          supabase.from('user_profiles').select('*', { count: 'exact', head: true }).throwOnError(),
+          supabase.from('schools').select('student_count, teacher_count, jenis_sekolah').throwOnError()
         ]);
 
-        const totalStudents = schoolsData?.reduce((acc: number, curr: any) => acc + (Number(curr.student_count) || 0), 0) || 0;
-        const totalTeachers = schoolsData?.reduce((acc: number, curr: any) => acc + (Number(curr.teacher_count) || 0), 0) || 0;
-        const schoolCount = schoolsData?.length || 0;
-        const schoolIntiCount = schoolsData?.filter((s: any) => s.jenis_sekolah === 'Sekolah Inti').length || 0;
-        const schoolImbasCount = schoolsData?.filter((s: any) => s.jenis_sekolah !== 'Sekolah Inti').length || 0;
+        const postCount = postRes.count || 0;
+        const docCount = docRes.count || 0;
+        const eventCount = eventRes.count || 0;
+        const userCount = userRes.count || 0;
+        const schoolsData = schoolRes.data || [];
+
+        const totalStudents = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.student_count) || 0), 0);
+        const totalTeachers = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.teacher_count) || 0), 0);
+        const schoolCount = schoolsData.length;
+        const schoolIntiCount = schoolsData.filter((s: any) => s.jenis_sekolah === 'Sekolah Inti').length;
+        const schoolImbasCount = schoolsData.filter((s: any) => s.jenis_sekolah !== 'Sekolah Inti').length;
 
         setDbStats({
           guru: totalTeachers,
@@ -930,14 +936,12 @@ function AdminOverview() {
   }, []);
 
   const statCards = [
-    { label: 'Total Guru (Gugus)', value: isStatsLoading ? '...' : dbStats.guru.toString(), icon: Users, color: 'from-blue-500 to-cyan-400' },
-    { label: 'Total Sekolah', value: isStatsLoading ? '...' : dbStats.sekolah.toString(), icon: BookOpen, color: 'from-green-500 to-emerald-400', 
-      detail: `${dbStats.sekolahInti} Inti | ${dbStats.sekolahImbas} Imbas` 
-    },
-    { label: 'Total Murid', value: isStatsLoading ? '...' : dbStats.murid.toString(), icon: GraduationCap, color: 'from-orange-500 to-amber-400' },
+    { label: 'Sekolah Inti', value: isStatsLoading ? '...' : dbStats.sekolahInti.toString(), icon: BookOpen, color: 'from-blue-500 to-cyan-400' },
+    { label: 'Sekolah Imbas', value: isStatsLoading ? '...' : dbStats.sekolahImbas.toString(), icon: BookOpen, color: 'from-green-500 to-emerald-400' },
+    { label: 'Data Guru', value: isStatsLoading ? '...' : dbStats.guru.toString(), icon: Users, color: 'from-orange-500 to-amber-400' },
+    { label: 'Data Siswa', value: isStatsLoading ? '...' : dbStats.murid.toString(), icon: GraduationCap, color: 'from-rose-500 to-pink-400' },
     { label: 'Total Berita', value: isStatsLoading ? '...' : dbStats.berita.toString(), icon: FileText, color: 'from-purple-500 to-fuchsia-400' },
-    { label: 'Total User Portal', value: isStatsLoading ? '...' : dbStats.user.toString(), icon: Shield, color: 'from-rose-500 to-pink-400' },
-    { label: 'Total Kegiatan', value: isStatsLoading ? '...' : dbStats.kegiatan.toString(), icon: Calendar, color: 'from-amber-500 to-yellow-400' },
+    { label: 'Total User', value: isStatsLoading ? '...' : dbStats.user.toString(), icon: Shield, color: 'from-indigo-500 to-violet-400' },
   ];
 
   return (
