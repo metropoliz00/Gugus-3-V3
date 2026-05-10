@@ -70,19 +70,28 @@ app.post("/api/v1/bulk-create-users", async (req, res) => {
 
     for (const user of users) {
       try {
+        if (!user.username || !user.email) {
+          errors.push({ username: user.username || "Unknown", error: "Username and Email are required" });
+          continue;
+        }
+
+        // Sanitize username for email generation if needed (though email is required here)
+        const sanitizedUsername = user.username.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+        const emailToUse = user.email || `${sanitizedUsername}_${Date.now()}@gugus3melati.local`;
+
         // Create Auth User
         const { data, error: authError } = await supabaseAdmin.auth.admin.createUser({
-          email: user.email,
+          email: emailToUse,
           password: user.password || "Gugus3Melati123!", // Default password if not provided
           email_confirm: true,
           user_metadata: {
             username: user.username,
-            nama: user.nama,
-            nip: user.nip,
-            kepegawaian: user.kepegawaian,
-            pangkat: user.pangkat,
-            jabatan: user.jabatan,
-            sekolah: user.sekolah,
+            nama: user.nama || user.username,
+            nip: user.nip || "",
+            kepegawaian: user.kepegawaian || "",
+            pangkat: user.pangkat || "",
+            jabatan: user.jabatan || "",
+            sekolah: user.sekolah || "",
             role: user.role || 'guru',
             foto: user.foto || "",
             password_text: user.password || "Gugus3Melati123!"
@@ -90,46 +99,44 @@ app.post("/api/v1/bulk-create-users", async (req, res) => {
         });
 
         if (authError) {
+          console.error(`[BULK] Auth Error for ${user.username}:`, authError.message);
           errors.push({ username: user.username, error: authError.message });
-        } else {
+        } else if (data.user) {
           const userId = data.user.id;
           
-          // Check if profile was created by trigger
-          const { data: profile } = await supabaseAdmin
+          // Upsert Profile
+          const { error: profileError } = await supabaseAdmin
             .from('user_profiles')
-            .select('id')
-            .eq('id', userId)
-            .single();
+            .upsert([{
+              id: userId,
+              username: user.username,
+              email: emailToUse,
+              role: user.role || 'guru',
+              nama: user.nama || user.username,
+              sekolah: user.sekolah || "",
+              nip: user.nip || "",
+              kepegawaian: user.kepegawaian || "",
+              pangkat: user.pangkat || "",
+              jabatan: user.jabatan || "",
+              password_text: user.password || "Gugus3Melati123!",
+              foto: user.foto || ""
+            }], { onConflict: 'id' });
 
-          if (!profile) {
-            console.log("Bulk: Trigger profile creation failed, creating manually for user:", userId);
-            await supabaseAdmin
-              .from('user_profiles')
-              .insert([{
-                id: userId,
-                username: user.username,
-                email: user.email,
-                role: user.role || 'guru',
-                nama: user.nama || user.username,
-                sekolah: user.sekolah,
-                nip: user.nip,
-                kepegawaian: user.kepegawaian,
-                pangkat: user.pangkat,
-                jabatan: user.jabatan,
-                password_text: user.password,
-                foto: user.foto || ""
-              }]);
-          }
+           if (profileError) {
+             console.error(`[BULK] Profile Error for ${user.username}:`, profileError.message);
+           }
 
           results.push({ username: user.username, status: "success" });
         }
       } catch (err: any) {
+        console.error(`[BULK] Loop Error for ${user.username}:`, err);
         errors.push({ username: user.username, error: err.message });
       }
     }
 
     res.json({ results, errors });
   } catch (err: any) {
+    console.error("[BULK] Fatal Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -188,8 +195,23 @@ app.post("/api/v1/create-user", async (req, res) => {
 
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    // Use provided email or generate a unique dummy email
-    const emailToUse = email || `${username.toLowerCase()}_${Date.now()}@gugus3melati.local`;
+    
+    // Check if username already exists in profiles
+    const { data: existingUser, error: checkError } = await supabaseAdmin
+      .from('user_profiles')
+      .select('username')
+      .eq('username', username)
+      .maybeSingle();
+    
+    if (existingUser) {
+      return res.status(400).json({ error: `Username '${username}' sudah terdaftar.` });
+    }
+
+    // Sanitize username for email generation
+    const sanitizedUsername = username.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+    const emailToUse = (email && email.trim() !== "") ? email : `${sanitizedUsername}_${Date.now()}@gugus3melati.local`;
+
+    console.log(`[CREATE] Attempting to create user: ${username} with email: ${emailToUse}`);
 
     // 1. Create Auth User
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
@@ -197,70 +219,75 @@ app.post("/api/v1/create-user", async (req, res) => {
       password,
       email_confirm: true,
       user_metadata: {
-        username,
+        username: username, // Original username
         nama: nama || username,
         role: role === 'admin' ? 'admin' : 'guru',
-        sekolah,
-        nip,
-        kepegawaian,
-        pangkat,
-        jabatan,
-        foto,
+        sekolah: sekolah || "",
+        nip: nip || "",
+        kepegawaian: kepegawaian || "",
+        pangkat: pangkat || "",
+        jabatan: jabatan || "",
+        foto: foto || "",
         password_text: password
       }
     });
 
     if (error) {
-      if (error.message.includes("already registered")) {
-        return res.status(400).json({ error: `User atau email '${username}' sudah terdaftar.` });
+      console.error("[CREATE] Auth Error:", error);
+      if (error.message.includes("already registered") || error.message.includes("Email already exists")) {
+        return res.status(400).json({ error: `User atau email sudah terdaftar.` });
       }
       throw error;
     }
 
+    if (!data.user) {
+      throw new Error("Gagal membuat data user (Auth returned no user)");
+    }
+
     const userId = data.user.id;
+    console.log(`[CREATE] Auth User created: ${userId}`);
 
-    // 2. Check if user_profile was created by trigger. If not, create it manually.
-    const { data: profile } = await supabaseAdmin
+    // 2. Check if user_profile was created by trigger.
+    // Give it a small delay or just try upsert to be safe.
+    console.log(`[CREATE] Upserting profile for: ${userId}`);
+    const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
-      .select('id')
-      .eq('id', userId)
-      .single();
-
-    if (!profile) {
-      console.log("Trigger profile creation failed, creating manually for user:", userId);
-      const { error: profileError } = await supabaseAdmin
-        .from('user_profiles')
-        .insert([{
-          id: userId,
-          username,
-          email: emailToUse,
-          role: role === 'admin' ? 'admin' : 'guru',
-          nama: nama || username,
-          sekolah,
-          nip,
-          kepegawaian,
-          pangkat,
-          jabatan,
-          password_text: password,
-          foto
-        }]);
-      
-      if (profileError) {
-        console.error("Manual profile creation error:", profileError);
-        // We don't throw here to at least give the user the Auth account, 
-        // but it might cause issues later.
+      .upsert([{
+        id: userId,
+        username: username,
+        email: emailToUse,
+        role: role === 'admin' ? 'admin' : 'guru',
+        nama: nama || username,
+        sekolah: sekolah || "",
+        nip: nip || "",
+        kepegawaian: kepegawaian || "",
+        pangkat: pangkat || "",
+        jabatan: jabatan || "",
+        password_text: password,
+        foto: foto || ""
+      }], { onConflict: 'id' });
+    
+    if (profileError) {
+      console.error("[CREATE] Profile Upsert Error:", profileError);
+      // If it's a unique violation on username, we should probably tell the user
+      if (profileError.message.includes("unique constraint") && profileError.message.includes("username")) {
+         return res.status(400).json({ error: `Username '${username}' sudah digunakan.` });
       }
     }
 
+    console.log(`[CREATE] SUCCESS for ${username}`);
     res.json({ 
       message: `User '${username}' berhasil dibuat!`, 
       userId,
       email: emailToUse,
-      password // Showing back as requested for verification
+      password 
     });
   } catch (err: any) {
-    console.error("Setup User Error:", err);
-    res.status(500).json({ error: err.message, details: err });
+    console.error("[CREATE] Fatal Error:", err);
+    res.status(500).json({ 
+      error: "Gagal membuat user baru", 
+      details: err.message 
+    });
   }
 });
 
@@ -309,7 +336,19 @@ app.post("/api/v1/update-user", async (req, res) => {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
-    // 0. Fetch current user data from Auth to check if email changed
+    // 0. Check if new username is already taken by someone else
+    const { data: nameCheck } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id')
+      .eq('username', username)
+      .neq('id', id)
+      .maybeSingle();
+
+    if (nameCheck) {
+      return res.status(400).json({ error: `Username '${username}' sudah digunakan oleh user lain.` });
+    }
+
+    // 1. Fetch current user data from Auth to check if email changed
     const { data: currentAuthUser, error: fetchError } = await supabaseAdmin.auth.admin.getUserById(id);
     if (fetchError) {
        console.error("[UPDATE] Error fetching user to check email:", fetchError);
