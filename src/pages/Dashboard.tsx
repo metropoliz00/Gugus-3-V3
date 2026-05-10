@@ -1306,7 +1306,7 @@ function AdminSettingsForm({ heroForm, setHeroForm, profilForm, setProfilForm, f
                 label="Foto Profil"
                 value={profilForm.image}
                 onChange={base64 => setProfilForm({...profilForm, image: base64})}
-                maxWidth={400}
+                maxWidth={300}
                 maxHeight={400}
               />
             </div>
