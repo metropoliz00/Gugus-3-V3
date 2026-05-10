@@ -88,20 +88,25 @@ export default function App() {
     // Always start the timer for splash screen effect
     const timer = setTimeout(() => {
       setIsAppReady(true);
-    }, 2000);
+    }, 3000);
 
     let authSubscription: any = null;
 
     if (supabase) {
       const fetchUserProfile = async (userId: string) => {
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
-        
-        setUser(profile);
-        setIsInitialAuthLoading(false);
+        try {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+          
+          setUser(profile);
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        } finally {
+          setIsInitialAuthLoading(false);
+        }
       };
 
       supabase.auth.getSession().then(({ data: { session } }) => {
@@ -110,6 +115,9 @@ export default function App() {
         } else {
           setIsInitialAuthLoading(false);
         }
+      }).catch((error) => {
+        console.error('Error getting session:', error);
+        setIsInitialAuthLoading(false);
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -180,7 +188,7 @@ export default function App() {
   return (
     <AlertProvider>
       <AnimatePresence mode="wait">
-        {(!isAppReady || isInitialAuthLoading) && (
+        {!isAppReady && (
           <LoadingScreen key="loader" />
         )}
       </AnimatePresence>
