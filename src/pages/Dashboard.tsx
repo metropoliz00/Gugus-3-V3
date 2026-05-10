@@ -970,9 +970,9 @@ function AdminOverview() {
                 <p className="text-gray-500 text-sm font-medium mb-1">{stat.label}</p>
                 <div className="flex items-baseline gap-2">
                   <h3 className="text-3xl font-heading font-black text-soft-black">{stat.value}</h3>
-                  {stat.detail && (
+                  {(stat as any).detail && (
                     <span className="text-[10px] font-bold text-main-blue bg-blue-50 px-2 py-0.5 rounded-full uppercase tracking-tighter">
-                      {stat.detail}
+                      {(stat as any).detail}
                     </span>
                   )}
                 </div>
@@ -1762,12 +1762,12 @@ function AdminSekolahForm() {
                <button 
                  type="button" 
                  onClick={() => handleDelete(school.id)}
-                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity z-10"
                >
                  <X className="w-4 h-4" />
                </button>
-               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                  <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center p-2 overflow-hidden shrink-0">
+               <div className="flex flex-col sm:flex-row items-start gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center p-2 overflow-hidden shrink-0 mt-2 sm:mt-0">
                     {school.logo_url ? (
                       <img src={school.logo_url} alt="Logo" className="w-full h-full object-contain" />
                     ) : (
@@ -1775,11 +1775,11 @@ function AdminSekolahForm() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0 w-full">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                       <input className="w-full sm:flex-1 border-gray-200 border sm:border-none p-2 sm:p-0 text-base sm:text-lg font-bold text-soft-black focus:ring-0 rounded-lg sm:rounded-none bg-transparent" placeholder="Nama Sekolah..." value={school.name} onChange={e => handleUpdate(school.id, { name: e.target.value })} />
-                       <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2 pr-8 sm:pr-0">
+                       <input className="w-full border border-gray-200 sm:border-none p-2 sm:p-0 text-base sm:text-lg font-bold text-soft-black focus:ring-2 focus:ring-main-blue/20 sm:focus:ring-0 rounded-lg sm:rounded-none bg-white sm:bg-transparent" placeholder="Nama Sekolah..." value={school.name} onChange={e => handleUpdate(school.id, { name: e.target.value })} />
+                       <div className="flex items-center gap-2 mt-1 sm:mt-0 w-full sm:w-auto">
                          <select 
-                           className="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-gray-100 border-none focus:ring-0 cursor-pointer"
+                           className="flex-1 sm:flex-none text-xs font-bold uppercase tracking-wider px-3 py-2 sm:py-1.5 rounded-lg bg-gray-100 border-none focus:ring-2 focus:ring-main-blue/20 cursor-pointer"
                            value={school.jenis_sekolah || 'Sekolah Imbas'}
                            onChange={e => handleUpdate(school.id, { jenis_sekolah: e.target.value })}
                            disabled={savingId === school.id}
@@ -1788,11 +1788,11 @@ function AdminSekolahForm() {
                            <option value="Sekolah Imbas">Sekolah Imbas</option>
                          </select>
                          {savingId === school.id && (
-                           <span className="text-[10px] text-main-blue font-bold animate-pulse">Menyimpan...</span>
+                           <span className="text-[10px] text-main-blue font-bold animate-pulse whitespace-nowrap">Menyimpan...</span>
                          )}
                        </div>
                     </div>
-                    <input className="w-full border-gray-200 border sm:border-none p-2 sm:p-0 text-sm text-gray-500 focus:ring-0 mb-3 rounded-lg sm:rounded-none bg-transparent" placeholder="Nama Kepala Sekolah..." value={school.principal_name || ''} onChange={e => handleUpdate(school.id, { principal_name: e.target.value })} />
+                    <input className="w-full border border-gray-200 sm:border-none p-2 sm:p-0 text-sm text-gray-500 focus:ring-2 focus:ring-main-blue/20 sm:focus:ring-0 mb-4 rounded-lg sm:rounded-none bg-white sm:bg-transparent" placeholder="Nama Kepala Sekolah..." value={school.principal_name || ''} onChange={e => handleUpdate(school.id, { principal_name: e.target.value })} />
                     <ImageUpload 
                       label="Foto Kepala Sekolah"
                       value={school.principal_image_url || ''} 
