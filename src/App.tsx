@@ -80,7 +80,7 @@ export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isInitialAuthLoading, setIsInitialAuthLoading] = useState(true);
-  const [isAppReady, setIsAppReady] = useState(true);
+  const [isAppReady, setIsAppReady] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -187,6 +187,12 @@ export default function App() {
 
   return (
     <AlertProvider>
+      <AnimatePresence mode="wait">
+        {(!isAppReady || isInitialAuthLoading) && (
+          <LoadingScreen key="loader" />
+        )}
+      </AnimatePresence>
+
       <div className="min-h-screen bg-light-gray font-sans text-soft-black selection:bg-main-blue selection:text-white">
         {!isDashboard && <Navbar onLoginClick={() => setIsLoginOpen(true)} user={user} />}
 
