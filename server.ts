@@ -1,13 +1,13 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { createServer as createViteServer } from "vite";
+// import { createServer as createViteServer } from "vite"; // Dynamic import used below
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const app = express();
+export const app = express();
 const PORT = 3000;
 
 app.use(express.json());
@@ -428,6 +428,7 @@ app.delete("/api/finance/records/:id", async (req, res) => {
 
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -446,4 +447,7 @@ async function startServer() {
   });
 }
 
-startServer();
+// Only start the server automatically if we're not in a serverless environment like Vercel
+if (!process.env.VERCEL && (process.env.NODE_ENV !== "production" || process.env.RENDER || process.env.RAILWAY_STATIC_URL)) {
+  startServer();
+}
