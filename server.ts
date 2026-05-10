@@ -275,28 +275,55 @@ app.get("/api/debug/list-users", async (req, res) => {
 
 app.post("/api/admin/update-user", async (req, res) => {
   const { id, username, email, role, nama, nip, kepegawaian, pangkat, jabatan, sekolah, password, foto } = req.body;
+  console.log(`[UPDATE] Starting update for user: ${username} (${id})`);
+  
+  if (!id) {
+    return res.status(400).json({ error: "User ID is required" });
+  }
+
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
-    // Update Auth
+    // 1. Update Auth
     const authUpdates: any = {
-      user_metadata: { role, nama, school: sekolah }
+      user_metadata: { 
+        role, 
+        nama, 
+        school: sekolah,
+        username,
+        nip,
+        kepegawaian,
+        pangkat,
+        jabatan,
+        password_text: password || undefined
+      }
     };
-    if (email) authUpdates.email = email;
+    
+    if (email && email.trim() !== "") {
+      authUpdates.email = email;
+    }
+    
     if (password) {
       authUpdates.password = password;
-      authUpdates.user_metadata.password_text = password;
     }
 
-    const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
-    if (authError) throw authError;
+    console.log(`[UPDATE] Updating Auth for ${id}...`);
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
     
-    // Update Profile
+    if (authError) {
+      console.error("[UPDATE] Auth Error:", authError);
+      return res.status(400).json({ error: `Gagal update Auth: ${authError.message}` });
+    }
+
+    const emailToSave = email || authUser.user?.email || "";
+
+    // 2. Update Profile
+    console.log(`[UPDATE] Updating Profile for ${id}...`);
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
       .update({
         username,
-        email,
+        email: emailToSave,
         role,
         nama,
         nip,
@@ -309,12 +336,19 @@ app.post("/api/admin/update-user", async (req, res) => {
       })
       .eq('id', id);
       
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error("[UPDATE] Profile Error:", profileError);
+      return res.status(400).json({ error: `Gagal update Profile: ${profileError.message}` });
+    }
     
-    res.json({ success: true });
+    console.log(`[UPDATE] Success for user: ${username}`);
+    return res.json({ success: true });
   } catch (err: any) {
-    console.error("Update User Error:", err);
-    res.status(500).json({ error: err.message });
+    console.error("[UPDATE] Fatal Catch:", err);
+    return res.status(500).json({ 
+      error: "Internal Server Error", 
+      message: err?.message || String(err) 
+    });
   }
 });
 

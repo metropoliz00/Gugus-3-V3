@@ -434,13 +434,19 @@ function AdminUserManagement() {
       
       let result;
       const responseText = await response.text();
+      
+      if (!responseText) {
+        throw new Error(`Sistem tidak memberikan respon. Periksa koneksi internet atau coba lagi nanti.`);
+      }
+
       try {
         result = JSON.parse(responseText);
       } catch (e) {
-        throw new Error(`Koneksi ke server gagal atau sedang offline. (Ext: ${responseText.substring(0, 40)})`);
+        console.error("Parse Error Details:", responseText);
+        throw new Error(`Gagal memproses respon server. (Detail: ${responseText.substring(0, 50)}...)`);
       }
 
-      if (!response.ok) throw new Error(result.error || "Gagal memproses user");
+      if (!response.ok) throw new Error(result.error || result.message || "Gagal memproses user");
 
       await alert(editId ? `Akun '${formData.username}' berhasil diperbarui.` : `Sukses! Akun '${formData.username}' berhasil dibuat.`);
       setShowAddForm(false);
