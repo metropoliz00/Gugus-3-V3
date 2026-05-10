@@ -215,7 +215,7 @@ export default function App() {
             <Route path="/layanan/elearning" element={<ELearning />} />
             <Route 
               path="/dashboard/*" 
-              element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />} 
+              element={isInitialAuthLoading ? <></> : (user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />)} 
             />
           </Routes>
         </main>
