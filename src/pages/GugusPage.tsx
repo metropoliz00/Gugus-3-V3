@@ -180,20 +180,22 @@ export default function GugusPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-main-blue to-leaf-green rounded-[2rem] p-1 text-white shadow-xl">
-                  <div className="bg-soft-black/20 backdrop-blur rounded-[1.8rem] p-8 h-full">
-                    <h3 className="text-2xl font-heading font-black mb-8 flex items-center gap-3">
-                      <ChevronRight className="w-6 h-6 text-leaf-green" />
-                      Tujuan Strategis
-                    </h3>
-                    <div className="space-y-6">
-                      {data.tujuan.map((tujuan, idx) => (
-                        <div key={idx} className="flex gap-4 group">
-                          <div className="w-1 h-full bg-leaf-green group-hover:w-2 transition-all" />
-                          <p className="text-lg font-medium text-white/90">{tujuan}</p>
-                        </div>
-                      ))}
+                <div className="bg-white border-2 border-gray-100 rounded-[2rem] p-8 shadow-sm h-full">
+                  <h3 className="text-2xl font-heading font-black text-soft-black mb-8 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-main-blue/10 rounded-xl flex items-center justify-center text-main-blue">
+                      <Target className="w-6 h-6" />
                     </div>
+                    Tujuan Strategis
+                  </h3>
+                  <div className="space-y-4">
+                    {data.tujuan.map((tujuan, idx) => (
+                      <div key={idx} className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200 group">
+                        <div className="w-10 h-10 shrink-0 bg-gray-100 text-gray-500 font-bold rounded-full flex items-center justify-center group-hover:bg-main-blue group-hover:text-white transition-colors">
+                          {idx + 1}
+                        </div>
+                        <p className="text-lg font-medium text-gray-700 leading-relaxed pt-1.5">{tujuan}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
