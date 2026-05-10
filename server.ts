@@ -13,6 +13,12 @@ const PORT = 3000;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Log all requests for debugging
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Lazy initialization for Supabase Admin client
 let _supabaseAdmin: any = null;
 
@@ -158,7 +164,23 @@ app.get("/api/debug/init-admin", async (req, res) => {
 });
 
 // Simplified route for user to create admin/guru easily
-app.post("/api/setup/create-user", async (req, res) => {
+app.all("/api/setup/create-user", async (req, res) => {
+  console.log(`[CREATE] Request Method: ${req.method}, Path: ${req.url}`);
+  
+  if (req.method === 'OPTIONS') {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+    return res.sendStatus(200);
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ 
+      error: "Method Not Allowed", 
+      message: `Endpoint ini hanya mendukung POST. Anda mencoba menggunakan ${req.method}` 
+    });
+  }
+
   const { username, password, role, nama, sekolah, nip, kepegawaian, pangkat, jabatan, foto, email } = req.body;
 
   if (!username || !password || !role) {
@@ -233,7 +255,7 @@ app.post("/api/setup/create-user", async (req, res) => {
     res.json({ 
       message: `User '${username}' berhasil dibuat!`, 
       userId,
-      email,
+      email: emailToUse,
       password // Showing back as requested for verification
     });
   } catch (err: any) {
@@ -273,12 +295,30 @@ app.get("/api/debug/list-users", async (req, res) => {
   }
 });
 
-app.post("/api/admin/update-user", async (req, res) => {
-  console.log("[UPDATE] Request received at /api/admin/update-user");
+app.all("/api/admin/update-user", async (req, res) => {
+  console.log(`[UPDATE] Request Method: ${req.method}, Path: ${req.url}`);
+  
+  // Explicitly handle CORS if needed
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  if (req.method !== 'POST') {
+    console.error(`[UPDATE] Method ${req.method} not allowed on this endpoint`);
+    return res.status(405).json({ 
+      error: "Method Not Allowed", 
+      message: `Endpoint ini hanya mendukung POST. Anda mencoba menggunakan ${req.method}` 
+    });
+  }
+
   const { id, username, email, role, nama, nip, kepegawaian, pangkat, jabatan, sekolah, password, foto } = req.body;
   
   if (!id) {
-    console.error("[UPDATE] Missing user ID");
+    console.error("[UPDATE] Missing user ID in payload:", req.body);
     return res.status(400).json({ error: "User ID is required" });
   }
 

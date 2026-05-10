@@ -423,7 +423,8 @@ function AdminUserManagement() {
     setFormError("");
 
     try {
-      const endpoint = editId ? '/api/admin/update-user' : '/api/setup/create-user';
+      const baseUrl = editId ? '/api/admin/update-user' : '/api/setup/create-user';
+      const endpoint = `${baseUrl}?t=${Date.now()}`;
       const body = editId ? { ...formData, id: editId } : formData;
 
       const response = await fetch(endpoint, {
