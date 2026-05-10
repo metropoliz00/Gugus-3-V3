@@ -1,0 +1,226 @@
+import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence } from 'motion/react';
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import Stats from './components/Stats';
+import Schools from './components/Schools';
+import Prestasi from './components/Prestasi';
+import MediaInformasi from './components/MediaInformasi';
+import DigitalServices from './components/DigitalServices';
+import Gallery from './components/Gallery';
+import Footer from './components/Footer';
+import ScrollTop from './components/ScrollTop';
+import FloatingWA from './components/FloatingWA';
+import LoginModal from './components/LoginModal';
+import AnnouncementPopup from './components/AnnouncementPopup';
+import LoadingScreen from './components/LoadingScreen';
+import Dashboard from './pages/Dashboard';
+import { supabase } from './lib/supabase';
+import { useSiteContent } from './contexts/SiteContext';
+
+import KkgPage from './pages/KkgPage';
+import KkgProgramPage from './pages/KkgProgramPage';
+import KkgAgendaPage from './pages/KkgAgendaPage';
+import GugusPage from './pages/GugusPage';
+import KegiatanPage from './pages/KegiatanPage';
+import AdministrasiOnline from './pages/AdministrasiOnline';
+import AbsensiKegiatan from './pages/AbsensiKegiatan';
+import UploadBerkas from './pages/UploadBerkas';
+import MonitoringPembelajaran from './pages/MonitoringPembelajaran';
+import ELearning from './pages/ELearning';
+import AnggotaGugusPage from './pages/AnggotaGugus';
+import KeuanganPage from './pages/KeuanganPage';
+import { AlertProvider } from './contexts/AlertContext';
+
+function HomePage({ onLoginClick, user }: { onLoginClick: () => void; user?: any }) {
+  const { content } = useSiteContent();
+  return (
+    <>
+      <Hero />
+      <Stats />
+      
+      {/* Sambutan Ketua Gugus (Simple Section Insert) */}
+      <section className="py-24 bg-light-gray" id="profil">
+        <div className="container mx-auto px-6 max-w-9xl">
+          <div className="bg-gradient-to-br from-white/80 to-blue-50/50 backdrop-blur-xl rounded-[3rem] p-8 md:p-16 border border-main-orange/20 flex flex-col md:flex-row items-center gap-12 relative overflow-hidden shadow-2xl shadow-blue-500/5">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-main-blue/5 rounded-full blur-3xl" />
+            <div className="relative w-48 md:w-64 shrink-0 aspect-[4/6] rounded-2xl overflow-hidden border-4 border-white shadow-xl group">
+              <img 
+                src={content.profil.image} 
+                alt={content.profil.name} 
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-90" 
+              />
+            </div>
+            <div className="relative z-10 text-center md:text-left">
+              <h2 className="text-dark-green font-bold tracking-widest text-sm uppercase mb-2">Sambutan Ketua Gugus</h2>
+              <h3 className="text-3xl md:text-4xl font-heading font-extrabold text-soft-black mb-6 whitespace-pre-line">{content.profil.title}</h3>
+              <p className="text-gray-600 text-lg md:text-xl font-light leading-relaxed mb-6 italic">
+                {content.profil.quote}
+              </p>
+              <div>
+                <h4 className="font-bold text-soft-black text-xl">{content.profil.name}</h4>
+                <p className="text-main-blue text-sm font-semibold">{content.profil.role}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <Schools />
+      <Prestasi />
+      <DigitalServices onLoginClick={onLoginClick} user={user} />
+      <MediaInformasi />
+      <Gallery />
+    </>
+  );
+}
+
+export default function App() {
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isInitialAuthLoading, setIsInitialAuthLoading] = useState(true);
+  const [isAppReady, setIsAppReady] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!supabase) {
+      setIsInitialAuthLoading(false);
+      return;
+    }
+
+    const fetchUserProfile = async (userId: string) => {
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      setUser(profile);
+      setIsInitialAuthLoading(false);
+    };
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setIsInitialAuthLoading(false);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      } else {
+        setUser(null);
+        setIsInitialAuthLoading(false);
+      }
+    });
+
+    // Add a minimum loading time for the splash screen effect
+    const timer = setTimeout(() => {
+      setIsAppReady(true);
+    }, 2000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setUser(null);
+  };
+
+  const handleLoginSuccess = (userData: any) => {
+    setUser(userData);
+    setIsLoginOpen(false);
+    navigate('/dashboard');
+  };
+
+  const isDashboard = location.pathname.startsWith('/dashboard');
+
+  useEffect(() => {
+    const titles: { [key: string]: string } = {
+      '/': 'Beranda',
+      '/halaman-utama': 'Beranda',
+      '/kkg': 'KKG',
+      '/kkg/program': 'Program KKG',
+      '/kkg/agenda': 'Agenda KKG',
+      '/anggota-gugus': 'Anggota Gugus',
+      '/profil-gugus': 'Profil Gugus',
+      '/kegiatan': 'Kegiatan',
+      '/keuangan': 'Laporan Keuangan',
+      '/layanan/administrasi': 'Administrasi Online',
+      '/layanan/absensi': 'Absensi Kegiatan',
+      '/layanan/upload': 'Upload Berkas',
+      '/layanan/monitoring': 'Monitoring Pembelajaran',
+      '/layanan/elearning': 'E-Learning',
+      '/dashboard': 'Dashboard Admin',
+    };
+
+    let title = 'Halaman';
+    if (location.pathname.startsWith('/dashboard')) {
+      title = 'Dashboard Admin';
+    } else {
+      title = titles[location.pathname] || 'Website Gugus 3';
+    }
+
+    document.title = `${title} | Gugus 3 Melati`;
+  }, [location]);
+
+  return (
+    <AlertProvider>
+      <AnimatePresence mode="wait">
+        {(!isAppReady || isInitialAuthLoading) && (
+          <LoadingScreen key="loader" />
+        )}
+      </AnimatePresence>
+
+      <div className="min-h-screen bg-light-gray font-sans text-soft-black selection:bg-main-blue selection:text-white">
+        {!isDashboard && <Navbar onLoginClick={() => setIsLoginOpen(true)} user={user} />}
+
+        
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage onLoginClick={() => setIsLoginOpen(true)} user={user} />} />
+            <Route path="/halaman-utama" element={<HomePage onLoginClick={() => setIsLoginOpen(true)} user={user} />} />
+            <Route path="/kkg" element={<KkgPage />} />
+            <Route path="/kkg/program" element={<KkgProgramPage />} />
+            <Route path="/kkg/agenda" element={<KkgAgendaPage />} />
+            <Route path="/anggota-gugus" element={<AnggotaGugusPage />} />
+            <Route path="/profil-gugus" element={<GugusPage />} />
+            <Route path="/kegiatan" element={<KegiatanPage />} />
+            <Route path="/keuangan" element={<KeuanganPage />} />
+            <Route path="/layanan/administrasi" element={<AdministrasiOnline />} />
+            <Route path="/layanan/absensi" element={<AbsensiKegiatan />} />
+            <Route path="/layanan/upload" element={<UploadBerkas />} />
+            <Route path="/layanan/monitoring" element={<MonitoringPembelajaran />} />
+            <Route path="/layanan/elearning" element={<ELearning />} />
+            <Route 
+              path="/dashboard/*" 
+              element={user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />} 
+            />
+          </Routes>
+        </main>
+
+        {!isDashboard && <Footer />}
+        {!isDashboard && <FloatingWA position="left" />}
+        {!isDashboard && <ScrollTop />}
+        
+        <LoginModal 
+          isOpen={isLoginOpen} 
+          onClose={() => setIsLoginOpen(false)} 
+          onLoginSuccess={handleLoginSuccess}
+        />
+        <AnnouncementPopup isReady={isAppReady && !isInitialAuthLoading} />
+      </div>
+    </AlertProvider>
+  );
+}

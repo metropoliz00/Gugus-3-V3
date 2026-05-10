@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Outfit", ui-sans-serif, system-ui, sans-serif;
+
+  --color-leaf-green: #7AC943;
+  --color-dark-green: #1E7A3D;
+  --color-main-blue: #1F8FE5;
+  --color-dark-blue: #1565C0;
+  --color-main-orange: #F47C20;
+  
+  --color-light-gray: #F5F7FA;
+  --color-dark-gray: #2D3748;
+  --color-soft-black: #1A1A1A;
+}
+
+@layer base {
+  body {
+    @apply bg-light-gray text-dark-gray font-sans antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading text-soft-black font-bold tracking-tight;
+  }
+}
