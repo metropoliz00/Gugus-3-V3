@@ -41,7 +41,7 @@ export default function Hero() {
             <motion.div 
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
-              className="relative w-32 h-32 md:w-40 md:h-40 bg-white/60 backdrop-blur-md rounded-full border border-gray-200 p-2 flex items-center justify-center shadow-2xl"
+              className="relative w-32 h-32 md:w-40 md:h-40 bg-white/30 backdrop-blur-md rounded-full border border-gray-200 p-2 flex items-center justify-center shadow-2xl"
             >
               <img src={content.hero.logo} alt="Logo Melati" className="w-full h-full object-contain drop-shadow-sm" />
             </motion.div>

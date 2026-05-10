@@ -39,7 +39,7 @@ export default function LoadingScreen() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="w-32 h-32 md:w-48 md:h-48 relative mb-8"
         >
-          <div className="absolute inset-0 bg-white rounded-full shadow-2xl shadow-main-blue/10 flex items-center justify-center p-4 border-2 border-main-blue/10">
+          <div className="absolute inset-0 bg-white/30 backdrop-blur-sm rounded-full shadow-2xl shadow-main-blue/10 flex items-center justify-center p-4 border-2 border-main-blue/10">
             <img 
               src={content.hero.logo} 
               alt="Logo" 
