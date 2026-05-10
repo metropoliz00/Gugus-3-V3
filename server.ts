@@ -43,9 +43,9 @@ function getSupabaseAdmin() {
     
     if (!url || url === "YOUR_SUPABASE_URL" || url === "" || url.startsWith('eyJ')) {
       url = DEFAULT_URL;
-      console.log(`[CONFIG] Using DEFAULT Supabase URL`);
+      console.log(`[CONFIG] Using DEFAULT Supabase URL: ${url}`);
     } else {
-      console.log(`[CONFIG] Using CUSTOM Supabase URL: ${url.substring(0, 15)}...`);
+      console.log(`[CONFIG] Using CUSTOM Supabase URL: ${url.substring(0, 20)}...`);
     }
 
     if (!key || key === "YOUR_SUPABASE_SERVICE_ROLE_KEY" || key === "" || key.length < 50) {
@@ -61,6 +61,10 @@ function getSupabaseAdmin() {
 }
 
 const apiRouter = express.Router();
+
+apiRouter.get("/health", (req, res) => {
+  res.json({ status: "ok", message: "API is running" });
+});
 
 apiRouter.get("/ping", (req, res) => {
   res.json({ message: "pong", time: new Date().toISOString() });
@@ -412,12 +416,12 @@ apiRouter.delete("/finance/records/:id", async (req, res) => {
   }
 });
 
-// Custom 404 for API
 apiRouter.use((req, res) => {
   console.log(`[API 404] ${req.method} ${req.url}`);
   res.status(404).json({ error: "API route not found", path: req.originalUrl });
 });
 
+// Mount API router FIRST
 app.use("/api", apiRouter);
 
 function p_get_username(authUser: any, profile: any) {

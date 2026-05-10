@@ -780,16 +780,26 @@ function AdminUserManagement() {
     setIsDiagnosticRunning(true);
     setDiagnosticResult(null);
     try {
+      console.log("Running diagnostics...");
+      const healthResp = await fetch(`/api/health?t=${Date.now()}`).catch(e => ({ ok: false, statusText: e.message }));
+      
       const response = await fetch(`/api/debug/list-users?diagnostic=true&t=${Date.now()}`);
       const contentType = response.headers.get("content-type");
+      
+      let data: any;
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text();
-        setDiagnosticResult({ error: `Not JSON: ${text.substring(0, 100)}` });
-        return;
+        data = { error: `Not JSON (${contentType}): ${text.substring(0, 100)}` };
+      } else {
+        data = await response.json();
       }
-      const data = await response.json();
-      setDiagnosticResult(data);
+
+      setDiagnosticResult({
+        ...data,
+        apiHealth: healthResp.ok ? "OK" : `FAILED: ${healthResp.statusText}`
+      });
     } catch (err: any) {
+      console.error("Diagnostic error:", err);
       setDiagnosticResult({ error: err.message });
     } finally {
       setIsDiagnosticRunning(false);
@@ -1401,6 +1411,7 @@ function AdminUserManagement() {
                                 Diagnostic DB Status:
                               </h4>
                               <div className="text-[11px] font-mono text-orange-700/80 space-y-1 bg-white/50 p-3 rounded-xl">
+                                <p>API Connectivity: {diagnosticResult.apiHealth ?? '?'}</p>
                                 <p>Total Users: {diagnosticResult.count ?? '?'}</p>
                                 <p>Auth Records: {diagnosticResult.authCount ?? '?'}</p>
                                 <p>Profile Records: {diagnosticResult.profileCount ?? '?'}</p>
