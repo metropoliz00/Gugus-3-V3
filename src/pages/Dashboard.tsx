@@ -821,7 +821,7 @@ function AdminUserManagement() {
                        {userList.map((usr, i) => (
                          <tr key={usr.id} className="hover:bg-gray-50/50 transition-colors">
                             <td className="px-6 py-4">
-                               <img src={usr.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(usr.nama || usr.username || 'U')}&background=random`} className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100" />
+                               <img src={usr.foto || usr.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(usr.nama || usr.username || 'U')}&background=random`} className="w-10 h-10 rounded-full object-cover shadow-sm border border-gray-100" />
                             </td>
                             <td className="px-6 py-4">
                                <div className="font-bold text-soft-black text-sm">{usr.nama || '-'}</div>

@@ -28,7 +28,7 @@ export default function AnggotaGugusPage() {
 
   return (
     <div className="min-h-screen bg-light-gray py-24">
-      <div className="container mx-auto px-6 max-w-7xl">
+      <div className="container mx-auto px-6 max-w-full">
         <div className="mb-12 text-center">
             <h1 className="text-4xl font-heading font-extrabold text-soft-black mb-4">Anggota Gugus</h1>
             <p className="text-gray-600">Daftar tenaga pendidik profesional anggota Gugus 3 Melati.</p>
@@ -58,7 +58,7 @@ export default function AnggotaGugusPage() {
                     <td className="p-6">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-main-blue to-leaf-green p-0.5">
                             <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-white">
-                                <img src={g.foto || `https://i.pravatar.cc/150?u=${g.id}`} alt={g.nama} className="w-full h-full object-cover" />
+                                <img src={g.foto || g.avatar_url || `https://i.pravatar.cc/150?u=${g.id}`} alt={g.nama} className="w-full h-full object-cover" />
                             </div>
                         </div>
                     </td>
