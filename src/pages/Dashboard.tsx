@@ -1766,7 +1766,7 @@ function AdminSekolahForm() {
                >
                  <X className="w-4 h-4" />
                </button>
-                <div className="flex items-center gap-4">
+               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center p-2 overflow-hidden shrink-0">
                     {school.logo_url ? (
                       <img src={school.logo_url} alt="Logo" className="w-full h-full object-contain" />
@@ -1774,23 +1774,25 @@ function AdminSekolahForm() {
                       <BookOpen className="w-6 h-6 text-gray-300" />
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                       <input className="flex-1 border-none p-0 text-lg font-bold text-soft-black focus:ring-0" placeholder="Nama Sekolah..." value={school.name} onChange={e => handleUpdate(school.id, { name: e.target.value })} />
-                       <select 
-                         className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded bg-gray-100 border-none focus:ring-0 cursor-pointer"
-                         value={school.jenis_sekolah || 'Sekolah Imbas'}
-                         onChange={e => handleUpdate(school.id, { jenis_sekolah: e.target.value })}
-                         disabled={savingId === school.id}
-                       >
-                         <option value="Sekolah Inti">Sekolah Inti</option>
-                         <option value="Sekolah Imbas">Sekolah Imbas</option>
-                       </select>
-                       {savingId === school.id && (
-                         <span className="text-[9px] text-main-blue font-bold animate-pulse">Menyimpan...</span>
-                       )}
+                  <div className="flex-1 min-w-0 w-full">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                       <input className="w-full sm:flex-1 border-gray-200 border sm:border-none p-2 sm:p-0 text-base sm:text-lg font-bold text-soft-black focus:ring-0 rounded-lg sm:rounded-none bg-transparent" placeholder="Nama Sekolah..." value={school.name} onChange={e => handleUpdate(school.id, { name: e.target.value })} />
+                       <div className="flex items-center gap-2">
+                         <select 
+                           className="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg bg-gray-100 border-none focus:ring-0 cursor-pointer"
+                           value={school.jenis_sekolah || 'Sekolah Imbas'}
+                           onChange={e => handleUpdate(school.id, { jenis_sekolah: e.target.value })}
+                           disabled={savingId === school.id}
+                         >
+                           <option value="Sekolah Inti">Sekolah Inti</option>
+                           <option value="Sekolah Imbas">Sekolah Imbas</option>
+                         </select>
+                         {savingId === school.id && (
+                           <span className="text-[10px] text-main-blue font-bold animate-pulse">Menyimpan...</span>
+                         )}
+                       </div>
                     </div>
-                    <input className="w-full border-none p-0 text-sm text-gray-500 focus:ring-0 mb-3" placeholder="Nama Kepala Sekolah..." value={school.principal_name || ''} onChange={e => handleUpdate(school.id, { principal_name: e.target.value })} />
+                    <input className="w-full border-gray-200 border sm:border-none p-2 sm:p-0 text-sm text-gray-500 focus:ring-0 mb-3 rounded-lg sm:rounded-none bg-transparent" placeholder="Nama Kepala Sekolah..." value={school.principal_name || ''} onChange={e => handleUpdate(school.id, { principal_name: e.target.value })} />
                     <ImageUpload 
                       label="Foto Kepala Sekolah"
                       value={school.principal_image_url || ''} 
