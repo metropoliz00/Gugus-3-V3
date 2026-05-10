@@ -92,7 +92,7 @@ export default function Schools() {
                    <div className="absolute inset-0 bg-gradient-to-t from-dark-gray/90 via-dark-gray/20 to-transparent" />
                    
                    {/* School Logo (Top Right) */}
-                   <div className="absolute top-4 right-4 w-12 h-12 bg-white/30 backdrop-blur-sm rounded-xl p-2 shadow-lg border border-white/50 z-10">
+                   <div className="absolute top-4 right-4 w-12 h-12 bg-white/70 backdrop-blur-sm rounded-xl p-2 shadow-lg border border-white/50 z-10">
                      <img 
                        src={school.logo_url || 'https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png'} 
                        alt="Logo" 
@@ -191,7 +191,7 @@ export default function Schools() {
                 <div className="absolute inset-0 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none" />
                 
                 {/* Detail Modal Logo */}
-                <div className="absolute top-4 left-6 w-16 h-16 bg-white/30 backdrop-blur-md rounded-2xl p-3 shadow-2xl border border-white/50 z-10 hidden sm:block">
+                <div className="absolute top-4 left-6 w-16 h-16 bg-white/70 backdrop-blur-md rounded-2xl p-3 shadow-2xl border border-white/50 z-10 hidden sm:block">
                   <img 
                     src={selectedSchool.logo_url || 'https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png'} 
                     alt="Logo" 

@@ -73,7 +73,7 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
               <motion.div 
                 whileHover={{ scale: 1.1 }}
                 transition={{ duration: 0.2 }}
-                className="w-10 h-10 rounded-full bg-white/30 border-2 border-main-blue flex items-center justify-center p-1.5 shadow-sm overflow-hidden backdrop-blur-sm"
+                className="w-10 h-10 rounded-full bg-white border-2 border-main-blue flex items-center justify-center p-1.5 shadow-sm overflow-hidden"
               >
                 <img src={content.hero.logo} alt="Logo Melati" className="w-full h-full object-contain" />
               </motion.div>

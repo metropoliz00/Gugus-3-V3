@@ -10,7 +10,6 @@ interface ImageUploadProps {
   quality?: number;
   className?: string;
   compact?: boolean;
-  aspect34?: boolean;
 }
 
 export default function ImageUpload({ 
@@ -21,9 +20,8 @@ export default function ImageUpload({
   maxHeight = 800,
   quality = 0.8,
   className = "",
-  compact = false,
-  aspect34 = false
-}: ImageUploadProps & { aspect34?: boolean }) {
+  compact = false
+}: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -142,15 +140,9 @@ export default function ImageUpload({
              </div>
           ) : (
             <div className="flex gap-4 items-center">
-              <div
-                className={`${aspect34 ? "w-20 h-[106.6px]" : "w-16 h-16"} rounded-xl overflow-hidden shadow-sm shrink-0 bg-white p-1`}
-              >
-                <img
-                  src={value}
-                  className="w-full h-full object-cover rounded-lg"
-                  alt="Upload preview"
-                />
-              </div>
+               <div className="w-16 h-16 rounded-xl overflow-hidden shadow-sm shrink-0 bg-white p-1">
+                 <img src={value} className="w-full h-full object-cover rounded-lg" alt="Upload preview" />
+               </div>
                <div className="flex-1">
                  <p className="text-sm font-semibold text-gray-700 mb-1">Gambar terpilih</p>
                  <p className="text-xs text-gray-500">Klik atau drag untuk mengganti (akan diperkecil otomatis).</p>

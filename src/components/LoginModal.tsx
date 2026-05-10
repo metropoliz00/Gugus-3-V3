@@ -31,25 +31,16 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: { isOpen
 
       // If 'username' doesn't look like an email, try fetching it from user_profiles
       if (!trimmedUsername.includes('@')) {
-        console.log("Looking up email for username:", trimmedUsername);
         const { data: profile, error: findError } = await supabase
           .from('user_profiles')
-          .select('email, id')
+          .select('email')
           .eq('username', trimmedUsername)
           .single();
         
         if (findError || !profile) {
-          console.error("Username lookup failed:", findError);
-          throw new Error("Username tidak ditemukan di database.");
+          throw new Error("Username tidak ditemukan.");
         }
-        
-        if (!profile.email) {
-          console.error("Profile found but email is empty for user:", trimmedUsername);
-          throw new Error("Akun ini tidak memiliki email yang terdaftar. Hubungi admin.");
-        }
-        
         loginEmail = profile.email;
-        console.log("Found email for login:", loginEmail);
       }
 
       const { data, error: supaError } = await supabase.auth.signInWithPassword({

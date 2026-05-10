@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS public.posts (
     content TEXT NOT NULL,
     featured_image_url TEXT,
     category post_category DEFAULT 'berita' NOT NULL,
-    author_id UUID REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    author_id UUID REFERENCES public.user_profiles(id),
     is_published BOOLEAN DEFAULT true,
     published_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -290,7 +290,7 @@ CREATE TABLE IF NOT EXISTS public.documents (
     description TEXT,
     file_url TEXT NOT NULL,
     file_type VARCHAR(50),
-    uploaded_by UUID REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    uploaded_by UUID REFERENCES public.user_profiles(id),
     is_public BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -371,18 +371,5 @@ DO $$ BEGIN
   -- Allow public read of user profiles for username lookup (essential for username login)
   DROP POLICY IF EXISTS "Allow public read for username lookup" ON public.user_profiles;
   CREATE POLICY "Allow public read for username lookup" ON public.user_profiles FOR SELECT USING (true);
-
-  -- Allow authenticated users to update their own profile
-  DROP POLICY IF EXISTS "Users can update own profile" ON public.user_profiles;
-  CREATE POLICY "Users can update own profile" ON public.user_profiles FOR UPDATE TO authenticated USING (auth.uid() = id);
-
-  -- Allow admins to manage all user profiles
-  DROP POLICY IF EXISTS "Admins can manage all profiles" ON public.user_profiles;
-  CREATE POLICY "Admins can manage all profiles" ON public.user_profiles FOR ALL TO authenticated USING (
-    EXISTS (
-      SELECT 1 FROM public.user_profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
 END $$;
 
