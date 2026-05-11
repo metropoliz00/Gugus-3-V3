@@ -204,8 +204,11 @@ export default function GugusPage() {
             {activeTab === 'struktur' && (
               <div className="space-y-12">
                 <div className="text-center">
-                   <h2 className="text-3xl font-heading font-black text-soft-black mb-4">Struktur Organisasi</h2>
-                   <p className="text-gray-500">Periode kepengurusan Gugus 3 Melati Kecamatan Jenu</p>
+                   <h2 className="text-3xl font-heading font-black text-soft-black mb-2">Struktur Organisasi</h2>
+                   {content.profil.periodeKepengurusan && (
+                     <p className="text-main-blue font-bold mb-4 uppercase tracking-widest text-sm text-center">Periode {content.profil.periodeKepengurusan}</p>
+                   )}
+                   <p className="text-gray-500">Susunan pengurus Gugus 3 Melati Kecamatan Jenu</p>
                 </div>
                 
                 <div className="bg-white/50 rounded-3xl p-6 border border-gray-100 overflow-x-auto min-h-[400px]">

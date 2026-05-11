@@ -257,7 +257,10 @@ export default function KkgPage() {
       <section className="container mx-auto px-6 max-w-7xl mb-24">
         <div className="text-center mb-16">
           <div className="inline-block px-4 py-1 bg-main-blue/5 text-main-blue rounded-full text-xs font-bold uppercase tracking-widest mb-4">Penggerak Gugus</div>
-          <h2 className="text-4xl font-heading font-extrabold text-soft-black mb-4">Struktur Organisasi</h2>
+          <h2 className="text-4xl font-heading font-extrabold text-soft-black mb-2">Struktur Organisasi</h2>
+          {content.profil.periodeKepengurusan && (
+            <p className="text-main-blue font-bold mb-4 uppercase tracking-[0.2em] text-sm">Periode {content.profil.periodeKepengurusan}</p>
+          )}
           <p className="text-gray-500 max-w-2xl mx-auto">Sinergi antara para profesional di lingkungan Gugus 3 Melati Kecamatan Jenu untuk mewujudkan visi bersama.</p>
         </div>
         <OrgChart members={struktur} />
