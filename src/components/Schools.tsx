@@ -40,9 +40,9 @@ export default function Schools() {
             viewport={{ once: true }}
           >
             <h2 className="text-dark-green font-bold tracking-widest text-sm uppercase mb-3">Jaringan Pendidikan</h2>
-            <h3 className="text-3xl md:text-5xl font-heading font-extrabold text-main-blue mb-6">
-              Profil Sekolah <br />
-              Gugus 3 Melati Kecamatan Jenu
+            <h3 className="text-3xl md:text-5xl font-heading font-extrabold mb-6">
+              <span className="text-main-blue">Profil Sekolah</span> <br />
+              <span className="text-main-orange">Gugus 3 Melati Kecamatan Jenu</span>
             </h3>
             <p className="text-gray-500 text-lg">Membangun harmoni dalam keberagaman melalui kolaborasi Sekolah Inti dan Sekolah Imbas untuk mencetak generasi unggul.</p>
           </motion.div>
