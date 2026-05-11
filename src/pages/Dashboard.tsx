@@ -3037,7 +3037,6 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
                       id="kkg_announcement_active"
                       checked={!!form.pengumuman?.isActive}
                       onChange={e => {
-                        console.log("Toggle clicked, new value:", e.target.checked);
                         const isActive = e.target.checked;
                         
                         setKkgForm((prev: any) => {
@@ -3049,8 +3048,14 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
                           if (updateContent) {
                             setIsSavingToggle(true);
                             updateContent({ kkg: updated })
-                              .then(() => console.log("Pengumuman KKG updated to:", isActive))
-                              .catch(err => console.error("Gagal menyimpan:", err))
+                              .then(() => {
+                                  alert(isActive ? "Pengumuman KKG diaktifkan!" : "Pengumuman KKG dinonaktifkan!");
+                                  console.log("Pengumuman KKG updated to:", isActive);
+                              })
+                              .catch(err => {
+                                  alert("Gagal menyimpan pengaturan!");
+                                  console.error("Gagal menyimpan:", err);
+                              })
                               .finally(() => setTimeout(() => setIsSavingToggle(false), 1000));
                           }
                           return updated;
