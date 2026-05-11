@@ -359,16 +359,18 @@ export default function KkgPage() {
 
           {/* Side Dashboard Metrics / Interactions */}
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-leaf-green to-dark-green rounded-3xl p-6 text-white shadow-xl shadow-leaf-green/20">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold font-heading">Pengumuman Khusus</h3>
-                <Bell className="w-5 h-5 opacity-80" />
+            {kkg.pengumuman?.isActive && (
+              <div className="bg-gradient-to-br from-leaf-green to-dark-green rounded-3xl p-6 text-white shadow-xl shadow-leaf-green/20">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold font-heading">{kkg.pengumuman.title}</h3>
+                  <Bell className="w-5 h-5 opacity-80" />
+                </div>
+                <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-main-orange/20">
+                  <span className="text-xs font-semibold text-green-200 block mb-1">Penting</span>
+                  <p className="text-sm leading-snug">{kkg.pengumuman.desc}</p>
+                </div>
               </div>
-              <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm border border-main-orange/20">
-                <span className="text-xs font-semibold text-green-200 block mb-1">Penting • Hari ini</span>
-                <p className="text-sm leading-snug">Jadwal pleno KKG bulan ini dimajukan menjadi hari Jumat, 20 Oktober di SDN Jenu 1.</p>
-              </div>
-            </div>
+            )}
 
             <div className="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
               <h3 className="font-bold justify-between flex items-center mb-6">
