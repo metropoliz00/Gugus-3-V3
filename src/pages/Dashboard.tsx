@@ -109,6 +109,16 @@ const adminMenuGroups = [
   }
 ];
 
+// Helper for notifications
+const getNotificationIcon = (name: string) => {
+  switch(name) {
+    case 'Megaphone': return Megaphone;
+    case 'Calendar': return Calendar;
+    case 'MessageSquare': return MessageSquare;
+    default: return Bell;
+  }
+};
+
 export default function Dashboard({ user: initialUser, onLogout }: { user: User; onLogout: () => void }) {
   const [user, setUser] = useState(initialUser);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -126,6 +136,73 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
       [title]: !prev[title]
     }));
   };
+
+  const [isNotificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const notificationRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setNotificationsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    async function fetchNotifications() {
+      if (!supabase) return;
+      try {
+        // Fetch last 5 of various items
+        const [postsRes, eventsRes, forumRes] = await Promise.all([
+          supabase.from('posts').select('*').order('created_at', { ascending: false }).limit(5),
+          supabase.from('events').select('*').order('created_at', { ascending: false }).limit(5),
+          supabase.from('forum_posts').select('*').order('created_at', { ascending: false }).limit(5)
+        ]);
+
+        const combined = [
+          ...(postsRes.data || []).map(p => ({
+             id: p.id,
+             type: 'post',
+             title: p.category === 'berita' ? 'Berita Baru' : 'Pengumuman Baru',
+             message: p.title,
+             time: new Date(p.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+             iconName: p.category === 'berita' ? 'Megaphone' : 'Bell',
+             link: `/dashboard/${p.category === 'berita' ? 'berita' : 'pengumuman'}`,
+             raw_date: p.created_at
+          })),
+          ...(eventsRes.data || []).map(e => ({
+             id: e.id,
+             type: 'event',
+             title: 'Agenda Baru',
+             message: e.title,
+             time: new Date(e.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+             iconName: 'Calendar',
+             link: '/dashboard/agenda',
+             raw_date: e.created_at
+          })),
+           ...(forumRes.data || []).map(f => ({
+             id: f.id,
+             type: 'forum',
+             title: 'Topik Forum Baru',
+             message: f.title,
+             time: new Date(f.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+             iconName: 'MessageSquare',
+             link: '/dashboard/forum',
+             raw_date: f.created_at
+          }))
+        ];
+
+        setNotifications(combined.sort((a, b) => new Date(b.raw_date).getTime() - new Date(a.raw_date).getTime()).slice(0, 8));
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    }
+    fetchNotifications();
+  }, []);
+
   const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -357,9 +434,81 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
           </div>
           
           <div className="flex items-center gap-4 md:gap-6">
-            <div className="relative group">
-              <Bell className="w-6 h-6 text-gray-400 group-hover:text-main-blue cursor-pointer transition-colors" />
-              <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+            <div className="relative" ref={notificationRef}>
+              <button 
+                onClick={() => setNotificationsOpen(!isNotificationsOpen)}
+                className="relative p-2 text-gray-400 hover:text-main-blue hover:bg-main-blue/5 rounded-xl transition-all"
+              >
+                <Bell className="w-6 h-6" />
+                {notifications.length > 0 && (
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {isNotificationsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-2 w-80 md:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                  >
+                    <div className="p-4 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
+                      <h3 className="font-bold text-soft-black">Notifikasi Terbaru</h3>
+                      <span className="text-[10px] bg-main-blue text-white px-2 py-0.5 rounded-full font-bold">
+                        {notifications.length} Info
+                      </span>
+                    </div>
+                    
+                    <div className="max-h-[400px] overflow-y-auto modern-scrollbar">
+                      {notifications.length > 0 ? (
+                        notifications.map((notif) => {
+                          const Icon = getNotificationIcon(notif.iconName);
+                          return (
+                            <button
+                              key={notif.id}
+                              onClick={() => {
+                                navigate(notif.link);
+                                setNotificationsOpen(false);
+                              }}
+                              className="w-full p-4 flex gap-4 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 text-left group"
+                            >
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                notif.type === 'post' ? 'bg-blue-50 text-blue-600' :
+                                notif.type === 'event' ? 'bg-orange-50 text-orange-600' :
+                                'bg-green-50 text-green-600'
+                              }`}>
+                                <Icon className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-gray-400 mb-0.5 uppercase tracking-wider">{notif.title}</p>
+                                <p className="text-sm text-soft-black font-medium line-clamp-2 group-hover:text-main-blue transition-colors">{notif.message}</p>
+                                <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1 font-medium">
+                                  <Activity className="w-3 h-3" /> {notif.time}
+                                </p>
+                              </div>
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="p-10 text-center">
+                          <Bell className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                          <p className="text-gray-500 text-sm">Tidak ada notifikasi baru</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {notifications.length > 0 && (
+                      <button 
+                        onClick={() => navigate('/dashboard/pengumuman')}
+                        className="w-full p-3 text-center text-xs font-bold text-main-blue hover:bg-main-blue/5 transition-colors border-t border-gray-50"
+                      >
+                        Lihat Semua Pengumuman
+                      </button>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             
             <div className="flex items-center gap-3 pl-4 md:pl-6 border-l border-gray-200">
