@@ -1142,6 +1142,28 @@ function AdminUserManagement() {
   );
 }
 
+function VisitorCounter() {
+  const [count, setCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function fetchCount() {
+       const { count } = await supabase.from('activity_logs').select('*', { count: 'exact', head: true });
+       setCount(count);
+    }
+    fetchCount();
+  }, []);
+
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-main-orange/20 shadow-lg mt-8 flex items-center gap-4">
+      <Globe className="w-8 h-8 text-main-blue" />
+      <div>
+        <h4 className="font-bold text-gray-700">Total Pengunjung Website</h4>
+        <p className="text-2xl font-black text-main-blue">{count ?? '...'}</p>
+      </div>
+    </div>
+  );
+}
+
 function AdminOverview() {
   const { content } = useSiteContent();
   const [dbStats, setDbStats] = useState({
@@ -1261,6 +1283,7 @@ function AdminOverview() {
 
   return (
     <div className="space-y-8">
+      <VisitorCounter />
       <motion.div 
         whileHover={{ scale: 1.02 }}
         transition={{ duration: 0.3 }}
@@ -1409,6 +1432,7 @@ function GuruOverview({ user }: { user: any }) {
 
   return (
     <div className="space-y-8">
+      <VisitorCounter />
       {/* Welcome Banner */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
