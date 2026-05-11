@@ -3036,20 +3036,24 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
                       type="checkbox" 
                       id="kkg_announcement_active"
                       checked={form.pengumuman?.isActive}
-                      onChange={async e => {
-                        const val = e.target.checked;
-                        const updatedKkg = { 
-                          ...form, 
-                          pengumuman: { ...(form.pengumuman || {}), isActive: val } 
-                        };
-                        setKkgForm(updatedKkg);
+                      onChange={e => {
+                        const isActive = e.target.checked;
                         
-                        // Immediate save for the toggle as requested
-                        if (updateContent) {
-                          setIsSavingToggle(true);
-                          await updateContent({ kkg: updatedKkg });
-                          setTimeout(() => setIsSavingToggle(false), 1000);
-                        }
+                        setKkgForm((prev: any) => {
+                          const updated = { 
+                            ...prev, 
+                            pengumuman: { ...(prev.pengumuman || {}), isActive } 
+                          };
+                          
+                          if (updateContent) {
+                            setIsSavingToggle(true);
+                            updateContent({ kkg: updated })
+                              .then(() => console.log("Pengumuman KKG updated to:", isActive))
+                              .catch(err => console.error("Gagal menyimpan:", err))
+                              .finally(() => setTimeout(() => setIsSavingToggle(false), 1000));
+                          }
+                          return updated;
+                        });
                       }}
                       className="sr-only peer"
                       disabled={isSavingToggle}
