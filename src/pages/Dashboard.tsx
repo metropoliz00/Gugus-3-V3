@@ -1124,6 +1124,7 @@ function GuruOverview({ user }: { user: any }) {
             </button>
           </div>
         </div>
+      </div>
       </motion.div>
 
       {/* Quick Menu */}
