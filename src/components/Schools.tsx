@@ -256,17 +256,29 @@ export default function Schools() {
                         </div>
                         <div className="w-full h-48 rounded-xl overflow-hidden border border-gray-200 bg-white flex items-center justify-center">
                           {selectedSchool.map_embed_url ? (
-                             <iframe 
-                               src={selectedSchool.map_embed_url} 
-                               width="100%" 
-                               height="100%" 
-                               style={{ border: 0 }} 
-                               allowFullScreen 
-                               loading="lazy" 
-                               referrerPolicy="no-referrer-when-downgrade"
-                               title={`Peta lokasi ${selectedSchool.name}`}
-                             />
-                          ) : (
+                             <>
+                               <iframe 
+                                 src={selectedSchool.map_embed_url} 
+                                 width="100%" 
+                                 height="100%" 
+                                 style={{ border: 0 }} 
+                                 allowFullScreen 
+                                 loading="lazy" 
+                                 referrerPolicy="no-referrer-when-downgrade"
+                                 title={`Peta lokasi ${selectedSchool.name}`}
+                               />
+                               <div className="absolute top-4 right-4 flex gap-2">
+                                 <a 
+                                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedSchool.name)}`}
+                                   target="_blank"
+                                   rel="noreferrer"
+                                   className="bg-white/90 backdrop-blur-md hover:bg-main-blue hover:text-white transition-all p-2 rounded-xl shadow-lg border border-white/50 text-gray-700 flex items-center gap-2 text-xs font-bold"
+                                 >
+                                   <Navigation className="w-4 h-4" /> Buka Maps
+                                 </a>
+                               </div>
+                             </>
+                           ) : (
                              <span className="text-gray-400 text-sm">Peta tidak tersedia</span>
                           )}
                         </div>

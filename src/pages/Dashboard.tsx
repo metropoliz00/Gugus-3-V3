@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'; // Updated
 import { 
   LogOut, LayoutDashboard, FileText, Settings, Users, BookOpen, 
-  Map, Image as ImageIcon, Briefcase, FileVideo, Video, MessageSquare, MessageCircle, Download,
+  Map, Navigation, Image as ImageIcon, Briefcase, FileVideo, Video, MessageSquare, MessageCircle, Download,
   Calendar, CheckSquare, Search, Menu, X, PlusCircle, PenTool, Trophy, Award,
   UploadCloud, Activity, Bell, Shield, ChevronRight, BarChart3, GraduationCap, Play, Megaphone,
   Wallet, Trash2, Globe, ArrowLeft, Send
@@ -84,7 +84,7 @@ const guruMenu = [
   { id: 'forum', label: 'Forum Diskusi', icon: MessageSquare },
   { id: 'sharing', label: 'Sharing Praktik Baik', icon: Play },
   { id: 'upload_karya', label: 'Upload Hasil Karya', icon: UploadCloud },
-  { id: 'pengaturan', label: 'Pengaturan Akun', icon: Settings },
+  { id: 'pengaturan_akun', label: 'Pengaturan Akun', icon: Settings },
 ];
 
 export default function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
@@ -147,7 +147,13 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
     });
   };
 
-  const menuItems = user.role?.toLowerCase() === 'admin' ? adminMenu : guruMenu;
+  const isAdmin = user.role?.toLowerCase() === 'admin';
+  const menuItems = isAdmin 
+    ? adminMenu 
+    : guruMenu.filter(item => {
+        if (isLoading || !content.activeMenus || Object.keys(content.activeMenus).length === 0) return true;
+        return !!content.activeMenus[item.id];
+      });
   
   // Get active tab from path
   const currentPath = location.pathname.split('/').pop() || 'overview';
@@ -308,8 +314,8 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
                         <Route path="guru" element={<AdminGuruForm />} />
                         <Route path="finance" element={<AdminFinanceManagement />} />
                         <Route path="materi" element={<DataManagementTable table="kkg_materials" title="Materi KKG" icon={BookOpen} fields={[{name:'title', label:'Judul'}, {name:'description', label:'Deskripsi'}, {name:'category', label:'Kategori'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
-                        <Route path="notulen" element={<DataManagementTable table="meeting_minutes" title="Notulen Rapat" icon={FileText} fields={[{name:'title', label:'Judul'}, {name:'date', label:'Tanggal', type:'date'}, {name:'content', label:'Isi Notulen', type:'textarea'}, {name:'file_url', label:'URL Lampiran', type:'file'}]} />} />
-                        <Route path="pelatihan" element={<DataManagementTable table="trainings" title="Pelatihan" icon={GraduationCap} fields={[{name:'title', label:'Nama Pelatihan'}, {name:'description', label:'Deskripsi'}, {name:'location', label:'Lokasi'}, {name:'date_start', label:'Mulai', type:'date'}, {name:'status', label:'Status', type:'select', options:['planned', 'ongoing', 'completed']}]} />} />
+                        <Route path="notulen" element={<DataManagementTable table="meeting_minutes" title="Notulen Rapat" icon={FileText} fields={[{name:'title', label:'Judul Notulen'}, {name:'date', label:'Tanggal Rapat', type:'date'}, {name:'content', label:'Konten / Isi Notulen', type:'textarea'}, {name:'file_url', label:'Lampiran (Opsional)', type:'file'}]} />} />
+                        <Route path="pelatihan" element={<DataManagementTable table="trainings" title="Sistem Manajemen Pelatihan" icon={GraduationCap} fields={[{name:'title', label:'Judul Pelatihan'}, {name:'description', label:'Deskripsi Lengkap', type:'textarea'}, {name:'location', label:'Lokasi / Link Pelatihan'}, {name:'date_start', label:'Tanggal Pelaksanaan', type:'date'}, {name:'status', label:'Status Publikasi', type:'select', options:['planned', 'ongoing', 'completed']}]} />} />
                         <Route path="sertifikat" element={<DataManagementTable table="training_certificates" title="Sertifikat" icon={Award} fields={[{name:'user_id', label:'User ID'}, {name:'training_id', label:'Training ID'}, {name:'certificate_url', label:'URL Sertifikat', type:'file'}]} />} />
                         <Route path="forum" element={<DataManagementTable table="forum_posts" title="Forum Diskusi" icon={MessageSquare} fields={[{name:'title', label:'Judul'}, {name:'content', label:'Konten', type:'textarea'}, {name:'category', label:'Kategori'}]} />} />
                         <Route path="komentar" element={<DataManagementTable table="forum_comments" title="Komentar Forum" icon={MessageSquare} fields={[{name:'post_id', label:'Post ID'}, {name:'content', label:'Konten', type:'textarea'}, {name:'user_id', label:'User ID'}]} />} />
@@ -323,16 +329,16 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
                    {user.role?.toLowerCase() === 'guru' && (
                      <>
                        <Route path="profil" element={<UserProfileEdit user={user} />} />
-                       <Route path="jadwal" element={<AdminAgendaForm readOnly={true} />} />
+                       <Route path="jadwal" element={<TeacherJadwalCards />} />
                        <Route path="materi" element={<DataViewList table="kkg_materials" title="Materi KKG" icon={BookOpen} />} />
                        <Route path="notulen" element={<DataViewList table="meeting_minutes" title="Notulen Rapat" icon={FileText} />} />
-                       <Route path="pelatihan" element={<DataViewList table="trainings" title="Pelatihan" icon={GraduationCap} />} />
+                       <Route path="pelatihan" element={<TeacherTrainingCards />} />
                        <Route path="absensi" element={<TeacherAttendance />} />
                        <Route path="sertifikat" element={<DataViewList table="training_certificates" title="Sertifikat Saya" icon={Award} filterColumn="user_id" filterValue={user.id} />} />
                        <Route path="forum" element={<ForumSystem user={user} />} />
                        <Route path="sharing" element={<DataViewList table="best_practices" title="Sharing Praktik Baik" icon={Play} />} />
                        <Route path="upload_karya" element={<DataManagementTable table="teacher_works" title="Upload Hasil Karya" icon={UploadCloud} fields={[{name:'title', label:'Judul Karya'}, {name:'description', label:'Deskripsi'}, {name:'work_type', label:'Jenis Karya'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
-                       <Route path="pengaturan" element={<AdminSettingsForm />} />
+                        <Route path="pengaturan_akun" element={<UserProfileEdit user={user} />} />
                      </>
                    )}
 
@@ -1187,6 +1193,7 @@ function AdminSettingsForm() {
   const [profilForm, setProfilForm] = useState(content.profil);
   const [footerForm, setFooterForm] = useState(content.footer);
   const [announcementForm, setAnnouncementForm] = useState(content.announcement || { title: '', subtitle: '', desc: '' });
+  const [activeMenusForm, setActiveMenusForm] = useState(content.activeMenus || {});
 
   React.useEffect(() => {
     if (!isLoading) {
@@ -1194,12 +1201,19 @@ function AdminSettingsForm() {
       setProfilForm(content.profil);
       setFooterForm(content.footer);
       setAnnouncementForm(content.announcement || { title: '', subtitle: '', desc: '' });
+      setActiveMenusForm(content.activeMenus || {});
     }
   }, [content, isLoading]);
 
   const handleSaveContent = (e: React.FormEvent) => {
     e.preventDefault();
-    updateContent({ hero: heroForm, profil: profilForm, footer: footerForm, announcement: announcementForm });
+    updateContent({ 
+      hero: heroForm, 
+      profil: profilForm, 
+      footer: footerForm, 
+      announcement: announcementForm,
+      activeMenus: activeMenusForm
+    });
   };
 
   return (
@@ -1212,6 +1226,38 @@ function AdminSettingsForm() {
       </div>
 
       <form onSubmit={handleSaveContent} className="space-y-12">
+        {/* Announcement Section */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-bold flex items-center gap-2 text-main-blue"><Menu className="w-5 h-5" /> Aktivasi Menu Guru</h3>
+          <p className="text-xs text-gray-500 -mt-4">Tentukan menu mana saja yang akan dimunculkan pada dashboard Guru.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
+            {[
+              { id: 'overview', label: 'Overview' },
+              { id: 'profil', label: 'Profil Guru' },
+              { id: 'jadwal', label: 'Jadwal KKG' },
+              { id: 'materi', label: 'Materi KKG' },
+              { id: 'notulen', label: 'Notulen Rapat' },
+              { id: 'pelatihan', label: 'Pelatihan' },
+              { id: 'absensi', label: 'Absensi' },
+              { id: 'sertifikat', label: 'Sertifikat' },
+              { id: 'forum', label: 'Forum Diskusi' },
+              { id: 'sharing', label: 'Sharing Praktik' },
+              { id: 'upload_karya', label: 'Upload Karya' },
+              { id: 'pengaturan_akun', label: 'Pengaturan Akun' },
+            ].map(menu => (
+              <label key={menu.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 cursor-pointer hover:border-main-blue/30 transition-all shadow-sm">
+                <input 
+                  type="checkbox" 
+                  className="w-5 h-5 rounded accent-main-blue" 
+                  checked={!!activeMenusForm[menu.id]} 
+                  onChange={e => setActiveMenusForm({...activeMenusForm, [menu.id]: e.target.checked})} 
+                />
+                <span className="text-sm font-bold text-gray-700">{menu.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         {/* Announcement Section */}
         <div className="space-y-6">
           <h3 className="text-lg font-bold flex items-center gap-2 text-main-blue"><Megaphone className="w-5 h-5" /> Popup Pengumuman</h3>
@@ -1948,6 +1994,36 @@ function AdminSekolahForm() {
                       handleUpdate(school.id, { map_embed_url: val });
                     }} 
                   />
+                  
+                  {school.map_embed_url && school.map_embed_url.includes('google.com/maps/embed') && (
+                    <div className="mt-4 rounded-2xl overflow-hidden border border-gray-200 shadow-inner h-64 bg-gray-50 relative group/map">
+                      <iframe 
+                        src={school.map_embed_url} 
+                        width="100%" 
+                        height="100%" 
+                        style={{ border: 0 }} 
+                        allowFullScreen 
+                        loading="lazy" 
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title={`Peta lokasi ${school.name}`}
+                        className="grayscale hover:grayscale-0 transition-all duration-500"
+                      />
+                      <div className="absolute top-3 right-3 flex gap-2">
+                        <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-gray-100 text-[10px] font-bold text-gray-500 flex items-center gap-2 pointer-events-none group-hover/map:opacity-0 transition-opacity">
+                          <Navigation className="w-3 h-3 text-main-blue" /> Live Preview Peta
+                        </div>
+                        <a 
+                          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(school.name)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-white hover:bg-main-blue hover:text-white transition-colors p-1.5 rounded-lg border border-gray-100 shadow-sm opacity-0 group-hover/map:opacity-100"
+                          title="Buka di Google Maps"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
                   {(!school.map_embed_url || !school.map_embed_url.includes('google.com/maps/embed')) && (
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-2">
                       <p className="text-blue-800 text-[10px] leading-relaxed">
@@ -4139,6 +4215,217 @@ function ForumDetail({ post, user }: { post: any, user: any }) {
              </button>
           </form>
        </div>
+    </div>
+  );
+}
+
+function TeacherJadwalCards() {
+  const [agendas, setAgendas] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAgendas = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('kkg_agendas')
+          .select('*')
+          .order('date', { ascending: true })
+          .gte('date', new Date().toISOString().split('T')[0]); // Only future/current events
+        
+        if (error) throw error;
+        setAgendas(data || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAgendas();
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="w-12 h-12 bg-main-orange/10 rounded-2xl flex items-center justify-center text-main-orange">
+          <Calendar className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold font-heading">Jadwal Kegiatan KKG</h2>
+          <p className="text-xs text-gray-500">Daftar agenda kegiatan yang akan datang.</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="py-20 text-center text-gray-400">Memuat jadwal...</div>
+      ) : agendas.length === 0 ? (
+        <div className="bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
+          <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">Belum ada agenda kegiatan mendatang.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {agendas.map((item) => (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              key={item.id} 
+              className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-main-orange/5 transition-all group"
+            >
+              <div className="bg-main-orange/5 p-6 border-b border-orange-50">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex flex-col items-center justify-center shadow-sm border border-orange-100">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase leading-none">{new Date(item.date).toLocaleString('id-ID', { month: 'short' })}</span>
+                    <span className="text-lg font-bold text-main-orange leading-none mt-1">{new Date(item.date).getDate()}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full border border-orange-100">
+                    <PenTool className="w-3 h-3 text-main-orange" />
+                    <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">{item.type || 'Kegiatan'}</span>
+                  </div>
+                </div>
+                <h3 className="font-bold text-soft-black text-lg group-hover:text-main-orange transition-colors line-clamp-2 min-h-[3.5rem]">{item.title}</h3>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div className="flex items-center gap-3 text-gray-500">
+                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
+                    <PenTool className="w-4 h-4 text-gray-400" />
+                  </div>
+                  <div className="text-xs">
+                    <p className="text-gray-400 font-medium">Lokasi / Media</p>
+                    <p className="font-bold text-soft-black">{item.location || 'Online / Sekolah'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3 text-gray-500">
+                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                  </div>
+                  <div className="text-xs">
+                    <p className="text-gray-400 font-medium">Waktu</p>
+                    <p className="font-bold text-soft-black">Pukul {item.time || '08:00'} - Selesai</p>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-50">
+                  <p className="text-xs text-gray-400 mb-2 leading-relaxed line-clamp-3">{item.description || 'Tidak ada deskripsi tambahan.'}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TeacherTrainingCards() {
+  const [trainings, setTrainings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTrainings = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('trainings')
+          .select('*')
+          .order('date_start', { ascending: false });
+        
+        if (error) throw error;
+        setTrainings(data || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTrainings();
+  }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ongoing': return 'bg-green-100 text-green-600 border-green-200';
+      case 'planned': return 'bg-blue-100 text-blue-600 border-blue-200';
+      case 'completed': return 'bg-gray-100 text-gray-600 border-gray-200';
+      default: return 'bg-gray-100 text-gray-600 border-gray-200';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'ongoing': return 'Sedang Berlangsung';
+      case 'planned': return 'Direncanakan';
+      case 'completed': return 'Selesai';
+      default: return status;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
+          <GraduationCap className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold font-heading">Program Pelatihan Guru</h2>
+          <p className="text-xs text-gray-500">Daftar pelatihan pengembangan kompetensi berkelanjutan.</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="py-20 text-center text-gray-400">Memuat pelatihan...</div>
+      ) : trainings.length === 0 ? (
+        <div className="bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
+          <GraduationCap className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">Belum ada program pelatihan yang tersedia.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {trainings.map((item) => (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              key={item.id} 
+              className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-main-blue/5 transition-all flex flex-col sm:flex-row"
+            >
+              <div className="sm:w-1/3 bg-gray-50 p-6 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-gray-100">
+                <div className="w-16 h-16 bg-white rounded-2xl flex flex-col items-center justify-center shadow-sm border border-gray-100 mb-3">
+                  <span className="text-xs font-bold text-gray-400 uppercase">{new Date(item.date_start).toLocaleString('id-ID', { month: 'short' })}</span>
+                  <span className="text-2xl font-bold text-main-blue leading-none mt-1">{new Date(item.date_start).getDate()}</span>
+                </div>
+                <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(item.status)}`}>
+                  {getStatusLabel(item.status)}
+                </div>
+              </div>
+              
+              <div className="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                  <h3 className="font-bold text-soft-black text-lg mb-2">{item.title}</h3>
+                  <p className="text-xs text-gray-400 line-clamp-2 mb-4 leading-relaxed">{item.description}</p>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <Map className="w-3.5 h-3.5 text-gray-300" />
+                      <span className="font-medium">{item.location || 'Lokasi TBA'}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <Calendar className="w-3.5 h-3.5 text-gray-300" />
+                      <span className="font-medium">Mulai: {new Date(item.date_start).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 flex items-center justify-between pt-4 border-t border-gray-50">
+                  <button className="text-[11px] font-bold text-main-blue flex items-center gap-1 hover:gap-2 transition-all">
+                    Lihat Detail Pelatihan <ChevronRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
