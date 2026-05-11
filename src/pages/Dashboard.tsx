@@ -4049,9 +4049,20 @@ function AdminStrukturManager() {
 }
 
 function AdminKKGFormWrapper() {
-  const { content, updateContent, kkgForm, setKkgForm, handleSaveContent } = useSiteContent() as any;
-  // We use current content but keep local state for the form within the wrapper if needed, 
-  // though AdminKKGForm is designed to take props.
+  const { content, updateContent } = useSiteContent() as any;
+  const kkgForm = content.kkg || { struktur: [] };
+  
+  const setKkgForm = (updater: any) => {
+    const currentState = kkgForm;
+    const newState = typeof updater === 'function' ? updater(currentState) : updater;
+    updateContent({ kkg: newState });
+  };
+  
+  const handleSaveContent = (e: React.FormEvent) => {
+      e.preventDefault();
+      updateContent({ kkg: kkgForm });
+  };
+
   return <AdminKKGForm kkgForm={kkgForm} setKkgForm={setKkgForm} handleSaveContent={handleSaveContent} updateContent={updateContent} />;
 }
 
