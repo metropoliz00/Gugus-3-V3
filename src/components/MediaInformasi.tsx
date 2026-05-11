@@ -91,7 +91,7 @@ export default function MediaInformasi() {
                         {item.content}
                      </p>
                   )}
-                  <a href="#" className="font-semibold text-leaf-green flex items-center gap-1 group-hover:gap-2 transition-all text-sm mt-auto">
+                  <a href={item.url || "#"} target={item.url ? "_blank" : "_self"} rel={item.url ? "noopener noreferrer" : ""} className="font-semibold text-leaf-green flex items-center gap-1 group-hover:gap-2 transition-all text-sm mt-auto">
                     Baca Selengkapnya <ArrowRight className="w-4 h-4" />
                   </a>
                 </div>

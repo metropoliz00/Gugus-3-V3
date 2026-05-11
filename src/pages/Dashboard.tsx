@@ -1426,6 +1426,15 @@ function AdminBeritaForm() {
                       <option value="pengumuman">Pengumuman</option>
                     </select>
                   </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Link URL</label>
+                    <input 
+                      className="w-full border-b border-gray-200 text-xs outline-none bg-transparent" 
+                      placeholder="https://..."
+                      value={item.url || ''} 
+                      onChange={e => handleUpdate(item.id, { url: e.target.value })} 
+                    />
+                  </div>
                </div>
                <button 
                  type="button" 
