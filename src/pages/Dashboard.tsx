@@ -66,10 +66,8 @@ const adminMenu = [
   { id: 'komentar', label: 'Kelola Komentar Forum', icon: MessageSquare },
   { id: 'sharing', label: 'Kelola Praktik Baik', icon: Play },
   { id: 'hasil_karya', label: 'Kelola Hasil Karya', icon: UploadCloud },
-  { id: 'struktur_org', label: 'Struktur Organisasi', icon: Users },
+  { id: 'struktur_org', label: 'Kelola KKG & Gugus', icon: Users },
   { id: 'penghargaan', label: 'Kelola Penghargaan', icon: Trophy },
-  { id: 'gugus', label: 'Kelola Gugus', icon: Shield },
-  { id: 'kkg', label: 'Kelola KKG', icon: Briefcase },
   { id: 'pengaturan', label: 'Pengaturan Website', icon: Settings },
 ];
 
@@ -3520,8 +3518,8 @@ function AdminStrukturManager() {
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-xl font-bold font-heading">Manajemen Struktur Organisasi</h2>
-            <p className="text-xs text-gray-500">Kelola pengurus KKG dan Gugus dari satu tempat.</p>
+            <h2 className="text-xl font-bold font-heading">Manajemen KKG & Gugus</h2>
+            <p className="text-xs text-gray-500">Kelola informasi dan struktur KKG serta Gugus dari satu tempat.</p>
           </div>
         </div>
         <div className="flex bg-gray-100 p-1 rounded-xl">
