@@ -8,7 +8,7 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={`bg-white rounded-2xl p-4 text-center border border-gray-200 shadow-sm transition-all relative ${size === "md" ? "w-64" : "w-56"} z-10 hover:-translate-y-1 hover:shadow-md hover:border-main-blue/50 group`}
+      className={`bg-white rounded-2xl p-4 text-center border border-gray-200 shadow-sm transition-all relative ${size === "md" ? "w-52" : "w-56"} z-10 hover:-translate-y-1 hover:shadow-md hover:border-main-blue/50 group`}
     >
       <div className={`mx-auto bg-gray-100 rounded-full mb-3 overflow-hidden border-2 border-white shadow-sm ${size === "md" ? "w-16 h-16" : "w-12 h-12"}`}>
         <img src={member?.photo_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${member?.name || "default"}`} alt={member?.name || "member"} className="w-full h-full object-cover" />
@@ -87,7 +87,7 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
               <div className="w-px h-8 bg-gradient-to-b from-main-blue/40 to-main-blue shadow-[0_0_8px_rgba(37,99,235,0.2)] my-2 relative z-0" />
             )}
             {chunks.map((chunk, chunkIndex) => (
-              <div key={`${i}-${chunkIndex}`} className="flex flex-wrap justify-center gap-6 relative z-10 w-full max-w-5xl my-2">
+              <div key={`${i}-${chunkIndex}`} className="flex flex-row flex-nowrap justify-center gap-6 relative z-10 w-full max-w-7xl my-2">
                 {chunk.map(member => (
                   <Card key={member.id} member={member} memberKey={member.id} />
                 ))}
