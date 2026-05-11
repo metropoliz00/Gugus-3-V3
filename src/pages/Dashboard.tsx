@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Updated
+import React, { useState, useEffect, useRef } from 'react'; // Updated
 import { 
   LogOut, LayoutDashboard, FileText, Settings, Users, BookOpen, 
   Map, Image as ImageIcon, Briefcase, FileVideo, Video, MessageSquare, MessageCircle, Download,
@@ -287,15 +287,7 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
                    {/* Admin Routes */}
                    {user.role?.toLowerCase() === 'admin' && (
                      <>
-                        <Route path="pengaturan" element={
-                          <AdminSettingsForm 
-                            heroForm={heroForm} setHeroForm={setHeroForm}
-                            profilForm={profilForm} setProfilForm={setProfilForm}
-                            footerForm={footerForm} setFooterForm={setFooterForm}
-                            announcementForm={announcementForm} setAnnouncementForm={setAnnouncementForm}
-                            handleSaveContent={handleSaveContent}
-                          />
-                        } />
+                        <Route path="pengaturan" element={<AdminSettingsForm />} />
                         <Route path="user" element={<AdminUserManagement />} />
                         <Route path="sekolah" element={<AdminSekolahForm />} />
                         <Route path="berita" element={<AdminBeritaForm />} />
@@ -1164,7 +1156,28 @@ function GuruOverview() {
 // FORM COMPONENTS 
 // ----------------------
 
-function AdminSettingsForm({ heroForm, setHeroForm, profilForm, setProfilForm, footerForm, setFooterForm, announcementForm, setAnnouncementForm, handleSaveContent }: any) {
+function AdminSettingsForm() {
+  const { content, updateContent, isLoading } = useSiteContent();
+
+  const [heroForm, setHeroForm] = useState(content.hero);
+  const [profilForm, setProfilForm] = useState(content.profil);
+  const [footerForm, setFooterForm] = useState(content.footer);
+  const [announcementForm, setAnnouncementForm] = useState(content.announcement || { title: '', subtitle: '', desc: '' });
+
+  React.useEffect(() => {
+    if (!isLoading) {
+      setHeroForm(content.hero);
+      setProfilForm(content.profil);
+      setFooterForm(content.footer);
+      setAnnouncementForm(content.announcement || { title: '', subtitle: '', desc: '' });
+    }
+  }, [content, isLoading]);
+
+  const handleSaveContent = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateContent({ hero: heroForm, profil: profilForm, footer: footerForm, announcement: announcementForm });
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5">
       <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
@@ -1305,6 +1318,7 @@ function AdminBeritaForm() {
   const { confirm } = useAlert();
   const [news, setNews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const debouncedSave = useRef<NodeJS.Timeout>();
 
   React.useEffect(() => {
     async function loadNews() {
@@ -1336,12 +1350,18 @@ function AdminBeritaForm() {
      }
   };
 
-  const handleUpdate = async (id: string, updates: any) => {
-     if (!supabase) return;
-     const { error } = await supabase.from('posts').update(updates).eq('id', id);
-     if (!error) {
-        setNews(news.map((n: any) => n.id === id ? { ...n, ...updates } : n));
-     }
+  const handleUpdate = (id: string, updates: any) => {
+     setNews(news.map((n: any) => n.id === id ? { ...n, ...updates } : n));
+     
+     if (debouncedSave.current) clearTimeout(debouncedSave.current);
+     
+     debouncedSave.current = setTimeout(async () => {
+        if (!supabase) return;
+        const { error } = await supabase.from('posts').update(updates).eq('id', id);
+        if (error) {
+           console.error("Error updating post:", error);
+        }
+     }, 800);
   };
 
   const handleDelete = async (id: string) => {
@@ -1380,7 +1400,11 @@ function AdminBeritaForm() {
                <div className="w-full flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 pr-8">
                   <div className="md:col-span-2">
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Judul Berita</label>
-                    <input className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent" value={item.title} onChange={e => handleUpdate(item.id, { title: e.target.value })} />
+                    <input 
+                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent" 
+                      value={item.title} 
+                      onChange={e => handleUpdate(item.id, { title: e.target.value })} 
+                    />
                   </div>
                   <div className="md:col-span-2">
                     <ImageUpload 
@@ -1535,6 +1559,7 @@ function AdminGaleriForm({ galleryForm, setGalleryForm, handleSaveContent }: any
 function AdminAgendaForm() {
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const debouncedSave = useRef<NodeJS.Timeout>();
 
   React.useEffect(() => {
     async function loadEvents() {
@@ -1566,12 +1591,18 @@ function AdminAgendaForm() {
     }
   };
 
-  const handleUpdate = async (id: string, updates: any) => {
-    if (!supabase) return;
-    const { error } = await supabase.from('events').update(updates).eq('id', id);
-    if (!error) {
-       setEvents(events.map((g: any) => g.id === id ? { ...g, ...updates } : g));
-    }
+  const handleUpdate = (id: string, updates: any) => {
+    setEvents(events.map((g: any) => g.id === id ? { ...g, ...updates } : g));
+    
+    if (debouncedSave.current) clearTimeout(debouncedSave.current);
+    
+    debouncedSave.current = setTimeout(async () => {
+        if (!supabase) return;
+        const { error } = await supabase.from('events').update(updates).eq('id', id);
+        if (error) {
+           console.error("Error updating event:", error);
+        }
+    }, 800);
   };
 
   const handleDelete = async (id: string) => {
@@ -1695,21 +1726,23 @@ function AdminSekolahForm() {
   };
 
   const [savingId, setSavingId] = useState<string | null>(null);
+  const debouncedSave = useRef<NodeJS.Timeout>();
 
-  const handleUpdate = async (id: string, updates: any) => {
-     if (!supabase) return;
-     setSavingId(id);
-     const { error } = await supabase.from('schools').update(updates).eq('id', id);
-     if (!error) {
-        setSchools(schools.map((s: any) => s.id === id ? { ...s, ...updates } : s));
-     } else {
-        console.error("Error updating school:", error);
-        const message = error.message?.includes("image_url") 
-          ? "Kolom 'image_url' belum ada di database. Silakan jalankan perintah SQL berikut di Supabase Dashboard (SQL Editor):\n\nALTER TABLE public.schools ADD COLUMN image_url TEXT;"
-          : (error.message || "Kesalahan tidak diketahui");
-        await alert("Gagal memperbarui sekolah: " + message, "Error");
-     }
-     setTimeout(() => setSavingId(null), 1000);
+  const handleUpdate = (id: string, updates: any) => {
+     setSchools(schools.map((s: any) => s.id === id ? { ...s, ...updates } : s));
+     
+     if (debouncedSave.current) clearTimeout(debouncedSave.current);
+     
+     debouncedSave.current = setTimeout(async () => {
+        if (!supabase) return;
+        setSavingId(id);
+        const { error } = await supabase.from('schools').update(updates).eq('id', id);
+        if (error) {
+           console.error("Error updating school:", error);
+           await alert("Gagal memperbarui sekolah", "Error");
+        }
+        setSavingId(null);
+     }, 800);
   };
 
   const handleDelete = async (id: string) => {
@@ -1841,11 +1874,34 @@ function AdminSekolahForm() {
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Moto</label>
                   <input className="w-full border-gray-200 border p-2.5 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors" value={school.motto || ''} onChange={e => handleUpdate(school.id, { motto: e.target.value })} />
                 </div>
-                <div>
+                 <div>
                   <label className="block text-xs font-semibold text-gray-500 mb-1">Google Maps Embed URL</label>
-                  <input className="w-full border-gray-200 border p-2.5 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors" value={school.map_embed_url || ''} onChange={e => handleUpdate(school.id, { map_embed_url: e.target.value })} />
-                  {(school.map_embed_url && !school.map_embed_url.includes('google.com/maps/embed')) && (
-                    <p className="text-red-500 text-[10px] mt-1">URL harus dalam format "Embed". Silakan gunakan fitur "Share" &gt; "Embed a map" di Google Maps.</p>
+                  <input 
+                    className="w-full border-gray-200 border p-2.5 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors" 
+                    placeholder="Contoh: https://www.google.com/maps/embed?..."
+                    value={school.map_embed_url || ''} 
+                    onChange={e => {
+                      let val = e.target.value;
+                      // Detect if user pasted whole iframe tag and extract src
+                      if (val.includes('<iframe') && val.includes('src="')) {
+                        const match = val.match(/src="([^"]+)"/);
+                        if (match && match[1]) {
+                          val = match[1];
+                        }
+                      }
+                      handleUpdate(school.id, { map_embed_url: val });
+                    }} 
+                  />
+                  {(!school.map_embed_url || !school.map_embed_url.includes('google.com/maps/embed')) && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-2">
+                      <p className="text-blue-800 text-[10px] leading-relaxed">
+                        <strong className="block mb-1">💡 Cara Menampilkan Peta:</strong>
+                        1. Cari lokasi di Google Maps &gt; Klik <strong>Bagikan (Share)</strong>.<br/>
+                        2. Pilih tab <strong>Sematkan peta (Embed a map)</strong>.<br/>
+                        3. Klik <strong>Salin HTML (Copy HTML)</strong> lalu tempelkan di sini.<br/>
+                        <span className="opacity-70 mt-1 block italic">*Sistem akan otomatis mengambil link yang diperlukan.</span>
+                      </p>
+                    </div>
                   )}
                 </div>
               </div>
@@ -1859,6 +1915,7 @@ function AdminSekolahForm() {
 
 
 function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }: any) {
+  const { alert } = useAlert();
   const [activeKkgTab, setActiveKkgTab] = useState('profil');
   const [dbStruktur, setDbStruktur] = useState<any[]>([]);
   const [isSavingToggle, setIsSavingToggle] = useState(false);
@@ -1875,14 +1932,22 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
   const sejarah = form.sejarah || '';
 
   // KKG: handle field change locally for performance
+  const [isSavingOrg, setIsSavingOrg] = useState<string | null>(null);
+  const debouncedOrgSave = useRef<NodeJS.Timeout>();
+
   const onFieldChangeKkg = (id: string, field: string, value: string) => {
     setDbStruktur(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
   };
 
   const loadStruktur = async () => {
     if (!supabase) return;
-    const { data } = await supabase.from('org_kkg').select('*').order('created_at', { ascending: true });
-    setDbStruktur(data || []);
+    try {
+      const { data, error } = await supabase.from('org_kkg').select('*').order('created_at', { ascending: true });
+      if (error) throw error;
+      setDbStruktur(data || []);
+    } catch (err) {
+      console.error("Gagal memuat struktur KKG:", err);
+    }
   };
 
   React.useEffect(() => {
@@ -1891,14 +1956,37 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
 
   const handleOrgCreate = async () => {
     if (!supabase) return;
-    const { data } = await supabase.from('org_kkg').insert([{ role: "Jabatan Baru", name: "-", school: "-" }]).select();
-    if (data) loadStruktur();
+    try {
+      const { data, error } = await supabase.from('org_kkg').insert([{ role: "Jabatan Baru", name: "-", school: "-" }]).select();
+      if (error) throw error;
+      if (data) loadStruktur();
+      await alert("Anggota baru berhasil ditambahkan", "Sukses");
+    } catch (err: any) {
+      console.error("Error creating org_kkg:", err);
+      await alert("Gagal menambah anggota: " + (err.message || "Kesalahan tidak diketahui"), "Error");
+    }
   };
 
   const handleOrgUpdate = async (id: string, updates: any) => {
     if (!supabase) return;
-    await supabase.from('org_kkg').update(updates).eq('id', id);
-    loadStruktur();
+    
+    if (debouncedOrgSave.current) clearTimeout(debouncedOrgSave.current);
+    
+    debouncedOrgSave.current = setTimeout(async () => {
+      setIsSavingOrg(id);
+      try {
+        const { data, error } = await supabase.from('org_kkg').update(updates).eq('id', id).select();
+        if (error) throw error;
+        if (data && data[0]) {
+           setDbStruktur(prev => prev.map(item => item.id === id ? data[0] : item));
+        }
+      } catch (err: any) {
+        console.error("Error updating org_kkg:", err);
+        await alert("Gagal menyimpan perubahan: " + (err.message || "Kesalahan tidak diketahui"), "Error");
+      } finally {
+        setIsSavingOrg(null);
+      }
+    }, 800);
   };
 
   const handleOrgDelete = async (id: string) => {
@@ -2175,17 +2263,43 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
                   <div className="flex-1 space-y-3">
                     <div>
                         <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Jabatan / Peran</label>
-                        <input className="w-full border-b border-gray-200 pb-1 text-sm font-bold text-soft-black focus:border-main-blue outline-none transition-colors bg-transparent" value={item.role} onChange={e => onFieldChangeKkg(item.id, 'role', e.target.value)} onBlur={e => handleOrgUpdate(item.id, { role: e.target.value })} />
+                        <input 
+                          className="w-full border-b border-gray-200 pb-1 text-sm font-bold text-soft-black focus:border-main-blue outline-none transition-colors bg-transparent" 
+                          value={item.role} 
+                          onChange={e => {
+                            onFieldChangeKkg(item.id, 'role', e.target.value);
+                            handleOrgUpdate(item.id, { role: e.target.value });
+                          }} 
+                        />
                     </div>
                     <div>
                         <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Nama Pengurus</label>
-                        <input className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent" value={item.name} onChange={e => onFieldChangeKkg(item.id, 'name', e.target.value)} onBlur={e => handleOrgUpdate(item.id, { name: e.target.value })} />
+                        <input 
+                          className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent" 
+                          value={item.name} 
+                          onChange={e => {
+                            onFieldChangeKkg(item.id, 'name', e.target.value);
+                            handleOrgUpdate(item.id, { name: e.target.value });
+                          }} 
+                        />
                     </div>
                     <div>
                         <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Asal Sekolah</label>
-                        <input className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent" value={item.school} onChange={e => onFieldChangeKkg(item.id, 'school', e.target.value)} onBlur={e => handleOrgUpdate(item.id, { school: e.target.value })} />
+                        <input 
+                          className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent" 
+                          value={item.school} 
+                          onChange={e => {
+                            onFieldChangeKkg(item.id, 'school', e.target.value);
+                            handleOrgUpdate(item.id, { school: e.target.value });
+                          }} 
+                        />
                     </div>
-                    <div>
+                    <div className="relative">
+                        {isSavingOrg === item.id && (
+                          <div className="absolute top-0 right-0">
+                            <div className="w-4 h-4 border-2 border-main-blue border-t-transparent animate-spin rounded-full"></div>
+                          </div>
+                        )}
                         <ImageUpload 
                            label="Foto Pengurus"
                            value={item.photo_url || ''} 
@@ -2358,6 +2472,7 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
 }
 
 function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
+  const { alert } = useAlert();
   const [activeTab, setActiveTab] = useState('profil');
   const [dbStruktur, setDbStruktur] = useState<any[]>([]);
   
@@ -2373,14 +2488,22 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
   const programs = form.programs || [];
 
   // Gugus: handle field change locally for performance
+  const [isSavingOrg, setIsSavingOrg] = useState<string | null>(null);
+  const debouncedOrgSave = useRef<NodeJS.Timeout>();
+
   const onFieldChangeGugus = (id: string, field: string, value: string) => {
     setDbStruktur(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
   };
 
   const loadStruktur = async () => {
     if (!supabase) return;
-    const { data } = await supabase.from('org_gugus').select('*').order('created_at', { ascending: true });
-    setDbStruktur(data || []);
+    try {
+      const { data, error } = await supabase.from('org_gugus').select('*').order('created_at', { ascending: true });
+      if (error) throw error;
+      setDbStruktur(data || []);
+    } catch (err) {
+      console.error("Gagal memuat struktur Gugus:", err);
+    }
   };
 
   React.useEffect(() => {
@@ -2389,14 +2512,37 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
 
   const handleOrgCreate = async () => {
     if (!supabase) return;
-    const { data } = await supabase.from('org_gugus').insert([{ role: "Jabatan Baru", name: "-", school: "-" }]).select();
-    if (data) loadStruktur();
+    try {
+      const { data, error } = await supabase.from('org_gugus').insert([{ role: "Jabatan Baru", name: "-", school: "-" }]).select();
+      if (error) throw error;
+      if (data) loadStruktur();
+      await alert("Anggota baru berhasil ditambahkan", "Sukses");
+    } catch (err: any) {
+      console.error("Error creating org_gugus:", err);
+      await alert("Gagal menambah anggota: " + (err.message || "Kesalahan tidak diketahui"), "Error");
+    }
   };
 
   const handleOrgUpdate = async (id: string, updates: any) => {
     if (!supabase) return;
-    await supabase.from('org_gugus').update(updates).eq('id', id);
-    loadStruktur();
+    
+    if (debouncedOrgSave.current) clearTimeout(debouncedOrgSave.current);
+    
+    debouncedOrgSave.current = setTimeout(async () => {
+      setIsSavingOrg(id);
+      try {
+        const { data, error } = await supabase.from('org_gugus').update(updates).eq('id', id).select();
+        if (error) throw error;
+        if (data && data[0]) {
+           setDbStruktur(prev => prev.map(item => item.id === id ? data[0] : item));
+        }
+      } catch (err: any) {
+        console.error("Error updating org_gugus:", err);
+        await alert("Gagal menyimpan perubahan: " + (err.message || "Kesalahan tidak diketahui"), "Error");
+      } finally {
+        setIsSavingOrg(null);
+      }
+    }, 800);
   };
 
   const handleOrgDelete = async (id: string) => {
@@ -2557,17 +2703,43 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                   <div className="flex-1 space-y-3">
                     <div>
                         <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Jabatan / Peran</label>
-                        <input className="w-full border-b border-gray-200 pb-1 text-sm font-bold text-soft-black focus:border-main-blue outline-none transition-colors bg-transparent" value={item.role} onChange={e => onFieldChangeGugus(item.id, 'role', e.target.value)} onBlur={e => handleOrgUpdate(item.id, { role: e.target.value })} />
+                        <input 
+                          className="w-full border-b border-gray-200 pb-1 text-sm font-bold text-soft-black focus:border-main-blue outline-none transition-colors bg-transparent" 
+                          value={item.role} 
+                          onChange={e => {
+                            onFieldChangeGugus(item.id, 'role', e.target.value);
+                            handleOrgUpdate(item.id, { role: e.target.value });
+                          }} 
+                        />
                     </div>
                     <div>
                         <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Nama Pengurus</label>
-                        <input className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent" value={item.name} onChange={e => onFieldChangeGugus(item.id, 'name', e.target.value)} onBlur={e => handleOrgUpdate(item.id, { name: e.target.value })} />
+                        <input 
+                          className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent" 
+                          value={item.name} 
+                          onChange={e => {
+                            onFieldChangeGugus(item.id, 'name', e.target.value);
+                            handleOrgUpdate(item.id, { name: e.target.value });
+                          }} 
+                        />
                     </div>
                     <div>
                         <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Asal Sekolah</label>
-                        <input className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent" value={item.school} onChange={e => onFieldChangeGugus(item.id, 'school', e.target.value)} onBlur={e => handleOrgUpdate(item.id, { school: e.target.value })} />
+                        <input 
+                          className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent" 
+                          value={item.school} 
+                          onChange={e => {
+                            onFieldChangeGugus(item.id, 'school', e.target.value);
+                            handleOrgUpdate(item.id, { school: e.target.value });
+                          }} 
+                        />
                     </div>
-                    <div>
+                    <div className="relative">
+                        {isSavingOrg === item.id && (
+                          <div className="absolute top-0 right-0">
+                            <div className="w-4 h-4 border-2 border-main-blue border-t-transparent animate-spin rounded-full"></div>
+                          </div>
+                        )}
                         <ImageUpload 
                            label="Foto Pengurus"
                            value={item.photo_url || ''} 
@@ -2640,6 +2812,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
 function AdminPenghargaanForm() {
   const [awards, setAwards] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const debouncedSave = useRef<NodeJS.Timeout>();
 
   React.useEffect(() => {
     async function loadAwards() {
@@ -2670,12 +2843,18 @@ function AdminPenghargaanForm() {
      }
   };
 
-  const handleUpdate = async (id: string, updates: any) => {
-     if (!supabase) return;
-     const { error } = await supabase.from('awards').update(updates).eq('id', id);
-     if (!error) {
-        setAwards(awards.map((a: any) => a.id === id ? { ...a, ...updates } : a));
-     }
+  const handleUpdate = (id: string, updates: any) => {
+     setAwards(awards.map((a: any) => a.id === id ? { ...a, ...updates } : a));
+     
+     if (debouncedSave.current) clearTimeout(debouncedSave.current);
+     
+     debouncedSave.current = setTimeout(async () => {
+        if (!supabase) return;
+        const { error } = await supabase.from('awards').update(updates).eq('id', id);
+        if (error) {
+           console.error("Error updating award:", error);
+        }
+     }, 800);
   };
 
   const handleDelete = async (id: string) => {
