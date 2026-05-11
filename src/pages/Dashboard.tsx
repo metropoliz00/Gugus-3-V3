@@ -1289,6 +1289,10 @@ function AdminSettingsForm() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">Jabatan Resmi</label>
               <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-leaf-green/20 outline-none transition-all" value={profilForm.role} onChange={e => setProfilForm({...profilForm, role: e.target.value})} />
             </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Periode Kepengurusan</label>
+              <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-leaf-green/20 outline-none transition-all" value={profilForm.periodeKepengurusan || ''} onChange={e => setProfilForm({...profilForm, periodeKepengurusan: e.target.value})} />
+            </div>
              <div className="md:col-span-2">
               <ImageUpload 
                 label="Foto Profil"
@@ -2225,7 +2229,7 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
           <div className="space-y-8">
             <div className="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100">
               <h4 className="text-sm font-bold text-main-blue mb-4 flex items-center gap-2">
-                <LayoutDashboard className="w-4 h-4" /> Preview Struktur Organisasi
+                <LayoutDashboard className="w-4 h-4" /> Preview Struktur Organisasi {content.profil.periodeKepengurusan && <span className="text-gray-500 font-normal">| Periode: {content.profil.periodeKepengurusan}</span>}
               </h4>
               <div className="bg-white rounded-2xl p-4 shadow-inner overflow-x-auto min-h-[300px]">
                 <OrgChart members={dbStruktur} onEdit={(member) => {
@@ -2668,7 +2672,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
           <div className="space-y-6">
             <div className="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100 mb-8">
               <h4 className="text-sm font-bold text-main-blue mb-4 flex items-center gap-2">
-                <LayoutDashboard className="w-4 h-4" /> Preview Struktur Organisasi
+                <LayoutDashboard className="w-4 h-4" /> Preview Struktur Organisasi {content.profil.periodeKepengurusan && <span className="text-gray-500 font-normal">| Periode: {content.profil.periodeKepengurusan}</span>}
               </h4>
               <div className="bg-white rounded-2xl p-4 shadow-inner overflow-x-auto min-h-[300px]">
                 <OrgChart members={dbStruktur} onEdit={(member) => {

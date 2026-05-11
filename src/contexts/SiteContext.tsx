@@ -18,6 +18,7 @@ export const defaultContent = {
     quote: "\"Pendidikan bukan sekadar transfer ilmu, melainkan proses membentuk karakter dan peradaban. Di Gugus 3 Melati Kecamatan Jenu, kami berkomitmen menjadi wadah kolaborasi antar sekolah untuk memastikan setiap anak mendapatkan hak pendidikan terbaiknya.\"",
     name: "Sulastri, S.Pd",
     role: "Ketua Gugus 3 Melati Kecamatan Jenu",
+    periodeKepengurusan: "2024-2027",
     image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1000&auto=format&fit=crop"
   },
   footer: {
