@@ -32,6 +32,7 @@ import ELearning from './pages/ELearning';
 import AnggotaGugusPage from './pages/AnggotaGugus';
 import KeuanganPage from './pages/KeuanganPage';
 import { AlertProvider } from './contexts/AlertContext';
+import { logActivity } from './lib/activity';
 
 function HomePage({ onLoginClick, user }: { onLoginClick: () => void; user?: any }) {
   const { content } = useSiteContent();
@@ -142,6 +143,9 @@ export default function App() {
   }, []);
 
   const handleLogout = async () => {
+    if (user) {
+      await logActivity(user, 'logout', `${user.nama || user.username} keluar dari aplikasi`);
+    }
     if (supabase) {
       await supabase.auth.signOut();
     }
@@ -149,6 +153,7 @@ export default function App() {
   };
 
   const handleLoginSuccess = (userData: any) => {
+    logActivity(userData, 'login', `${userData.nama || userData.username} berhasil masuk ke aplikasi`);
     setUser(userData);
     setIsLoginOpen(false);
     navigate('/dashboard');
