@@ -3039,38 +3039,38 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
 
               <div className="bg-white rounded-2xl p-6 border border-yellow-100 shadow-sm space-y-6">
                 <div className="flex items-center gap-3 pb-4 border-b border-gray-50">
-                  <div className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      id="kkg_announcement_active"
-                      checked={localIsActive}
-                      onChange={e => {
-                        const isActive = e.target.checked;
-                        setLocalIsActive(isActive);
-                        
-                        if (updateContent) {
-                          setIsSavingToggle(true);
-                          const updated = { 
-                            ...form, 
-                            pengumuman: { ...(form.pengumuman || {}), isActive } 
-                          };
-                          updateContent({ kkg: updated })
-                            .then(() => {
-                                alert(isActive ? "Pengumuman KKG diaktifkan!" : "Pengumuman KKG dinonaktifkan!");
-                                console.log("Pengumuman KKG updated to:", isActive);
-                            })
-                            .catch(err => {
-                                alert("Gagal menyimpan pengaturan!");
-                                console.error("Gagal menyimpan:", err);
-                                setLocalIsActive(!isActive);
-                            })
-                            .finally(() => setTimeout(() => setIsSavingToggle(false), 1000));
-                        }
-                      }}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-500"></div>
-                  </div>
+                  <label className="relative inline-block w-[60px] h-[34px]">
+                      <input 
+                        type="checkbox" 
+                        id="kkg_announcement_active"
+                        checked={localIsActive}
+                        onChange={e => {
+                          const isActive = e.target.checked;
+                          setLocalIsActive(isActive);
+                          
+                          if (updateContent) {
+                            setIsSavingToggle(true);
+                            const updated = { 
+                              ...form, 
+                              pengumuman: { ...(form.pengumuman || {}), isActive } 
+                            };
+                            updateContent({ kkg: updated })
+                              .then(() => {
+                                  alert(isActive ? "Pengumuman KKG diaktifkan!" : "Pengumuman KKG dinonaktifkan!");
+                                  console.log("Pengumuman KKG updated to:", isActive);
+                              })
+                              .catch(err => {
+                                  alert("Gagal menyimpan pengaturan!");
+                                  console.error("Gagal menyimpan:", err);
+                                  setLocalIsActive(!isActive);
+                              })
+                              .finally(() => setTimeout(() => setIsSavingToggle(false), 1000));
+                          }
+                        }}
+                        className="peer sr-only"
+                      />
+                      <span className="absolute cursor-pointer inset-0 bg-gray-300 transition-all duration-400 rounded-full peer-checked:bg-[#2196F3] before:absolute before:content-[''] before:h-[26px] before:w-[26px] before:left-[4px] before:bottom-[4px] before:bg-white before:transition-all before:duration-400 before:rounded-full peer-checked:before:translate-x-[26px]"></span>
+                    </label>
                   <label htmlFor="kkg_announcement_active" className="text-sm font-bold text-gray-700 cursor-pointer">
                     Tampilkan Pengumuman ini di Halaman KKG
                   </label>
