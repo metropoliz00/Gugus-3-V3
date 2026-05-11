@@ -60,18 +60,27 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
 
   return (
     <div className="flex flex-col items-center p-8 overflow-x-auto w-full">
-      {levels.map((level, i) => (
-        <React.Fragment key={i}>
-          {i > 0 && (
-            <div className="w-px h-8 bg-gradient-to-b from-main-blue/40 to-main-blue shadow-[0_0_8px_rgba(37,99,235,0.2)] my-2 relative z-0" />
-          )}
-          <div className="flex flex-wrap justify-center gap-6 relative z-10 w-full max-w-5xl">
-            {level.map(member => (
-              <Card key={member.id} member={member} memberKey={member.id} />
+      {levels.map((level, i) => {
+        const chunks = [];
+        for (let j = 0; j < level.length; j += 4) {
+          chunks.push(level.slice(j, j + 4));
+        }
+        
+        return (
+          <React.Fragment key={i}>
+            {i > 0 && (
+              <div className="w-px h-8 bg-gradient-to-b from-main-blue/40 to-main-blue shadow-[0_0_8px_rgba(37,99,235,0.2)] my-2 relative z-0" />
+            )}
+            {chunks.map((chunk, chunkIndex) => (
+              <div key={`${i}-${chunkIndex}`} className="flex flex-wrap justify-center gap-6 relative z-10 w-full max-w-5xl my-2">
+                {chunk.map(member => (
+                  <Card key={member.id} member={member} memberKey={member.id} />
+                ))}
+              </div>
             ))}
-          </div>
-        </React.Fragment>
-      ))}
+          </React.Fragment>
+        );
+      })}
     </div>
   );
 }
