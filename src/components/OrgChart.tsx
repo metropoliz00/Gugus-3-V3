@@ -8,14 +8,14 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={`bg-white rounded-2xl p-4 text-center border border-gray-200 shadow-sm transition-all relative ${size === "md" ? "w-48" : "w-40"} z-10 hover:-translate-y-1 hover:shadow-md hover:border-main-blue/50 group`}
+      className={`bg-white rounded-2xl p-4 text-center border border-gray-200 shadow-sm transition-all relative ${size === "md" ? "w-64" : "w-56"} z-10 hover:-translate-y-1 hover:shadow-md hover:border-main-blue/50 group`}
     >
       <div className={`mx-auto bg-gray-100 rounded-full mb-3 overflow-hidden border-2 border-white shadow-sm ${size === "md" ? "w-16 h-16" : "w-12 h-12"}`}>
         <img src={member?.photo_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${member?.name || "default"}`} alt={member?.name || "member"} className="w-full h-full object-cover" />
       </div>
       <h4 className="font-bold text-soft-black text-sm mb-0.5 leading-tight">{member?.name || "-"}</h4>
       <p className="text-main-blue font-semibold text-xs mb-1">{member?.role || "Jabatan"}</p>
-      <div className="text-[10px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full truncate">{member?.school || "-"}</div>
+      <div className="text-[10px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full leading-tight">{member?.school || "-"}</div>
       
       {onEdit && onDelete && (
         <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 p-1 rounded-lg backdrop-blur-sm shadow-sm border border-gray-100">
