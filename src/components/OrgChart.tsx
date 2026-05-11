@@ -28,28 +28,43 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
 
   const getLevels = () => {
     if (!Array.isArray(members) || members.length === 0) return [];
-    
-    // Auto-detect structure type
-    const isKKG = members.some(m => m.role?.toLowerCase().includes('kkg') || m.role?.toLowerCase().includes('bidang') || m.role?.toLowerCase().includes('pemandu'));
 
-    if (isKKG) {
-       return [
-         members.filter(m => /pembina/i.test(m.role)),
-         members.filter(m => /ketua/i.test(m.role)),
-         members.filter(m => /sekretaris|bendahara/i.test(m.role)),
-         members.filter(m => /bidang/i.test(m.role)),
-         members.filter(m => /pemandu/i.test(m.role)),
-         members.filter(m => !/pembina|ketua|sekretaris|bendahara|bidang|pemandu/i.test(m.role))
-       ].filter(layer => layer.length > 0);
-    } else {
-       return [
-         members.filter(m => /pembina/i.test(m.role)),
-         members.filter(m => /ketua/i.test(m.role)),
-         members.filter(m => /sekretaris|bendahara/i.test(m.role)),
-         members.filter(m => /anggota/i.test(m.role)),
-         members.filter(m => !/pembina|ketua|sekretaris|bendahara|anggota/i.test(m.role))
-       ].filter(layer => layer.length > 0);
+    const levelGroups: { [key: string]: any[] } = {};
+
+    members.forEach(member => {
+        const role = member.role?.toLowerCase() || "";
+        
+        let targetGroup = "";
+        
+        if (/pembina/i.test(role)) targetGroup = "Pembina";
+        else if (/ketua/i.test(role)) targetGroup = "Ketua";
+        else if (/sekretaris|bendahara/i.test(role)) targetGroup = "Sekretariat";
+        else if (/pemandu/i.test(role)) targetGroup = "Pemandu";
+        else if (role.includes("bidang")) targetGroup = "Bidang-Bidang";
+        else if (/anggota/i.test(role)) targetGroup = "Anggota";
+        else targetGroup = member.role || "Lain-lain";
+
+        if (!levelGroups[targetGroup]) levelGroups[targetGroup] = [];
+        levelGroups[targetGroup].push(member);
+    });
+
+    const orderedKeys = ["Pembina", "Ketua", "Sekretariat", "Bidang-Bidang", "Pemandu", "Anggota"];
+    const result = [];
+    
+    // Add known ordered keys first
+    for (const key of orderedKeys) {
+        if (levelGroups[key]) {
+            result.push(levelGroups[key]);
+            delete levelGroups[key];
+        }
     }
+    
+    // Add remaining groups
+    for (const key in levelGroups) {
+        result.push(levelGroups[key]);
+    }
+    
+    return result;
   };
 
   const levels = getLevels();
