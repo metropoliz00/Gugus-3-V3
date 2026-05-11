@@ -1596,7 +1596,10 @@ function AdminAgendaForm() {
        description: 'Deskripsi Kegiatan',
        category: 'guru',
        date_start: new Date().toISOString(),
-       location: 'Kantor Gugus'
+       location: 'Kantor Gugus',
+       image_url: '',
+       detail_url: '',
+       materi_url: ''
     };
     const { data, error } = await supabase.from('events').insert([newEvent]).select();
     if (!error && data) {
@@ -1674,6 +1677,22 @@ function AdminAgendaForm() {
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Lokasi</label>
                     <input className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent" value={item.location || ''} onChange={e => handleUpdate(item.id, { location: e.target.value })} />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">Deskripsi Kegiatan</label>
+                    <textarea className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent" value={item.description || ''} onChange={e => handleUpdate(item.id, { description: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">URL Cover Foto</label>
+                    <input className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent" value={item.image_url || ''} onChange={e => handleUpdate(item.id, { image_url: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">URL Detail Link</label>
+                    <input className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent" value={item.detail_url || ''} onChange={e => handleUpdate(item.id, { detail_url: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">URL Materi (Unduh)</label>
+                    <input className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent" value={item.materi_url || ''} onChange={e => handleUpdate(item.id, { materi_url: e.target.value })} />
                   </div>
                </div>
                <button 
