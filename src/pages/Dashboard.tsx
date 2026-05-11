@@ -4,7 +4,7 @@ import {
   Map, Image as ImageIcon, Briefcase, FileVideo, Video, MessageSquare, MessageCircle, Download,
   Calendar, CheckSquare, Search, Menu, X, PlusCircle, PenTool, Trophy, Award,
   UploadCloud, Activity, Bell, Shield, ChevronRight, BarChart3, GraduationCap, Play, Megaphone,
-  Wallet, Trash2, Globe
+  Wallet, Trash2, Globe, ArrowLeft, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
@@ -33,6 +33,7 @@ interface User {
   email?: string;
   full_name?: string;
   id?: string;
+  foto?: string;
 }
 
 // Data Chart Temp
@@ -55,28 +56,34 @@ const adminMenu = [
   { id: 'guru', label: 'Kelola Guru', icon: Users },
   { id: 'finance', label: 'Kelola Keuangan', icon: Wallet },
   { id: 'user', label: 'Kelola User', icon: Shield },
-  { id: 'agenda', label: 'Kelola Agenda', icon: Calendar },
+  { id: 'agenda', label: 'Kelola Agenda KKG', icon: Calendar },
+  { id: 'materi', label: 'Kelola Materi KKG', icon: BookOpen },
+  { id: 'notulen', label: 'Kelola Notulen Rapat', icon: FileText },
+  { id: 'pelatihan', label: 'Kelola Pelatihan', icon: GraduationCap },
+  { id: 'sertifikat', label: 'Kelola Sertifikat', icon: Award },
+  { id: 'forum', label: 'Kelola Forum Diskusi', icon: MessageSquare },
+  { id: 'komentar', label: 'Kelola Komentar Forum', icon: MessageSquare },
+  { id: 'sharing', label: 'Kelola Praktik Baik', icon: Play },
+  { id: 'hasil_karya', label: 'Kelola Hasil Karya', icon: UploadCloud },
+  { id: 'struktur_org', label: 'Struktur Organisasi', icon: Users },
   { id: 'penghargaan', label: 'Kelola Penghargaan', icon: Trophy },
   { id: 'gugus', label: 'Kelola Gugus', icon: Shield },
   { id: 'kkg', label: 'Kelola KKG', icon: Briefcase },
-  { id: 'monitoring', label: 'Monitoring Aktivitas', icon: Activity },
-  { id: 'upload', label: 'Upload Dokumen', icon: UploadCloud },
-  { id: 'laporan', label: 'Laporan', icon: BarChart3 },
   { id: 'pengaturan', label: 'Pengaturan Website', icon: Settings },
 ];
 
 const guruMenu = [
   { id: 'overview', label: 'Dashboard Guru', icon: LayoutDashboard },
   { id: 'profil', label: 'Profil Saya', icon: Users },
-  { id: 'perangkat_ajar', label: 'Upload Perangkat Ajar', icon: UploadCloud },
-  { id: 'jadwal', label: 'Jadwal Kegiatan', icon: Calendar },
-  { id: 'administrasi', label: 'Administrasi Guru', icon: Briefcase },
-  { id: 'forum', label: 'Forum Guru', icon: MessageSquare },
-  { id: 'program_kkg', label: 'Program KKG', icon: GraduationCap },
-  { id: 'pengumuman', label: 'Pengumuman', icon: Bell },
-  { id: 'berkas', label: 'Download Berkas', icon: Download },
-  { id: 'absensi', label: 'Absensi Kegiatan', icon: CheckSquare },
-  { id: 'galeri_kegiatan', label: 'Galeri Kegiatan', icon: ImageIcon },
+  { id: 'jadwal', label: 'Jadwal KKG', icon: Calendar },
+  { id: 'materi', label: 'Materi KKG', icon: BookOpen },
+  { id: 'notulen', label: 'Notulen Rapat', icon: FileText },
+  { id: 'pelatihan', label: 'Pelatihan', icon: GraduationCap },
+  { id: 'absensi', label: 'Absensi Pelatihan', icon: CheckSquare },
+  { id: 'sertifikat', label: 'Sertifikat Pelatihan', icon: Award },
+  { id: 'forum', label: 'Forum Diskusi', icon: MessageSquare },
+  { id: 'sharing', label: 'Sharing Praktik Baik', icon: Play },
+  { id: 'upload_karya', label: 'Upload Hasil Karya', icon: UploadCloud },
   { id: 'pengaturan', label: 'Pengaturan Akun', icon: Settings },
 ];
 
@@ -253,9 +260,9 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
                  <p className="text-sm font-bold text-soft-black">{user.nama || user.full_name || user.username || user.role}</p>
                  <p className="text-xs text-gray-500">Online</p>
                </div>
-               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-main-blue to-leaf-green p-0.5">
+               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-main-blue to-leaf-green p-0.5 cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/dashboard/profil')}>
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-white">
-                    <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={user.foto || "https://i.pravatar.cc/150?u=a042581f4e29026704d"} alt="Avatar" className="w-full h-full object-cover" />
                   </div>
                </div>
             </div>
@@ -295,20 +302,37 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
                         <Route path="kkg" element={<AdminKKGForm kkgForm={kkgForm} setKkgForm={setKkgForm} handleSaveContent={handleSaveContent} updateContent={updateContent} />} />
                         <Route path="agenda" element={<AdminAgendaForm />} />
                         <Route path="gugus" element={<AdminGugusForm gugusForm={gugusForm} setGugusForm={setGugusForm} handleSaveContent={handleSaveContent} />} />
+                        <Route path="struktur_org" element={<AdminStrukturManager />} />
                         <Route path="penghargaan" element={<AdminPenghargaanForm />} />
                         <Route path="pengumuman" element={<AdminPengumumanForm />} />
                         <Route path="guru" element={<AdminGuruForm />} />
                         <Route path="finance" element={<AdminFinanceManagement />} />
-                        <Route path="monitoring" element={<AdminMonitoring />} />
-                        <Route path="upload" element={<AdminUpload />} />
-                        <Route path="laporan" element={<AdminLaporan />} />
+                        <Route path="materi" element={<DataManagementTable table="kkg_materials" title="Materi KKG" icon={BookOpen} fields={[{name:'title', label:'Judul'}, {name:'description', label:'Deskripsi'}, {name:'category', label:'Kategori'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
+                        <Route path="notulen" element={<DataManagementTable table="meeting_minutes" title="Notulen Rapat" icon={FileText} fields={[{name:'title', label:'Judul'}, {name:'date', label:'Tanggal', type:'date'}, {name:'content', label:'Isi Notulen', type:'textarea'}, {name:'file_url', label:'URL Lampiran', type:'file'}]} />} />
+                        <Route path="pelatihan" element={<DataManagementTable table="trainings" title="Pelatihan" icon={GraduationCap} fields={[{name:'title', label:'Nama Pelatihan'}, {name:'description', label:'Deskripsi'}, {name:'location', label:'Lokasi'}, {name:'date_start', label:'Mulai', type:'date'}, {name:'status', label:'Status', type:'select', options:['planned', 'ongoing', 'completed']}]} />} />
+                        <Route path="sertifikat" element={<DataManagementTable table="training_certificates" title="Sertifikat" icon={Award} fields={[{name:'user_id', label:'User ID'}, {name:'training_id', label:'Training ID'}, {name:'certificate_url', label:'URL Sertifikat', type:'file'}]} />} />
+                        <Route path="forum" element={<DataManagementTable table="forum_posts" title="Forum Diskusi" icon={MessageSquare} fields={[{name:'title', label:'Judul'}, {name:'content', label:'Konten', type:'textarea'}, {name:'category', label:'Kategori'}]} />} />
+                        <Route path="komentar" element={<DataManagementTable table="forum_comments" title="Komentar Forum" icon={MessageSquare} fields={[{name:'post_id', label:'Post ID'}, {name:'content', label:'Konten', type:'textarea'}, {name:'user_id', label:'User ID'}]} />} />
+                        <Route path="sharing" element={<DataManagementTable table="best_practices" title="Sharing Praktik Baik" icon={Play} fields={[{name:'title', label:'Judul'}, {name:'description', label:'Deskripsi'}, {name:'video_url', label:'URL Video'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
+                        <Route path="hasil_karya" element={<DataManagementTable table="teacher_works" title="Hasil Karya Guru" icon={UploadCloud} fields={[{name:'title', label:'Judul Karya'}, {name:'description', label:'Deskripsi'}, {name:'work_type', label:'Jenis Karya'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
+                        <Route path="profil" element={<UserProfileEdit user={user} />} />
                      </>
                    )}
 
                    {/* Guru Routes */}
                    {user.role?.toLowerCase() === 'guru' && (
                      <>
-                       {/* Add guru specific routes here if needed, currently they use placeholder */}
+                       <Route path="profil" element={<UserProfileEdit user={user} />} />
+                       <Route path="jadwal" element={<AdminAgendaForm readOnly={true} />} />
+                       <Route path="materi" element={<DataViewList table="kkg_materials" title="Materi KKG" icon={BookOpen} />} />
+                       <Route path="notulen" element={<DataViewList table="meeting_minutes" title="Notulen Rapat" icon={FileText} />} />
+                       <Route path="pelatihan" element={<DataViewList table="trainings" title="Pelatihan" icon={GraduationCap} />} />
+                       <Route path="absensi" element={<TeacherAttendance />} />
+                       <Route path="sertifikat" element={<DataViewList table="training_certificates" title="Sertifikat Saya" icon={Award} filterColumn="user_id" filterValue={user.id} />} />
+                       <Route path="forum" element={<ForumSystem user={user} />} />
+                       <Route path="sharing" element={<DataViewList table="best_practices" title="Sharing Praktik Baik" icon={Play} />} />
+                       <Route path="upload_karya" element={<DataManagementTable table="teacher_works" title="Upload Hasil Karya" icon={UploadCloud} fields={[{name:'title', label:'Judul Karya'}, {name:'description', label:'Deskripsi'}, {name:'work_type', label:'Jenis Karya'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
+                       <Route path="pengaturan" element={<AdminSettingsForm />} />
                      </>
                    )}
 
@@ -3399,6 +3423,723 @@ function AdminLaporan() {
        <h2 className="text-2xl font-bold font-heading text-soft-black mb-2">Laporan Statistik</h2>
        <p className="text-gray-500 text-sm max-w-md">Data laporan ditarik dari tabel kegiatan CMS yang dapat di-export ke format Excel/PDF.</p>
     </motion.div>
+  );
+}
+
+function AdminStrukturManager() {
+  const [activeTab, setActiveTab] = useState<'kkg' | 'gugus'>('kkg');
+  
+  return (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-main-orange/10 rounded-2xl flex items-center justify-center text-main-orange">
+            <Users className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-heading">Manajemen Struktur Organisasi</h2>
+            <p className="text-xs text-gray-500">Kelola pengurus KKG dan Gugus dari satu tempat.</p>
+          </div>
+        </div>
+        <div className="flex bg-gray-100 p-1 rounded-xl">
+          <button onClick={() => setActiveTab('kkg')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'kkg' ? 'bg-white text-main-blue shadow' : 'text-gray-500 hover:text-gray-700'}`}>KKG</button>
+          <button onClick={() => setActiveTab('gugus')} className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === 'gugus' ? 'bg-white text-main-blue shadow' : 'text-gray-500 hover:text-gray-700'}`}>Gugus</button>
+        </div>
+      </div>
+      
+      {activeTab === 'kkg' ? (
+        <AdminKKGFormWrapper />
+      ) : (
+        <AdminGugusFormWrapper />
+      )}
+    </div>
+  );
+}
+
+function AdminKKGFormWrapper() {
+  const { content, updateContent, kkgForm, setKkgForm, handleSaveContent } = useSiteContent() as any;
+  // We use current content but keep local state for the form within the wrapper if needed, 
+  // though AdminKKGForm is designed to take props.
+  return <AdminKKGForm kkgForm={kkgForm} setKkgForm={setKkgForm} handleSaveContent={handleSaveContent} updateContent={updateContent} />;
+}
+
+function AdminGugusFormWrapper() {
+  const { content, updateContent, gugusForm, setGugusForm, handleSaveContent } = useSiteContent() as any;
+  return <AdminGugusForm gugusForm={gugusForm} setGugusForm={setGugusForm} handleSaveContent={handleSaveContent} />;
+}
+
+function UserProfileEdit({ user }: { user: any }) {
+  const { alert } = useAlert();
+  const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<any>({
+    nama: user.nama || '',
+    nip: user.nip || '',
+    jabatan: user.jabatan || '',
+    sekolah: user.sekolah || '',
+    kepegawaian: user.kepegawaian || '',
+    pangkat: user.pangkat || '',
+    email: user.email || '',
+    foto: user.foto || ''
+  });
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/update-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...profile, id: user.id })
+      });
+      if (!response.ok) throw new Error("Gagal memperbarui profil");
+      await alert("Profil berhasil diperbarui. Silakan refresh halaman untuk melihat perubahan.", "Sukses", "success");
+    } catch (err: any) {
+      alert(err.message, "Error", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl max-w-4xl mx-auto">
+      <div className="flex items-center gap-6 mb-10 pb-6 border-b border-gray-100">
+        <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 shadow-lg shadow-main-blue/20">
+           <div className="w-full h-full bg-white rounded-xl flex items-center justify-center overflow-hidden">
+             <img src={profile.foto || "https://i.pravatar.cc/150?u=a042581f4e29026704d"} alt="Profile" className="w-full h-full object-cover" />
+           </div>
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold font-heading text-soft-black">Profil Saya</h2>
+          <p className="text-gray-500">Kelola informasi pribadi dan data kepegawaian Anda.</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="col-span-full">
+           <ImageUpload label="Foto Profil" value={profile.foto} onChange={base64 => setProfile({...profile, foto: base64})} maxWidth={400} maxHeight={400} />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Nama Lengkap</label>
+          <input className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none" value={profile.nama} onChange={e => setProfile({...profile, nama: e.target.value})} />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Email</label>
+          <input className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none" value={profile.email} onChange={e => setProfile({...profile, email: e.target.value})} />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">NIP</label>
+          <input className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none" value={profile.nip} onChange={e => setProfile({...profile, nip: e.target.value})} />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Jabatan</label>
+          <input className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none" value={profile.jabatan} onChange={e => setProfile({...profile, jabatan: e.target.value})} />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Sekolah</label>
+          <input className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none" value={profile.sekolah} onChange={e => setProfile({...profile, sekolah: e.target.value})} />
+        </div>
+        <div>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Status Kepegawaian</label>
+          <input className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none" value={profile.kepegawaian} onChange={e => setProfile({...profile, kepegawaian: e.target.value})} />
+        </div>
+        <div className="col-span-full pt-6">
+          <button type="submit" disabled={loading} className="w-full py-4 bg-main-blue text-white rounded-2xl font-bold shadow-lg shadow-main-blue/20 hover:scale-[1.02] transition-all">
+            {loading ? 'Menyimpan...' : 'Simpan Perubahan Profil'}
+          </button>
+        </div>
+      </form>
+    </motion.div>
+  );
+}
+
+function DataManagementTable({ table, title, icon: Icon, fields }: any) {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState<any>({});
+  const [editId, setEditId] = useState<string | null>(null);
+  const { alert, confirm } = useAlert();
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const { data: res, error } = await supabase.from(table).select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      setData(res || []);
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [table]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editId) {
+        const { error } = await supabase.from(table).update(formData).eq('id', editId);
+        if (error) throw error;
+        await alert("Data Berhasil Diperbarui");
+      } else {
+        const { error } = await supabase.from(table).insert([formData]);
+        if (error) throw error;
+        await alert("Data Berhasil Ditambahkan");
+      }
+      setShowForm(false);
+      setEditId(null);
+      setFormData({});
+      fetchData();
+    } catch (err: any) {
+      alert(err.message, "Error", "error");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (await confirm("Yakin ingin menghapus data ini?")) {
+      try {
+        const { error } = await supabase.from(table).delete().eq('id', id);
+        if (error) throw error;
+        fetchData();
+      } catch (err: any) {
+        alert(err.message, "Error", "error");
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
+            <Icon className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-heading">{title}</h2>
+            <p className="text-xs text-gray-500">Kelola data {title.toLowerCase()} didatabase.</p>
+          </div>
+        </div>
+        <button onClick={() => setShowForm(!showForm)} className="px-6 py-2.5 bg-main-blue text-white rounded-xl font-bold shadow-lg shadow-main-blue/20 transition-all flex items-center gap-2">
+           {showForm ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+           {showForm ? 'Batal' : 'Tambah Data'}
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {showForm && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="bg-white p-8 rounded-3xl shadow-md border border-gray-100 overflow-hidden">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {fields.map((f: any) => (
+                <div key={f.name} className={f.type === 'textarea' || f.type === 'file' ? 'col-span-full' : ''}>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-2">{f.label}</label>
+                  {f.type === 'textarea' ? (
+                    <textarea className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none" rows={4} value={formData[f.name] || ''} onChange={e => setFormData({...formData, [f.name]: e.target.value})} />
+                  ) : f.type === 'select' ? (
+                    <select className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none bg-white" value={formData[f.name] || ''} onChange={e => setFormData({...formData, [f.name]: e.target.value})}>
+                      <option value="">Pilih</option>
+                      {f.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  ) : f.type === 'file' ? (
+                    <ImageUpload label={f.label} value={formData[f.name] || ''} onChange={base64 => setFormData({...formData, [f.name]: base64})} />
+                  ) : (
+                    <input type={f.type || 'text'} className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none" value={formData[f.name] || ''} onChange={e => setFormData({...formData, [f.name]: e.target.value})} />
+                  )}
+                </div>
+              ))}
+              <div className="col-span-full flex justify-end gap-3 pt-4">
+                <button type="submit" className="px-8 py-3 bg-main-blue text-white rounded-xl font-bold shadow-lg">Simpan Data</button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50">
+              <tr>
+                {fields.slice(0, 3).map((f: any) => <th key={f.name} className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">{f.label}</th>)}
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr><td colSpan={10} className="p-10 text-center text-gray-400 italic">Memuat data...</td></tr>
+              ) : data.length === 0 ? (
+                <tr><td colSpan={10} className="p-10 text-center text-gray-400 italic">Belum ada data.</td></tr>
+              ) : data.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
+                  {fields.slice(0, 3).map((f: any) => (
+                    <td key={f.name} className="px-6 py-4 text-sm font-medium text-gray-700 max-w-[200px] truncate">
+                      {f.type === 'date' ? new Date(item[f.name]).toLocaleDateString('id-ID') : item[f.name] || '-'}
+                    </td>
+                  ))}
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                       <button onClick={() => { setFormData(item); setEditId(item.id); setShowForm(true); }} className="p-2 text-main-blue hover:bg-main-blue/5 rounded-lg"><PenTool className="w-4 h-4"/></button>
+                       <button onClick={() => handleDelete(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DataViewList({ table, title, icon: Icon, filterColumn, filterValue }: any) {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        let query: any = supabase.from(table).select('*').order('created_at', { ascending: false });
+        if (filterColumn && filterValue) {
+          query = query.eq(filterColumn, filterValue);
+        }
+        const { data: res, error } = await query;
+        if (error) throw error;
+        setData(res || []);
+      } catch (err: any) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [table, filterColumn, filterValue]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <div className="w-12 h-12 bg-leaf-green/10 rounded-2xl flex items-center justify-center text-leaf-green">
+          <Icon className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold font-heading">{title}</h2>
+          <p className="text-xs text-gray-500">Lihat daftar {title.toLowerCase()} untuk menunjang kegiatan KKG.</p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {loading ? (
+          <div className="col-span-full py-20 text-center text-gray-400 italic">Memuat data...</div>
+        ) : data.length === 0 ? (
+          <div className="col-span-full py-20 text-center text-gray-400 italic">Belum ada data tersedia.</div>
+        ) : data.map((item) => (
+          <motion.div whileHover={{ y: -5 }} key={item.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition-all">
+             <div className="flex justify-between items-start mb-4">
+                <div className="p-2 bg-gray-50 rounded-lg">
+                  <Icon className="w-5 h-5 text-gray-400" />
+                </div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(item.created_at).toLocaleDateString()}</span>
+             </div>
+             <h3 className="font-bold text-soft-black mb-2 line-clamp-2">{item.title}</h3>
+             <p className="text-xs text-gray-500 mb-4 line-clamp-3">{item.description || item.content || 'Klik tombol dibawah untuk detail.'}</p>
+             <div className="flex gap-2">
+                {item.file_url && (
+                  <a href={item.file_url} target="_blank" rel="noreferrer" className="flex-1 py-2 bg-main-blue/10 text-main-blue rounded-lg text-xs font-bold text-center hover:bg-main-blue hover:text-white transition-all">Download / Lihat File</a>
+                )}
+                {item.video_url && (
+                  <a href={item.video_url} target="_blank" rel="noreferrer" className="flex-1 py-2 bg-main-orange/10 text-main-orange rounded-lg text-xs font-bold text-center hover:bg-main-orange hover:text-white transition-all">Lihat Video</a>
+                )}
+             </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TeacherAttendance() {
+  const { alert } = useAlert();
+  const [trainings, setTrainings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTrainings = async () => {
+      try {
+        const { data, error } = await supabase.from('trainings').select('*').eq('status', 'ongoing');
+        if (error) throw error;
+        setTrainings(data || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTrainings();
+  }, []);
+
+  const handleAbsen = async (trainingId: string) => {
+    try {
+      const { error } = await supabase.from('training_attendance').insert([{ training_id: trainingId }]); // user_id will be handled by RLS or manually if needed
+      if (error) throw error;
+      await alert("Absensi Berhasil Dicatat!", "Sukses", "success");
+    } catch (err: any) {
+      alert(err.message, "Error", "error");
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
+          <CheckSquare className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold font-heading">Presensi Pelatihan</h2>
+          <p className="text-xs text-gray-500">Lakukan absensi pada pelatihan yang sedang berlangsung.</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="py-20 text-center text-gray-400">Memuat pelatihan aktif...</div>
+      ) : trainings.length === 0 ? (
+        <div className="bg-gray-50/50 p-10 rounded-3xl text-center border-2 border-dashed border-gray-200">
+           <Activity className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+           <p className="text-gray-500 font-medium">Tidak ada pelatihan yang sedang berlangsung saat ini.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {trainings.map(t => (
+            <div key={t.id} className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-soft-black">{t.title}</h3>
+                <p className="text-xs text-gray-500">{t.location} | {new Date(t.date_start).toLocaleDateString()}</p>
+              </div>
+              <button onClick={() => handleAbsen(t.id)} className="px-6 py-2 bg-main-blue text-white rounded-xl font-bold text-sm shadow-lg shadow-main-blue/20">Absen Sekarang</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ForumSystem({ user }: { user: any }) {
+  const [activeView, setActiveView] = useState<'list' | 'create' | 'detail'>('list');
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('forum_posts')
+        .select(`*, author:user_id (*)`)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setPosts(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const handleCreateSuccess = () => {
+    setActiveView('list');
+    fetchPosts();
+  };
+
+  const handleViewDetail = (post: any) => {
+    setSelectedPost(post);
+    setActiveView('detail');
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
+            <MessageSquare className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-heading">Forum Diskusi KKG</h2>
+            <p className="text-xs text-gray-500">Ruang berbagi ide, pertanyaan, dan pengalaman antar guru.</p>
+          </div>
+        </div>
+        {activeView === 'list' ? (
+          <button onClick={() => setActiveView('create')} className="px-6 py-2.5 bg-main-blue text-white rounded-xl font-bold shadow-lg shadow-main-blue/20 flex items-center gap-2">
+            <PlusCircle className="w-4 h-4" />
+            Buat Topik Baru
+          </button>
+        ) : (
+          <button onClick={() => setActiveView('list')} className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4" />
+            Kembali ke Daftar
+          </button>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="py-20 text-center text-gray-400 font-medium">Memuat diskusi...</div>
+      ) : activeView === 'create' ? (
+        <CreateForumPostForm user={user} onSuccess={handleCreateSuccess} />
+      ) : activeView === 'detail' ? (
+        <ForumDetail post={selectedPost} user={user} />
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {posts.length === 0 ? (
+            <div className="bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
+               <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+               <p className="text-gray-500">Belum ada diskusi. Jadilah yang pertama memulai!</p>
+            </div>
+          ) : (
+            posts.map(post => (
+              <motion.div 
+                whileHover={{ x: 5 }} 
+                key={post.id} 
+                onClick={() => handleViewDetail(post)}
+                className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:border-main-blue/30 cursor-pointer transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden border">
+                    <img src={post.author?.foto || `https://ui-avatars.com/api/?name=${post.author?.nama || 'Guru'}&background=random`} alt="Author" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-main-blue uppercase tracking-widest bg-main-blue/5 px-2 py-0.5 rounded-full">{post.category || 'Umum'}</span>
+                    <h3 className="font-bold text-soft-black mt-1 mb-1">{post.title}</h3>
+                    <div className="flex items-center gap-3 text-xs text-gray-400">
+                       <span>Oleh: {post.author?.nama || post.user_id?.substring(0,8)}</span>
+                       <span>•</span>
+                       <span>{new Date(post.created_at).toLocaleDateString('id-ID')}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 text-gray-400">
+                   <div className="flex items-center gap-1">
+                      <MessageSquare className="w-4 h-4" />
+                      <span className="text-xs font-bold">Detail</span>
+                   </div>
+                   <ChevronRight className="w-5 h-5 text-gray-300" />
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CreateForumPostForm({ user, onSuccess }: { user: any, onSuccess: () => void }) {
+  const { alert } = useAlert();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({ title: '', content: '', category: 'Umum' });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.title || !formData.content) return alert("Harap isi judul dan konten diskusi.");
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('forum_posts').insert([{
+        user_id: user.id,
+        title: formData.title,
+        content: formData.content,
+        category: formData.category
+      }]);
+      
+      if (error) throw error;
+      await alert("Topik diskusi berhasil diterbitkan!", "Sukses", "success");
+      onSuccess();
+    } catch (err: any) {
+      alert(err.message, "Error", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 max-w-3xl mx-auto">
+       <h3 className="text-xl font-bold font-heading mb-6 text-soft-black">Buat Topik Baru</h3>
+       <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Pilih Kategori</label>
+            <div className="flex flex-wrap gap-2">
+              {['Umum', 'Kurikulum', 'Media', 'Administrasi', 'Inovasi'].map(cat => (
+                <button 
+                  key={cat}
+                  type="button"
+                  onClick={() => setFormData({...formData, category: cat})}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${formData.category === cat ? 'bg-main-blue text-white shadow-md' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Judul Diskusi</label>
+            <input 
+              placeholder="Apa yang ingin Anda diskusikan?"
+              className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none text-lg font-bold"
+              value={formData.title}
+              onChange={e => setFormData({...formData, title: e.target.value})}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Detail Pembahasan</label>
+            <textarea 
+              placeholder="Tuliskan detail pertanyaan atau pengalaman Anda..."
+              rows={8}
+              className="w-full border border-gray-100 p-4 rounded-2xl focus:border-main-blue outline-none bg-gray-50/50"
+              value={formData.content}
+              onChange={e => setFormData({...formData, content: e.target.value})}
+            />
+          </div>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full py-4 bg-main-blue text-white rounded-2xl font-bold shadow-lg shadow-main-blue/20 hover:scale-[1.02] transition-all disabled:opacity-50"
+          >
+            {loading ? 'Sedang Menerbitkan...' : 'Terbitkan Diskusi Sekarang'}
+          </button>
+       </form>
+    </motion.div>
+  );
+}
+
+function ForumDetail({ post, user }: { post: any, user: any }) {
+  const [comments, setComments] = useState<any[]>([]);
+  const [loadingComments, setLoadingComments] = useState(true);
+  const [newComment, setNewComment] = useState('');
+  const [submittingReply, setSubmittingReply] = useState(false);
+  const { alert } = useAlert();
+
+  const fetchComments = async () => {
+    setLoadingComments(true);
+    try {
+      const { data, error } = await supabase
+        .from('forum_comments')
+        .select(`*, author:user_id (*)`)
+        .eq('post_id', post.id)
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      setComments(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, [post.id]);
+
+  const handleReply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    
+    setSubmittingReply(true);
+    try {
+      const { error } = await supabase.from('forum_comments').insert([{
+        post_id: post.id,
+        user_id: user.id,
+        content: newComment
+      }]);
+      
+      if (error) throw error;
+      setNewComment('');
+      fetchComments();
+    } catch (err: any) {
+      alert(err.message, "Error", "error");
+    } finally {
+      setSubmittingReply(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8 max-w-4xl mx-auto pb-24">
+       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-10 h-10 rounded-full overflow-hidden border">
+              <img src={post.author?.foto || `https://ui-avatars.com/api/?name=${post.author?.nama || 'Guru'}&background=random`} alt="Author" className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-soft-black">{post.author?.nama || 'Pengguna'}</p>
+              <p className="text-xs text-gray-400">{new Date(post.created_at).toLocaleString('id-ID')}</p>
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold font-heading text-soft-black mb-4">{post.title}</h1>
+          <div className="prose prose-blue max-w-none text-gray-600 mb-6 bg-gray-50/50 p-6 rounded-2xl whitespace-pre-wrap">
+             {post.content}
+          </div>
+          <div className="flex items-center gap-4 py-4 border-t border-gray-50">
+             <span className="text-[10px] font-extrabold text-main-blue bg-main-blue/10 px-3 py-1 rounded-full uppercase tracking-widest">{post.category}</span>
+          </div>
+       </motion.div>
+
+       <div className="space-y-4">
+          <h3 className="text-lg font-bold font-heading flex items-center gap-2 text-soft-black">
+            <MessageSquare className="w-5 h-5 text-main-blue" />
+            Tanggapan Komunitas ({comments.length})
+          </h3>
+          
+          {loadingComments ? (
+            <div className="py-10 text-center text-gray-400 text-sm italic">Memuat tanggapan...</div>
+          ) : comments.length === 0 ? (
+            <div className="bg-white/50 p-8 rounded-3xl text-center italic text-gray-400 text-sm border border-dashed border-gray-200">
+               Belum ada tanggapan. Jadilah yang pertama memberikan respon!
+            </div>
+          ) : (
+            comments.map(comment => (
+              <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} key={comment.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                 <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full overflow-hidden border bg-gray-100">
+                       <img src={comment.author?.foto || `https://ui-avatars.com/api/?name=${comment.author?.nama || 'Guru'}&background=random`} alt="Commenter" className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                       <p className="text-xs font-bold text-soft-black">{comment.author?.nama || 'Guru'}</p>
+                       <p className="text-[10px] text-gray-400">{new Date(comment.created_at).toLocaleString('id-ID')}</p>
+                    </div>
+                 </div>
+                 <p className="text-sm text-gray-600 leading-relaxed pl-11">{comment.content}</p>
+              </motion.div>
+            ))
+          )}
+       </div>
+
+       <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl border border-main-blue/20 sticky bottom-4 z-10 transition-all focus-within:shadow-main-blue/20">
+          <form onSubmit={handleReply} className="flex gap-4 items-end">
+             <div className="flex-1">
+                <textarea 
+                  placeholder="Ketik tanggapan konstruktif Anda..."
+                  rows={1}
+                  className="w-full border-b border-gray-200 focus:border-main-blue outline-none resize-none p-2 text-sm transition-all"
+                  value={newComment}
+                  onChange={e => setNewComment(e.target.value)}
+                />
+             </div>
+             <button 
+               type="submit" 
+               disabled={submittingReply || !newComment.trim()}
+               className="bg-main-blue text-white px-5 py-3 rounded-xl font-bold shadow-lg shadow-main-blue/20 hover:scale-[1.05] active:scale-95 transition-all disabled:opacity-50 disabled:scale-100"
+             >
+               {submittingReply ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-5 h-5" />}
+             </button>
+          </form>
+       </div>
+    </div>
   );
 }
 
