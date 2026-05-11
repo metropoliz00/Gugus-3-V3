@@ -1594,6 +1594,11 @@ function AdminGaleriForm({ galleryForm, setGalleryForm, handleSaveContent }: any
   const { confirm } = useAlert();
   const [gallery, setGallery] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [bulkTitle, setBulkTitle] = useState('');
+  const [uploadingBulk, setUploadingBulk] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     async function loadGallery() {
@@ -1609,6 +1614,88 @@ function AdminGaleriForm({ galleryForm, setGalleryForm, handleSaveContent }: any
     }
     loadGallery();
   }, []);
+
+  const resizeImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxWidth = 1200;
+          const maxHeight = 1200;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/webp', 0.8));
+          } else {
+            reject(new Error("Failed to get canvas context"));
+          }
+        };
+        img.onerror = () => reject(new Error("Failed to load image"));
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleBulkUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0 || !supabase) return;
+    if (!bulkTitle) {
+      alert("Mohon isi Nama Kegiatan terlebih dahulu.");
+      return;
+    }
+
+    setUploadingBulk(true);
+    setUploadProgress({ current: 0, total: files.length });
+    
+    const newItems = [];
+
+    for (let i = 0; i < files.length; i++) {
+      try {
+        const base64 = await resizeImage(files[i]);
+        newItems.push({
+          title: bulkTitle,
+          media_url: base64,
+          type: 'photo'
+        });
+        setUploadProgress(prev => ({ ...prev, current: i + 1 }));
+      } catch (err) {
+        console.error("Error processing file:", err);
+      }
+    }
+
+    if (newItems.length > 0) {
+      const { data, error } = await supabase.from('gallery').insert(newItems).select();
+      if (!error && data) {
+        setGallery([...data, ...gallery]);
+      }
+    }
+
+    setUploadingBulk(false);
+    setShowBulkUpload(false);
+    setBulkTitle('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const handleCreate = async () => {
      if (!supabase) return;
@@ -1643,18 +1730,85 @@ function AdminGaleriForm({ galleryForm, setGalleryForm, handleSaveContent }: any
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5">
-       <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
+       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b border-gray-100 gap-4">
          <div>
           <h2 className="text-2xl font-bold font-heading text-soft-black">Kelola Galeri Kegiatan</h2>
           <p className="text-gray-500 text-sm mt-1">Unggah dokumentasi aktivitas sekolah (Tabel <code className="bg-gray-100 px-1 rounded">gallery</code>).</p>
          </div>
-         <button 
-           onClick={handleCreate}
-           className="px-4 py-2 bg-leaf-green/10 text-leaf-green flex items-center gap-2 font-bold rounded-xl hover:bg-leaf-green/20 transition-colors"
-         >
-           <PlusCircle className="w-5 h-5" /> Tambah Item
-         </button>
+         <div className="flex gap-2">
+           <button 
+             onClick={() => setShowBulkUpload(!showBulkUpload)}
+             className={`px-4 py-2 flex items-center gap-2 font-bold rounded-xl transition-colors ${showBulkUpload ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-600 hover:bg-orange-100'}`}
+           >
+             <UploadCloud className="w-5 h-5" /> {showBulkUpload ? 'Batal' : 'Upload Massal'}
+           </button>
+           <button 
+             onClick={handleCreate}
+             className="px-4 py-2 bg-leaf-green/10 text-leaf-green flex items-center gap-2 font-bold rounded-xl hover:bg-leaf-green/20 transition-colors"
+           >
+             <PlusCircle className="w-5 h-5" /> Tambah Satuan
+           </button>
+         </div>
       </div>
+
+      {showBulkUpload && (
+        <div className="mb-8 p-6 bg-orange-50/50 rounded-2xl border-2 border-dashed border-orange-200">
+           <div className="max-w-xl mx-auto space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-orange-900 mb-2">Nama/Judul Kegiatan</label>
+                <input 
+                  type="text" 
+                  placeholder="Contoh: Rapat Kerja Gugus 2024" 
+                  className="w-full px-4 py-3 rounded-xl border border-orange-200 outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                  value={bulkTitle}
+                  onChange={e => setBulkTitle(e.target.value)}
+                />
+              </div>
+              
+              <div 
+                onClick={() => !uploadingBulk && fileInputRef.current?.click()}
+                className={`relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all ${
+                  uploadingBulk ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'bg-white border-orange-300 hover:border-orange-500 hover:bg-orange-50/30'
+                }`}
+              >
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  className="hidden" 
+                  ref={fileInputRef}
+                  onChange={handleBulkUpload}
+                  disabled={uploadingBulk}
+                />
+                
+                {uploadingBulk ? (
+                  <div className="space-y-4">
+                     <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                     <p className="text-orange-900 font-bold">Sedang Mengunggah...</p>
+                     <div className="w-full bg-orange-200 rounded-full h-2.5 max-w-xs mx-auto">
+                        <div className="bg-orange-600 h-2.5 rounded-full transition-all" style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}></div>
+                     </div>
+                     <p className="text-xs text-orange-700">{uploadProgress.current} dari {uploadProgress.total} foto diproses</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <ImageIcon className="w-8 h-8" />
+                    </div>
+                    <p className="text-orange-900 font-bold">Pilih Banyak Foto</p>
+                    <p className="text-sm text-orange-600">Klik untuk memilih beberapa foto sekaligus untuk kegiatan "{bulkTitle || '...'}"</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-orange-100">
+                <p className="text-xs text-orange-800 leading-relaxed font-medium">
+                  <strong>Tips:</strong> Gunakan fitur ini untuk mengunggah banyak dokumentasi sekaligus. Pastikan koneksi internet stabil karena sistem akan memproses dan mengunggah foto satu per satu secara otomatis.
+                </p>
+              </div>
+           </div>
+        </div>
+      )}
 
       <div className="space-y-6">
         {isLoading ? (
