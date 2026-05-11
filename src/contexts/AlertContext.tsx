@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import AlertModal, { AlertModalProps } from '../components/AlertModal';
 
 type AlertContextType = {
-  alert: (message: string, title?: string) => Promise<void>;
+  alert: (message: string, title?: string, type?: 'info' | 'success' | 'error') => Promise<void>;
   confirm: (message: string, title?: string) => Promise<boolean>;
 };
 
@@ -15,14 +15,14 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   const [resolveConfirm, setResolveConfirm] = useState({ resolve: (value: boolean) => {} });
   const [resolveAlert, setResolveAlert] = useState({ resolve: () => {} });
 
-  const alert = (message: string, title?: string) => {
+  const alert = (message: string, title?: string, type: 'info' | 'success' | 'error' = 'info') => {
     return new Promise<void>((resolve) => {
       setResolveAlert({ resolve });
       setModalProps({
         isOpen: true,
         message,
         title,
-        type: 'info',
+        type,
         onClose: () => {
           setModalProps(null);
           resolve();

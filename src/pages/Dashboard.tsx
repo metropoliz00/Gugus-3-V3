@@ -1960,10 +1960,10 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
       const { data, error } = await supabase.from('org_kkg').insert([{ role: "Jabatan Baru", name: "-", school: "-" }]).select();
       if (error) throw error;
       if (data) loadStruktur();
-      await alert("Anggota baru berhasil ditambahkan", "Sukses");
+      await alert("Anggota baru berhasil ditambahkan", "Sukses", "success");
     } catch (err: any) {
       console.error("Error creating org_kkg:", err);
-      await alert("Gagal menambah anggota: " + (err.message || "Kesalahan tidak diketahui"), "Error");
+      await alert("Gagal menambah anggota: " + (err.message || "Kesalahan tidak diketahui"), "Error", "error");
     }
   };
 
@@ -1982,7 +1982,7 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
         }
       } catch (err: any) {
         console.error("Error updating org_kkg:", err);
-        await alert("Gagal menyimpan perubahan: " + (err.message || "Kesalahan tidak diketahui"), "Error");
+        await alert("Gagal menyimpan perubahan: " + (err.message || "Kesalahan tidak diketahui"), "Error", "error");
       } finally {
         setIsSavingOrg(null);
       }
@@ -2254,7 +2254,7 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {dbStruktur.map((item: any, i: number) => (
                 <div key={item.id} className="p-4 border border-gray-100 rounded-2xl bg-white shadow-sm flex items-start gap-4 hover:shadow-md transition-all group">
                   <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 justify-center items-center flex text-gray-400 shrink-0 mt-1">
@@ -2516,10 +2516,10 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
       const { data, error } = await supabase.from('org_gugus').insert([{ role: "Jabatan Baru", name: "-", school: "-" }]).select();
       if (error) throw error;
       if (data) loadStruktur();
-      await alert("Anggota baru berhasil ditambahkan", "Sukses");
+      await alert("Anggota baru berhasil ditambahkan", "Sukses", "success");
     } catch (err: any) {
       console.error("Error creating org_gugus:", err);
-      await alert("Gagal menambah anggota: " + (err.message || "Kesalahan tidak diketahui"), "Error");
+      await alert("Gagal menambah anggota: " + (err.message || "Kesalahan tidak diketahui"), "Error", "error");
     }
   };
 
@@ -2538,7 +2538,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
         }
       } catch (err: any) {
         console.error("Error updating org_gugus:", err);
-        await alert("Gagal menyimpan perubahan: " + (err.message || "Kesalahan tidak diketahui"), "Error");
+        await alert("Gagal menyimpan perubahan: " + (err.message || "Kesalahan tidak diketahui"), "Error", "error");
       } finally {
         setIsSavingOrg(null);
       }
@@ -2694,7 +2694,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                 <PlusCircle className="w-5 h-5" /> Tambah Pengurus
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {dbStruktur.map((item: any) => (
                 <div key={item.id} className="p-4 border border-gray-100 rounded-2xl bg-white shadow-sm flex items-start gap-4 hover:shadow-md transition-all group">
                   <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-100 justify-center items-center flex text-gray-400 shrink-0 mt-1">
