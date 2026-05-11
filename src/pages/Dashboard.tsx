@@ -2564,7 +2564,10 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
   const [localIsActive, setLocalIsActive] = useState(!!kkgForm.pengumuman?.isActive);
 
   useEffect(() => {
-    setLocalIsActive(!!kkgForm.pengumuman?.isActive);
+    const isActive = !!kkgForm.pengumuman?.isActive;
+    if (localIsActive !== isActive) {
+      setLocalIsActive(isActive);
+    }
   }, [kkgForm.pengumuman?.isActive]);
   
   // Use default values if current form fields are empty/missing
@@ -3045,28 +3048,24 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
                         const isActive = e.target.checked;
                         setLocalIsActive(isActive);
                         
-                        setKkgForm((prev: any) => {
+                        if (updateContent) {
+                          setIsSavingToggle(true);
                           const updated = { 
-                            ...prev, 
-                            pengumuman: { ...(prev.pengumuman || {}), isActive } 
+                            ...form, 
+                            pengumuman: { ...(form.pengumuman || {}), isActive } 
                           };
-                          
-                          if (updateContent) {
-                            setIsSavingToggle(true);
-                            updateContent({ kkg: updated })
-                              .then(() => {
-                                  alert(isActive ? "Pengumuman KKG diaktifkan!" : "Pengumuman KKG dinonaktifkan!");
-                                  console.log("Pengumuman KKG updated to:", isActive);
-                              })
-                              .catch(err => {
-                                  alert("Gagal menyimpan pengaturan!");
-                                  console.error("Gagal menyimpan:", err);
-                                  setLocalIsActive(!isActive);
-                              })
-                              .finally(() => setTimeout(() => setIsSavingToggle(false), 1000));
-                          }
-                          return updated;
-                        });
+                          updateContent({ kkg: updated })
+                            .then(() => {
+                                alert(isActive ? "Pengumuman KKG diaktifkan!" : "Pengumuman KKG dinonaktifkan!");
+                                console.log("Pengumuman KKG updated to:", isActive);
+                            })
+                            .catch(err => {
+                                alert("Gagal menyimpan pengaturan!");
+                                console.error("Gagal menyimpan:", err);
+                                setLocalIsActive(!isActive);
+                            })
+                            .finally(() => setTimeout(() => setIsSavingToggle(false), 1000));
+                        }
                       }}
                       className="sr-only peer"
                     />
