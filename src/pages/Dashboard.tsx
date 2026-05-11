@@ -86,6 +86,29 @@ const guruMenu = [
   { id: 'pengaturan_akun', label: 'Pengaturan Akun', icon: Settings },
 ];
 
+const adminMenuGroups = [
+  { 
+    title: 'Ikhtisar', 
+    items: ['overview', 'user', 'guru', 'finance'] 
+  },
+  { 
+    title: 'Konten Publik', 
+    items: ['berita', 'pengumuman', 'galeri'] 
+  },
+  { 
+    title: 'Akademik', 
+    items: ['agenda', 'materi', 'notulen', 'pelatihan', 'sertifikat'] 
+  },
+  { 
+    title: 'Forum & Karya', 
+    items: ['forum', 'komentar', 'sharing', 'hasil_karya', 'penghargaan'] 
+  },
+  { 
+    title: 'Sistem', 
+    items: ['sekolah', 'struktur_org', 'pengaturan'] 
+  }
+];
+
 export default function Dashboard({ user: initialUser, onLogout }: { user: User; onLogout: () => void }) {
   const [user, setUser] = useState(initialUser);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -198,36 +221,77 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1 modern-scrollbar">
-          {menuItems.map((menu) => {
-            const Icon = menu.icon;
-            const isActive = activeTab === menu.id;
-            return (
-              <button
-                key={menu.id}
-                onClick={() => {
-                  navigate(`/dashboard/${menu.id}`);
-                  if (window.innerWidth < 768) setSidebarOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group relative overflow-hidden ${
-                  isActive 
-                    ? 'text-main-blue'
-                    : 'text-gray-600 hover:text-soft-black hover:bg-gray-50'
-                }`}
-              >
-                {isActive && (
-                  <motion.div 
-                    layoutId="active-sidebar"
-                    className="absolute inset-0 bg-main-blue/10 rounded-xl"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
-                <Icon className={`w-5 h-5 relative z-10 transition-colors ${isActive ? 'text-main-blue' : 'text-gray-400 group-hover:text-main-blue/70'}`} />
-                <span className="relative z-10">{menu.label}</span>
-              </button>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-6 modern-scrollbar">
+          {isAdmin ? (
+            adminMenuGroups.map((group, idx) => (
+              <div key={idx} className="space-y-1">
+                <h3 className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 border-l-2 border-main-blue/20 ml-1">{group.title}</h3>
+                {group.items.map(itemId => {
+                  const menu = adminMenu.find(m => m.id === itemId);
+                  if (!menu) return null;
+                  const Icon = menu.icon;
+                  const isActive = activeTab === menu.id;
+                  return (
+                    <button
+                      key={menu.id}
+                      onClick={() => {
+                        navigate(`/dashboard/${menu.id}`);
+                        if (window.innerWidth < 768) setSidebarOpen(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all group relative overflow-hidden ${
+                        isActive 
+                          ? 'text-main-blue'
+                          : 'text-gray-600 hover:text-soft-black hover:bg-gray-50'
+                      }`}
+                    >
+                      {isActive && (
+                        <motion.div 
+                          layoutId="active-sidebar-admin"
+                          className="absolute inset-0 bg-main-blue/10 rounded-xl"
+                          initial={false}
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        />
+                      )}
+                      <Icon className={`w-5 h-5 relative z-10 transition-colors ${isActive ? 'text-main-blue' : 'text-gray-400 group-hover:text-main-blue/70'}`} />
+                      <span className="relative z-10">{menu.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ))
+          ) : (
+            <div className="space-y-1">
+              {menuItems.map((menu) => {
+                const Icon = menu.icon;
+                const isActive = activeTab === menu.id;
+                return (
+                  <button
+                    key={menu.id}
+                    onClick={() => {
+                      navigate(`/dashboard/${menu.id}`);
+                      if (window.innerWidth < 768) setSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all group relative overflow-hidden ${
+                      isActive 
+                        ? 'text-main-blue'
+                        : 'text-gray-600 hover:text-soft-black hover:bg-gray-50'
+                    }`}
+                  >
+                    {isActive && (
+                      <motion.div 
+                        layoutId="active-sidebar-guru"
+                        className="absolute inset-0 bg-main-blue/10 rounded-xl"
+                        initial={false}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                    <Icon className={`w-5 h-5 relative z-10 transition-colors ${isActive ? 'text-main-blue' : 'text-gray-400 group-hover:text-main-blue/70'}`} />
+                    <span className="relative z-10">{menu.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </nav>
 
         {/* Logout Button */}
