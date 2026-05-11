@@ -2561,6 +2561,11 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
   const [activeKkgTab, setActiveKkgTab] = useState('profil');
   const [dbStruktur, setDbStruktur] = useState<any[]>([]);
   const [isSavingToggle, setIsSavingToggle] = useState(false);
+  const [localIsActive, setLocalIsActive] = useState(!!kkgForm.pengumuman?.isActive);
+
+  useEffect(() => {
+    setLocalIsActive(!!kkgForm.pengumuman?.isActive);
+  }, [kkgForm.pengumuman?.isActive]);
   
   // Use default values if current form fields are empty/missing
   const form = {
@@ -3035,9 +3040,10 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
                     <input 
                       type="checkbox" 
                       id="kkg_announcement_active"
-                      checked={!!form.pengumuman?.isActive}
+                      checked={localIsActive}
                       onChange={e => {
                         const isActive = e.target.checked;
+                        setLocalIsActive(isActive);
                         
                         setKkgForm((prev: any) => {
                           const updated = { 
@@ -3055,6 +3061,7 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
                               .catch(err => {
                                   alert("Gagal menyimpan pengaturan!");
                                   console.error("Gagal menyimpan:", err);
+                                  setLocalIsActive(!isActive);
                               })
                               .finally(() => setTimeout(() => setIsSavingToggle(false), 1000));
                           }
