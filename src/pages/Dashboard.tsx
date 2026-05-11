@@ -1948,6 +1948,7 @@ function AdminSekolahForm() {
 
 function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }: any) {
   const { alert } = useAlert();
+  const { content } = useSiteContent();
   const [activeKkgTab, setActiveKkgTab] = useState('profil');
   const [dbStruktur, setDbStruktur] = useState<any[]>([]);
   const [isSavingToggle, setIsSavingToggle] = useState(false);
@@ -2505,6 +2506,7 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
 
 function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
   const { alert } = useAlert();
+  const { content } = useSiteContent();
   const [activeTab, setActiveTab] = useState('profil');
   const [dbStruktur, setDbStruktur] = useState<any[]>([]);
   
