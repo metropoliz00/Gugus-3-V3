@@ -34,6 +34,7 @@ interface User {
   full_name?: string;
   id?: string;
   foto?: string;
+  avatar_url?: string;
 }
 
 // Data Chart Temp
@@ -87,7 +88,8 @@ const guruMenu = [
   { id: 'pengaturan_akun', label: 'Pengaturan Akun', icon: Settings },
 ];
 
-export default function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
+export default function Dashboard({ user: initialUser, onLogout }: { user: User; onLogout: () => void }) {
+  const [user, setUser] = useState(initialUser);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : false);
   const navigate = useNavigate();
@@ -268,7 +270,7 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
                </div>
                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-main-blue to-leaf-green p-0.5 cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/dashboard/profil')}>
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-white">
-                    <img src={user.foto || "https://i.pravatar.cc/150?u=a042581f4e29026704d"} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={user.foto || user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || 'U')}&background=random`} alt="Avatar" className="w-full h-full object-cover" />
                   </div>
                </div>
             </div>
@@ -295,7 +297,7 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
                >
                  <Routes>
                    <Route path="/" element={<Navigate to="overview" replace />} />
-                   <Route path="overview" element={user.role?.toLowerCase() === 'admin' ? <AdminOverview /> : <GuruOverview />} />
+                   <Route path="overview" element={user.role?.toLowerCase() === 'admin' ? <AdminOverview /> : <GuruOverview user={user} />} />
                    
                    {/* Admin Routes */}
                    {user.role?.toLowerCase() === 'admin' && (
@@ -321,14 +323,14 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
                         <Route path="komentar" element={<DataManagementTable table="forum_comments" title="Komentar Forum" icon={MessageSquare} fields={[{name:'post_id', label:'Post ID'}, {name:'content', label:'Konten', type:'textarea'}, {name:'user_id', label:'User ID'}]} />} />
                         <Route path="sharing" element={<DataManagementTable table="best_practices" title="Sharing Praktik Baik" icon={Play} fields={[{name:'title', label:'Judul'}, {name:'description', label:'Deskripsi'}, {name:'video_url', label:'URL Video'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
                         <Route path="hasil_karya" element={<DataManagementTable table="teacher_works" title="Hasil Karya Guru" icon={UploadCloud} fields={[{name:'title', label:'Judul Karya'}, {name:'description', label:'Deskripsi'}, {name:'work_type', label:'Jenis Karya'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
-                        <Route path="profil" element={<UserProfileEdit user={user} />} />
+                        <Route path="profil" element={<UserProfileEdit user={user} onUpdate={(updated: any) => setUser(prev => ({ ...prev, ...updated }))} />} />
                      </>
                    )}
 
                    {/* Guru Routes */}
                    {user.role?.toLowerCase() === 'guru' && (
                      <>
-                       <Route path="profil" element={<UserProfileEdit user={user} />} />
+                       <Route path="profil" element={<UserProfileEdit user={user} onUpdate={(updated: any) => setUser(prev => ({ ...prev, ...updated }))} />} />
                        <Route path="jadwal" element={<TeacherJadwalCards />} />
                        <Route path="materi" element={<DataViewList table="kkg_materials" title="Materi KKG" icon={BookOpen} />} />
                        <Route path="notulen" element={<DataViewList table="meeting_minutes" title="Notulen Rapat" icon={FileText} />} />
@@ -338,7 +340,7 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
                        <Route path="forum" element={<ForumSystem user={user} />} />
                        <Route path="sharing" element={<DataViewList table="best_practices" title="Sharing Praktik Baik" icon={Play} />} />
                        <Route path="upload_karya" element={<DataManagementTable table="teacher_works" title="Upload Hasil Karya" icon={UploadCloud} fields={[{name:'title', label:'Judul Karya'}, {name:'description', label:'Deskripsi'}, {name:'work_type', label:'Jenis Karya'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
-                        <Route path="pengaturan_akun" element={<UserProfileEdit user={user} />} />
+                        <Route path="pengaturan_akun" element={<UserProfileEdit user={user} onUpdate={(updated: any) => setUser(prev => ({ ...prev, ...updated }))} />} />
                      </>
                    )}
 
@@ -1070,7 +1072,7 @@ function AdminOverview() {
   );
 }
 
-function GuruOverview() {
+function GuruOverview({ user }: { user: any }) {
   const [events, setEvents] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
 
@@ -1106,10 +1108,14 @@ function GuruOverview() {
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        <div className="relative z-10 max-w-2xl">
-          <h2 className="text-3xl md:text-4xl font-heading font-black mb-4">Selamat Datang di Portal Guru! 👋</h2>
-          <p className="text-blue-50 text-lg md:text-xl font-light mb-8">Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan Gugus.</p>
-          <div className="flex flex-wrap gap-4">
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+          <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] bg-white p-1 overflow-hidden shadow-2xl rotate-3 shrink-0">
+             <img src={user.foto || user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || 'U')}&background=random`} alt="User" className="w-full h-full object-cover rounded-[1.7rem]" />
+          </div>
+          <div className="max-w-2xl text-center md:text-left">
+            <h2 className="text-3xl md:text-4xl font-heading font-black mb-4 uppercase tracking-tight">Selamat Datang, {user.nama?.split(' ')[0] || 'Guru'}! 👋</h2>
+            <p className="text-blue-50 text-lg md:text-xl font-light mb-8">Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan Gugus.</p>
+            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
             <button className="px-6 py-3 bg-white text-main-blue rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-lg flex items-center gap-2">
               <UploadCloud className="w-5 h-5" /> Mulai Upload Dokumen
             </button>
@@ -3544,7 +3550,7 @@ function AdminGugusFormWrapper() {
   return <AdminGugusForm gugusForm={gugusForm} setGugusForm={setGugusForm} handleSaveContent={handleSaveContent} />;
 }
 
-function UserProfileEdit({ user }: { user: any }) {
+function UserProfileEdit({ user, onUpdate }: { user: any, onUpdate: (data: any) => void }) {
   const { alert } = useAlert();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<any>({
@@ -3568,7 +3574,8 @@ function UserProfileEdit({ user }: { user: any }) {
         body: JSON.stringify({ ...profile, id: user.id })
       });
       if (!response.ok) throw new Error("Gagal memperbarui profil");
-      await alert("Profil berhasil diperbarui. Silakan refresh halaman untuk melihat perubahan.", "Sukses", "success");
+      onUpdate(profile);
+      await alert("Profil berhasil diperbarui.", "Sukses", "success");
     } catch (err: any) {
       alert(err.message, "Error", "error");
     } finally {
@@ -3581,7 +3588,7 @@ function UserProfileEdit({ user }: { user: any }) {
       <div className="flex items-center gap-6 mb-10 pb-6 border-b border-gray-100">
         <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 shadow-lg shadow-main-blue/20">
            <div className="w-full h-full bg-white rounded-xl flex items-center justify-center overflow-hidden">
-             <img src={profile.foto || "https://i.pravatar.cc/150?u=a042581f4e29026704d"} alt="Profile" className="w-full h-full object-cover" />
+             <img src={profile.foto || profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nama || 'U')}&background=random`} alt="Profile" className="w-full h-full object-cover" />
            </div>
         </div>
         <div>
@@ -3987,7 +3994,7 @@ function ForumSystem({ user }: { user: any }) {
               >
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden border">
-                    <img src={post.author?.foto || `https://ui-avatars.com/api/?name=${post.author?.nama || 'Guru'}&background=random`} alt="Author" className="w-full h-full object-cover" />
+                    <img src={post.author?.foto || post.author?.avatar_url || `https://ui-avatars.com/api/?name=${post.author?.nama || 'Guru'}&background=random`} alt="Author" className="w-full h-full object-cover" />
                   </div>
                   <div>
                     <span className="text-[10px] font-bold text-main-blue uppercase tracking-widest bg-main-blue/5 px-2 py-0.5 rounded-full">{post.category || 'Umum'}</span>
@@ -4149,7 +4156,7 @@ function ForumDetail({ post, user }: { post: any, user: any }) {
        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-4 mb-6">
             <div className="w-10 h-10 rounded-full overflow-hidden border">
-              <img src={post.author?.foto || `https://ui-avatars.com/api/?name=${post.author?.nama || 'Guru'}&background=random`} alt="Author" className="w-full h-full object-cover" />
+              <img src={post.author?.foto || post.author?.avatar_url || `https://ui-avatars.com/api/?name=${post.author?.nama || 'Guru'}&background=random`} alt="Author" className="w-full h-full object-cover" />
             </div>
             <div>
               <p className="text-sm font-bold text-soft-black">{post.author?.nama || 'Pengguna'}</p>
@@ -4182,7 +4189,7 @@ function ForumDetail({ post, user }: { post: any, user: any }) {
               <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} key={comment.id} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                  <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-full overflow-hidden border bg-gray-100">
-                       <img src={comment.author?.foto || `https://ui-avatars.com/api/?name=${comment.author?.nama || 'Guru'}&background=random`} alt="Commenter" className="w-full h-full object-cover" />
+                       <img src={comment.author?.foto || comment.author?.avatar_url || `https://ui-avatars.com/api/?name=${comment.author?.nama || 'Guru'}&background=random`} alt="Commenter" className="w-full h-full object-cover" />
                     </div>
                     <div>
                        <p className="text-xs font-bold text-soft-black">{comment.author?.nama || 'Guru'}</p>

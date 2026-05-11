@@ -58,7 +58,7 @@ export default function AnggotaGugusPage() {
                     <td className="p-6">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-main-blue to-leaf-green p-0.5">
                             <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-white">
-                                <img src={g.foto || g.avatar_url || `https://i.pravatar.cc/150?u=${g.id}`} alt={g.nama} className="w-full h-full object-cover" />
+                                <img src={g.foto || g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.nama || 'G')}&background=random`} alt={g.nama} className="w-full h-full object-cover" />
                             </div>
                         </div>
                     </td>
