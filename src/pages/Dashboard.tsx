@@ -393,14 +393,14 @@ function AdminUserManagement() {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    role: 'guru',
     email: '',
     nama: '',
     nip: '',
+    role: 'guru',
+    sekolah: '',
+    jabatan: '',
     kepegawaian: '',
     pangkat: '',
-    jabatan: '',
-    sekolah: '',
     foto: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -470,14 +470,14 @@ function AdminUserManagement() {
       setFormData({ 
         username: '', 
         password: '', 
-        role: 'guru', 
         email: '',
         nama: '', 
         nip: '',
+        role: 'guru', 
+        sekolah: '',
+        jabatan: '',
         kepegawaian: '',
         pangkat: '',
-        jabatan: '',
-        sekolah: '',
         foto: ''
       });
       fetchUsers();
@@ -493,14 +493,14 @@ function AdminUserManagement() {
     setFormData({
       username: user.username || '',
       password: '', 
-      role: user.role || 'guru',
       email: user.email || '',
       nama: user.nama || '',
       nip: user.nip || '',
+      role: user.role || 'guru',
+      sekolah: user.sekolah || '',
+      jabatan: user.jabatan || '',
       kepegawaian: user.kepegawaian || '',
       pangkat: user.pangkat || '',
-      jabatan: user.jabatan || '',
-      sekolah: user.sekolah || '',
       foto: user.foto || ''
     });
     setShowAddForm(true);
@@ -527,15 +527,15 @@ function AdminUserManagement() {
     const template = [
       {
         Username: "budi_setiawan",
-        Email: "budi@gugus3.id",
         Password: "Password123!",
-        Role: "guru",
+        Email: "budi@gugus3.id",
         Nama: "Budi Setiawan, S.Pd.",
         NIP: "198501012010011001",
-        Kepegawaian: "PNS",
-        Pangkat: "Penata / IIIc",
+        Role: "guru",
+        Sekolah: "SDN 1 Melati",
         Jabatan: "Guru Kelas IV",
-        Sekolah: "SDN 1 Melati"
+        Kepegawaian: "PNS",
+        Pangkat: "Penata / IIIc"
       }
     ];
 
@@ -619,14 +619,14 @@ function AdminUserManagement() {
                   setFormData({ 
                     username: '', 
                     password: '', 
-                    role: 'guru', 
                     email: '', 
                     nama: '', 
                     nip: '', 
+                    role: 'guru', 
+                    sekolah: '',
+                    jabatan: '',
                     kepegawaian: '', 
                     pangkat: '', 
-                    jabatan: '', 
-                    sekolah: '',
                     foto: ''
                   });
                 } else {
