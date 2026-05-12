@@ -4354,8 +4354,22 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                         new Date(item[f.name]).toLocaleDateString('id-ID')
                       ) : f.type === 'select' ? (
                         (() => {
-                           const opt = f.options.find((o: any) => (typeof o === 'string' ? o : o.value) === item[f.name]);
-                           return typeof opt === 'string' ? opt : opt?.label || item[f.name] || '-';
+                           let val = item[f.name];
+                           
+                           // Automate status for trainings table
+                           if (table === 'trainings' && f.name === 'status' && item.date_start) {
+                              const today = new Date();
+                              today.setHours(0, 0, 0, 0);
+                              const trainingDate = new Date(item.date_start);
+                              trainingDate.setHours(0, 0, 0, 0);
+                              
+                              if (trainingDate > today) val = 'planned';
+                              else if (trainingDate.getTime() === today.getTime()) val = 'ongoing';
+                              else val = 'completed';
+                           }
+
+                           const opt = f.options.find((o: any) => (typeof o === 'string' ? o : o.value) === val);
+                           return typeof opt === 'string' ? opt : opt?.label || val || '-';
                         })()
                       ) : (
                         item[f.name] || '-'
@@ -5072,6 +5086,21 @@ function TeacherTrainingCards({ user }: { user: any }) {
             const reg = registrations[item.id];
             const isRegistered = !!reg;
             const hasAttended = reg?.status === 'attended';
+            
+            // Logic status otomatis berdasarkan tanggal
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const trainingDate = new Date(item.date_start);
+            trainingDate.setHours(0, 0, 0, 0);
+            
+            let autoStatus = item.status || 'planned';
+            if (trainingDate > today) {
+              autoStatus = 'planned';
+            } else if (trainingDate.getTime() === today.getTime()) {
+              autoStatus = 'ongoing';
+            } else {
+              autoStatus = 'completed';
+            }
 
             return (
               <motion.div 
@@ -5086,8 +5115,8 @@ function TeacherTrainingCards({ user }: { user: any }) {
                       <span className="text-xs font-bold text-gray-400 uppercase">{new Date(item.date_start).toLocaleString('id-ID', { month: 'short' })}</span>
                       <span className="text-2xl font-bold text-main-blue leading-none mt-1">{new Date(item.date_start).getDate()}</span>
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(item.status)}`}>
-                      {getStatusLabel(item.status)}
+                    <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(autoStatus)}`}>
+                      {getStatusLabel(autoStatus)}
                     </div>
                   </div>
                   
@@ -5112,13 +5141,19 @@ function TeacherTrainingCards({ user }: { user: any }) {
 
                 <div className="bg-gray-50/50 p-4 border-t border-gray-100 flex flex-wrap gap-2 items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {!isRegistered ? (
-                        <button 
-                          onClick={() => handleRegister(item.id)}
-                          className="px-4 py-2 bg-main-blue text-white rounded-xl text-xs font-bold shadow-md shadow-main-blue/20 hover:scale-105 transition-all"
-                        >
-                          Daftar Sekarang
-                        </button>
+                       {!isRegistered ? (
+                        autoStatus === 'completed' ? (
+                          <div className="px-4 py-2 bg-gray-100 text-gray-400 rounded-xl text-xs font-bold border border-gray-200">
+                            Pendaftaran Ditutup
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => handleRegister(item.id)}
+                            className="px-4 py-2 bg-main-blue text-white rounded-xl text-xs font-bold shadow-md shadow-main-blue/20 hover:scale-105 transition-all"
+                          >
+                            Daftar Sekarang
+                          </button>
+                        )
                       ) : !hasAttended ? (
                         <button 
                           onClick={() => handleAttendance(item.id)}
