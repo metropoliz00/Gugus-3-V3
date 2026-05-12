@@ -206,8 +206,10 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Ensure desktop state is accurate
   React.useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    handleResize(); // Call once to be sure
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -218,13 +220,14 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
   const [profilForm, setProfilForm] = useState(content.profil);
   const [footerForm, setFooterForm] = useState(content.footer);
   const [statsForm, setStatsForm] = useState(content.stats);
-  const [kkgForm, setKkgForm] = useState(content.kkg || { struktur: [] });
-  const [gugusForm, setGugusForm] = useState(content.gugus || { struktur: [] });
+  const [kkgForm, setKkgForm] = useState(content.kkg || defaultContent.kkg);
+  const [gugusForm, setGugusForm] = useState(content.gugus || defaultContent.gugus);
   const [schoolsForm, setSchoolsForm] = useState(content.schools);
   const [newsForm, setNewsForm] = useState(content.news);
   const [galleryForm, setGalleryForm] = useState(content.gallery);
   const [agendaForm, setAgendaForm] = useState(content.agenda);
   const [announcementForm, setAnnouncementForm] = useState(content.announcement || { title: '', subtitle: '', desc: '' });
+  const [activeMenusForm, setActiveMenusForm] = useState((content as any).activeMenus || {});
 
   // Sync with context if it changes (e.g. initial load)
   React.useEffect(() => {
@@ -240,6 +243,7 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
       setGalleryForm(content.gallery);
       setAgendaForm(content.agenda);
       setAnnouncementForm(content.announcement);
+      setActiveMenusForm((content as any).activeMenus || {});
     }
   }, [content, isLoading]);
 
@@ -256,7 +260,8 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
       news: newsForm,
       gallery: galleryForm,
       agenda: agendaForm,
-      announcement: announcementForm
+      announcement: announcementForm,
+      activeMenus: activeMenusForm
     });
   };
 
@@ -265,23 +270,26 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
     ? adminMenu 
     : guruMenu.filter(item => {
         const activeMenus = (content as any).activeMenus;
+        // Fallback: if no settings or loading, show everything
         if (isLoading || !activeMenus || Object.keys(activeMenus).length === 0) return true;
         return !!activeMenus[item.id];
       });
   
   // Get active tab from path
   const currentPath = location.pathname.split('/').pop() || 'overview';
-  const activeTab = menuItems.find(m => m.id === currentPath) ? currentPath : 'overview';
+  const activeTab = (menuItems || []).find(m => m.id === currentPath) ? currentPath : 'overview';
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex font-sans text-soft-black selection:bg-main-blue selection:text-white overflow-hidden">
       
       {/* Mobile Sidebar Overlay */}
       <AnimatePresence>
-        {isSidebarOpen && (
+        {isSidebarOpen && !isDesktop && (
           <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-sm"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -290,8 +298,9 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
       {/* Sidebar */}
       <motion.aside 
         initial={false}
-        animate={isDesktop || isSidebarOpen ? { x: 0 } : { x: "-100%" }}
-        className="w-[280px] bg-white/80 backdrop-blur-xl border-r border-gray-100 flex-shrink-0 fixed inset-y-0 left-0 z-50 md:sticky md:translate-x-0 transition-transform duration-300 flex flex-col shadow-2xl md:shadow-none"
+        animate={{ x: (isDesktop || isSidebarOpen) ? 0 : -280 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="w-[280px] bg-white border-r border-gray-100 flex-shrink-0 fixed md:sticky inset-y-0 left-0 z-50 flex flex-col shadow-2xl md:shadow-none bg-white/95 backdrop-blur-xl"
       >
         <div className="p-6 flex items-center justify-between border-b border-gray-100">
           <div className="flex items-center gap-3">
@@ -1652,19 +1661,19 @@ function AdminSettingsForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Instagram URL</label>
-              <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all" value={footerForm.social?.instagram || ''} onChange={e => setFooterForm({...footerForm, social: {...(footerForm.social || {}), instagram: e.target.value}})} placeholder="https://instagram.com/..." />
+              <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all" value={footerForm.social?.instagram || ''} onChange={e => setFooterForm({...footerForm, social: { facebook: footerForm.social?.facebook || '', tiktok: footerForm.social?.tiktok || '', youtube: footerForm.social?.youtube || '', instagram: e.target.value}})} placeholder="https://instagram.com/..." />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Facebook URL</label>
-              <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all" value={footerForm.social?.facebook || ''} onChange={e => setFooterForm({...footerForm, social: {...(footerForm.social || {}), facebook: e.target.value}})} placeholder="https://facebook.com/..." />
+              <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all" value={footerForm.social?.facebook || ''} onChange={e => setFooterForm({...footerForm, social: { instagram: footerForm.social?.instagram || '', tiktok: footerForm.social?.tiktok || '', youtube: footerForm.social?.youtube || '', facebook: e.target.value}})} placeholder="https://facebook.com/..." />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">TikTok URL</label>
-              <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all" value={footerForm.social?.tiktok || ''} onChange={e => setFooterForm({...footerForm, social: {...(footerForm.social || {}), tiktok: e.target.value}})} placeholder="https://tiktok.com/@..." />
+              <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all" value={footerForm.social?.tiktok || ''} onChange={e => setFooterForm({...footerForm, social: { instagram: footerForm.social?.instagram || '', facebook: footerForm.social?.facebook || '', youtube: footerForm.social?.youtube || '', tiktok: e.target.value}})} placeholder="https://tiktok.com/@..." />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">YouTube URL</label>
-              <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all" value={footerForm.social?.youtube || ''} onChange={e => setFooterForm({...footerForm, social: {...(footerForm.social || {}), youtube: e.target.value}})} placeholder="https://youtube.com/..." />
+              <input className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all" value={footerForm.social?.youtube || ''} onChange={e => setFooterForm({...footerForm, social: { instagram: footerForm.social?.instagram || '', facebook: footerForm.social?.facebook || '', tiktok: footerForm.social?.tiktok || '', youtube: e.target.value}})} placeholder="https://youtube.com/..." />
             </div>
           </div>
         </div>
@@ -1750,7 +1759,7 @@ function AdminBeritaForm({ user }: { user: any }) {
   const { confirm } = useAlert();
   const [news, setNews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const debouncedSave = useRef<NodeJS.Timeout>();
+  const debouncedSave = useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
     async function loadNews() {
@@ -2162,7 +2171,7 @@ function AdminGaleriForm({ user, galleryForm, setGalleryForm, handleSaveContent 
 function AdminAgendaForm({ user }: { user: any }) {
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const debouncedSave = useRef<NodeJS.Timeout>();
+  const debouncedSave = useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
     async function loadEvents() {
@@ -2353,7 +2362,7 @@ function AdminSekolahForm({ user }: { user: any }) {
   };
 
   const [savingId, setSavingId] = useState<string | null>(null);
-  const debouncedSave = useRef<NodeJS.Timeout>();
+  const debouncedSave = useRef<NodeJS.Timeout | null>(null);
 
   const handleUpdate = (id: string, updates: any) => {
      setSchools(schools.map((s: any) => s.id === id ? { ...s, ...updates } : s));
@@ -2602,7 +2611,7 @@ function AdminKKGForm({ kkgForm, setKkgForm, handleSaveContent, updateContent }:
 
   // KKG: handle field change locally for performance
   const [isSavingOrg, setIsSavingOrg] = useState<string | null>(null);
-  const debouncedOrgSave = useRef<NodeJS.Timeout>();
+  const debouncedOrgSave = useRef<NodeJS.Timeout | null>(null);
 
   const onFieldChangeKkg = (id: string, field: string, value: string) => {
     setDbStruktur(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
@@ -3166,7 +3175,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
 
   // Gugus: handle field change locally for performance
   const [isSavingOrg, setIsSavingOrg] = useState<string | null>(null);
-  const debouncedOrgSave = useRef<NodeJS.Timeout>();
+  const debouncedOrgSave = useRef<NodeJS.Timeout | null>(null);
 
   const onFieldChangeGugus = (id: string, field: string, value: string) => {
     setDbStruktur(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
@@ -3489,7 +3498,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
 function AdminPenghargaanForm() {
   const [awards, setAwards] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const debouncedSave = useRef<NodeJS.Timeout>();
+  const debouncedSave = useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
     async function loadAwards() {

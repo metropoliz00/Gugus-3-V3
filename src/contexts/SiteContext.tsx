@@ -161,7 +161,7 @@ export const defaultContent = {
       { label: "Program Diselesaikan", value: 120, suffix: "" },
       { label: "Workshop", value: 24, suffix: "" }
     ],
-    visi: "Terwujudnya Guru Profesional, Kreatif, dan Inovatif dalam Menyelenggarakan Pembelajaran yang Berpusat pada Peserta Didik.",
+    visi: "Terwujudnya Guru Profesional, Kreatif, and Inovatif dalam Menyelenggarakan Pembelajaran yang Berpusat pada Peserta Didik.",
     misi: [
       "Meningkatkan kompetensi pedagogik dan profesional guru.",
       "Mengembangkan media dan sumber belajar interaktif.",
@@ -172,6 +172,7 @@ export const defaultContent = {
       "Standarisasi perangkat dan evaluasi pembelajaran.",
       "Memberdayakan guru dalam penelitian tindakan kelas (PTK)."
     ],
+    dokumen: [],
     pengumuman: {
       title: "Pengumuman Penting KKG Gugus 3",
       desc: "Seluruh anggota KKG diharapkan hadir dalam rapat koordinasi bulanan yang akan dilaksanakan pada hari Jumat mendatang.",
@@ -241,7 +242,8 @@ export const defaultContent = {
       { title: "Rapat Koordinasi Kepala Sekolah Gugus", desc: "Pertemuan bulanan kepala sekolah untuk sinkronisasi kebijakan.", date: "Setiap Awal Bulan" },
       { title: "Monitoring dan Evaluasi Kinerja Sekolah", desc: "Pelaporan dan penjaminan mutu rutin.", date: "Tiap Semester" },
       { title: "Pembinaan Manajerial", desc: "Pelatihan administrasi sekolah bagi staf dan pimpinan.", date: "Agustus 2024" }
-    ]
+    ],
+    dokumen: []
   },
   agenda: [
     { title: 'Rapat Persiapan Ujian', time: 'Kamis, 09:00 WIB', location: 'Ruang Guru Utama' },
@@ -253,7 +255,22 @@ export const defaultContent = {
     subtitle: "Pendaftaran Peserta Didik Baru Telah Dibuka!",
     desc: "Mari daftarkan putra/putri Anda di sekolah-sekolah unggulan Gugus 3 Melati Kecamatan Jenu. Kuota terbatas!"
   },
-  activeMenus: ["profil", "gugus", "kkg", "berita", "galeri", "jadwal", "download"]
+  activeMenus: {
+    overview: true,
+    profil: true,
+    jadwal: true,
+    materi: true,
+    notulen: true,
+    pelatihan: true,
+    forum: true,
+    sharing: true,
+    upload_karya: true,
+    gugus: true,
+    kkg: true,
+    berita: true,
+    galeri: true,
+    download: true
+  }
 };
 
 export type SiteContent = typeof defaultContent;
