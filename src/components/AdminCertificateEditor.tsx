@@ -278,7 +278,8 @@ export function useCertificateGenerator() {
         });
 
       const pdfBytes = await pdfDoc.save();
-      const namaLengkap = teacher.nama || teacher.full_name || teacher.name || 'Peserta';
+      const namaLengkap =
+        teacher.nama || teacher.full_name || teacher.name || "Peserta";
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
         `sertifikat_${training.title}_${namaLengkap}.pdf`,
@@ -491,13 +492,11 @@ export default function AdminCertificateEditor() {
         },
       };
 
-      const { error } = await supabase
-        .from("site_settings")
-        .upsert({
-          id: 1,
-          content: newContent,
-          updated_at: new Date().toISOString(),
-        });
+      const { error } = await supabase.from("site_settings").upsert({
+        id: 1,
+        content: newContent,
+        updated_at: new Date().toISOString(),
+      });
 
       if (error) throw error;
       await alert(

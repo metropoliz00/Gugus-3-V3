@@ -1167,6 +1167,7 @@ function AdminUserManagement() {
   const [uploadResult, setUploadResult] = useState<{
     success: number;
     failure: number;
+    errors?: any[];
   } | null>(null);
 
   const [userList, setUserList] = useState<any[]>([]);
@@ -1358,18 +1359,51 @@ function AdminUserManagement() {
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
 
-        const formattedUsers = jsonData.map((row) => ({
-          username: row.Username || row.username,
-          email: row.Email || row.email,
-          password: row.Password || row.password,
-          role: row.Role || row.role || "guru",
-          nama: row.Nama || row.nama,
-          nip: row.NIP || row.nip,
-          kepegawaian: row.Kepegawaian || row.kepegawaian,
-          pangkat: row.Pangkat || row.pangkat,
-          jabatan: row.Jabatan || row.jabatan,
-          sekolah: row.Sekolah || row.sekolah,
-        }));
+        const formattedUsers = jsonData.map((row) => {
+          const normalizedRow: Record<string, any> = {};
+          for (const key in row) {
+            if (Object.prototype.hasOwnProperty.call(row, key)) {
+              const cleanKey = key.trim().toLowerCase();
+              normalizedRow[cleanKey] = row[key];
+            }
+          }
+
+          const nama =
+            normalizedRow["nama"] || normalizedRow["nama lengkap"] || "";
+          let email = normalizedRow["email"] || "";
+          let username =
+            normalizedRow["username"] || normalizedRow["user name"] || "";
+
+          if (!username) {
+            username =
+              nama.toLowerCase().replace(/[^a-z0-9]/g, "") +
+              Math.floor(Math.random() * 1000);
+          }
+          if (!email) {
+            email = `${username}@gugus3.local`;
+          }
+
+          return {
+            username: username,
+            email: email,
+            password: normalizedRow["password"] || normalizedRow["kata sandi"],
+            role: normalizedRow["role"] || normalizedRow["peran"] || "guru",
+            nama: nama,
+            nip: normalizedRow["nip"] || normalizedRow["n i p"],
+            kepegawaian:
+              normalizedRow["kepegawaian"] ||
+              normalizedRow["status kepegawaian"],
+            pangkat:
+              normalizedRow["pangkat"] ||
+              normalizedRow["pangkat/golongan"] ||
+              normalizedRow["golongan"],
+            jabatan: normalizedRow["jabatan"],
+            sekolah:
+              normalizedRow["sekolah"] ||
+              normalizedRow["asal sekolah"] ||
+              normalizedRow["unit kerja"],
+          };
+        });
 
         const response = await fetch("/api/admin/bulk-create-users", {
           method: "POST",
@@ -1388,7 +1422,11 @@ function AdminUserManagement() {
         const successCount = result.results?.length || 0;
         const failureCount = result.errors?.length || 0;
 
-        setUploadResult({ success: successCount, failure: failureCount });
+        setUploadResult({
+          success: successCount,
+          failure: failureCount,
+          errors: result.errors || [],
+        });
 
         setIsUploading(false);
         fetchUsers();
@@ -1656,27 +1694,44 @@ function AdminUserManagement() {
       <div className="w-full">
         {/* Banner info upload jika ada */}
         {uploadResult && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <UploadCloud className="w-5 h-5 text-green-600" />
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <UploadCloud className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-green-800">
+                    Proses Upload Selesai
+                  </p>
+                  <p className="text-xs text-green-600 font-medium">
+                    {uploadResult.success} Akun berhasil dibuat,{" "}
+                    {uploadResult.failure} Gagal.
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm font-bold text-green-800">
-                  Proses Upload Selesai
-                </p>
-                <p className="text-xs text-green-600 font-medium">
-                  {uploadResult.success} Akun berhasil dibuat,{" "}
-                  {uploadResult.failure} Gagal.
-                </p>
-              </div>
+              <button
+                onClick={() => setUploadResult(null)}
+                className="text-green-600 hover:bg-green-100 p-2 rounded-lg transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
-            <button
-              onClick={() => setUploadResult(null)}
-              className="text-green-600 hover:bg-green-100 p-2 rounded-lg transition-all"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {uploadResult.errors && uploadResult.errors.length > 0 && (
+              <div className="mt-2 bg-white/60 p-4 rounded-xl max-h-48 overflow-y-auto">
+                <h4 className="text-xs font-bold text-red-600 uppercase mb-2">
+                  Daftar Akun Gagal:
+                </h4>
+                <ul className="text-xs text-red-500 space-y-1">
+                  {uploadResult.errors.map((error: any, i: number) => (
+                    <li key={i}>
+                      <b>{error.username || error.email || "Unknown"}:</b>{" "}
+                      {error.error || "Gagal membuat akun."}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
