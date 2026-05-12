@@ -440,8 +440,16 @@ export default function AdminCertificateEditor() {
         </div>
 
         {/* Canvas Area */}
-        <div className="bg-gray-100 p-4 rounded-[2rem] flex items-center justify-center overflow-auto modern-scrollbar border-2 border-dashed border-gray-200 min-h-[500px]">
-          <div className="bg-white shadow-2xl relative" style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}>
+        <div className="bg-gray-100 p-4 rounded-[2rem] flex flex-col items-center justify-center border-2 border-dashed border-gray-200 min-h-[500px]">
+          <div className="w-full flex items-center justify-between mb-4 px-4">
+             <div className="flex items-center gap-2 text-main-blue">
+                <Move className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-widest">Editor Visual</span>
+             </div>
+             <p className="text-[10px] text-gray-500 italic">* Klik & Geser teks untuk mengatur posisi secara presisi.</p>
+          </div>
+
+          <div className="bg-white shadow-2xl relative overflow-auto max-w-full modern-scrollbar" style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}>
             <Stage width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={stageRef}>
               <Layer>
                 {/* TEMPLATE */}
@@ -464,10 +472,17 @@ export default function AdminCertificateEditor() {
                     draggable
                     fill={field.color}
                     align="center"
-                    onDragEnd={(e) => {
+                    onDragMove={(e) => {
                        updateField(field.id, { x: e.target.x(), y: e.target.y() });
                     }}
-                    onMouseEnter={() => { document.body.style.cursor = 'move'; }}
+                    onDragStart={() => {
+                       document.body.style.cursor = 'grabbing';
+                    }}
+                    onDragEnd={(e) => {
+                       updateField(field.id, { x: e.target.x(), y: e.target.y() });
+                       document.body.style.cursor = 'grab';
+                    }}
+                    onMouseEnter={() => { document.body.style.cursor = 'grab'; }}
                     onMouseLeave={() => { document.body.style.cursor = 'default'; }}
                   />
                 ))}
