@@ -61,8 +61,8 @@ export default function ImageUpload({
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          // Convert to WebP for better compression
-          const dataUrl = canvas.toDataURL('image/webp', quality);
+          // Convert to PNG for better compatibility with pdf-lib
+          const dataUrl = canvas.toDataURL('image/png');
           onChange(dataUrl);
         }
         setIsLoading(false);

@@ -90,23 +90,54 @@ export function useCertificateGenerator() {
         return result;
       };
 
+      // Helper to embed image safely
+      const embedImage = async (url: string) => {
+        try {
+          const isWebP = url.toLowerCase().includes('.webp') || url.startsWith('data:image/webp');
+          let buffer: ArrayBuffer;
+          let isPng = url.toLowerCase().includes('.png') || url.startsWith('data:image/png');
+
+          if (isWebP) {
+            // Convert WebP to PNG using canvas
+            const pngDataUrl = await new Promise<string>((resolve, reject) => {
+              const img = new Image();
+              img.crossOrigin = "anonymous";
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return reject("Canvas context error");
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+              };
+              img.onerror = () => reject("Image load error");
+              img.src = url;
+            });
+            const res = await fetch(pngDataUrl);
+            buffer = await res.arrayBuffer();
+            isPng = true;
+          } else {
+            const res = await fetch(url);
+            const contentType = res.headers.get('content-type');
+            buffer = await res.arrayBuffer();
+            if (contentType?.includes('png')) isPng = true;
+          }
+
+          if (isPng) return await pdfDoc.embedPng(buffer);
+          return await pdfDoc.embedJpg(buffer);
+        } catch (err) {
+          console.error("Embed error:", err);
+          return null;
+        }
+      };
+
       // --- PAGE 1 ---
       const page1 = pdfDoc.addPage([config.canvasWidth || 1000, config.canvasHeight || 700]);
       if (config.templateUrl) {
-        try {
-          const res = await fetch(config.templateUrl);
-          const contentType = res.headers.get('content-type');
-          const imageBytes = await res.arrayBuffer();
-          
-          let image;
-          if (contentType?.includes('png') || config.templateUrl.toLowerCase().includes('.png') || config.templateUrl.startsWith('data:image/png')) {
-            image = await pdfDoc.embedPng(imageBytes);
-          } else {
-            image = await pdfDoc.embedJpg(imageBytes);
-          }
+        const image = await embedImage(config.templateUrl);
+        if (image) {
           page1.drawImage(image, { x: 0, y: 0, width: config.canvasWidth || 1000, height: config.canvasHeight || 700 });
-        } catch (err) {
-          console.error("Error embedding Page 1 image:", err);
         }
       }
 
@@ -128,20 +159,9 @@ export function useCertificateGenerator() {
       // --- PAGE 2 ---
       const page2 = pdfDoc.addPage([config.canvasWidth || 1000, config.canvasHeight || 700]);
       if (config.templateUrl2) {
-        try {
-          const res = await fetch(config.templateUrl2);
-          const contentType = res.headers.get('content-type');
-          const imageBytes = await res.arrayBuffer();
-          
-          let image;
-          if (contentType?.includes('png') || config.templateUrl2.toLowerCase().includes('.png') || config.templateUrl2.startsWith('data:image/png')) {
-            image = await pdfDoc.embedPng(imageBytes);
-          } else {
-            image = await pdfDoc.embedJpg(imageBytes);
-          }
+        const image = await embedImage(config.templateUrl2);
+        if (image) {
           page2.drawImage(image, { x: 0, y: 0, width: config.canvasWidth || 1000, height: config.canvasHeight || 700 });
-        } catch (err) {
-          console.error("Error embedding Page 2 image:", err);
         }
       }
 
@@ -317,23 +337,54 @@ export default function AdminCertificateEditor() {
       const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
+      // Helper to embed image safely (shared logic)
+      const embedImage = async (url: string) => {
+        try {
+          const isWebP = url.toLowerCase().includes('.webp') || url.startsWith('data:image/webp');
+          let buffer: ArrayBuffer;
+          let isPng = url.toLowerCase().includes('.png') || url.startsWith('data:image/png');
+
+          if (isWebP) {
+            const pngDataUrl = await new Promise<string>((resolve, reject) => {
+              const img = new Image();
+              img.crossOrigin = "anonymous";
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return reject("Canvas context error");
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+              };
+              img.onerror = () => reject("Image load error");
+              img.src = url;
+            });
+            const res = await fetch(pngDataUrl);
+            buffer = await res.arrayBuffer();
+            isPng = true;
+          } else {
+            const res = await fetch(url);
+            const contentType = res.headers.get('content-type');
+            buffer = await res.arrayBuffer();
+            if (contentType?.includes('png')) isPng = true;
+          }
+
+          if (isPng) return await pdfDoc.embedPng(buffer);
+          return await pdfDoc.embedJpg(buffer);
+        } catch (err) {
+          console.error("Embed error:", err);
+          return null;
+        }
+      };
+
       // --- PAGE 1 ---
       const page1 = pdfDoc.addPage([CANVAS_WIDTH, CANVAS_HEIGHT]);
       if (templateUrl) {
-        try {
-          const res = await fetch(templateUrl);
-          const contentType = res.headers.get('content-type');
-          const imageBytes = await res.arrayBuffer();
-          
-          let image;
-          if (contentType?.includes('png') || templateUrl.toLowerCase().includes('.png') || templateUrl.startsWith('data:image/png')) {
-            image = await pdfDoc.embedPng(imageBytes);
-          } else {
-            image = await pdfDoc.embedJpg(imageBytes);
-          }
+        const image = await embedImage(templateUrl);
+        if (image) {
           page1.drawImage(image, { x: 0, y: 0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT });
-        } catch (e) { 
-          console.error("Page 1 image error", e);
+        } else {
           alert("Gagal memuat background halaman 1. Pastikan file valid.");
         }
       }
@@ -356,20 +407,10 @@ export default function AdminCertificateEditor() {
       // --- PAGE 2 ---
       const page2 = pdfDoc.addPage([CANVAS_WIDTH, CANVAS_HEIGHT]);
       if (templateUrl2) {
-        try {
-          const res = await fetch(templateUrl2);
-          const contentType = res.headers.get('content-type');
-          const imageBytes = await res.arrayBuffer();
-          
-          let image;
-          if (contentType?.includes('png') || templateUrl2.toLowerCase().includes('.png') || templateUrl2.startsWith('data:image/png')) {
-            image = await pdfDoc.embedPng(imageBytes);
-          } else {
-            image = await pdfDoc.embedJpg(imageBytes);
-          }
+        const image = await embedImage(templateUrl2);
+        if (image) {
           page2.drawImage(image, { x: 0, y: 0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT });
-        } catch (e) { 
-          console.error("Page 2 image error", e);
+        } else {
           alert("Gagal memuat background halaman 2. Pastikan file valid.");
         }
       }
