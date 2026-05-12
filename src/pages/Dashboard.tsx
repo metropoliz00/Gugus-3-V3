@@ -18,7 +18,7 @@ import ImageUpload from '../components/ImageUpload';
 import { useAlert } from '../contexts/AlertContext';
 import { FinanceTransaction } from '../types';
 import { logActivity, ActivityLog } from '../lib/activity';
-import AdminCertificateEditor from '../components/AdminCertificateEditor';
+import AdminCertificateEditor, { useCertificateGenerator } from '../components/AdminCertificateEditor';
 
 import * as XLSX from 'xlsx';
 
@@ -584,7 +584,7 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
                        <Route path="jadwal" element={<TeacherJadwalCards />} />
                        <Route path="materi" element={<DataViewList table="kkg_materials" title="Materi KKG" icon={BookOpen} />} />
                        <Route path="notulen" element={<DataViewList table="meeting_minutes" title="Notulen Rapat" icon={FileText} />} />
-                       <Route path="pelatihan" element={<TeacherTrainingCards />} />
+                       <Route path="pelatihan" element={<TeacherTrainingCards user={user} />} />
                        <Route path="absensi" element={<TeacherAttendance />} />
                        <Route path="sertifikat" element={<DataViewList table="training_certificates" title="Sertifikat Saya" icon={Award} filterColumn="user_id" filterValue={user.id} />} />
                        <Route path="forum" element={<ForumSystem user={user} />} />
@@ -4037,9 +4037,10 @@ function AdminCertificateManager({ user }: { user: any }) {
           title="Daftar Sertifikat Terbit" 
           icon={Award} 
           fields={[
-            {name:'user_id', label:'User ID'}, 
-            {name:'training_id', label:'Training ID'}, 
-            {name:'certificate_url', label:'URL Sertifikat', type:'file'}
+            {name:'user_id', label:'ID Guru / Email'}, 
+            {name:'training_id', label:'ID Pelatihan'}, 
+            {name:'certificate_number', label:'Nomor Sertifikat'},
+            {name:'certificate_url', label:'File Sertifikat (PDF)', type:'file'}
           ]} 
         />
       ) : (
@@ -4913,29 +4914,107 @@ function TeacherJadwalCards() {
   );
 }
 
-function TeacherTrainingCards() {
+function TeacherTrainingCards({ user }: { user: any }) {
+  const { alert } = useAlert();
+  const { generateTeacherPDF } = useCertificateGenerator();
   const [trainings, setTrainings] = useState<any[]>([]);
+  const [registrations, setRegistrations] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
+  const [certConfig, setCertConfig] = useState<any>(null);
 
   useEffect(() => {
-    const fetchTrainings = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('trainings')
-          .select('*')
-          .order('date_start', { ascending: false });
-        
-        if (error) throw error;
-        setTrainings(data || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTrainings();
+    fetchData();
   }, []);
+
+  const fetchData = async () => {
+    if (!supabase || !user) return;
+    setLoading(true);
+    try {
+      // Fetch Trainings
+      const { data: tData, error: tError } = await supabase
+        .from('trainings')
+        .select('*')
+        .order('date_start', { ascending: false });
+      
+      if (tError) throw tError;
+      setTrainings(tData || []);
+
+      // Fetch User Registrations
+      const { data: rData } = await supabase
+        .from('training_participants')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      const regMap: Record<string, any> = {};
+      rData?.forEach(reg => {
+        regMap[reg.training_id] = reg;
+      });
+      setRegistrations(regMap);
+
+      // Fetch Certificate Config
+      const { data: sData } = await supabase
+        .from('site_settings')
+        .select('content')
+        .eq('id', 1)
+        .single();
+      
+      if (sData?.content?.certificate_config) {
+        setCertConfig(sData.content.certificate_config);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (trainingId: string) => {
+    if (!supabase || !user) return;
+    try {
+      const { error } = await supabase
+        .from('training_participants')
+        .insert({
+          user_id: user.id,
+          training_id: trainingId,
+          status: 'registered',
+          registered_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      alert("Pendaftaran berhasil!", "Sukses", "success");
+      fetchData();
+    } catch (err: any) {
+      alert(err.message, "Gagal Daftar", "error");
+    }
+  };
+
+  const handleAttendance = async (trainingId: string) => {
+    if (!supabase || !user) return;
+    try {
+      const { error } = await supabase
+        .from('training_participants')
+        .update({
+          status: 'attended',
+          attended_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id)
+        .eq('training_id', trainingId);
+      
+      if (error) throw error;
+      alert("Daftar hadir berhasil diisi!", "Sukses", "success");
+      fetchData();
+    } catch (err: any) {
+      alert(err.message, "Gagal Absen", "error");
+    }
+  };
+
+  const handleDownload = async (training: any) => {
+    if (!certConfig) {
+      alert("Template sertifikat belum diatur oleh admin.", "Info", "info");
+      return;
+    }
+    await generateTeacherPDF(user, training, certConfig);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -4963,7 +5042,7 @@ function TeacherTrainingCards() {
         </div>
         <div>
           <h2 className="text-xl font-bold font-heading">Program Pelatihan Guru</h2>
-          <p className="text-xs text-gray-500">Daftar pelatihan pengembangan kompetensi berkelanjutan.</p>
+          <p className="text-xs text-gray-500">Daftar pelatihan dan unduh sertifikat hasil pelatihan.</p>
         </div>
       </div>
 
@@ -4976,51 +5055,87 @@ function TeacherTrainingCards() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {trainings.map((item) => (
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              key={item.id} 
-              className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-main-blue/5 transition-all flex flex-col sm:flex-row"
-            >
-              <div className="sm:w-1/3 bg-gray-50 p-6 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-gray-100">
-                <div className="w-16 h-16 bg-white rounded-2xl flex flex-col items-center justify-center shadow-sm border border-gray-100 mb-3">
-                  <span className="text-xs font-bold text-gray-400 uppercase">{new Date(item.date_start).toLocaleString('id-ID', { month: 'short' })}</span>
-                  <span className="text-2xl font-bold text-main-blue leading-none mt-1">{new Date(item.date_start).getDate()}</span>
-                </div>
-                <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(item.status)}`}>
-                  {getStatusLabel(item.status)}
-                </div>
-              </div>
-              
-              <div className="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-bold text-soft-black text-lg mb-2">{item.title}</h3>
-                  <p className="text-xs text-gray-400 line-clamp-2 mb-4 leading-relaxed">{item.description}</p>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Map className="w-3.5 h-3.5 text-gray-300" />
-                      <span className="font-medium">{item.location || 'Lokasi TBA'}</span>
+          {trainings.map((item) => {
+            const reg = registrations[item.id];
+            const isRegistered = !!reg;
+            const hasAttended = reg?.status === 'attended';
+
+            return (
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                key={item.id} 
+                className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-main-blue/5 transition-all flex flex-col"
+              >
+                <div className="flex flex-col sm:flex-row flex-1">
+                  <div className="sm:w-1/3 bg-gray-50 p-6 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-gray-100">
+                    <div className="w-16 h-16 bg-white rounded-2xl flex flex-col items-center justify-center shadow-sm border border-gray-100 mb-3">
+                      <span className="text-xs font-bold text-gray-400 uppercase">{new Date(item.date_start).toLocaleString('id-ID', { month: 'short' })}</span>
+                      <span className="text-2xl font-bold text-main-blue leading-none mt-1">{new Date(item.date_start).getDate()}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Calendar className="w-3.5 h-3.5 text-gray-300" />
-                      <span className="font-medium">Mulai: {new Date(item.date_start).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(item.status)}`}>
+                      {getStatusLabel(item.status)}
+                    </div>
+                  </div>
+                  
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-bold text-soft-black text-lg mb-2">{item.title}</h3>
+                      <p className="text-xs text-gray-400 line-clamp-2 mb-4 leading-relaxed">{item.description}</p>
+                      
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Map className="w-3.5 h-3.5 text-gray-300" />
+                          <span className="font-medium">{item.location || 'Lokasi TBA'}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Calendar className="w-3.5 h-3.5 text-gray-300" />
+                          <span className="font-medium">Mulai: {new Date(item.date_start).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
-                
-                <div className="mt-6 flex items-center justify-between pt-4 border-t border-gray-50">
-                  <button className="text-[11px] font-bold text-main-blue flex items-center gap-1 hover:gap-2 transition-all">
-                    Lihat Detail Pelatihan <ChevronRight className="w-3 h-3" />
-                  </button>
+
+                <div className="bg-gray-50/50 p-4 border-t border-gray-100 flex flex-wrap gap-2 items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {!isRegistered ? (
+                        <button 
+                          onClick={() => handleRegister(item.id)}
+                          className="px-4 py-2 bg-main-blue text-white rounded-xl text-xs font-bold shadow-md shadow-main-blue/20 hover:scale-105 transition-all"
+                        >
+                          Daftar Sekarang
+                        </button>
+                      ) : !hasAttended ? (
+                        <button 
+                          onClick={() => handleAttendance(item.id)}
+                          className="px-4 py-2 bg-leaf-green text-white rounded-xl text-xs font-bold shadow-md shadow-leaf-green/20 hover:scale-105 transition-all flex items-center gap-2"
+                        >
+                          <CheckSquare className="w-4 h-4" /> Isi Daftar Hadir
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-600 rounded-xl text-xs font-bold border border-green-100">
+                          <CheckSquare className="w-4 h-4" /> Kehadiran Terverifikasi
+                        </div>
+                      )}
+                    </div>
+
+                    {hasAttended && (
+                      <button 
+                        onClick={() => handleDownload(item)}
+                        className="px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 hover:scale-105 transition-all flex items-center gap-2"
+                      >
+                         <Download className="w-4 h-4" /> Unduh Sertifikat
+                      </button>
+                    )}
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
+
 

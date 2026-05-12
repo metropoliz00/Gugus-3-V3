@@ -46,6 +46,81 @@ function URLImage({ src }: { src: string }) {
 // MAIN COMPONENT
 // =================================
 
+export function useCertificateGenerator() {
+  const { alert } = useAlert();
+
+  const generateTeacherPDF = async (teacher: any, training: any, config: CertificateConfig) => {
+    try {
+      const pdfDoc = await PDFDocument.create();
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+      // Helper to replace placeholders
+      const replacePlaceholders = (text: string) => {
+        return text
+          .replace(/\[Nama Peserta\]/g, teacher.full_name || teacher.name || "")
+          .replace(/\[NIP\]/g, teacher.nip || "-")
+          .replace(/\[Satuan Kerja\]/g, teacher.work_unit || "-")
+          .replace(/\[Judul Pelatihan\]/g, training.title || "")
+          .replace(/\[Tanggal\]/g, new Date(training.date_start).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }));
+      };
+
+      // --- PAGE 1 ---
+      const page1 = pdfDoc.addPage([config.canvasWidth || 1000, config.canvasHeight || 700]);
+      if (config.templateUrl) {
+        const imageBytes = await fetch(config.templateUrl).then((res) => res.arrayBuffer());
+        const image = config.templateUrl.toLowerCase().endsWith('.png') ? await pdfDoc.embedPng(imageBytes) : await pdfDoc.embedJpg(imageBytes);
+        page1.drawImage(image, { x: 0, y: 0, width: config.canvasWidth, height: config.canvasHeight });
+      }
+
+      config.fields.filter(f => (f.page || 1) === 1).forEach((field) => {
+        const hex = field.color || "#000000";
+        const r = parseInt(hex.slice(1, 3), 16) / 255;
+        const g = parseInt(hex.slice(3, 5), 16) / 255;
+        const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+        page1.drawText(replacePlaceholders(field.text), {
+          x: field.x,
+          y: config.canvasHeight - field.y - (field.fontSize * 0.5),
+          size: field.fontSize,
+          font: field.fontWeight === 'bold' ? fontBold : fontRegular,
+          color: rgb(r, g, b),
+        });
+      });
+
+      // --- PAGE 2 ---
+      const page2 = pdfDoc.addPage([config.canvasWidth || 1000, config.canvasHeight || 700]);
+      if (config.templateUrl2) {
+        const imageBytes = await fetch(config.templateUrl2).then((res) => res.arrayBuffer());
+        const image = config.templateUrl2.toLowerCase().endsWith('.png') ? await pdfDoc.embedPng(imageBytes) : await pdfDoc.embedJpg(imageBytes);
+        page2.drawImage(image, { x: 0, y: 0, width: config.canvasWidth, height: config.canvasHeight });
+      }
+
+      config.fields.filter(f => f.page === 2).forEach((field) => {
+        const hex = field.color || "#000000";
+        const r = parseInt(hex.slice(1, 3), 16) / 255;
+        const g = parseInt(hex.slice(3, 5), 16) / 255;
+        const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+        page2.drawText(replacePlaceholders(field.text), {
+          x: field.x,
+          y: config.canvasHeight - field.y - (field.fontSize * 0.5),
+          size: field.fontSize,
+          font: field.fontWeight === 'bold' ? fontBold : fontRegular,
+          color: rgb(r, g, b),
+        });
+      });
+
+      const pdfBytes = await pdfDoc.save();
+      saveAs(new Blob([pdfBytes], { type: "application/pdf" }), `Sertifikat_${training.title}_${teacher.name}.pdf`);
+    } catch (err: any) {
+      alert("Gagal generate sertifikat: " + err.message, "Error", "error");
+    }
+  };
+
+  return { generateTeacherPDF };
+}
+
 export default function AdminCertificateEditor() {
   const { alert } = useAlert();
   const stageRef = useRef<any>(null);
@@ -406,6 +481,16 @@ export default function AdminCertificateEditor() {
                />
              </div>
           </div>
+
+             <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 mt-4">
+                <p className="text-[10px] font-bold text-main-blue uppercase tracking-widest mb-2">Placeholder Teks</p>
+                <div className="grid grid-cols-2 gap-2">
+                   {['[Nama Peserta]', '[NIP]', '[Satuan Kerja]', '[Judul Pelatihan]', '[Tanggal]'].map(p => (
+                     <div key={p} className="text-[10px] font-mono bg-white px-2 py-1 rounded border border-blue-200 text-gray-600">{p}</div>
+                   ))}
+                </div>
+                <p className="text-[9px] text-gray-500 mt-2 leading-tight">* Gunakan kode di atas agar data terisi otomatis saat guru mengunduh sertifikat.</p>
+             </div>
 
           <div className="border-t border-gray-100 pt-8 space-y-6">
              <div className="flex items-center justify-between">
