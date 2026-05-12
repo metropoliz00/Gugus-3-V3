@@ -4,7 +4,7 @@ import useImage from "use-image";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import { supabase } from "../lib/supabase";
-import { Award, Save, Download, Plus, Trash2, Move, Type, Settings, RefreshCw, Image as ImageIcon } from "lucide-react";
+import { Award, Save, Download, Plus, Trash2, Move, Type, Settings, RefreshCw, Image as ImageIcon, Database } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageUpload from "./ImageUpload";
 import { useAlert } from "../contexts/AlertContext";
@@ -25,12 +25,19 @@ interface FieldType {
   page?: number;
 }
 
+interface PlaceholderConfig {
+  label: string;
+  placeholder: string;
+  dbField: string;
+}
+
 interface CertificateConfig {
   templateUrl: string;
   templateUrl2?: string;
   fields: FieldType[];
   canvasWidth: number;
   canvasHeight: number;
+  placeholders?: PlaceholderConfig[];
 }
 
 // =================================
@@ -55,15 +62,32 @@ export function useCertificateGenerator() {
       const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-      // Helper to replace placeholders
       const replacePlaceholders = (text: string) => {
-        return text
-          .replace(/\[Nama Peserta\]/g, teacher.full_name || teacher.name || "")
-          .replace(/\[NIP\]/g, teacher.nip || "-")
-          .replace(/\[Satuan Kerja\]/g, teacher.work_unit || "-")
-          .replace(/\[Judul Pelatihan\]/g, training.title || "")
-          .replace(/\[Nomor Sertifikat\]/g, certNumber || "-")
-          .replace(/\[Tanggal\]/g, new Date(training.date_start).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }));
+        let result = text;
+        const placeholders = config.placeholders || [
+          { label: 'Nama Lengkap', placeholder: '[nama]', dbField: 'nama' },
+          { label: 'NIP', placeholder: '[nip]', dbField: 'nip' },
+          { label: 'Satuan Kerja', placeholder: '[sekolah]', dbField: 'sekolah' },
+          { label: 'Judul Pelatihan', placeholder: '[title]', dbField: 'title' },
+          { label: 'Nomor Sertifikat', placeholder: '[certificate_number]', dbField: 'certificate_number' },
+          { label: 'Tgl Pelaksanaan', placeholder: '[date_start]', dbField: 'date_start' }
+        ];
+
+        placeholders.forEach(p => {
+          const regex = new RegExp(p.placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+          
+          if (p.dbField === 'certificate_number') {
+            result = result.replace(regex, certNumber || "-");
+          } else if (p.dbField === 'date_start') {
+            const val = training.date_start ? new Date(training.date_start).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }) : "-";
+            result = result.replace(regex, val);
+          } else {
+            // Check teacher first then training
+            const val = teacher[p.dbField] || training[p.dbField] || "-";
+            result = result.replace(regex, val.toString());
+          }
+        });
+        return result;
       };
 
       // --- PAGE 1 ---
@@ -142,26 +166,29 @@ export default function AdminCertificateEditor() {
     {
       id: "nama",
       field_name: "Nama Peserta",
-      text: "[Nama Peserta]",
+      text: "[nama]",
       x: 500,
       y: 350,
       fontSize: 40,
       fontWeight: "bold",
       color: "#000000",
       page: 1
-    },
-    {
-      id: "nip",
-      field_name: "NIP",
-      text: "NIP. 123456789",
-      x: 500,
-      y: 420,
-      fontSize: 20,
-      fontWeight: "normal",
-      color: "#000000",
-      page: 1
     }
   ]);
+
+  const [availablePlaceholders, setAvailablePlaceholders] = useState<PlaceholderConfig[]>([
+    { label: 'Nama Lengkap', placeholder: '[nama]', dbField: 'nama' },
+    { label: 'NIP', placeholder: '[nip]', dbField: 'nip' },
+    { label: 'Pangkat/Gol', placeholder: '[pangkat]', dbField: 'pangkat' },
+    { label: 'Satuan Kerja', placeholder: '[sekolah]', dbField: 'sekolah' },
+    { label: 'Jabatan', placeholder: '[jabatan]', dbField: 'jabatan' },
+    { label: 'Status Pegawai', placeholder: '[kepegawaian]', dbField: 'kepegawaian' },
+    { label: 'Judul Pelatihan', placeholder: '[title]', dbField: 'title' },
+    { label: 'Tgl Pelaksanaan', placeholder: '[date_start]', dbField: 'date_start' },
+    { label: 'Nomor Sertifikat', placeholder: '[certificate_number]', dbField: 'certificate_number' }
+  ]);
+  const [showAddPlaceholder, setShowAddPlaceholder] = useState(false);
+  const [newPH, setNewPH] = useState({ label: '', placeholder: '', dbField: '' });
 
   // =================================
   // LOAD CONFIG FROM DB
@@ -191,6 +218,7 @@ export default function AdminCertificateEditor() {
         if (config.templateUrl) setTemplateUrl(config.templateUrl);
         if (config.templateUrl2) setTemplateUrl2(config.templateUrl2);
         if (config.fields) setFields(config.fields.map(f => ({ ...f, page: f.page || 1 })));
+        if (config.placeholders) setAvailablePlaceholders(config.placeholders);
       }
     } catch (err) {
       console.error("Error loading certificate config:", err);
@@ -235,6 +263,7 @@ export default function AdminCertificateEditor() {
           templateUrl,
           templateUrl2,
           fields,
+          availablePlaceholders,
           canvasWidth: CANVAS_WIDTH,
           canvasHeight: CANVAS_HEIGHT
         }
@@ -483,14 +512,119 @@ export default function AdminCertificateEditor() {
              </div>
           </div>
 
-             <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 mt-4">
-                <p className="text-[10px] font-bold text-main-blue uppercase tracking-widest mb-2">Placeholder Teks</p>
-                <div className="grid grid-cols-2 gap-2">
-                   {['[Nama Peserta]', '[NIP]', '[Satuan Kerja]', '[Judul Pelatihan]', '[Tanggal]', '[Nomor Sertifikat]'].map(p => (
-                     <div key={p} className="text-[10px] font-mono bg-white px-2 py-1 rounded border border-blue-200 text-gray-600">{p}</div>
+             <div className="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100 mt-6">
+                <div className="flex items-center justify-between mb-4">
+                   <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-main-blue/10 rounded-xl flex items-center justify-center text-main-blue">
+                         <Database className="w-4 h-4" />
+                      </div>
+                      <div>
+                         <p className="text-xs font-bold text-main-blue uppercase tracking-widest">Sinkronisasi Database</p>
+                         <p className="text-[10px] text-gray-500">Klik untuk menambah element teks otomatis.</p>
+                      </div>
+                   </div>
+                   <button 
+                    onClick={() => setShowAddPlaceholder(!showAddPlaceholder)}
+                    className="p-1.5 bg-main-blue/10 text-main-blue rounded-lg hover:bg-main-blue hover:text-white transition-all shadow-sm"
+                   >
+                     <Plus className="w-3 h-3" />
+                   </button>
+                </div>
+
+                {showAddPlaceholder && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-4 p-4 bg-white rounded-2xl border border-main-blue/20 shadow-sm space-y-3"
+                  >
+                    <div className="grid grid-cols-2 gap-2">
+                       <div>
+                          <label className="text-[8px] font-bold text-gray-400 uppercase mb-1 block">Label</label>
+                          <input 
+                            placeholder="Nama Lengkap"
+                            className="w-full border border-gray-100 p-2 rounded-lg text-[10px] outline-none focus:border-main-blue"
+                            value={newPH.label}
+                            onChange={e => setNewPH({...newPH, label: e.target.value})}
+                          />
+                       </div>
+                       <div>
+                          <label className="text-[8px] font-bold text-gray-400 uppercase mb-1 block">Placeholder</label>
+                          <input 
+                            placeholder="[nama]"
+                            className="w-full border border-gray-100 p-2 rounded-lg text-[10px] outline-none focus:border-main-blue"
+                            value={newPH.placeholder}
+                            onChange={e => setNewPH({...newPH, placeholder: e.target.value})}
+                          />
+                       </div>
+                    </div>
+                    <div>
+                       <label className="text-[8px] font-bold text-gray-400 uppercase mb-1 block">Field DB (Key)</label>
+                       <input 
+                        placeholder="full_name"
+                        className="w-full border border-gray-100 p-2 rounded-lg text-[10px] outline-none focus:border-main-blue"
+                        value={newPH.dbField}
+                        onChange={e => setNewPH({...newPH, dbField: e.target.value})}
+                       />
+                    </div>
+                    <button 
+                      onClick={() => {
+                        if(!newPH.label || !newPH.placeholder || !newPH.dbField) return;
+                        setAvailablePlaceholders([...availablePlaceholders, newPH]);
+                        setNewPH({ label: '', placeholder: '', dbField: '' });
+                        setShowAddPlaceholder(false);
+                      }}
+                      className="w-full py-2 bg-main-blue text-white rounded-xl text-[10px] font-bold"
+                    >
+                      Tambah Placeholder
+                    </button>
+                  </motion.div>
+                )}
+                
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                   {availablePlaceholders.map((p, idx) => (
+                     <div key={idx} className="relative group">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                              const newField: FieldType = {
+                                id: Math.random().toString(36).substr(2, 9),
+                                field_name: p.label,
+                                text: p.placeholder,
+                                x: 50,
+                                y: 50,
+                                fontSize: 20,
+                                fontWeight: 'normal',
+                                color: '#000000',
+                                page: activePage
+                              };
+                              setFields([...fields, newField]);
+                          }}
+                          className="w-full h-full flex flex-col bg-white p-3 rounded-2xl border border-blue-100 hover:border-main-blue hover:shadow-md transition-all text-left"
+                        >
+                            <span className="text-[9px] text-gray-400 font-bold uppercase mb-1">{p.label}</span>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-mono text-main-blue font-bold">{p.placeholder}</span>
+                              <Plus className="w-3 h-3 text-main-blue opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAvailablePlaceholders(availablePlaceholders.filter((_, i) => i !== idx));
+                          }}
+                          className="absolute -top-1 -right-1 w-5 h-5 bg-red-50 text-red-500 border border-red-100 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all shadow-sm z-10"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                     </div>
                    ))}
                 </div>
-                <p className="text-[9px] text-gray-500 mt-2 leading-tight">* Gunakan kode di atas agar data terisi otomatis saat guru mengunduh sertifikat.</p>
+                <div className="mt-4 p-3 bg-white/50 rounded-xl border border-blue-50">
+                   <p className="text-[9px] text-gray-500 italic flex items-center gap-2">
+                      <span className="w-1 h-1 bg-main-blue rounded-full"></span>
+                      Klik pada kotak di atas untuk langsung menambahkan element teks ke sertifikat.
+                   </p>
+                </div>
              </div>
 
           <div className="border-t border-gray-100 pt-8 space-y-6">

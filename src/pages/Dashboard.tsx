@@ -4207,6 +4207,10 @@ function UserProfileEdit({ user, onUpdate }: { user: any, onUpdate: (data: any) 
           <input className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none" value={profile.sekolah} onChange={e => setProfile({...profile, sekolah: e.target.value})} />
         </div>
         <div>
+          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Pangkat/Golongan</label>
+          <input className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none" value={profile.pangkat} onChange={e => setProfile({...profile, pangkat: e.target.value})} />
+        </div>
+        <div>
           <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Status Kepegawaian</label>
           <input className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none" value={profile.kepegawaian} onChange={e => setProfile({...profile, kepegawaian: e.target.value})} />
         </div>
