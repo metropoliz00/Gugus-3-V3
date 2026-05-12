@@ -149,7 +149,7 @@ export function useCertificateGenerator() {
 
         page1.drawText(replacePlaceholders(field.text), {
           x: field.x,
-          y: config.canvasHeight - field.y - (field.fontSize * 0.5),
+          y: (config.canvasHeight || 700) - field.y - (field.fontSize * 0.8),
           size: field.fontSize,
           font: field.fontWeight === 'bold' ? fontBold : fontRegular,
           color: rgb(r, g, b),
@@ -173,7 +173,7 @@ export function useCertificateGenerator() {
 
         page2.drawText(replacePlaceholders(field.text), {
           x: field.x,
-          y: config.canvasHeight - field.y - (field.fontSize * 0.5),
+          y: (config.canvasHeight || 700) - field.y - (field.fontSize * 0.8),
           size: field.fontSize,
           font: field.fontWeight === 'bold' ? fontBold : fontRegular,
           color: rgb(r, g, b),
@@ -397,7 +397,7 @@ export default function AdminCertificateEditor() {
 
         page1.drawText(field.text, {
           x: field.x, 
-          y: CANVAS_HEIGHT - field.y - (field.fontSize * 0.5),
+          y: CANVAS_HEIGHT - field.y - (field.fontSize * 0.8),
           size: field.fontSize,
           font: field.fontWeight === 'bold' ? fontBold : fontRegular,
           color: rgb(r, g, b),
@@ -423,7 +423,7 @@ export default function AdminCertificateEditor() {
 
         page2.drawText(field.text, {
           x: field.x,
-          y: CANVAS_HEIGHT - field.y - (field.fontSize * 0.5),
+          y: CANVAS_HEIGHT - field.y - (field.fontSize * 0.8),
           size: field.fontSize,
           font: field.fontWeight === 'bold' ? fontBold : fontRegular,
           color: rgb(r, g, b),
@@ -552,7 +552,6 @@ export default function AdminCertificateEditor() {
                     fontFamily="Helvetica"
                     draggable
                     fill={field.color}
-                    align="center"
                     onDragMove={(e) => {
                        const node = e.target;
                        // Live update state
