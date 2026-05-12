@@ -1368,40 +1368,50 @@ function AdminUserManagement() {
             }
           }
 
-          const nama =
-            normalizedRow["nama"] || normalizedRow["nama lengkap"] || "";
-          let email = normalizedRow["email"] || "";
-          let username =
-            normalizedRow["username"] || normalizedRow["user name"] || "";
+          const nama = String(
+            normalizedRow["nama"] || normalizedRow["nama lengkap"] || ""
+          );
+          
+          let email = normalizedRow["email"] !== undefined ? String(normalizedRow["email"]).trim() : "";
+          
+          let username = "";
+          if (normalizedRow["username"] !== undefined && normalizedRow["username"] !== "") {
+            username = String(normalizedRow["username"]).trim();
+          } else if (normalizedRow["user name"] !== undefined && normalizedRow["user name"] !== "") {
+            username = String(normalizedRow["user name"]).trim();
+          }
 
           if (!username) {
             username =
               nama.toLowerCase().replace(/[^a-z0-9]/g, "") +
               Math.floor(Math.random() * 1000);
           }
+
           if (!email) {
-            email = `${username}@gugus3.local`;
+            email = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@gugus3.local`;
+          }
+          
+          let password = "";
+          if (normalizedRow["password"] !== undefined && normalizedRow["password"] !== "") {
+            password = String(normalizedRow["password"]).trim();
+          } else if (normalizedRow["kata sandi"] !== undefined && normalizedRow["kata sandi"] !== "") {
+            password = String(normalizedRow["kata sandi"]).trim();
           }
 
           return {
             username: username,
             email: email,
-            password: normalizedRow["password"] || normalizedRow["kata sandi"],
-            role: normalizedRow["role"] || normalizedRow["peran"] || "guru",
+            password: password,
+            role: String(normalizedRow["role"] || normalizedRow["peran"] || "guru").trim().toLowerCase(),
             nama: nama,
-            nip: normalizedRow["nip"] || normalizedRow["n i p"],
+            nip: normalizedRow["nip"] !== undefined ? String(normalizedRow["nip"]).trim() : (normalizedRow["n i p"] !== undefined ? String(normalizedRow["n i p"]).trim() : ""),
             kepegawaian:
-              normalizedRow["kepegawaian"] ||
-              normalizedRow["status kepegawaian"],
+              normalizedRow["kepegawaian"] !== undefined ? String(normalizedRow["kepegawaian"]).trim() : (normalizedRow["status kepegawaian"] !== undefined ? String(normalizedRow["status kepegawaian"]).trim() : ""),
             pangkat:
-              normalizedRow["pangkat"] ||
-              normalizedRow["pangkat/golongan"] ||
-              normalizedRow["golongan"],
-            jabatan: normalizedRow["jabatan"],
+              normalizedRow["pangkat"] !== undefined ? String(normalizedRow["pangkat"]).trim() : (normalizedRow["pangkat/golongan"] !== undefined ? String(normalizedRow["pangkat/golongan"]).trim() : (normalizedRow["golongan"] !== undefined ? String(normalizedRow["golongan"]).trim() : "")),
+            jabatan: normalizedRow["jabatan"] !== undefined ? String(normalizedRow["jabatan"]).trim() : "",
             sekolah:
-              normalizedRow["sekolah"] ||
-              normalizedRow["asal sekolah"] ||
-              normalizedRow["unit kerja"],
+              normalizedRow["sekolah"] !== undefined ? String(normalizedRow["sekolah"]).trim() : (normalizedRow["asal sekolah"] !== undefined ? String(normalizedRow["asal sekolah"]).trim() : (normalizedRow["unit kerja"] !== undefined ? String(normalizedRow["unit kerja"]).trim() : "")),
           };
         });
 
