@@ -6223,6 +6223,12 @@ function AdminFinanceManagement({ user }: { user: any }) {
 
 function AdminCertificateManager({ user }: { user: any }) {
   const [activeSubTab, setActiveSubTab] = useState<"editor" | "list">("list");
+  const { content, updateContent } = useSiteContent() as any;
+  const isDownloadEnabled = content?.certificateDownloadEnabled !== false;
+
+  const handleToggleDownload = () => {
+    updateContent({ certificateDownloadEnabled: !isDownloadEnabled });
+  };
 
   return (
     <div className="space-y-6">
@@ -6240,19 +6246,30 @@ function AdminCertificateManager({ user }: { user: any }) {
             </p>
           </div>
         </div>
-        <div className="flex bg-gray-100 p-1 rounded-xl">
-          <button
-            onClick={() => setActiveSubTab("list")}
-            className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeSubTab === "list" ? "bg-white text-main-blue shadow" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Daftar Sertifikat
-          </button>
-          <button
-            onClick={() => setActiveSubTab("editor")}
-            className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeSubTab === "editor" ? "bg-white text-main-blue shadow" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Desain Template
-          </button>
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <label className="flex items-center gap-2 cursor-pointer bg-amber-50 px-4 py-2 rounded-xl text-amber-700 text-sm font-bold border border-amber-100">
+            <input
+              type="checkbox"
+              className="w-4 h-4 accent-amber-600 rounded"
+              checked={isDownloadEnabled}
+              onChange={handleToggleDownload}
+            />
+            Tombol Unduh Guru
+          </label>
+          <div className="flex bg-gray-100 p-1 rounded-xl">
+            <button
+              onClick={() => setActiveSubTab("list")}
+              className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeSubTab === "list" ? "bg-white text-main-blue shadow" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Daftar Sertifikat
+            </button>
+            <button
+              onClick={() => setActiveSubTab("editor")}
+              className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeSubTab === "editor" ? "bg-white text-main-blue shadow" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Desain Template
+            </button>
+          </div>
         </div>
       </div>
 
@@ -7641,6 +7658,8 @@ function TeacherJadwalCards() {
 
 function TeacherTrainingCards({ user }: { user: any }) {
   const { alert } = useAlert();
+  const { content } = useSiteContent() as any;
+  const isDownloadEnabled = content?.certificateDownloadEnabled !== false;
   const { generateTeacherPDF } = useCertificateGenerator();
   const [trainings, setTrainings] = useState<any[]>([]);
   const [registrations, setRegistrations] = useState<Record<string, any>>({});
@@ -8091,16 +8110,20 @@ function TeacherTrainingCards({ user }: { user: any }) {
                               {training?.title}
                             </h4>
                             <p className="text-[10px] text-gray-400">
-                              Sertifikat tersedia untuk diunduh
+                              {isDownloadEnabled
+                                ? "Sertifikat tersedia untuk diunduh"
+                                : "Sertifikat belum tersedia untuk diunduh"}
                             </p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleDownload(training)}
-                          className="p-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20"
-                        >
-                          <Download className="w-5 h-5" />
-                        </button>
+                        {isDownloadEnabled && (
+                          <button
+                            onClick={() => handleDownload(training)}
+                            className="p-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20"
+                          >
+                            <Download className="w-5 h-5" />
+                          </button>
+                        )}
                       </div>
                     );
                   })
