@@ -1375,9 +1375,9 @@ function AdminUserManagement() {
           let email = normalizedRow["email"] !== undefined ? String(normalizedRow["email"]).trim() : "";
           
           let username = "";
-          if (normalizedRow["username"] !== undefined && normalizedRow["username"] !== "") {
+          if (normalizedRow["username"] !== undefined && String(normalizedRow["username"]).trim() !== "") {
             username = String(normalizedRow["username"]).trim();
-          } else if (normalizedRow["user name"] !== undefined && normalizedRow["user name"] !== "") {
+          } else if (normalizedRow["user name"] !== undefined && String(normalizedRow["user name"]).trim() !== "") {
             username = String(normalizedRow["user name"]).trim();
           }
 
@@ -1387,15 +1387,21 @@ function AdminUserManagement() {
               Math.floor(Math.random() * 1000);
           }
 
-          if (!email) {
+          if (!email || !email.includes("@")) {
+            // Fix invalid email by converting to a dummy valid one
             email = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@gugus3.local`;
           }
           
           let password = "";
-          if (normalizedRow["password"] !== undefined && normalizedRow["password"] !== "") {
+          if (normalizedRow["password"] !== undefined && String(normalizedRow["password"]).trim() !== "") {
             password = String(normalizedRow["password"]).trim();
-          } else if (normalizedRow["kata sandi"] !== undefined && normalizedRow["kata sandi"] !== "") {
+          } else if (normalizedRow["kata sandi"] !== undefined && String(normalizedRow["kata sandi"]).trim() !== "") {
             password = String(normalizedRow["kata sandi"]).trim();
+          }
+          
+          // Supabase requires minimum 6 character passwords
+          if (password && password.length < 6) {
+            password = password.padEnd(6, "0"); // pad with zeros to meet requirements
           }
 
           return {
