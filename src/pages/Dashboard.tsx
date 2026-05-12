@@ -4,7 +4,7 @@ import {
   Map, Navigation, Image as ImageIcon, Briefcase, FileVideo, Video, MessageSquare, MessageCircle, Download,
   Calendar, CheckSquare, Search, Menu, X, PlusCircle, PenTool, Trophy, Award,
   UploadCloud, Activity, Bell, Shield, ChevronRight, BarChart3, GraduationCap, Play, Megaphone,
-  Wallet, Trash2, Globe, ArrowLeft, Send, ChevronDown
+  Wallet, Trash2, Globe, ArrowLeft, Send, ChevronDown, Type
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
@@ -18,6 +18,7 @@ import ImageUpload from '../components/ImageUpload';
 import { useAlert } from '../contexts/AlertContext';
 import { FinanceTransaction } from '../types';
 import { logActivity, ActivityLog } from '../lib/activity';
+import AdminCertificateEditor from '../components/AdminCertificateEditor';
 
 import * as XLSX from 'xlsx';
 
@@ -567,7 +568,7 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
                          <Route path="materi" element={<DataManagementTable user={user} table="kkg_materials" title="Materi KKG" icon={BookOpen} fields={[{name:'title', label:'Judul'}, {name:'description', label:'Deskripsi'}, {name:'category', label:'Kategori'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
                         <Route path="notulen" element={<DataManagementTable user={user} table="meeting_minutes" title="Notulen Rapat" icon={FileText} fields={[{name:'title', label:'Judul Notulen'}, {name:'date', label:'Tanggal Rapat', type:'date'}, {name:'content', label:'Konten / Isi Notulen', type:'textarea'}, {name:'file_url', label:'Lampiran (Opsional)', type:'file'}]} />} />
                         <Route path="pelatihan" element={<DataManagementTable user={user} table="trainings" title="Sistem Manajemen Pelatihan" icon={GraduationCap} fields={[{name:'title', label:'Judul Pelatihan'}, {name:'description', label:'Deskripsi Lengkap', type:'textarea'}, {name:'location', label:'Lokasi / Link Pelatihan'}, {name:'date_start', label:'Tanggal Pelaksanaan', type:'date'}, {name:'status', label:'Status Publikasi', type:'select', options:['planned', 'ongoing', 'completed']}]} />} />
-                        <Route path="sertifikat" element={<DataManagementTable user={user} table="training_certificates" title="Sertifikat" icon={Award} fields={[{name:'user_id', label:'User ID'}, {name:'training_id', label:'Training ID'}, {name:'certificate_url', label:'URL Sertifikat', type:'file'}]} />} />
+                         <Route path="sertifikat" element={<AdminCertificateManager user={user} />} />
                         <Route path="forum" element={<DataManagementTable user={user} table="forum_posts" title="Forum Diskusi" icon={MessageSquare} fields={[{name:'title', label:'Judul'}, {name:'content', label:'Konten', type:'textarea'}, {name:'category', label:'Kategori'}]} />} />
                         <Route path="komentar" element={<DataManagementTable user={user} table="forum_comments" title="Komentar Forum" icon={MessageSquare} fields={[{name:'post_id', label:'Post ID'}, {name:'content', label:'Konten', type:'textarea'}, {name:'user_id', label:'User ID'}]} />} />
                         <Route path="sharing" element={<DataManagementTable user={user} table="best_practices" title="Sharing Praktik Baik" icon={Play} fields={[{name:'title', label:'Judul'}, {name:'description', label:'Deskripsi'}, {name:'video_url', label:'URL Video'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
@@ -3994,6 +3995,56 @@ function AdminFinanceManagement({ user }: { user: any }) {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AdminCertificateManager({ user }: { user: any }) {
+  const [activeSubTab, setActiveSubTab] = useState<'editor' | 'list'>('list');
+  
+  return (
+    <div className="space-y-6">
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
+            <Award className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-heading">Manajemen Sertifikat</h2>
+            <p className="text-xs text-gray-500">Kelola desain template dan penerbitan sertifikat pelatihan.</p>
+          </div>
+        </div>
+        <div className="flex bg-gray-100 p-1 rounded-xl">
+          <button 
+            onClick={() => setActiveSubTab('list')} 
+            className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeSubTab === 'list' ? 'bg-white text-main-blue shadow' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Daftar Sertifikat
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('editor')} 
+            className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${activeSubTab === 'editor' ? 'bg-white text-main-blue shadow' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Desain Template
+          </button>
+        </div>
+      </div>
+      
+      {activeSubTab === 'list' ? (
+        <DataManagementTable 
+          user={user} 
+          table="training_certificates" 
+          title="Daftar Sertifikat Terbit" 
+          icon={Award} 
+          fields={[
+            {name:'user_id', label:'User ID'}, 
+            {name:'training_id', label:'Training ID'}, 
+            {name:'certificate_url', label:'URL Sertifikat', type:'file'}
+          ]} 
+        />
+      ) : (
+        <AdminCertificateEditor />
+      )}
     </div>
   );
 }
