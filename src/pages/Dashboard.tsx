@@ -40,6 +40,9 @@ import {
   Send,
   ChevronDown,
   Type,
+  RefreshCw,
+  Upload,
+  Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -1172,6 +1175,7 @@ function AdminUserManagement() {
 
   const [userList, setUserList] = useState<any[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [previewUsers, setPreviewUsers] = useState<any[] | null>(null);
 
   // Manual User Form
   const [showAddForm, setShowAddForm] = useState(false);
@@ -1347,9 +1351,6 @@ function AdminUserManagement() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploading(true);
-    setUploadResult(null);
-
     try {
       const reader = new FileReader();
       reader.onload = async (event) => {
@@ -1358,6 +1359,11 @@ function AdminUserManagement() {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+
+        if (jsonData.length === 0) {
+          alert("File Excel kosong atau tidak terbaca.", "Gagal", "error");
+          return;
+        }
 
         const formattedUsers = jsonData.map((row) => {
           const normalizedRow: Record<string, any> = {};
@@ -1369,15 +1375,27 @@ function AdminUserManagement() {
           }
 
           const nama = String(
-            normalizedRow["nama"] || normalizedRow["nama lengkap"] || ""
+            normalizedRow["nama"] ||
+              normalizedRow["nama lengkap"] ||
+              normalizedRow["penerima"] ||
+              ""
           );
-          
-          let email = normalizedRow["email"] !== undefined ? String(normalizedRow["email"]).trim() : "";
-          
+
+          let email =
+            normalizedRow["email"] !== undefined
+              ? String(normalizedRow["email"]).trim()
+              : "";
+
           let username = "";
-          if (normalizedRow["username"] !== undefined && String(normalizedRow["username"]).trim() !== "") {
+          if (
+            normalizedRow["username"] !== undefined &&
+            String(normalizedRow["username"]).trim() !== ""
+          ) {
             username = String(normalizedRow["username"]).trim();
-          } else if (normalizedRow["user name"] !== undefined && String(normalizedRow["user name"]).trim() !== "") {
+          } else if (
+            normalizedRow["user name"] !== undefined &&
+            String(normalizedRow["user name"]).trim() !== ""
+          ) {
             username = String(normalizedRow["user name"]).trim();
           }
 
@@ -1388,67 +1406,120 @@ function AdminUserManagement() {
           }
 
           if (!email || !email.includes("@")) {
-            // Fix invalid email by converting to a dummy valid one
-            email = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}@gugus3.local`;
+            email = `${username.toLowerCase().replace(/[^a-z0-9]/g, "")}_${Math.floor(Math.random() * 10000)}@gugus3.local`;
           }
-          
+
           let password = "";
-          if (normalizedRow["password"] !== undefined && String(normalizedRow["password"]).trim() !== "") {
+          if (
+            normalizedRow["password"] !== undefined &&
+            String(normalizedRow["password"]).trim() !== ""
+          ) {
             password = String(normalizedRow["password"]).trim();
-          } else if (normalizedRow["kata sandi"] !== undefined && String(normalizedRow["kata sandi"]).trim() !== "") {
+          } else if (
+            normalizedRow["kata sandi"] !== undefined &&
+            String(normalizedRow["kata sandi"]).trim() !== ""
+          ) {
             password = String(normalizedRow["kata sandi"]).trim();
           }
-          
-          // Supabase requires minimum 6 character passwords
+
           if (password && password.length < 6) {
-            password = password.padEnd(6, "0"); // pad with zeros to meet requirements
+            password = password.padEnd(6, "0");
+          }
+
+          if (!password) {
+            password = "Gugus3Melati123!";
           }
 
           return {
             username: username,
             email: email,
             password: password,
-            role: String(normalizedRow["role"] || normalizedRow["peran"] || "guru").trim().toLowerCase(),
+            role: String(normalizedRow["role"] || normalizedRow["peran"] || "guru")
+              .trim()
+              .toLowerCase(),
             nama: nama,
-            nip: normalizedRow["nip"] !== undefined ? String(normalizedRow["nip"]).trim() : (normalizedRow["n i p"] !== undefined ? String(normalizedRow["n i p"]).trim() : ""),
+            nip:
+              normalizedRow["nip"] !== undefined
+                ? String(normalizedRow["nip"]).trim()
+                : normalizedRow["n i p"] !== undefined
+                  ? String(normalizedRow["n i p"]).trim()
+                  : "",
             kepegawaian:
-              normalizedRow["kepegawaian"] !== undefined ? String(normalizedRow["kepegawaian"]).trim() : (normalizedRow["status kepegawaian"] !== undefined ? String(normalizedRow["status kepegawaian"]).trim() : ""),
+              normalizedRow["kepegawaian"] !== undefined
+                ? String(normalizedRow["kepegawaian"]).trim()
+                : normalizedRow["status kepegawaian"] !== undefined
+                  ? String(normalizedRow["status kepegawaian"]).trim()
+                  : "",
             pangkat:
-              normalizedRow["pangkat"] !== undefined ? String(normalizedRow["pangkat"]).trim() : (normalizedRow["pangkat/golongan"] !== undefined ? String(normalizedRow["pangkat/golongan"]).trim() : (normalizedRow["golongan"] !== undefined ? String(normalizedRow["golongan"]).trim() : "")),
-            jabatan: normalizedRow["jabatan"] !== undefined ? String(normalizedRow["jabatan"]).trim() : "",
+              normalizedRow["pangkat"] !== undefined
+                ? String(normalizedRow["pangkat"]).trim()
+                : normalizedRow["pangkat/golongan"] !== undefined
+                  ? String(normalizedRow["pangkat/golongan"]).trim()
+                  : normalizedRow["golongan"] !== undefined
+                    ? String(normalizedRow["golongan"]).trim()
+                    : "",
+            jabatan:
+              normalizedRow["jabatan"] !== undefined
+                ? String(normalizedRow["jabatan"]).trim()
+                : "",
             sekolah:
-              normalizedRow["sekolah"] !== undefined ? String(normalizedRow["sekolah"]).trim() : (normalizedRow["asal sekolah"] !== undefined ? String(normalizedRow["asal sekolah"]).trim() : (normalizedRow["unit kerja"] !== undefined ? String(normalizedRow["unit kerja"]).trim() : "")),
+              normalizedRow["sekolah"] !== undefined
+                ? String(normalizedRow["sekolah"]).trim()
+                : normalizedRow["asal sekolah"] !== undefined
+                  ? String(normalizedRow["asal sekolah"]).trim()
+                  : normalizedRow["unit kerja"] !== undefined
+                    ? String(normalizedRow["unit kerja"]).trim()
+                    : "",
           };
         });
 
-        const response = await fetch("/api/admin/bulk-create-users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ users: formattedUsers }),
-        });
-
-        let result;
-        const responseText = await response.text();
-        try {
-          result = JSON.parse(responseText);
-        } catch (e) {
-          throw new Error("Respons bulk-create tidak valid dari server.");
-        }
-
-        const successCount = result.results?.length || 0;
-        const failureCount = result.errors?.length || 0;
-
-        setUploadResult({
-          success: successCount,
-          failure: failureCount,
-          errors: result.errors || [],
-        });
-
-        setIsUploading(false);
-        fetchUsers();
+        setPreviewUsers(formattedUsers);
       };
       reader.readAsArrayBuffer(file);
     } catch (err: any) {
+      alert("Gagal membaca file: " + err.message, "Error", "error");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const confirmUpload = async () => {
+    if (!previewUsers) return;
+
+    setIsUploading(true);
+    setUploadResult(null);
+
+    try {
+      const response = await fetch("/api/admin/bulk-create-users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ users: previewUsers }),
+      });
+
+      let result;
+      const responseText = await response.text();
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error("Respons bulk-create tidak valid dari server.");
+      }
+
+      const successCount = result.results?.length || 0;
+      const failureCount = result.errors?.length || 0;
+
+      setUploadResult({
+        success: successCount,
+        failure: failureCount,
+        errors: result.errors || [],
+      });
+
+      if (successCount > 0) {
+        fetchUsers();
+      }
+      setPreviewUsers(null);
+    } catch (err: any) {
+      alert(err.message, "Upload Gagal", "error");
+    } finally {
       setIsUploading(false);
     }
   };
@@ -1516,6 +1587,106 @@ function AdminUserManagement() {
       </div>
 
       <AnimatePresence>
+        {previewUsers && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="mb-8 bg-blue-50 p-6 rounded-3xl border border-blue-100 shadow-xl"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-blue-900">
+                    Preview Data Excel
+                  </h3>
+                  <p className="text-sm text-blue-600">
+                    Silakan tinjau data berikut sebelum diimpor ke sistem.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPreviewUsers(null)}
+                  className="px-5 py-2 bg-white text-gray-600 font-bold rounded-xl border border-gray-200 hover:bg-gray-50 transition-all text-sm"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmUpload}
+                  disabled={isUploading}
+                  className="px-5 py-2 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 hover:bg-blue-700 transition-all text-sm flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Upload className="w-4 h-4" />
+                  )}
+                  {isUploading ? "Mengunggah..." : `Konfirmasi & Impor ${previewUsers.length} Akun`}
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl overflow-hidden border border-blue-100 max-h-96 overflow-y-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead className="bg-blue-50 text-blue-900 sticky top-0">
+                  <tr className="border-b border-blue-100">
+                    <th className="p-4 font-bold">Nama</th>
+                    <th className="p-4 font-bold">Username</th>
+                    <th className="p-4 font-bold">Email</th>
+                    <th className="p-4 font-bold">Password</th>
+                    <th className="p-4 font-bold">Role</th>
+                    <th className="p-4 font-bold">Sekolah</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {previewUsers.map((user, idx) => {
+                    const isDuplicate = previewUsers.some((u, i) => i !== idx && u.username === user.username);
+                    const hasMissingInfo = !user.nama || !user.username;
+                    
+                    return (
+                      <tr
+                        key={idx}
+                        className={`transition-colors ${isDuplicate || hasMissingInfo ? 'bg-red-50/50 hover:bg-red-50' : 'hover:bg-blue-50/30'}`}
+                      >
+                        <td className="p-4 font-medium text-gray-800">
+                          <div className="flex items-center gap-2">
+                            {user.nama || <span className="text-red-400 italic">Tanpa Nama</span>}
+                            {hasMissingInfo && <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" title="Informasi Penting Hilang" />}
+                          </div>
+                        </td>
+                        <td className={`p-4 font-mono text-xs ${isDuplicate ? 'text-red-600 font-bold' : 'text-blue-600'}`}>
+                          {user.username}
+                          {isDuplicate && <span className="ml-1 text-[8px] uppercase">(Duplikat)</span>}
+                        </td>
+                        <td className="p-4 font-mono text-xs text-gray-500">
+                          {user.email}
+                        </td>
+                        <td className="p-4 text-gray-400 text-xs">
+                          {user.password === "Gugus3Melati123!" ? "Default" : (user.password.length < 6 ? "Terlalu Pendek" : "Custom")}
+                        </td>
+                        <td className="p-4">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>
+                            {user.role}
+                          </span>
+                        </td>
+                        <td className="p-4 text-gray-600">{user.sekolah || "-"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            
+            <p className="mt-4 text-[11px] text-blue-500 italic flex items-center gap-1">
+              <Info className="w-3 h-3" /> Tip: Username dan Email akan otomatis dibuat unik jika kolom dikosongkan di Excel.
+            </p>
+          </motion.div>
+        )}
+
         {showAddForm && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
