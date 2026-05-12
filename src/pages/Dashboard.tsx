@@ -567,7 +567,7 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
                         <Route path="finance" element={<AdminFinanceManagement user={user} />} />
                          <Route path="materi" element={<DataManagementTable user={user} table="kkg_materials" title="Materi KKG" icon={BookOpen} fields={[{name:'title', label:'Judul'}, {name:'description', label:'Deskripsi'}, {name:'category', label:'Kategori'}, {name:'file_url', label:'URL File', type:'file'}]} />} />
                         <Route path="notulen" element={<DataManagementTable user={user} table="meeting_minutes" title="Notulen Rapat" icon={FileText} fields={[{name:'title', label:'Judul Notulen'}, {name:'date', label:'Tanggal Rapat', type:'date'}, {name:'content', label:'Konten / Isi Notulen', type:'textarea'}, {name:'file_url', label:'Lampiran (Opsional)', type:'file'}]} />} />
-                        <Route path="pelatihan" element={<DataManagementTable user={user} table="trainings" title="Sistem Manajemen Pelatihan" icon={GraduationCap} fields={[{name:'title', label:'Judul Pelatihan'}, {name:'description', label:'Deskripsi Lengkap', type:'textarea'}, {name:'location', label:'Lokasi / Link Pelatihan'}, {name:'date_start', label:'Tanggal Pelaksanaan', type:'date'}, {name:'status', label:'Status Publikasi', type:'select', options:['planned', 'ongoing', 'completed']}]} />} />
+                        <Route path="pelatihan" element={<DataManagementTable user={user} table="trainings" title="Sistem Manajemen Pelatihan" icon={GraduationCap} fields={[{name:'title', label:'Judul Pelatihan'}, {name:'description', label:'Deskripsi Lengkap', type:'textarea'}, {name:'location', label:'Lokasi / Link Pelatihan'}, {name:'date_start', label:'Tanggal Pelaksanaan', type:'date'}, {name:'status', label:'Status Publikasi', type:'select', options:[{label: 'Direncanakan', value: 'planned'}, {label: 'Sedang Berlangsung', value: 'ongoing'}, {label: 'Selesai', value: 'completed'}]}]} />} />
                          <Route path="sertifikat" element={<AdminCertificateManager user={user} />} />
                         <Route path="forum" element={<DataManagementTable user={user} table="forum_posts" title="Forum Diskusi" icon={MessageSquare} fields={[{name:'title', label:'Judul'}, {name:'content', label:'Konten', type:'textarea'}, {name:'category', label:'Kategori'}]} />} />
                         <Route path="komentar" element={<DataManagementTable user={user} table="forum_comments" title="Komentar Forum" icon={MessageSquare} fields={[{name:'post_id', label:'Post ID'}, {name:'content', label:'Konten', type:'textarea'}, {name:'user_id', label:'User ID'}]} />} />
@@ -4311,7 +4311,11 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                   ) : f.type === 'select' ? (
                     <select className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none bg-white" value={formData[f.name] || ''} onChange={e => setFormData({...formData, [f.name]: e.target.value})}>
                       <option value="">Pilih</option>
-                      {f.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
+                      {f.options.map((opt: any) => {
+                        const label = typeof opt === 'string' ? opt : opt.label;
+                        const value = typeof opt === 'string' ? opt : opt.value;
+                        return <option key={value} value={value}>{label}</option>;
+                      })}
                     </select>
                   ) : f.type === 'file' ? (
                     <ImageUpload label={f.label} value={formData[f.name] || ''} onChange={base64 => setFormData({...formData, [f.name]: base64})} />
@@ -4346,7 +4350,16 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                 <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
                   {fields.slice(0, 3).map((f: any) => (
                     <td key={f.name} className="px-6 py-4 text-sm font-medium text-gray-700 max-w-[200px] truncate">
-                      {f.type === 'date' ? new Date(item[f.name]).toLocaleDateString('id-ID') : item[f.name] || '-'}
+                      {f.type === 'date' ? (
+                        new Date(item[f.name]).toLocaleDateString('id-ID')
+                      ) : f.type === 'select' ? (
+                        (() => {
+                           const opt = f.options.find((o: any) => (typeof o === 'string' ? o : o.value) === item[f.name]);
+                           return typeof opt === 'string' ? opt : opt?.label || item[f.name] || '-';
+                        })()
+                      ) : (
+                        item[f.name] || '-'
+                      )}
                     </td>
                   ))}
                   <td className="px-6 py-4 text-right">
