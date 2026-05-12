@@ -4,7 +4,7 @@ import useImage from "use-image";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import { supabase } from "../lib/supabase";
-import { Award, Save, Download, Plus, Trash2, Move, Type, Settings, RefreshCw } from "lucide-react";
+import { Award, Save, Download, Plus, Trash2, Move, Type, Settings, RefreshCw, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageUpload from "./ImageUpload";
 import { useAlert } from "../contexts/AlertContext";
@@ -90,14 +90,17 @@ export default function AdminCertificateEditor() {
   }, []);
 
   async function loadConfig() {
-    if (!supabase) return;
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from("site_settings")
         .select("content")
         .eq("id", 1)
-        .single();
+        .maybeSingle(); // Use maybeSingle to avoid error if row missing
 
       if (error) throw error;
       
@@ -130,20 +133,21 @@ export default function AdminCertificateEditor() {
   // =================================
 
   async function saveConfig() {
-    if (!supabase) return;
+    if (!supabase) {
+      alert("Supabase tidak terhubung. Tidak dapat menyimpan.", "Error", "error");
+      return;
+    }
     setSaving(true);
     try {
-      // Get current content first
-      const { data: current, error: fetchError } = await supabase
+      // Get current content first or default to empty object
+      const { data: current } = await supabase
         .from("site_settings")
         .select("content")
         .eq("id", 1)
-        .single();
-      
-      if (fetchError) throw fetchError;
+        .maybeSingle();
 
       const newContent = {
-        ...current.content,
+        ...(current?.content || {}),
         certificate_config: {
           templateUrl,
           fields,
@@ -154,8 +158,7 @@ export default function AdminCertificateEditor() {
 
       const { error } = await supabase
         .from("site_settings")
-        .update({ content: newContent, updated_at: new Date().toISOString() })
-        .eq("id", 1);
+        .upsert({ id: 1, content: newContent, updated_at: new Date().toISOString() });
 
       if (error) throw error;
       await alert("Konfigurasi sertifikat berhasil disimpan", "Sukses", "success");
