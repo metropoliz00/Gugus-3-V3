@@ -23,7 +23,7 @@ function TiktokIcon(props: any) {
 
 export default function Footer() {
   const { content } = useSiteContent();
-  const social = content.footer.social || {};
+  const social = (content.footer as any).social || {};
 
   const menuAkses = [
     { label: 'Beranda', href: '/' },

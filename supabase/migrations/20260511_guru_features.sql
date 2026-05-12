@@ -37,13 +37,35 @@ CREATE TABLE IF NOT EXISTS trainings (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Absensi Pelatihan
+-- Peserta Pelatihan (Pendaftaran & Absensi)
+CREATE TABLE IF NOT EXISTS training_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  training_id UUID REFERENCES trainings(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'registered',
+  registered_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  attended_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Absensi Pelatihan (Legacy, used for simple logs)
 CREATE TABLE IF NOT EXISTS training_attendance (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   training_id UUID REFERENCES trainings(id) ON DELETE CASCADE,
   user_id UUID REFERENCES auth.users(id),
   check_in TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   status TEXT DEFAULT 'present'
+);
+
+-- Log Aktivitas
+CREATE TABLE IF NOT EXISTS activity_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID,
+  user_name TEXT,
+  user_role TEXT,
+  action TEXT,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Sertifikat Pelatihan

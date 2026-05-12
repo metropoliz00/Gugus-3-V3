@@ -80,12 +80,9 @@ const guruMenu = [
   { id: 'materi', label: 'Materi KKG', icon: BookOpen },
   { id: 'notulen', label: 'Notulen Rapat', icon: FileText },
   { id: 'pelatihan', label: 'Pelatihan', icon: GraduationCap },
-  { id: 'absensi', label: 'Absensi Pelatihan', icon: CheckSquare },
-  { id: 'sertifikat', label: 'Sertifikat Pelatihan', icon: Award },
   { id: 'forum', label: 'Forum Diskusi', icon: MessageSquare },
   { id: 'sharing', label: 'Sharing Praktik Baik', icon: Play },
   { id: 'upload_karya', label: 'Upload Hasil Karya', icon: UploadCloud },
-  { id: 'pengaturan_akun', label: 'Pengaturan Akun', icon: Settings },
 ];
 
 const adminMenuGroups = [
@@ -267,8 +264,9 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
   const menuItems = isAdmin 
     ? adminMenu 
     : guruMenu.filter(item => {
-        if (isLoading || !content.activeMenus || Object.keys(content.activeMenus).length === 0) return true;
-        return !!content.activeMenus[item.id];
+        const activeMenus = (content as any).activeMenus;
+        if (isLoading || !activeMenus || Object.keys(activeMenus).length === 0) return true;
+        return !!activeMenus[item.id];
       });
   
   // Get active tab from path
@@ -1407,6 +1405,10 @@ function AdminOverview() {
 function GuruOverview({ user }: { user: any }) {
   const [events, setEvents] = useState<any[]>([]);
   const [news, setNews] = useState<any[]>([]);
+  const [counts, setCounts] = useState({
+    pelatihan: 0,
+    karya: 0
+  });
 
   useEffect(() => {
     async function loadData() {
@@ -1417,19 +1419,31 @@ function GuruOverview({ user }: { user: any }) {
 
         const { data: newsData } = await supabase.from('posts').select('*').in('category', ['berita', 'pengumuman']).order('published_at', { ascending: false }).limit(3);
         if (newsData) setNews(newsData);
+
+        const [pelatihanRes, karyaRes] = await Promise.all([
+          supabase.from('trainings').select('*', { count: 'exact', head: true }),
+          supabase.from('teacher_works').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+        ]);
+        
+        setCounts({
+          pelatihan: pelatihanRes.count || 0,
+          karya: karyaRes.count || 0
+        });
       } catch (e) {
         console.error(e);
       }
     }
     loadData();
-  }, []);
+  }, [user.id]);
 
   const activities = [
-    { title: 'Jadwal Mengajar', icon: Calendar, color: 'from-blue-500 to-cyan-400', value: 'Lihat Jadwal' },
-    { title: 'Tugas Dikoreksi', icon: CheckSquare, color: 'from-green-500 to-emerald-400', value: 'Monitoring Tugas' },
-    { title: 'Agenda KKG', icon: Users, color: 'from-purple-500 to-fuchsia-400', value: `${events.length} Agenda Aktif` },
-    { title: 'Upload Modul', icon: UploadCloud, color: 'from-amber-500 to-yellow-400', value: 'Kelola Berkas' },
+    { title: 'Pelatihan', icon: GraduationCap, color: 'from-blue-500 to-cyan-400', value: `${counts.pelatihan} Pelatihan Tersedia`, link: '/dashboard/pelatihan' },
+    { title: 'Hasil Karya', icon: UploadCloud, color: 'from-green-500 to-emerald-400', value: `${counts.karya} Karya Diupload`, link: '/dashboard/upload_karya' },
+    { title: 'Agenda KKG', icon: Users, color: 'from-purple-500 to-fuchsia-400', value: `${events.length} Agenda Aktif`, link: '/dashboard/jadwal' },
+    { title: 'Materi KKG', icon: BookOpen, color: 'from-amber-500 to-yellow-400', value: 'Lihat Materi', link: '/dashboard/materi' },
   ];
+
+  const navigate = useNavigate();
 
   return (
     <div className="space-y-8">
@@ -1442,18 +1456,24 @@ function GuruOverview({ user }: { user: any }) {
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-          <div className="w-24 h-24 md:w-32 md:h-32 rounded-[2rem] bg-white p-1 overflow-hidden shadow-2xl rotate-3 shrink-0">
-             <img src={user.foto || user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || 'U')}&background=random`} alt="User" className="w-full h-full object-cover rounded-[1.7rem]" />
+          <div className="w-48 md:w-64 aspect-[3/4] rounded-2xl bg-white p-1 overflow-hidden shadow-2xl shrink-0">
+             <img src={user.foto || user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || 'U')}&background=random`} alt="User" className="w-full h-full object-cover rounded-xl" />
           </div>
           <div className="max-w-2xl text-center md:text-left">
-            <h2 className="text-3xl md:text-4xl font-heading font-black mb-4 uppercase tracking-tight">Selamat Datang, {user.nama?.split(' ')[0] || 'Guru'}! 👋</h2>
+            <h2 className="text-3xl md:text-4xl font-heading font-black mb-4 uppercase tracking-tight">Selamat Datang, {user.nama || user.full_name || 'Guru'}! 👋</h2>
             <p className="text-blue-50 text-lg md:text-xl font-light mb-8">Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan Gugus.</p>
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-            <button className="px-6 py-3 bg-white text-main-blue rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-lg flex items-center gap-2">
-              <UploadCloud className="w-5 h-5" /> Mulai Upload Dokumen
+            <button 
+              onClick={() => navigate('/dashboard/upload_karya')}
+              className="px-6 py-3 bg-white text-main-blue rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-lg flex items-center gap-2"
+            >
+              <UploadCloud className="w-5 h-5" /> Upload Hasil Karya
             </button>
-            <button className="px-6 py-3 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-xl font-bold hover:bg-white/30 transition-colors flex items-center gap-2">
-              <Calendar className="w-5 h-5" /> Lihat Jadwal KKG
+            <button 
+              onClick={() => navigate('/dashboard/pelatihan')}
+              className="px-6 py-3 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-xl font-bold hover:bg-white/30 transition-colors flex items-center gap-2"
+            >
+              <GraduationCap className="w-5 h-5" /> Ikuti Pelatihan
             </button>
           </div>
         </div>
@@ -1466,6 +1486,7 @@ function GuruOverview({ user }: { user: any }) {
           <motion.div 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + (i * 0.05) }}
             key={i} 
+            onClick={() => navigate(item.link)}
             className="bg-white/80 backdrop-blur-xl border border-main-orange/20 p-6 rounded-3xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer"
           >
             <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
@@ -1533,7 +1554,7 @@ function AdminSettingsForm() {
   const [profilForm, setProfilForm] = useState(content.profil);
   const [footerForm, setFooterForm] = useState(content.footer);
   const [announcementForm, setAnnouncementForm] = useState(content.announcement || { title: '', subtitle: '', desc: '' });
-  const [activeMenusForm, setActiveMenusForm] = useState(content.activeMenus || {});
+  const [activeMenusForm, setActiveMenusForm] = useState((content as any).activeMenus || {});
 
   React.useEffect(() => {
     if (!isLoading) {
@@ -1541,7 +1562,7 @@ function AdminSettingsForm() {
       setProfilForm(content.profil);
       setFooterForm(content.footer);
       setAnnouncementForm(content.announcement || { title: '', subtitle: '', desc: '' });
-      setActiveMenusForm(content.activeMenus || {});
+      setActiveMenusForm((content as any).activeMenus || {});
     }
   }, [content, isLoading]);
 
@@ -1578,12 +1599,9 @@ function AdminSettingsForm() {
               { id: 'materi', label: 'Materi KKG' },
               { id: 'notulen', label: 'Notulen Rapat' },
               { id: 'pelatihan', label: 'Pelatihan' },
-              { id: 'absensi', label: 'Absensi' },
-              { id: 'sertifikat', label: 'Sertifikat' },
               { id: 'forum', label: 'Forum Diskusi' },
               { id: 'sharing', label: 'Sharing Praktik' },
               { id: 'upload_karya', label: 'Upload Karya' },
-              { id: 'pengaturan_akun', label: 'Pengaturan Akun' },
             ].map(menu => (
               <label key={menu.id} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 cursor-pointer hover:border-main-blue/30 transition-all shadow-sm">
                 <input 
@@ -4171,7 +4189,7 @@ function UserProfileEdit({ user, onUpdate }: { user: any, onUpdate: (data: any) 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl max-w-4xl mx-auto">
       <div className="flex items-center gap-6 mb-10 pb-6 border-b border-gray-100">
-        <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 shadow-lg shadow-main-blue/20">
+        <div className="w-24 h-32 aspect-[3/4] rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 shadow-lg shadow-main-blue/20">
            <div className="w-full h-full bg-white rounded-xl flex items-center justify-center overflow-hidden">
              <img src={profile.foto || profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nama || 'U')}&background=random`} alt="Profile" className="w-full h-full object-cover" />
            </div>
@@ -4952,6 +4970,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
   const [registrations, setRegistrations] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [certConfig, setCertConfig] = useState<any>(null);
+  const [activeSubTab, setActiveSubTab] = useState<'daftar' | 'absensi' | 'sertifikat'>('daftar');
 
   useEffect(() => {
     fetchData();
@@ -5075,12 +5094,10 @@ function TeacherTrainingCards({ user }: { user: any }) {
               user_id: user.id,
               training_id: training.id,
               certificate_number: certNumber,
-              // We don't have a URL for client-side generated PDF, 
-              // but recording the data satisfies the user request for "daftar riwayat terbit"
               certificate_url: "Generated Individually"
             });
           
-          logActivity(user.id, `Mengunduh sertifikat pelatihan: ${training.title}`);
+          logActivity(user, 'download_cert', `Mengunduh sertifikat pelatihan: ${training.title}`);
         }
       } catch (err) {
         console.error("Gagal mencatat rincian sertifikat:", err);
@@ -5111,124 +5128,198 @@ function TeacherTrainingCards({ user }: { user: any }) {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-4">
-        <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
-          <GraduationCap className="w-6 h-6" />
+      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
+            <GraduationCap className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-heading">Program Pelatihan Guru</h2>
+            <p className="text-xs text-gray-500">Daftar pelatihan dan unduh sertifikat hasil pelatihan.</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-bold font-heading">Program Pelatihan Guru</h2>
-          <p className="text-xs text-gray-500">Daftar pelatihan dan unduh sertifikat hasil pelatihan.</p>
+
+        {/* Tab System */}
+        <div className="flex bg-gray-100 p-1 rounded-2xl shrink-0">
+          {[
+            { id: 'daftar', label: 'Daftar' },
+            { id: 'absensi', label: 'Absensi' },
+            { id: 'sertifikat', label: 'Sertifikat' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSubTab(tab.id as any)}
+              className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeSubTab === tab.id 
+                  ? 'bg-white text-main-blue shadow-sm' 
+                  : 'text-gray-500 hover:text-soft-black'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-gray-400">Memuat pelatihan...</div>
-      ) : trainings.length === 0 ? (
-        <div className="bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
-          <GraduationCap className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Belum ada program pelatihan yang tersedia.</p>
-        </div>
+        <div className="py-20 text-center text-gray-400">Memuat data...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {trainings.map((item) => {
-            const reg = registrations[item.id];
-            const isRegistered = !!reg;
-            const hasAttended = reg?.status === 'attended';
-            
-            // Logic status otomatis berdasarkan tanggal
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const trainingDate = new Date(item.date_start);
-            trainingDate.setHours(0, 0, 0, 0);
-            
-            let autoStatus = item.status || 'planned';
-            if (trainingDate > today) {
-              autoStatus = 'planned';
-            } else if (trainingDate.getTime() === today.getTime()) {
-              autoStatus = 'ongoing';
-            } else {
-              autoStatus = 'completed';
-            }
-
-            return (
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                key={item.id} 
-                className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-main-blue/5 transition-all flex flex-col"
-              >
-                <div className="flex flex-col sm:flex-row flex-1">
-                  <div className="sm:w-1/3 bg-gray-50 p-6 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-gray-100">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex flex-col items-center justify-center shadow-sm border border-gray-100 mb-3">
-                      <span className="text-xs font-bold text-gray-400 uppercase">{new Date(item.date_start).toLocaleString('id-ID', { month: 'short' })}</span>
-                      <span className="text-2xl font-bold text-main-blue leading-none mt-1">{new Date(item.date_start).getDate()}</span>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(autoStatus)}`}>
-                      {getStatusLabel(autoStatus)}
-                    </div>
-                  </div>
+        <AnimatePresence mode="wait">
+          {activeSubTab === 'daftar' && (
+            <motion.div 
+              key="daftar"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            >
+              {trainings.length === 0 ? (
+                 <div className="md:col-span-2 bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
+                    <GraduationCap className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">Belum ada program pelatihan yang tersedia.</p>
+                 </div>
+              ) : (
+                trainings.map((item) => {
+                  const reg = registrations[item.id];
+                  const isRegistered = !!reg;
+                  const hasAttended = reg?.status === 'attended';
                   
-                  <div className="p-6 flex-1 flex flex-col justify-between">
-                    <div>
-                      <h3 className="font-bold text-soft-black text-lg mb-2">{item.title}</h3>
-                      <p className="text-xs text-gray-400 line-clamp-2 mb-4 leading-relaxed">{item.description}</p>
-                      
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Map className="w-3.5 h-3.5 text-gray-300" />
-                          <span className="font-medium">{item.location || 'Lokasi TBA'}</span>
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const trainingDate = new Date(item.date_start);
+                  trainingDate.setHours(0, 0, 0, 0);
+                  
+                  let autoStatus = item.status || 'planned';
+                  if (trainingDate > today) autoStatus = 'planned';
+                  else if (trainingDate.getTime() === today.getTime()) autoStatus = 'ongoing';
+                  else autoStatus = 'completed';
+
+                  return (
+                    <div key={item.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all flex flex-col">
+                      <div className="flex flex-col sm:flex-row flex-1">
+                        <div className="sm:w-1/3 bg-gray-50 p-6 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-gray-100">
+                          <div className="w-16 h-16 bg-white rounded-2xl flex flex-col items-center justify-center shadow-sm border border-gray-100 mb-3">
+                            <span className="text-xs font-bold text-gray-400 uppercase">{new Date(item.date_start).toLocaleString('id-ID', { month: 'short' })}</span>
+                            <span className="text-2xl font-bold text-main-blue leading-none mt-1">{new Date(item.date_start).getDate()}</span>
+                          </div>
+                          <div className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(autoStatus)}`}>
+                            {getStatusLabel(autoStatus)}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <Calendar className="w-3.5 h-3.5 text-gray-300" />
-                          <span className="font-medium">Mulai: {new Date(item.date_start).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                        <div className="p-6 flex-1">
+                          <h3 className="font-bold text-soft-black text-lg mb-2">{item.title}</h3>
+                          <p className="text-xs text-gray-400 line-clamp-2 mb-4">{item.description}</p>
+                          <div className="space-y-1">
+                             <p className="text-[10px] text-gray-500 flex items-center gap-1 font-medium"><Map className="w-3 h-3" /> {item.location}</p>
+                             <p className="text-[10px] text-gray-500 flex items-center gap-1 font-medium"><Calendar className="w-3 h-3" /> {new Date(item.date_start).toLocaleDateString('id-ID')}</p>
+                          </div>
                         </div>
                       </div>
+                      <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
+                         {!isRegistered ? (
+                            <button onClick={() => handleRegister(item.id)} className="px-4 py-2 bg-main-blue text-white rounded-xl text-xs font-bold shadow-md shadow-main-blue/20">Daftar</button>
+                         ) : (
+                            <span className="text-xs font-bold text-green-600 flex items-center gap-1"><CheckSquare className="w-4 h-4" /> Terdaftar</span>
+                         )}
+                         {isRegistered && !hasAttended && (
+                            <button onClick={() => handleAttendance(item.id)} className="px-4 py-2 bg-leaf-green text-white rounded-xl text-xs font-bold shadow-md shadow-leaf-green/20">Isi Absen</button>
+                         )}
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })
+              )}
+            </motion.div>
+          )}
 
-                <div className="bg-gray-50/50 p-4 border-t border-gray-100 flex flex-wrap gap-2 items-center justify-between">
-                    <div className="flex items-center gap-2">
-                       {!isRegistered ? (
-                        autoStatus === 'completed' ? (
-                          <div className="px-4 py-2 bg-gray-100 text-gray-400 rounded-xl text-xs font-bold border border-gray-200">
-                            Pendaftaran Ditutup
+          {activeSubTab === 'absensi' && (
+            <motion.div 
+              key="absensi"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden"
+            >
+              <table className="w-full text-left">
+                <thead className="bg-gray-50">
+                  <tr className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
+                    <th className="px-8 py-4">Pelatihan</th>
+                    <th className="px-8 py-4">Tanggal Daftar</th>
+                    <th className="px-8 py-4">Status</th>
+                    <th className="px-8 py-4">Absensi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {Object.values(registrations).length === 0 ? (
+                    <tr><td colSpan={4} className="px-8 py-12 text-center text-gray-400 italic">Belum ada riwayat pendaftaran.</td></tr>
+                  ) : (
+                    Object.values(registrations).map((reg: any) => {
+                      const training = trainings.find(t => t.id === reg.training_id);
+                      return (
+                        <tr key={reg.id} className="text-sm">
+                          <td className="px-8 py-4 font-bold">{training?.title || 'Unknown'}</td>
+                          <td className="px-8 py-4 text-gray-500">{new Date(reg.registered_at).toLocaleDateString('id-ID')}</td>
+                          <td className="px-8 py-4">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${reg.status === 'attended' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'}`}>
+                              {reg.status}
+                            </span>
+                          </td>
+                          <td className="px-8 py-4">
+                            {reg.attended_at ? (
+                              <span className="text-xs text-gray-400">{new Date(reg.attended_at).toLocaleString('id-ID')}</span>
+                            ) : (
+                              <button onClick={() => handleAttendance(reg.training_id)} className="text-main-blue font-bold text-xs hover:underline">Isi Sekarang</button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </motion.div>
+          )}
+
+          {activeSubTab === 'sertifikat' && (
+            <motion.div 
+              key="sertifikat"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            >
+              {Object.values(registrations).filter(r => r.status === 'attended').length === 0 ? (
+                <div className="md:col-span-2 bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
+                   <Award className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                   <p className="text-gray-500">Selesaikan pelatihan untuk mendapatkan sertifikat.</p>
+                </div>
+              ) : (
+                Object.values(registrations).filter(r => r.status === 'attended').map((reg: any) => {
+                  const training = trainings.find(t => t.id === reg.training_id);
+                  return (
+                    <div key={reg.id} className="bg-white p-6 rounded-3xl border border-amber-100 shadow-sm flex items-center justify-between group hover:border-amber-400 transition-all">
+                       <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                             <Award className="w-6 h-6" />
                           </div>
-                        ) : (
-                          <button 
-                            onClick={() => handleRegister(item.id)}
-                            className="px-4 py-2 bg-main-blue text-white rounded-xl text-xs font-bold shadow-md shadow-main-blue/20 hover:scale-105 transition-all"
-                          >
-                            Daftar Sekarang
-                          </button>
-                        )
-                      ) : !hasAttended ? (
-                        <button 
-                          onClick={() => handleAttendance(item.id)}
-                          className="px-4 py-2 bg-leaf-green text-white rounded-xl text-xs font-bold shadow-md shadow-leaf-green/20 hover:scale-105 transition-all flex items-center gap-2"
-                        >
-                          <CheckSquare className="w-4 h-4" /> Isi Daftar Hadir
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-600 rounded-xl text-xs font-bold border border-green-100">
-                          <CheckSquare className="w-4 h-4" /> Kehadiran Terverifikasi
-                        </div>
-                      )}
+                          <div>
+                             <h4 className="font-bold text-soft-black text-sm">{training?.title}</h4>
+                             <p className="text-[10px] text-gray-400">Sertifikat tersedia untuk diunduh</p>
+                          </div>
+                       </div>
+                       <button 
+                         onClick={() => handleDownload(training)}
+                         className="p-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20"
+                       >
+                          <Download className="w-5 h-5" />
+                       </button>
                     </div>
-
-                    {hasAttended && (
-                      <button 
-                        onClick={() => handleDownload(item)}
-                        className="px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 hover:scale-105 transition-all flex items-center gap-2"
-                      >
-                         <Download className="w-4 h-4" /> Unduh Sertifikat
-                      </button>
-                    )}
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                  );
+                })
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       )}
     </div>
   );

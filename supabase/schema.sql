@@ -368,8 +368,159 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Enable all access for authenticated users" ON public.org_gugus;
   CREATE POLICY "Enable all access for authenticated users" ON public.org_gugus FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
-  -- Allow public read of user profiles for username lookup (essential for username login)
   DROP POLICY IF EXISTS "Allow public read for username lookup" ON public.user_profiles;
   CREATE POLICY "Allow public read for username lookup" ON public.user_profiles FOR SELECT USING (true);
+END $$;
+
+-- Training and Activity Logs
+CREATE TABLE IF NOT EXISTS public.trainings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    description TEXT,
+    date_start TIMESTAMP WITH TIME ZONE,
+    date_end TIMESTAMP WITH TIME ZONE,
+    location TEXT,
+    status TEXT DEFAULT 'planned',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS public.training_participants (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    training_id UUID REFERENCES public.trainings(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    status TEXT DEFAULT 'registered',
+    registered_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    attended_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS public.activity_logs (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID,
+    user_name TEXT,
+    user_role TEXT,
+    action TEXT,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.trainings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.training_participants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Public view trainings" ON public.trainings;
+    CREATE POLICY "Public view trainings" ON public.trainings FOR SELECT USING (true);
+    
+    DROP POLICY IF EXISTS "Users can view their own registrations" ON public.training_participants;
+    CREATE POLICY "Users can view their own registrations" ON public.training_participants FOR SELECT USING (true);
+    
+    DROP POLICY IF EXISTS "Users can register themselves" ON public.training_participants;
+    CREATE POLICY "Users can register themselves" ON public.training_participants FOR INSERT WITH CHECK (true);
+    
+    DROP POLICY IF EXISTS "Users can update their own attendance" ON public.training_participants;
+    CREATE POLICY "Users can update their own attendance" ON public.training_participants FOR UPDATE USING (true);
+    
+    DROP POLICY IF EXISTS "System can log activity" ON public.activity_logs;
+    CREATE POLICY "System can log activity" ON public.activity_logs FOR INSERT WITH CHECK (true);
+    
+    DROP POLICY IF EXISTS "Admins can view all logs" ON public.activity_logs;
+    CREATE POLICY "Admins can view all logs" ON public.activity_logs FOR SELECT USING (true);
+END $$;
+
+-- Additional Guru Features Tables
+CREATE TABLE IF NOT EXISTS public.kkg_materials (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  file_url TEXT,
+  category TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  created_by UUID REFERENCES auth.users(id)
+);
+
+CREATE TABLE IF NOT EXISTS public.meeting_minutes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  date DATE NOT NULL,
+  content TEXT,
+  file_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  created_by UUID REFERENCES auth.users(id)
+);
+
+CREATE TABLE IF NOT EXISTS public.training_certificates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  training_id UUID REFERENCES public.trainings(id),
+  user_id UUID REFERENCES auth.users(id),
+  certificate_url TEXT NOT NULL,
+  issued_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS public.forum_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  category TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS public.forum_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID REFERENCES public.forum_posts(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id),
+  content TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS public.best_practices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  title TEXT NOT NULL,
+  description TEXT,
+  video_url TEXT,
+  file_url TEXT,
+  thumbnail_url TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS public.teacher_works (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id),
+  title TEXT NOT NULL,
+  description TEXT,
+  file_url TEXT,
+  work_type TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- Basic RLS for new tables
+ALTER TABLE public.kkg_materials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meeting_minutes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.training_certificates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.forum_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.forum_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.best_practices ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.teacher_works ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  CREATE POLICY "Public read kkg_materials" ON public.kkg_materials FOR SELECT USING (true);
+  CREATE POLICY "Public read meeting_minutes" ON public.meeting_minutes FOR SELECT USING (true);
+  CREATE POLICY "Public read forum" ON public.forum_posts FOR SELECT USING (true);
+  CREATE POLICY "Public read forum_comments" ON public.forum_comments FOR SELECT USING (true);
+  CREATE POLICY "Public read best_practices" ON public.best_practices FOR SELECT USING (true);
+  CREATE POLICY "Public read teacher_works" ON public.teacher_works FOR SELECT USING (true);
+  CREATE POLICY "Users view own certificates" ON public.training_certificates FOR SELECT USING (auth.uid() = user_id);
+  
+  -- Simple allow all for authenticated for other ops in dev
+  CREATE POLICY "Auth all kkg_materials" ON public.kkg_materials FOR ALL TO authenticated USING (true);
+  CREATE POLICY "Auth all meeting_minutes" ON public.meeting_minutes FOR ALL TO authenticated USING (true);
+  CREATE POLICY "Auth all forum" ON public.forum_posts FOR ALL TO authenticated USING (true);
+  CREATE POLICY "Auth all forum_comments" ON public.forum_comments FOR ALL TO authenticated USING (true);
+  CREATE POLICY "Auth all best_practices" ON public.best_practices FOR ALL TO authenticated USING (true);
+  CREATE POLICY "Auth all teacher_works" ON public.teacher_works FOR ALL TO authenticated USING (true);
+EXCEPTION WHEN OTHERS THEN
+  -- Policies might already exist
 END $$;
 

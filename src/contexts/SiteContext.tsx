@@ -252,7 +252,8 @@ export const defaultContent = {
     title: "Pengumuman Penting",
     subtitle: "Pendaftaran Peserta Didik Baru Telah Dibuka!",
     desc: "Mari daftarkan putra/putri Anda di sekolah-sekolah unggulan Gugus 3 Melati Kecamatan Jenu. Kuota terbatas!"
-  }
+  },
+  activeMenus: ["profil", "gugus", "kkg", "berita", "galeri", "jadwal", "download"]
 };
 
 export type SiteContent = typeof defaultContent;
