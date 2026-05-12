@@ -278,9 +278,10 @@ export function useCertificateGenerator() {
         });
 
       const pdfBytes = await pdfDoc.save();
+      const namaLengkap = teacher.nama || teacher.full_name || teacher.name || 'Peserta';
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
-        `Sertifikat_${training.title}_${teacher.name}.pdf`,
+        `sertifikat_${training.title}_${namaLengkap}.pdf`,
       );
     } catch (err: any) {
       alert("Gagal generate sertifikat: " + err.message, "Error", "error");
