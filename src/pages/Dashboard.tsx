@@ -270,8 +270,9 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
     ? adminMenu 
     : guruMenu.filter(item => {
         const activeMenus = (content as any).activeMenus;
-        // Fallback: if no settings or loading, show everything
-        if (isLoading || !activeMenus || Object.keys(activeMenus).length === 0) return true;
+        if (isLoading) return true;
+        // Default to visible if not explicitly hidden in settings
+        if (!activeMenus || typeof activeMenus !== 'object' || activeMenus[item.id] === undefined) return true;
         return !!activeMenus[item.id];
       });
   
@@ -1468,8 +1469,10 @@ function GuruOverview({ user }: { user: any }) {
           <div className="w-48 md:w-64 aspect-[3/4] rounded-2xl bg-white p-1 overflow-hidden shadow-2xl shrink-0">
              <img src={user.foto || user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || 'U')}&background=random`} alt="User" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <div className="max-w-2xl text-center md:text-left">
-            <h2 className="text-3xl md:text-4xl font-heading font-black mb-4 uppercase tracking-tight">Selamat Datang, {user.nama || user.full_name || 'Guru'}! 👋</h2>
+          <div className="max-w-3xl text-center md:text-left overflow-hidden">
+            <h2 className="text-2xl md:text-4xl font-heading font-black mb-4 tracking-tight leading-tight block truncate">
+              Selamat Datang, {user.nama || user.full_name || 'Guru'}! 👋
+            </h2>
             <p className="text-blue-50 text-lg md:text-xl font-light mb-8">Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan Gugus.</p>
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
             <button 
