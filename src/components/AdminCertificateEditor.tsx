@@ -22,10 +22,12 @@ interface FieldType {
   fontSize: number;
   fontWeight: string;
   color: string;
+  page?: number;
 }
 
 interface CertificateConfig {
   templateUrl: string;
+  templateUrl2?: string;
   fields: FieldType[];
   canvasWidth: number;
   canvasHeight: number;
@@ -49,9 +51,11 @@ export default function AdminCertificateEditor() {
   const stageRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activePage, setActivePage] = useState<number>(1);
 
-  // TEMPLATE IMAGE
+  // TEMPLATE IMAGES
   const [templateUrl, setTemplateUrl] = useState("");
+  const [templateUrl2, setTemplateUrl2] = useState("");
   
   // CANVAS SIZE (Landscape A4ish aspect)
   const CANVAS_WIDTH = 1000;
@@ -67,7 +71,8 @@ export default function AdminCertificateEditor() {
       y: 350,
       fontSize: 40,
       fontWeight: "bold",
-      color: "#000000"
+      color: "#000000",
+      page: 1
     },
     {
       id: "nip",
@@ -77,7 +82,8 @@ export default function AdminCertificateEditor() {
       y: 420,
       fontSize: 20,
       fontWeight: "normal",
-      color: "#000000"
+      color: "#000000",
+      page: 1
     }
   ]);
 
@@ -107,7 +113,8 @@ export default function AdminCertificateEditor() {
       const config = data?.content?.certificate_config as CertificateConfig;
       if (config) {
         if (config.templateUrl) setTemplateUrl(config.templateUrl);
-        if (config.fields) setFields(config.fields);
+        if (config.templateUrl2) setTemplateUrl2(config.templateUrl2);
+        if (config.fields) setFields(config.fields.map(f => ({ ...f, page: f.page || 1 })));
       }
     } catch (err) {
       console.error("Error loading certificate config:", err);
@@ -150,6 +157,7 @@ export default function AdminCertificateEditor() {
         ...(current?.content || {}),
         certificate_config: {
           templateUrl,
+          templateUrl2,
           fields,
           canvasWidth: CANVAS_WIDTH,
           canvasHeight: CANVAS_HEIGHT
@@ -177,45 +185,63 @@ export default function AdminCertificateEditor() {
   async function generatePDF() {
     try {
       const pdfDoc = await PDFDocument.create();
-      // Letter landscape roughly 842x595 (A4)
-      // Custom size matching our canvas aspect
-      const page = pdfDoc.addPage([CANVAS_WIDTH, CANVAS_HEIGHT]);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
+      // --- PAGE 1 ---
+      const page1 = pdfDoc.addPage([CANVAS_WIDTH, CANVAS_HEIGHT]);
       if (templateUrl) {
         try {
           const imageBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
-          // Determine if PNG or JPG
           let image;
           if (templateUrl.toLowerCase().endsWith('.png') || templateUrl.startsWith('data:image/png')) {
             image = await pdfDoc.embedPng(imageBytes);
           } else {
             image = await pdfDoc.embedJpg(imageBytes);
           }
-          
-          page.drawImage(image, {
-            x: 0,
-            y: 0,
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
-          });
-        } catch (e) {
-          console.error("Failed to embed image in PDF", e);
-        }
+          page1.drawImage(image, { x: 0, y: 0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT });
+        } catch (e) { console.error("Page 1 image error", e); }
       }
 
-      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-      const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-      fields.forEach((field) => {
-        // Convert hex to rgb
+      fields.filter(f => (f.page || 1) === 1).forEach((field) => {
         const hex = field.color || "#000000";
         const r = parseInt(hex.slice(1, 3), 16) / 255;
         const g = parseInt(hex.slice(3, 5), 16) / 255;
         const b = parseInt(hex.slice(5, 7), 16) / 255;
 
-        page.drawText(field.text, {
-          x: field.x - (field.text.length * field.fontSize * 0.25), // Rough centering adjustment if needed, but we use drag position
-          y: CANVAS_HEIGHT - field.y - (field.fontSize * 0.5), // pdf-lib uses bottom-left origin
+        page1.drawText(field.text, {
+          x: field.x, 
+          y: CANVAS_HEIGHT - field.y - (field.fontSize * 0.5),
+          size: field.fontSize,
+          font: field.fontWeight === 'bold' ? fontBold : fontRegular,
+          color: rgb(r, g, b),
+        });
+      });
+
+      // --- PAGE 2 ---
+      const page2 = pdfDoc.addPage([CANVAS_WIDTH, CANVAS_HEIGHT]);
+      if (templateUrl2) {
+        try {
+          const imageBytes = await fetch(templateUrl2).then((res) => res.arrayBuffer());
+          let image;
+          if (templateUrl2.toLowerCase().endsWith('.png') || templateUrl2.startsWith('data:image/png')) {
+            image = await pdfDoc.embedPng(imageBytes);
+          } else {
+            image = await pdfDoc.embedJpg(imageBytes);
+          }
+          page2.drawImage(image, { x: 0, y: 0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT });
+        } catch (e) { console.error("Page 2 image error", e); }
+      }
+
+      fields.filter(f => f.page === 2).forEach((field) => {
+        const hex = field.color || "#000000";
+        const r = parseInt(hex.slice(1, 3), 16) / 255;
+        const g = parseInt(hex.slice(3, 5), 16) / 255;
+        const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+        page2.drawText(field.text, {
+          x: field.x,
+          y: CANVAS_HEIGHT - field.y - (field.fontSize * 0.5),
           size: field.fontSize,
           font: field.fontWeight === 'bold' ? fontBold : fontRegular,
           color: rgb(r, g, b),
@@ -239,7 +265,8 @@ export default function AdminCertificateEditor() {
       y: 100,
       fontSize: 20,
       fontWeight: "normal",
-      color: "#000000"
+      color: "#000000",
+      page: activePage
     }]);
   };
 
@@ -291,25 +318,36 @@ export default function AdminCertificateEditor() {
           </div>
         </div>
 
+        {/* Page Switcher */}
+        <div className="flex bg-white p-2 rounded-2xl border border-gray-100 shadow-sm self-start">
+           <button 
+              onClick={() => setActivePage(1)}
+              className={`px-6 py-2 rounded-xl font-bold text-sm transition-all ${activePage === 1 ? 'bg-main-blue text-white shadow-lg shadow-main-blue/20' : 'text-gray-500 hover:bg-gray-50'}`}
+           >
+              Halaman 1 (Depan)
+           </button>
+           <button 
+              onClick={() => setActivePage(2)}
+              className={`px-6 py-2 rounded-xl font-bold text-sm transition-all ${activePage === 2 ? 'bg-main-blue text-white shadow-lg shadow-main-blue/20' : 'text-gray-500 hover:bg-gray-50'}`}
+           >
+              Halaman 2 (Belakang)
+           </button>
+        </div>
+
         {/* Canvas Area */}
         <div className="bg-gray-100 p-4 rounded-[2rem] flex items-center justify-center overflow-auto modern-scrollbar border-2 border-dashed border-gray-200 min-h-[500px]">
           <div className="bg-white shadow-2xl relative" style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}>
             <Stage width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={stageRef}>
               <Layer>
                 {/* TEMPLATE */}
-                {templateUrl ? (
-                  <URLImage src={templateUrl} />
+                {activePage === 1 ? (
+                  templateUrl ? <URLImage src={templateUrl} /> : <KonvaImage image={undefined as any} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="#f3f4f6" />
                 ) : (
-                  <KonvaImage 
-                    image={undefined as any} 
-                    width={CANVAS_WIDTH} 
-                    height={CANVAS_HEIGHT} 
-                    fill="#f3f4f6"
-                  />
+                  templateUrl2 ? <URLImage src={templateUrl2} /> : <KonvaImage image={undefined as any} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="#f3f4f6" />
                 )}
 
                 {/* DRAG TEXT */}
-                {fields.map((field) => (
+                {fields.filter(f => (f.page || 1) === activePage).map((field) => (
                   <Text
                     key={field.id}
                     text={field.text}
@@ -330,10 +368,10 @@ export default function AdminCertificateEditor() {
                 ))}
               </Layer>
             </Stage>
-            {!templateUrl && (
+            {((activePage === 1 && !templateUrl) || (activePage === 2 && !templateUrl2)) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center">
                  <Settings className="w-16 h-16 text-gray-200 mb-4" />
-                 <p className="text-gray-400 font-medium">Harap upload atau pilih file background sertifikat (template) melalui panel kontrol di samping.</p>
+                 <p className="text-gray-400 font-medium">Harap upload atau pilih file background sertifikat untuk Halaman {activePage} melalui panel kontrol di samping.</p>
               </div>
             )}
           </div>
@@ -344,18 +382,29 @@ export default function AdminCertificateEditor() {
       <div className="w-full lg:w-[400px] space-y-6">
         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-lg space-y-8 h-full">
           {/* Template Selection */}
-          <div className="space-y-4">
+          <div className="space-y-6">
              <div className="flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-main-blue" />
                 <h3 className="font-bold text-gray-700">Template Background</h3>
              </div>
-             <ImageUpload 
-                label="Background Sertifikat (Rekomendasi Landscape A4)" 
-                value={templateUrl} 
-                onChange={val => setTemplateUrl(val)} 
-                maxWidth={2000}
-                maxHeight={2000}
-             />
+             
+             <div className="space-y-4">
+               <ImageUpload 
+                  label="Halaman Depan (PNG/JPG)" 
+                  value={templateUrl} 
+                  onChange={val => setTemplateUrl(val)} 
+                  maxWidth={2000}
+                  maxHeight={2000}
+               />
+               
+               <ImageUpload 
+                  label="Halaman Belakang (PNG/JPG)" 
+                  value={templateUrl2} 
+                  onChange={val => setTemplateUrl2(val)} 
+                  maxWidth={2000}
+                  maxHeight={2000}
+               />
+             </div>
           </div>
 
           <div className="border-t border-gray-100 pt-8 space-y-6">
@@ -412,15 +461,27 @@ export default function AdminCertificateEditor() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Ukuran Font</label>
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              value={field.fontSize}
-                              onChange={(e) => updateField(field.id, { fontSize: Number(e.target.value) })}
-                              className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
-                            />
-                          </div>
+                          <input
+                            type="number"
+                            value={field.fontSize}
+                            onChange={(e) => updateField(field.id, { fontSize: Number(e.target.value) })}
+                            className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
+                          />
                         </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Halaman</label>
+                          <select
+                            value={field.page || 1}
+                            onChange={(e) => updateField(field.id, { page: Number(e.target.value) })}
+                            className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
+                          >
+                            <option value={1}>Halaman 1</option>
+                            <option value={2}>Halaman 2</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Warna Teks</label>
                           <input
@@ -430,15 +491,15 @@ export default function AdminCertificateEditor() {
                             className="w-full h-9 bg-white border border-gray-200 px-1 py-1 rounded-xl cursor-pointer"
                           />
                         </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                         <button 
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Gaya</label>
+                          <button 
                             onClick={() => updateField(field.id, { fontWeight: field.fontWeight === 'bold' ? 'normal' : 'bold' })}
-                            className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold border transition-all ${field.fontWeight === 'bold' ? 'bg-main-blue text-white border-main-blue' : 'bg-white text-gray-500 border-gray-200'}`}
-                         >
+                            className={`w-full py-2 px-3 rounded-xl text-xs font-bold border transition-all ${field.fontWeight === 'bold' ? 'bg-main-blue text-white border-main-blue' : 'bg-white text-gray-500 border-gray-200'}`}
+                          >
                             Bold
-                         </button>
+                          </button>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-[10px] text-gray-400 font-mono italic">
