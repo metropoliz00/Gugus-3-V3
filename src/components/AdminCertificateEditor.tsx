@@ -722,9 +722,25 @@ export default function AdminCertificateEditor() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-[10px] text-gray-400 font-mono italic">
-                         <span>X: {Math.round(field.x)}px</span>
-                         <span>Y: {Math.round(field.y)}px</span>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Posisi X (Horizontal)</label>
+                          <input
+                            type="number"
+                            value={Math.round(field.x)}
+                            onChange={(e) => updateField(field.id, { x: Number(e.target.value) })}
+                            className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none font-mono"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Posisi Y (Vertical)</label>
+                          <input
+                            type="number"
+                            value={Math.round(field.y)}
+                            onChange={(e) => updateField(field.id, { y: Number(e.target.value) })}
+                            className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none font-mono"
+                          />
+                        </div>
                       </div>
                     </div>
                   </motion.div>
