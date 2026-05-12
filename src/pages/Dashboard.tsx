@@ -5040,7 +5040,51 @@ function TeacherTrainingCards({ user }: { user: any }) {
       alert("Template sertifikat belum diatur oleh admin.", "Info", "info");
       return;
     }
-    await generateTeacherPDF(user, training, certConfig);
+    
+    let certNumber = "";
+
+    // Auto-record to training_certificates and generate number
+    if (supabase) {
+      try {
+        // Check if certificate record already exists
+        const { data: existingCert } = await supabase
+          .from('training_certificates')
+          .select('certificate_number')
+          .eq('user_id', user.id)
+          .eq('training_id', training.id)
+          .maybeSingle();
+        
+        if (existingCert?.certificate_number) {
+          certNumber = existingCert.certificate_number;
+        } else {
+          // Generate an automatic certificate number: [Nomer]/CERT-KKG/[Bulan Romawi]/[Tahun]
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth() + 1;
+          const romanMonths = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+          const randomPart = Math.floor(1000 + Math.random() * 9000);
+          certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
+          
+          await supabase
+            .from('training_certificates')
+            .insert({
+              user_id: user.id,
+              training_id: training.id,
+              certificate_number: certNumber,
+              // We don't have a URL for client-side generated PDF, 
+              // but recording the data satisfies the user request for "daftar riwayat terbit"
+              certificate_url: "Generated Individually"
+            });
+          
+          logActivity(user.id, `Mengunduh sertifikat pelatihan: ${training.title}`);
+        }
+      } catch (err) {
+        console.error("Gagal mencatat rincian sertifikat:", err);
+      }
+    }
+
+    // Generate PDF with the number
+    await generateTeacherPDF(user, training, certConfig, certNumber);
   };
 
   const getStatusColor = (status: string) => {

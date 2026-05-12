@@ -49,7 +49,7 @@ function URLImage({ src }: { src: string }) {
 export function useCertificateGenerator() {
   const { alert } = useAlert();
 
-  const generateTeacherPDF = async (teacher: any, training: any, config: CertificateConfig) => {
+  const generateTeacherPDF = async (teacher: any, training: any, config: CertificateConfig, certNumber?: string) => {
     try {
       const pdfDoc = await PDFDocument.create();
       const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -62,6 +62,7 @@ export function useCertificateGenerator() {
           .replace(/\[NIP\]/g, teacher.nip || "-")
           .replace(/\[Satuan Kerja\]/g, teacher.work_unit || "-")
           .replace(/\[Judul Pelatihan\]/g, training.title || "")
+          .replace(/\[Nomor Sertifikat\]/g, certNumber || "-")
           .replace(/\[Tanggal\]/g, new Date(training.date_start).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }));
       };
 
@@ -485,7 +486,7 @@ export default function AdminCertificateEditor() {
              <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 mt-4">
                 <p className="text-[10px] font-bold text-main-blue uppercase tracking-widest mb-2">Placeholder Teks</p>
                 <div className="grid grid-cols-2 gap-2">
-                   {['[Nama Peserta]', '[NIP]', '[Satuan Kerja]', '[Judul Pelatihan]', '[Tanggal]'].map(p => (
+                   {['[Nama Peserta]', '[NIP]', '[Satuan Kerja]', '[Judul Pelatihan]', '[Tanggal]', '[Nomor Sertifikat]'].map(p => (
                      <div key={p} className="text-[10px] font-mono bg-white px-2 py-1 rounded border border-blue-200 text-gray-600">{p}</div>
                    ))}
                 </div>
