@@ -392,8 +392,8 @@ export default function AdminCertificateEditor() {
 
   return (
     <div className="flex flex-col lg:flex-row gap-8">
-      {/* Editor Section */}
-      <div className="flex-1 space-y-6">
+      {/* Editor Section - Sticky on desktop to stay visible during scroll */}
+      <div className="flex-1 space-y-6 lg:sticky lg:top-8 self-start z-10 bg-gray-50/50 pb-4">
         <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
@@ -450,8 +450,12 @@ export default function AdminCertificateEditor() {
           </div>
 
           <div className="bg-white shadow-2xl relative overflow-auto max-w-full modern-scrollbar" style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}>
-            <Stage width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={stageRef}>
-              <Layer>
+            <Stage 
+              width={CANVAS_WIDTH} 
+              height={CANVAS_HEIGHT} 
+              ref={stageRef}
+            >
+              <Layer listening={true}>
                 {/* TEMPLATE */}
                 {activePage === 1 ? (
                   templateUrl ? <URLImage src={templateUrl} /> : <KonvaImage image={undefined as any} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="#f3f4f6" />
@@ -473,17 +477,26 @@ export default function AdminCertificateEditor() {
                     fill={field.color}
                     align="center"
                     onDragMove={(e) => {
-                       updateField(field.id, { x: e.target.x(), y: e.target.y() });
+                       const node = e.target;
+                       // Live update state
+                       updateField(field.id, { x: node.x(), y: node.y() });
                     }}
                     onDragStart={() => {
                        document.body.style.cursor = 'grabbing';
                     }}
                     onDragEnd={(e) => {
-                       updateField(field.id, { x: e.target.x(), y: e.target.y() });
+                       const node = e.target;
+                       updateField(field.id, { x: node.x(), y: node.y() });
                        document.body.style.cursor = 'grab';
                     }}
-                    onMouseEnter={() => { document.body.style.cursor = 'grab'; }}
-                    onMouseLeave={() => { document.body.style.cursor = 'default'; }}
+                    onMouseEnter={(e) => { 
+                      const container = e.target.getStage()?.container();
+                      if(container) container.style.cursor = 'grab';
+                    }}
+                    onMouseLeave={(e) => { 
+                      const container = e.target.getStage()?.container();
+                      if(container) container.style.cursor = 'default';
+                    }}
                   />
                 ))}
               </Layer>
@@ -526,6 +539,127 @@ export default function AdminCertificateEditor() {
                />
              </div>
           </div>
+
+             <div className="border-t border-gray-100 pt-8 space-y-6">
+                <div className="flex items-center justify-between">
+                   <div className="flex items-center gap-2">
+                     <Type className="w-5 h-5 text-main-blue" />
+                     <h3 className="font-bold text-gray-700">Elemen Teks</h3>
+                   </div>
+                   <button 
+                     onClick={addField}
+                     className="p-2 bg-main-blue/10 text-main-blue rounded-xl hover:bg-main-blue hover:text-white transition-all shadow-sm"
+                   >
+                     <Plus className="w-4 h-4" />
+                   </button>
+                </div>
+
+                <div className="space-y-4 max-h-[500px] overflow-y-auto modern-scrollbar pr-2">
+                   {fields.filter(f => (f.page || 1) === activePage).map((field) => (
+                     <motion.div 
+                       initial={{ opacity: 0, x: 20 }}
+                       animate={{ opacity: 1, x: 0 }}
+                       key={field.id} 
+                       className="p-5 bg-gray-50 rounded-2xl border border-gray-200 relative group"
+                     >
+                       <button 
+                          onClick={() => removeField(field.id)}
+                          className="absolute -top-2 -right-2 p-1.5 bg-red-100 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white shadow-sm"
+                       >
+                         <Trash2 className="w-3 h-3" />
+                       </button>
+                       
+                       <div className="space-y-4">
+                         <div>
+                           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Nama Field / Label</label>
+                           <input
+                             type="text"
+                             value={field.field_name}
+                             onChange={(e) => updateField(field.id, { field_name: e.target.value })}
+                             className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
+                             placeholder="Contoh: Nama Guru"
+                           />
+                         </div>
+                         
+                         <div>
+                           <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Teks Preview</label>
+                           <textarea
+                             value={field.text}
+                             onChange={(e) => updateField(field.id, { text: e.target.value })}
+                             className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
+                             rows={2}
+                           />
+                         </div>
+
+                         <div className="grid grid-cols-2 gap-4">
+                           <div>
+                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Ukuran Font</label>
+                             <input
+                               type="number"
+                               value={field.fontSize}
+                               onChange={(e) => updateField(field.id, { fontSize: Number(e.target.value) })}
+                               className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
+                             />
+                           </div>
+                           <div>
+                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Halaman</label>
+                             <select
+                               value={field.page || 1}
+                               onChange={(e) => updateField(field.id, { page: Number(e.target.value) })}
+                               className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
+                             >
+                               <option value={1}>Halaman 1</option>
+                               <option value={2}>Halaman 2</option>
+                             </select>
+                           </div>
+                         </div>
+
+                         <div className="grid grid-cols-2 gap-4">
+                           <div>
+                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Warna Teks</label>
+                             <input
+                               type="color"
+                               value={field.color}
+                               onChange={(e) => updateField(field.id, { color: e.target.value })}
+                               className="w-full h-9 bg-white border border-gray-200 px-1 py-1 rounded-xl cursor-pointer"
+                             />
+                           </div>
+                           <div>
+                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Gaya</label>
+                             <button 
+                               onClick={() => updateField(field.id, { fontWeight: field.fontWeight === 'bold' ? 'normal' : 'bold' })}
+                               className={`w-full py-2 px-3 rounded-xl text-xs font-bold border transition-all ${field.fontWeight === 'bold' ? 'bg-main-blue text-white border-main-blue' : 'bg-white text-gray-500 border-gray-200'}`}
+                             >
+                               Bold
+                             </button>
+                           </div>
+                         </div>
+
+                         <div className="grid grid-cols-2 gap-4">
+                           <div>
+                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Posisi X</label>
+                             <input
+                               type="number"
+                               value={Math.round(field.x)}
+                               onChange={(e) => updateField(field.id, { x: Number(e.target.value) })}
+                               className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none font-mono"
+                             />
+                           </div>
+                           <div>
+                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Posisi Y</label>
+                             <input
+                               type="number"
+                               value={Math.round(field.y)}
+                               onChange={(e) => updateField(field.id, { y: Number(e.target.value) })}
+                               className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none font-mono"
+                             />
+                           </div>
+                         </div>
+                       </div>
+                     </motion.div>
+                   ))}
+                </div>
+             </div>
 
              <div className="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100 mt-6">
                 <div className="flex items-center justify-between mb-4">
@@ -641,129 +775,8 @@ export default function AdminCertificateEditor() {
                    </p>
                 </div>
              </div>
-
-          <div className="border-t border-gray-100 pt-8 space-y-6">
-             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Type className="w-5 h-5 text-main-blue" />
-                  <h3 className="font-bold text-gray-700">Elemen Teks</h3>
-                </div>
-                <button 
-                  onClick={addField}
-                  className="p-2 bg-main-blue/10 text-main-blue rounded-xl hover:bg-main-blue hover:text-white transition-all shadow-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-             </div>
-
-             <div className="space-y-4 max-h-[600px] overflow-y-auto modern-scrollbar pr-2">
-                {fields.map((field) => (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    key={field.id} 
-                    className="p-5 bg-gray-50 rounded-2xl border border-gray-200 relative group"
-                  >
-                    <button 
-                       onClick={() => removeField(field.id)}
-                       className="absolute -top-2 -right-2 p-1.5 bg-red-100 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white shadow-sm"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                    
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Nama Field / Label</label>
-                        <input
-                          type="text"
-                          value={field.field_name}
-                          onChange={(e) => updateField(field.id, { field_name: e.target.value })}
-                          className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
-                          placeholder="Contoh: Nama Guru"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Teks Preview</label>
-                        <textarea
-                          value={field.text}
-                          onChange={(e) => updateField(field.id, { text: e.target.value })}
-                          className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
-                          rows={2}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Ukuran Font</label>
-                          <input
-                            type="number"
-                            value={field.fontSize}
-                            onChange={(e) => updateField(field.id, { fontSize: Number(e.target.value) })}
-                            className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Halaman</label>
-                          <select
-                            value={field.page || 1}
-                            onChange={(e) => updateField(field.id, { page: Number(e.target.value) })}
-                            className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none"
-                          >
-                            <option value={1}>Halaman 1</option>
-                            <option value={2}>Halaman 2</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Warna Teks</label>
-                          <input
-                            type="color"
-                            value={field.color}
-                            onChange={(e) => updateField(field.id, { color: e.target.value })}
-                            className="w-full h-9 bg-white border border-gray-200 px-1 py-1 rounded-xl cursor-pointer"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Gaya</label>
-                          <button 
-                            onClick={() => updateField(field.id, { fontWeight: field.fontWeight === 'bold' ? 'normal' : 'bold' })}
-                            className={`w-full py-2 px-3 rounded-xl text-xs font-bold border transition-all ${field.fontWeight === 'bold' ? 'bg-main-blue text-white border-main-blue' : 'bg-white text-gray-500 border-gray-200'}`}
-                          >
-                            Bold
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Posisi X (Horizontal)</label>
-                          <input
-                            type="number"
-                            value={Math.round(field.x)}
-                            onChange={(e) => updateField(field.id, { x: Number(e.target.value) })}
-                            className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none font-mono"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">Posisi Y (Vertical)</label>
-                          <input
-                            type="number"
-                            value={Math.round(field.y)}
-                            onChange={(e) => updateField(field.id, { y: Number(e.target.value) })}
-                            className="w-full bg-white border border-gray-200 px-3 py-2 rounded-xl text-sm focus:border-main-blue outline-none font-mono"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
 }
