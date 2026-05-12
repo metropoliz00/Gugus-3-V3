@@ -528,7 +528,7 @@ export default function Dashboard({ user: initialUser, onLogout }: { user: User;
                </div>
                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-main-blue to-leaf-green p-0.5 cursor-pointer hover:scale-105 transition-transform" onClick={() => navigate('/dashboard/profil')}>
                   <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden border-2 border-white">
-                    <img src={user.foto || user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || 'U')}&background=random`} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={user.foto || user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || 'U')}&background=6366f1&color=fff`} alt="Avatar" className="w-full h-full object-cover" />
                   </div>
                </div>
             </div>
@@ -1467,13 +1467,14 @@ function GuruOverview({ user }: { user: any }) {
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
         <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
           <div className="w-48 md:w-64 aspect-[3/4] rounded-2xl bg-white p-1 overflow-hidden shadow-2xl shrink-0">
-             <img src={user.foto || user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || 'U')}&background=random`} alt="User" className="w-full h-full object-cover rounded-xl" />
+             <img src={user.foto || user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || 'U')}&background=6366f1&color=fff&size=512`} alt="User" className="w-full h-full object-cover rounded-xl" />
           </div>
-          <div className="max-w-3xl text-center md:text-left overflow-hidden">
-            <h2 className="text-2xl md:text-4xl font-heading font-black mb-4 tracking-tight leading-tight block truncate">
-              Selamat Datang, {user.nama || user.full_name || 'Guru'}! 👋
+          <div className="max-w-4xl text-center md:text-left select-none overflow-visible">
+            <h2 className="text-2xl md:text-5xl font-heading font-black mb-4 tracking-tight leading-tight text-white drop-shadow-lg">
+              Selamat Datang,<br />
+              <span className="block mt-2 drop-shadow-sm">{user.nama || user.full_name || 'Guru'}! 👋</span>
             </h2>
-            <p className="text-blue-50 text-lg md:text-xl font-light mb-8">Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan Gugus.</p>
+            <p className="text-blue-50/90 text-lg md:text-xl font-light mb-8 max-w-2xl">Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan di lingkungan Gugus 3 Melati.</p>
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
             <button 
               onClick={() => navigate('/dashboard/upload_karya')}
@@ -4175,7 +4176,7 @@ function UserProfileEdit({ user, onUpdate }: { user: any, onUpdate: (data: any) 
     kepegawaian: user.kepegawaian || '',
     pangkat: user.pangkat || '',
     email: user.email || '',
-    foto: user.foto || ''
+    foto: user.foto || user.avatar_url || ''
   });
 
   const handleSave = async (e: React.FormEvent) => {
@@ -4203,7 +4204,7 @@ function UserProfileEdit({ user, onUpdate }: { user: any, onUpdate: (data: any) 
       <div className="flex items-center gap-6 mb-10 pb-6 border-b border-gray-100">
         <div className="w-24 h-32 aspect-[3/4] rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 shadow-lg shadow-main-blue/20">
            <div className="w-full h-full bg-white rounded-xl flex items-center justify-center overflow-hidden">
-             <img src={profile.foto || profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nama || 'U')}&background=random`} alt="Profile" className="w-full h-full object-cover" />
+             <img src={profile.foto || profile.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nama || 'U')}&background=6366f1&color=fff`} alt="Profile" className="w-full h-full object-cover" />
            </div>
         </div>
         <div>
