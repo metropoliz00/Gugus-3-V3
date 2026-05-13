@@ -61,8 +61,11 @@ export default function ImageUpload({
         const ctx = canvas.getContext('2d');
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
-          // Convert to PNG for better compatibility with pdf-lib
-          const dataUrl = canvas.toDataURL('image/png');
+          
+          // Use original file type if it's jpeg or png, otherwise default to png
+          // For JPEG, we use the quality parameter to reduce file size
+          const outputType = file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+          const dataUrl = canvas.toDataURL(outputType, quality);
           onChange(dataUrl);
         }
         setIsLoading(false);
