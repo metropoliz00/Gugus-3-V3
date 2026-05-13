@@ -7202,7 +7202,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
           <table className="w-full text-left">
             <thead className="bg-gray-50">
               <tr>
-                {fields.slice(0, 3).map((f: any) => (
+                {fields.map((f: any) => (
                   <th
                     key={f.name}
                     className="px-6 py-4 text-xs font-bold text-gray-500 uppercase"
@@ -7219,7 +7219,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={fields.length + 1}
                     className="p-10 text-center text-gray-400 italic"
                   >
                     Memuat data...
@@ -7228,7 +7228,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
               ) : data.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={10}
+                    colSpan={fields.length + 1}
                     className="p-10 text-center text-gray-400 italic"
                   >
                     Belum ada data.
@@ -7240,7 +7240,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                     key={item.id}
                     className="hover:bg-gray-50/50 transition-colors"
                   >
-                    {fields.slice(0, 3).map((f: any) => (
+                    {fields.map((f: any) => (
                       <td
                         key={f.name}
                         className="px-6 py-4 text-sm font-medium text-gray-700 max-w-[200px] truncate"
@@ -7250,8 +7250,6 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                           : f.type === "select"
                             ? (() => {
                                 let val = item[f.name];
-
-                                // Automate status for trainings table
                                 if (
                                   table === "trainings" &&
                                   f.name === "status" &&
@@ -7259,19 +7257,13 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                                 ) {
                                   const today = new Date();
                                   today.setHours(0, 0, 0, 0);
-                                  const trainingDate = new Date(
-                                    item.date_start,
-                                  );
+                                  const trainingDate = new Date(item.date_start);
                                   trainingDate.setHours(0, 0, 0, 0);
-
                                   if (trainingDate > today) val = "planned";
-                                  else if (
-                                    trainingDate.getTime() === today.getTime()
-                                  )
+                                  else if (trainingDate.getTime() === today.getTime())
                                     val = "ongoing";
                                   else val = "completed";
                                 }
-
                                 const opt = f.options.find(
                                   (o: any) =>
                                     (typeof o === "string" ? o : o.value) ===
@@ -7281,7 +7273,9 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                                   ? opt
                                   : opt?.label || val || "-";
                               })()
-                            : item[f.name] || "-"}
+                            : f.type === "file"
+                              ? (item[f.name] ? "Terisi" : "-")
+                              : item[f.name] || "-"}
                       </td>
                     ))}
                     <td className="px-6 py-4 text-right">
