@@ -6941,7 +6941,7 @@ function UserProfileEdit({
   return (
     <div className="space-y-10 max-w-5xl mx-auto pb-20">
       {/* Modern Profile Hero */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 via-main-blue to-indigo-700 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-main-blue to-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-main-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-leaf-green/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         
@@ -7187,7 +7187,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
   return (
     <div className="space-y-10">
       {/* Modern Management Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-slate-700 to-slate-900 p-10 rounded-[3rem] shadow-2xl shadow-indigo-500/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-main-blue to-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-main-blue/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         
@@ -7453,7 +7453,7 @@ function DataViewList({
   return (
     <div className="space-y-10">
       {/* Dynamic Modern Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 p-10 rounded-[3rem] shadow-2xl shadow-indigo-500/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-main-blue to-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         
@@ -7585,7 +7585,7 @@ function TeacherAttendance() {
   return (
     <div className="space-y-10">
       {/* Modern Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-600 p-10 rounded-[3rem] shadow-2xl shadow-emerald-500/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-main-blue to-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         
@@ -7727,7 +7727,7 @@ function ForumSystem({ user }: { user: any }) {
   return (
     <div className="space-y-10">
       {/* Modern Forum Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-violet-800 p-10 rounded-[3rem] shadow-2xl shadow-indigo-500/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-main-blue to-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         
@@ -8172,7 +8172,7 @@ function TeacherJadwalCards() {
   return (
     <div className="space-y-10">
       {/* Modern Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 p-10 rounded-[3rem] shadow-2xl shadow-orange-500/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-main-blue to-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         
@@ -8486,7 +8486,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
   return (
     <div className="space-y-8">
       {/* Header with Background Gradient */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-600 to-main-blue p-10 rounded-[3rem] shadow-2xl shadow-blue-500/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-main-blue to-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
         {/* Abstract background blobs with more color */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-leaf-green/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
