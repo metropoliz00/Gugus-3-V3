@@ -6602,8 +6602,18 @@ function AdminFinanceManagement({ user }: { user: any }) {
 
 function AdminCertificateManager({ user }: { user: any }) {
   const [activeSubTab, setActiveSubTab] = useState<"editor" | "list">("list");
+  const [trainings, setTrainings] = useState<any[]>([]);
+  const [selectedTrainingId, setSelectedTrainingId] = useState<string>("");
   const { content, updateContent } = useSiteContent() as any;
   const isDownloadEnabled = content?.certificateDownloadEnabled !== false;
+
+  useEffect(() => {
+    const fetchTrainings = async () => {
+      const { data } = await supabase.from("trainings").select("*");
+      setTrainings(data || []);
+    };
+    fetchTrainings();
+  }, []);
 
   const handleToggleDownload = () => {
     updateContent({ certificateDownloadEnabled: !isDownloadEnabled });
@@ -6670,7 +6680,21 @@ function AdminCertificateManager({ user }: { user: any }) {
           ]}
         />
       ) : (
-        <AdminCertificateEditor />
+        <div className="space-y-4">
+          <select
+            className="w-full p-4 rounded-xl border border-gray-200"
+            value={selectedTrainingId}
+            onChange={(e) => setSelectedTrainingId(e.target.value)}
+          >
+            <option value="">Pilih Pelatihan (Default/Global)</option>
+            {trainings.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.title}
+              </option>
+            ))}
+          </select>
+          <AdminCertificateEditor trainingId={selectedTrainingId} />
+        </div>
       )}
     </div>
   );
@@ -8084,8 +8108,8 @@ function TeacherTrainingCards({ user }: { user: any }) {
         .eq("id", 1)
         .single();
 
-      if (sData?.content?.certificate_config) {
-        setCertConfig(sData.content.certificate_config);
+      if (sData?.content?.certificate_configs) {
+        setCertConfig(sData.content.certificate_configs);
       }
     } catch (err) {
       console.error(err);
@@ -8133,7 +8157,8 @@ function TeacherTrainingCards({ user }: { user: any }) {
   };
 
   const handleDownload = async (training: any) => {
-    if (!certConfig) {
+    const config = certConfig ? (certConfig[training.id] || certConfig["default"]) : null;
+    if (!config) {
       alert("Template sertifikat belum diatur oleh admin.", "Info", "info");
       return;
     }
@@ -8194,7 +8219,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
     }
 
     // Generate PDF with the number
-    await generateTeacherPDF(user, training, certConfig, certNumber);
+    await generateTeacherPDF(user, training, config, certNumber);
   };
 
   const getStatusColor = (status: string) => {

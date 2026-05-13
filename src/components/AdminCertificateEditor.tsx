@@ -348,7 +348,7 @@ function DraggableField({
   );
 }
 
-export default function AdminCertificateEditor() {
+export default function AdminCertificateEditor({ trainingId }: { trainingId?: string }) {
   const { alert } = useAlert();
   const stageRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
@@ -416,7 +416,7 @@ export default function AdminCertificateEditor() {
 
   useEffect(() => {
     loadConfig();
-  }, []);
+  }, [trainingId]);
 
   async function loadConfig() {
     if (!supabase) {
@@ -429,17 +429,61 @@ export default function AdminCertificateEditor() {
         .from("site_settings")
         .select("content")
         .eq("id", 1)
-        .maybeSingle(); // Use maybeSingle to avoid error if row missing
+        .maybeSingle();
 
       if (error) throw error;
 
-      const config = data?.content?.certificate_config as CertificateConfig;
+      // Access per-training config if trainingId is provided, else use global/default
+      const allConfigs = data?.content?.certificate_configs || {};
+      const config = trainingId ? allConfigs[trainingId] : data?.content?.certificate_config as CertificateConfig;
+
       if (config) {
         if (config.templateUrl) setTemplateUrl(config.templateUrl);
         if (config.templateUrl2) setTemplateUrl2(config.templateUrl2);
         if (config.fields)
           setFields(config.fields.map((f) => ({ ...f, page: f.page || 1 })));
         if (config.placeholders) setAvailablePlaceholders(config.placeholders);
+      } else {
+        // Reset to default
+        setTemplateUrl("");
+        setTemplateUrl2("");
+        setFields([
+          {
+            id: "nama",
+            field_name: "Nama Peserta",
+            text: "[nama]",
+            x: 500,
+            y: 350,
+            fontSize: 40,
+            fontWeight: "bold",
+            color: "#000000",
+            page: 1,
+            align: "center",
+          },
+        ]);
+        setAvailablePlaceholders([
+          { label: "Nama Lengkap", placeholder: "[nama]", dbField: "nama" },
+          { label: "NIP", placeholder: "[nip]", dbField: "nip" },
+          { label: "Pangkat/Gol", placeholder: "[pangkat]", dbField: "pangkat" },
+          { label: "Satuan Kerja", placeholder: "[sekolah]", dbField: "sekolah" },
+          { label: "Jabatan", placeholder: "[jabatan]", dbField: "jabatan" },
+          {
+            label: "Status Pegawai",
+            placeholder: "[kepegawaian]",
+            dbField: "kepegawaian",
+          },
+          { label: "Judul Pelatihan", placeholder: "[title]", dbField: "title" },
+          {
+            label: "Tgl Pelaksanaan",
+            placeholder: "[date_start]",
+            dbField: "date_start",
+          },
+          {
+            label: "Nomor Sertifikat",
+            placeholder: "[certificate_number]",
+            dbField: "certificate_number",
+          },
+        ]);
       }
     } catch (err) {
       console.error("Error loading certificate config:", err);
@@ -482,13 +526,16 @@ export default function AdminCertificateEditor() {
 
       const newContent = {
         ...(current?.content || {}),
-        certificate_config: {
-          templateUrl,
-          templateUrl2,
-          fields,
-          availablePlaceholders,
-          canvasWidth: CANVAS_WIDTH,
-          canvasHeight: CANVAS_HEIGHT,
+        certificate_configs: {
+          ...(current?.content?.certificate_configs || {}),
+          [trainingId || "default"]: {
+            templateUrl,
+            templateUrl2,
+            fields,
+            availablePlaceholders,
+            canvasWidth: CANVAS_WIDTH,
+            canvasHeight: CANVAS_HEIGHT,
+          },
         },
       };
 
