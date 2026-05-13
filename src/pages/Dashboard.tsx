@@ -44,6 +44,9 @@ import {
   RefreshCw,
   Upload,
   Info,
+  MapPin,
+  Clock,
+  UserCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -8293,41 +8296,49 @@ function TeacherTrainingCards({ user }: { user: any }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
-            <GraduationCap className="w-6 h-6" />
+    <div className="space-y-8">
+      {/* Header with Background Gradient */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-blue-600 to-indigo-700 p-8 rounded-[2.5rem] shadow-2xl shadow-blue-500/20">
+        {/* Abstract background blobs */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-leaf-green/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+            <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border border-white/30 shadow-inner">
+              <GraduationCap className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black font-heading text-white tracking-tight leading-tight">
+                Portal Pelatihan <span className="text-leaf-green">Guru</span>
+              </h2>
+              <p className="text-sm text-blue-100 font-medium opacity-90 mt-1 max-w-md leading-relaxed">
+                Tingkatkan kompetensi Anda melalui program pelatihan berkualitas dan pantau riwayat sertifikasi Anda.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold font-heading">
-              Program Pelatihan Guru
-            </h2>
-            <p className="text-xs text-gray-500">
-              Daftar pelatihan dan unduh sertifikat hasil pelatihan.
-            </p>
-          </div>
-        </div>
 
-        {/* Tab System */}
-        <div className="flex bg-gray-100 p-1 rounded-2xl shrink-0">
-          {[
-            { id: "daftar", label: "Daftar" },
-            { id: "absensi", label: "Absensi" },
-            { id: "sertifikat", label: "Sertifikat" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveSubTab(tab.id as any)}
-              className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
-                activeSubTab === tab.id
-                  ? "bg-white text-main-blue shadow-sm"
-                  : "text-gray-500 hover:text-soft-black"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {/* Tab System Modernized */}
+          <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-[1.5rem] shrink-0 border border-white/20 shadow-xl">
+            {[
+              { id: "daftar", label: "Program", icon: Calendar },
+              { id: "absensi", label: "Riwayat", icon: CheckSquare },
+              { id: "sertifikat", label: "Sertifikat", icon: Award },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveSubTab(tab.id as any)}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black transition-all duration-300 ${
+                  activeSubTab === tab.id
+                    ? "bg-white text-main-blue shadow-lg shadow-black/10 scale-105"
+                    : "text-white/70 hover:text-white hover:bg-white/5"
+                }`}
+              >
+                <tab.icon className={`w-4 h-4 ${activeSubTab === tab.id ? 'text-main-blue' : 'text-current'}`} />
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -8368,72 +8379,127 @@ function TeacherTrainingCards({ user }: { user: any }) {
                   else autoStatus = "completed";
 
                   return (
-                    <div
+                    <motion.div
                       key={item.id}
-                      className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all flex flex-col"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      whileHover={{ y: -8 }}
+                      className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden transition-all flex flex-col group relative"
                     >
+                      {/* Sub-header inside card for status */}
+                      <div className="absolute top-6 left-6 z-10">
+                        <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm backdrop-blur-md ${
+                          autoStatus === 'ongoing' ? 'bg-leaf-green/90 text-white border-leaf-green/20' :
+                          autoStatus === 'planned' ? 'bg-main-blue/90 text-white border-main-blue/20' :
+                          'bg-gray-800/80 text-white border-gray-700'
+                        }`}>
+                          {getStatusLabel(autoStatus)}
+                        </div>
+                      </div>
+
                       <div className="flex flex-col sm:flex-row flex-1">
-                        <div className="sm:w-1/3 bg-gray-50 p-6 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-gray-100">
-                          <div className="w-16 h-16 bg-white rounded-2xl flex flex-col items-center justify-center shadow-sm border border-gray-100 mb-3">
-                            <span className="text-xs font-bold text-gray-400 uppercase">
-                              {new Date(item.date_start).toLocaleString(
-                                "id-ID",
-                                { month: "short" },
-                              )}
-                            </span>
-                            <span className="text-2xl font-bold text-main-blue leading-none mt-1">
-                              {new Date(item.date_start).getDate()}
-                            </span>
-                          </div>
-                          <div
-                            className={`px-3 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(autoStatus)}`}
-                          >
-                            {getStatusLabel(autoStatus)}
+                        {/* Day & Month Badge Section */}
+                        <div className={`sm:w-32 flex flex-col items-center justify-center p-6 border-b sm:border-b-0 sm:border-r border-gray-50 bg-gradient-to-b ${
+                           autoStatus === 'ongoing' ? 'from-leaf-green/5 to-white' :
+                           autoStatus === 'planned' ? 'from-main-blue/5 to-white' :
+                           'from-gray-50 to-white'
+                        }`}>
+                          <div className="relative">
+                            <div className={`w-20 h-20 rounded-[1.5rem] bg-white shadow-xl flex flex-col items-center justify-center border-t-4 ${
+                               autoStatus === 'ongoing' ? 'border-t-leaf-green border-leaf-green/10' :
+                               autoStatus === 'planned' ? 'border-t-main-blue border-main-blue/10' :
+                               'border-t-gray-400 border-gray-100'
+                            }`}>
+                              <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
+                                {new Date(item.date_start).toLocaleString(
+                                  "id-ID",
+                                  { month: "short" },
+                                )}
+                              </span>
+                              <span className={`text-4xl font-black leading-none mt-1 ${
+                                autoStatus === 'ongoing' ? 'text-leaf-green' :
+                                autoStatus === 'planned' ? 'text-main-blue' :
+                                'text-gray-700'
+                              }`}>
+                                {new Date(item.date_start).getDate()}
+                              </span>
+                            </div>
+                            <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center border border-gray-50">
+                               <Calendar className="w-4 h-4 text-gray-400" />
+                            </div>
                           </div>
                         </div>
-                        <div className="p-6 flex-1">
-                          <h3 className="font-bold text-soft-black text-lg mb-2">
+
+                        {/* Content Section */}
+                        <div className="p-8 flex-1">
+                          <h3 className="font-black text-soft-black text-2xl mb-3 leading-tight tracking-tight group-hover:text-main-blue transition-colors">
                             {item.title}
                           </h3>
-                          <p className="text-xs text-gray-400 line-clamp-2 mb-4">
+                          <p className="text-sm text-gray-500 line-clamp-2 mb-6 leading-relaxed">
                             {item.description}
                           </p>
-                          <div className="space-y-1">
-                            <p className="text-[10px] text-gray-500 flex items-center gap-1 font-medium">
-                              <Map className="w-3 h-3" /> {item.location}
-                            </p>
-                            <p className="text-[10px] text-gray-500 flex items-center gap-1 font-medium">
-                              <Calendar className="w-3 h-3" />{" "}
-                              {new Date(item.date_start).toLocaleDateString(
-                                "id-ID",
-                              )}
-                            </p>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-2xl border border-gray-100">
+                               <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm text-main-blue">
+                                  <MapPin className="w-4 h-4" />
+                               </div>
+                               <div>
+                                  <p className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Lokasi</p>
+                                  <p className="text-[11px] font-bold text-soft-black truncate max-w-[100px]">{item.location}</p>
+                               </div>
+                            </div>
+                            <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-2xl border border-gray-100">
+                               <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm text-leaf-green">
+                                  <Clock className="w-4 h-4" />
+                               </div>
+                               <div>
+                                  <p className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Waktu</p>
+                                  <p className="text-[11px] font-bold text-soft-black">08:00 WIB</p>
+                               </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                      <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
-                        {!isRegistered ? (
-                          <button
-                            onClick={() => handleRegister(item.id)}
-                            className="px-4 py-2 bg-main-blue text-white rounded-xl text-xs font-bold shadow-md shadow-main-blue/20"
-                          >
-                            Daftar
-                          </button>
-                        ) : (
-                          <span className="text-xs font-bold text-green-600 flex items-center gap-1">
-                            <CheckSquare className="w-4 h-4" /> Terdaftar
-                          </span>
-                        )}
-                        {isRegistered && !hasAttended && (
-                          <button
-                            onClick={() => handleAttendance(item.id)}
-                            className="px-4 py-2 bg-leaf-green text-white rounded-xl text-xs font-bold shadow-md shadow-leaf-green/20"
-                          >
-                            Isi Absen
-                          </button>
-                        )}
+
+                      {/* Footer / Actions */}
+                      <div className="p-6 bg-gradient-to-r from-gray-50/50 to-white border-t border-gray-50 flex justify-between items-center">
+                        <div>
+                           {isRegistered ? (
+                             <div className="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-xl border border-green-100">
+                               <CheckCircle className="w-4 h-4 text-green-500" />
+                               <span className="text-[10px] font-black text-green-600 uppercase tracking-wider">Terdaftar</span>
+                             </div>
+                           ) : (
+                             <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest pl-2">
+                               Belum Terdaftar
+                             </div>
+                           )}
+                        </div>
+
+                        <div className="flex gap-3">
+                          {!isRegistered ? (
+                            <button
+                              onClick={() => handleRegister(item.id)}
+                              className="px-8 py-3 bg-main-blue text-white rounded-2xl text-xs font-black shadow-xl shadow-main-blue/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            >
+                              <PlusCircle className="w-4 h-4" /> Daftar Sekarang
+                            </button>
+                          ) : !hasAttended ? (
+                            <button
+                              onClick={() => handleAttendance(item.id)}
+                              className="px-8 py-3 bg-leaf-green text-white rounded-2xl text-xs font-black shadow-xl shadow-leaf-green/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            >
+                              <UserCheck className="w-4 h-4" /> Konfirmasi Hadir
+                            </button>
+                          ) : (
+                            <div className="px-6 py-3 bg-white text-gray-400 rounded-2xl text-xs font-black border border-gray-100 shadow-sm flex items-center gap-2">
+                               <Award className="w-4 h-4 text-amber-500" /> Selesai
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })
               )}
@@ -8462,9 +8528,12 @@ function TeacherTrainingCards({ user }: { user: any }) {
                     <tr>
                       <td
                         colSpan={4}
-                        className="px-8 py-12 text-center text-gray-400 italic"
+                        className="px-8 py-20 text-center text-gray-300"
                       >
-                        Belum ada riwayat pendaftaran.
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
+                          <BookOpen className="w-8 h-8 text-gray-200" />
+                        </div>
+                        <p className="font-medium italic">Belum ada riwayat pendaftaran.</p>
                       </td>
                     </tr>
                   ) : (
@@ -8472,40 +8541,47 @@ function TeacherTrainingCards({ user }: { user: any }) {
                       const training = trainings.find(
                         (t) => t.id === reg.training_id,
                       );
+                      const isAttended = reg.status === "attended";
+
                       return (
-                        <tr key={reg.id} className="text-sm">
-                          <td className="px-8 py-4 font-bold">
-                            {training?.title || "Unknown"}
+                        <tr key={reg.id} className="text-sm group hover:bg-blue-50/30 transition-colors">
+                          <td className="px-8 py-6">
+                            <div className="flex items-center gap-3">
+                               <div className={`w-2 h-8 rounded-full ${isAttended ? 'bg-leaf-green' : 'bg-main-blue opacity-30'}`} />
+                               <div>
+                                  <p className="font-black text-soft-black leading-tight mb-0.5">{training?.title || "Unknown"}</p>
+                                  <p className="text-[10px] text-gray-400 font-bold uppercase">{training?.location}</p>
+                               </div>
+                            </div>
                           </td>
-                          <td className="px-8 py-4 text-gray-500">
-                            {new Date(reg.registered_at).toLocaleDateString(
-                              "id-ID",
-                            )}
+                          <td className="px-8 py-6">
+                            <div className="flex flex-col">
+                               <span className="font-black text-gray-600">{new Date(reg.registered_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                               <span className="text-[10px] text-gray-400 font-bold uppercase">Terdaftar Pada</span>
+                            </div>
                           </td>
-                          <td className="px-8 py-4">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${reg.status === "attended" ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"}`}
-                            >
-                              {reg.status === "attended"
-                                ? "Hadir"
-                                : reg.status === "registered"
-                                  ? "Terdaftar"
-                                  : reg.status}
-                            </span>
+                          <td className="px-8 py-6">
+                            <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
+                               isAttended 
+                                ? "bg-green-50 text-green-600 border-green-100" 
+                                : "bg-blue-50 text-main-blue border-blue-100"
+                            }`}>
+                               {isAttended ? <CheckCircle className="w-3 h-3" /> : <div className="w-2 h-2 rounded-full bg-main-blue/40 animate-pulse" />}
+                               {isAttended ? "Hadir" : "Terdaftar"}
+                            </div>
                           </td>
-                          <td className="px-8 py-4">
+                          <td className="px-8 py-6">
                             {reg.attended_at ? (
-                              <span className="text-xs text-gray-400">
-                                {new Date(reg.attended_at).toLocaleString(
-                                  "id-ID",
-                                )}
-                              </span>
+                              <div className="flex flex-col">
+                                <span className="text-xs font-black text-gray-400">
+                                  {new Date(reg.attended_at).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })} WIB
+                                </span>
+                                <span className="text-[10px] text-gray-300 font-bold uppercase">Waktu Absensi</span>
+                              </div>
                             ) : (
                               <button
-                                onClick={() =>
-                                  handleAttendance(reg.training_id)
-                                }
-                                className="text-main-blue font-bold text-xs hover:underline"
+                                onClick={() => handleAttendance(reg.training_id)}
+                                className="px-6 py-2 bg-main-blue/10 text-main-blue rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-main-blue hover:text-white transition-all shadow-md shadow-main-blue/5"
                               >
                                 Isi Sekarang
                               </button>
@@ -8523,18 +8599,21 @@ function TeacherTrainingCards({ user }: { user: any }) {
           {activeSubTab === "sertifikat" && (
             <motion.div
               key="sertifikat"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-8"
             >
               {Object.values(registrations).filter(
                 (r) => r.status === "attended",
               ).length === 0 ? (
-                <div className="md:col-span-2 bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
-                  <Award className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">
-                    Selesaikan pelatihan untuk mendapatkan sertifikat.
+                <div className="md:col-span-2 bg-gray-50 p-20 rounded-[3rem] text-center border-2 border-dashed border-gray-200">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
+                    <Award className="w-10 h-10" />
+                  </div>
+                  <h3 className="text-xl font-black text-gray-400 mb-2">Belum Tersedia</h3>
+                  <p className="text-gray-400 max-w-sm mx-auto font-medium">
+                    Selesaikan pelatihan dan pastikan daftar hadir terisi untuk mendapatkan sertifikat Anda.
                   </p>
                 </div>
               ) : (
@@ -8544,41 +8623,59 @@ function TeacherTrainingCards({ user }: { user: any }) {
                     const training = trainings.find(
                       (t) => t.id === reg.training_id,
                     );
+                    const isDownloaded = !!certRecords[reg.training_id];
+                    
                     return (
-                      <div
+                      <motion.div
                         key={reg.id}
-                        className="bg-white p-6 rounded-3xl border border-amber-100 shadow-sm flex items-center justify-between group hover:border-amber-400 transition-all"
+                        whileHover={{ scale: 1.02 }}
+                        className={`p-8 rounded-[3rem] border-2 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all relative overflow-hidden group ${
+                           isDownloaded 
+                            ? 'bg-gradient-to-br from-green-50 to-white border-green-100 shadow-xl shadow-green-500/5' 
+                            : 'bg-gradient-to-br from-amber-50 to-white border-amber-100 shadow-xl shadow-amber-500/5'
+                        }`}
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
-                            {certRecords[reg.training_id] ? (
-                                <CheckCircle className="w-6 h-6" />
-                            ) : (
-                                <Award className="w-6 h-6" />
-                            )}
+                        {/* Background Decoration */}
+                        <div className={`absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-32 h-32 blur-3xl opacity-20 ${isDownloaded ? 'bg-green-500' : 'bg-amber-500'}`} />
+
+                        <div className="flex items-center gap-6 relative z-10">
+                          <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center shadow-xl group-hover:rotate-6 transition-transform ${
+                             isDownloaded ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-amber-500 text-white shadow-amber-500/20'
+                          }`}>
+                             {isDownloaded ? <CheckCircle className="w-8 h-8" /> : <Award className="w-8 h-8" />}
                           </div>
                           <div>
-                            <h4 className="font-bold text-soft-black text-sm">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-2">Penghargaan Pelatihan</p>
+                            <h4 className="font-black text-soft-black text-lg leading-tight mb-1">
                               {training?.title}
                             </h4>
-                            <p className="text-[10px] text-gray-400">
-                              {certRecords[reg.training_id]
-                                ? "Sertifikat sudah diunduh"
-                                : isDownloadEnabled
-                                  ? "Sertifikat tersedia untuk diunduh"
-                                  : "Sertifikat belum tersedia untuk diunduh"}
-                            </p>
+                            <div className="flex items-center gap-2">
+                               <div className={`w-2 h-2 rounded-full animate-pulse ${isDownloaded ? 'bg-green-500' : 'bg-amber-500'}`} />
+                               <span className={`text-[11px] font-bold ${isDownloaded ? 'text-green-600' : 'text-amber-600'}`}>
+                                 {isDownloaded ? "Sertifikat Terverifikasi" : "Siap Diunduh"}
+                               </span>
+                            </div>
                           </div>
                         </div>
-                        {isDownloadEnabled && (
+
+                        {isDownloadEnabled ? (
                           <button
                             onClick={() => handleDownload(training)}
-                            className={`p-3 text-white rounded-xl transition-all shadow-lg ${certRecords[reg.training_id] ? "bg-green-500 hover:bg-green-600 shadow-green-500/20" : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"}`}
+                            className={`px-8 py-4 text-white rounded-2xl transition-all shadow-2xl relative z-10 flex items-center gap-3 font-black text-xs active:scale-90 ${
+                               isDownloaded 
+                                ? 'bg-green-500 hover:bg-green-600 shadow-green-500/30' 
+                                : 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/30'
+                            }`}
                           >
                             <Download className="w-5 h-5" />
+                            {isDownloaded ? "Cetak Ulang" : "Unduh Sekarang"}
                           </button>
+                        ) : (
+                          <div className="px-6 py-3 bg-gray-100 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest">
+                             Terkunci
+                          </div>
                         )}
-                      </div>
+                      </motion.div>
                     );
                   })
               )}

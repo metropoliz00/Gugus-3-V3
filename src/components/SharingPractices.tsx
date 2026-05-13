@@ -7,6 +7,8 @@ import ImageUpload from './ImageUpload';
 export function SharingPractices({ user }: { user: any }) {
   const [practices, setPractices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadPractices() {
@@ -27,22 +29,32 @@ export function SharingPractices({ user }: { user: any }) {
   }, []);
 
   const handleAdd = async () => {
-    if (!supabase) return;
-    const newPractice = {
-      user_id: user.id,
-      title: "Praktik Baik Baru",
-      author_name: user.nama || user.full_name || user.username || "Guru Gugus 3",
-      description: "Deskripsi praktik baik...",
-      image_url:
-        "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80",
-    };
-    const { data, error } = await supabase
-      .from("best_practices")
-      .insert([newPractice])
-      .select();
-    if (!error && data) {
-      setPractices([data[0], ...practices]);
-      setEditingId(data[0].id);
+    if (!supabase || isAdding) return;
+    setIsAdding(true);
+    try {
+      const newPractice = {
+        user_id: user.id,
+        title: "Praktik Baik Baru",
+        author_name: user.nama || user.full_name || user.username || "Guru Gugus 3",
+        description: "Bagikan pengalaman mengajar Anda di sini...",
+        image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80",
+      };
+      const { data, error } = await supabase
+        .from("best_practices")
+        .insert([newPractice])
+        .select();
+      
+      if (error) throw error;
+      if (data) {
+        setPractices([data[0], ...practices]);
+        setEditingId(data[0].id);
+        // Scroll to top to see the new form
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (err) {
+      console.error("Error adding practice:", err);
+    } finally {
+      setIsAdding(false);
     }
   };
 
@@ -69,8 +81,6 @@ export function SharingPractices({ user }: { user: any }) {
     }
   };
 
-  const [editingId, setEditingId] = useState<string | null>(null);
-
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
@@ -84,9 +94,15 @@ export function SharingPractices({ user }: { user: any }) {
         </div>
         <button
           onClick={handleAdd}
-          className="flex items-center gap-2 bg-main-blue text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-main-blue/20 hover:scale-105 active:scale-95"
+          disabled={isAdding}
+          className="flex items-center gap-2 bg-main-blue text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-main-blue/20 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
         >
-          <PlusCircle className="w-5 h-5" /> Bagikan Praktik Baik
+          {isAdding ? (
+            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          ) : (
+            <PlusCircle className="w-5 h-5" />
+          )}
+          {isAdding ? "Menyiapkan..." : "Bagikan Praktik Baik"}
         </button>
       </div>
 
@@ -112,12 +128,32 @@ export function SharingPractices({ user }: { user: any }) {
                 }}
               />
               {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/20" />
 
               {/* Card Content Overlaid */}
-              <div className="relative z-10 p-8 h-full flex flex-col justify-end min-h-[400px]">
+              <div className="relative z-10 p-8 h-full flex flex-col justify-end min-h-[450px]">
+                {/* Admin/Owner Controls */}
+                {(p.user_id === user.id || user.role === "admin") && (
+                  <div className="absolute top-6 right-6 flex gap-2">
+                    <button
+                      onClick={() => setEditingId(editingId === p.id ? null : p.id)}
+                      className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-main-blue transition-all border border-white/20 shadow-lg"
+                      title="Edit Konten"
+                    >
+                      {editingId === p.id ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(p.id)}
+                      className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500 transition-all border border-white/20 shadow-lg"
+                      title="Hapus Konten"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2 mb-4">
-                  <span className="bg-main-blue/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
+                  <span className="bg-leaf-green/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
                     Praktik Baik
                   </span>
                 </div>
@@ -126,102 +162,86 @@ export function SharingPractices({ user }: { user: any }) {
                   {p.title}
                 </h3>
 
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
-                    <Award className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-gray-300 font-bold uppercase leading-none mb-1">
-                      Oleh Pendidik
-                    </p>
-                    <p className="text-sm font-bold text-white">
-                      {p.author_name || "Guru Gugus 3"}
-                    </p>
-                  </div>
-                </div>
-
-                <p className="text-gray-200 text-sm mb-8 line-clamp-3 leading-relaxed drop-shadow-sm">
+                <p className="text-gray-200 text-sm mb-8 line-clamp-3 leading-relaxed drop-shadow-sm flex-1">
                   {p.description}
                 </p>
 
-                <div className="pt-6 border-t border-white/20 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[10px] text-white/80 font-bold uppercase tracking-widest">
+                <div className="pt-6 border-t border-white/20 flex items-center justify-between mt-auto">
+                  <div className="flex items-center gap-2 text-[10px] text-white/60 font-bold uppercase tracking-widest">
                     <Play className="w-4 h-4 text-main-blue" />
-                    Bagi Pengalaman
+                    Inspirasi Guru
                   </div>
-                  {(p.user_id === user.id || user.role === "admin") && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setEditingId(editingId === p.id ? null : p.id)}
-                        className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-main-blue transition-all border border-white/20 shadow-lg"
-                        title="Edit Konten"
-                      >
-                        {editingId === p.id ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p.id)}
-                        className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500 transition-all border border-white/20 shadow-lg"
-                        title="Hapus Konten"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                  
+                  {/* Author Name at Bottom Right */}
+                  <div className="text-right">
+                    <p className="text-[9px] text-gray-400 font-bold uppercase leading-none mb-1">
+                      Karya Oleh
+                    </p>
+                    <div className="flex items-center justify-end gap-2 text-white">
+                      <span className="text-sm font-bold truncate max-w-[120px]">
+                        {p.author_name || "Guru Gugus 3"}
+                      </span>
+                      <div className="w-6 h-6 rounded-full bg-main-blue/30 backdrop-blur-sm flex items-center justify-center border border-main-blue/50">
+                        <Award className="w-3.4 h-3.4 text-white" />
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
                 {/* Inline Editing Form */}
                 {editingId === p.id && (
                   <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-6 bg-white/95 backdrop-blur-xl rounded-3xl space-y-4 shadow-2xl text-soft-black"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="absolute inset-4 z-50 bg-white rounded-[2rem] p-6 shadow-2xl flex flex-col space-y-4 overflow-y-auto"
                   >
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
-                        Judul Praktik
-                      </label>
-                      <input
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold focus:border-main-blue outline-none"
-                        value={p.title}
-                        onChange={(e) =>
-                          handleUpdate(p.id, { title: e.target.value })
-                        }
+                    <div className="flex justify-between items-center mb-2">
+                       <h4 className="text-sm font-bold text-soft-black">Edit Praktik Baik</h4>
+                       <button onClick={() => setEditingId(null)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200">
+                          <X className="w-4 h-4" />
+                       </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Judul Praktik</label>
+                        <input
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold focus:border-main-blue outline-none"
+                          value={p.title}
+                          onChange={(e) => handleUpdate(p.id, { title: e.target.value })}
+                          placeholder="Contoh: Pembelajaran Berbasis Game"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nama Lengkap Penulis</label>
+                        <input
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold focus:border-main-blue outline-none"
+                          value={p.author_name || ""}
+                          onChange={(e) => handleUpdate(p.id, { author_name: e.target.value })}
+                          placeholder="Nama lengkap Anda"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Deskripsi</label>
+                        <textarea
+                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs h-32 focus:border-main-blue outline-none"
+                          value={p.description}
+                          onChange={(e) => handleUpdate(p.id, { description: e.target.value })}
+                          placeholder="Ceritakan metode dan hasil praktik baik Anda..."
+                        />
+                      </div>
+                      <ImageUpload
+                        label="Ganti Foto Sampul"
+                        value={p.image_url || ""}
+                        onChange={(url) => handleUpdate(p.id, { image_url: url })}
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
-                        Nama Lengkap Penulis
-                      </label>
-                      <input
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold focus:border-main-blue outline-none"
-                        value={p.author_name || ""}
-                        onChange={(e) =>
-                          handleUpdate(p.id, { author_name: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">
-                        Deskripsi
-                      </label>
-                      <textarea
-                        className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs h-24 focus:border-main-blue outline-none"
-                        value={p.description}
-                        onChange={(e) =>
-                          handleUpdate(p.id, { description: e.target.value })
-                        }
-                      />
-                    </div>
-                    <ImageUpload
-                      label="Foto Sampul"
-                      value={p.image_url || ""}
-                      onChange={(url) => handleUpdate(p.id, { image_url: url })}
-                    />
+
                     <button
                       onClick={() => setEditingId(null)}
-                      className="w-full bg-main-blue text-white py-3 rounded-2xl text-xs font-bold hover:bg-blue-600 transition-all shadow-lg shadow-main-blue/20"
+                      className="w-full bg-main-blue text-white py-3 rounded-2xl text-xs font-bold hover:bg-blue-600 transition-all shadow-lg mt-auto"
                     >
-                      Simpan Perubahan
+                      Simpan & Publikasikan
                     </button>
                   </motion.div>
                 )}
