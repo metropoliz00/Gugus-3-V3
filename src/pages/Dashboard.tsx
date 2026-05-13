@@ -6918,137 +6918,173 @@ function UserProfileEdit({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl max-w-4xl mx-auto"
-    >
-      <div className="flex items-center gap-6 mb-10 pb-6 border-b border-gray-100">
-        <div className="w-24 h-32 aspect-[3/4] rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 shadow-lg shadow-main-blue/20">
-          <div className="w-full h-full bg-white rounded-xl flex items-center justify-center overflow-hidden">
-            <img
-              src={
-                profile.foto ||
-                profile.avatar_url ||
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nama || "U")}&background=6366f1&color=fff`
-              }
-              alt="Profile"
-              className="w-full h-full object-cover"
-            />
+    <div className="space-y-10 max-w-5xl mx-auto pb-20">
+      {/* Modern Profile Hero */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-700 via-slate-800 to-slate-950 p-10 rounded-[3rem] shadow-2xl shadow-slate-900/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-main-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-leaf-green/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+          <div className="relative group">
+            <div className="w-32 h-40 rounded-[2rem] bg-white/10 backdrop-blur-xl p-1.5 border border-white/20 shadow-2xl overflow-hidden transition-transform group-hover:scale-105 duration-500">
+               <div className="w-full h-full rounded-[1.5rem] overflow-hidden bg-white">
+                 <img
+                    src={
+                      profile.foto ||
+                      profile.avatar_url ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nama || "U")}&background=6366f1&color=fff`
+                    }
+                    alt="Profile"
+                    className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700"
+                 />
+               </div>
+            </div>
+            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-main-blue rounded-full flex items-center justify-center text-white border-4 border-slate-800 shadow-xl">
+               <User className="w-5 h-5" />
+            </div>
           </div>
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Profil Saya
-          </h2>
-          <p className="text-gray-500">
-            Kelola informasi pribadi dan data kepegawaian Anda.
-          </p>
+          
+          <div className="text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10 mb-4">
+               <Settings className="w-3 h-3 text-white/60" />
+               <span className="text-[10px] font-black text-white/80 uppercase tracking-widest">Pengaturan Akun</span>
+            </div>
+            <h2 className="text-4xl font-black text-white tracking-tight mb-2">
+              {profile.nama || "Profil Guru"}
+            </h2>
+            <p className="text-slate-300 font-medium max-w-md leading-relaxed">
+              Perbarui identitas dan data profesional Anda untuk sinkronisasi sistem yang akurat.
+            </p>
+          </div>
         </div>
       </div>
 
-      <form
-        onSubmit={handleSave}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-[3rem] shadow-2xl shadow-gray-200 border border-gray-100 overflow-hidden"
       >
-        <div className="col-span-full">
-          <ImageUpload
-            label="Foto Profil"
-            value={profile.foto}
-            onChange={(base64) => setProfile({ ...profile, foto: base64 })}
-            maxWidth={400}
-            maxHeight={400}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Nama Lengkap
-          </label>
-          <input
-            className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none"
-            value={profile.nama}
-            onChange={(e) => setProfile({ ...profile, nama: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Email
-          </label>
-          <input
-            className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none"
-            value={profile.email}
-            onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            NIP
-          </label>
-          <input
-            className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none"
-            value={profile.nip}
-            onChange={(e) => setProfile({ ...profile, nip: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Jabatan
-          </label>
-          <input
-            className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none"
-            value={profile.jabatan}
-            onChange={(e) =>
-              setProfile({ ...profile, jabatan: e.target.value })
-            }
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Sekolah
-          </label>
-          <input
-            className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none"
-            value={profile.sekolah}
-            onChange={(e) =>
-              setProfile({ ...profile, sekolah: e.target.value })
-            }
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Pangkat/Golongan
-          </label>
-          <input
-            className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none"
-            value={profile.pangkat}
-            onChange={(e) =>
-              setProfile({ ...profile, pangkat: e.target.value })
-            }
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Status Kepegawaian
-          </label>
-          <input
-            className="w-full border-b border-gray-200 p-2 focus:border-main-blue outline-none"
-            value={profile.kepegawaian}
-            onChange={(e) =>
-              setProfile({ ...profile, kepegawaian: e.target.value })
-            }
-          />
-        </div>
-        <div className="col-span-full pt-6">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 bg-main-blue text-white rounded-2xl font-bold shadow-lg shadow-main-blue/20 hover:scale-[1.02] transition-all"
+        <div className="p-10 md:p-12">
+          <form
+            onSubmit={handleSave}
+            className="space-y-10"
           >
-            {loading ? "Menyimpan..." : "Simpan Perubahan Profil"}
-          </button>
+            {/* Photo Upload Section */}
+            <div className="bg-gray-50/50 p-8 rounded-[2rem] border border-gray-100">
+              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">Unggah Foto Identitas Baru</label>
+              <ImageUpload
+                label="Klik untuk ganti foto profil"
+                value={profile.foto}
+                onChange={(base64) => setProfile({ ...profile, foto: base64 })}
+                maxWidth={400}
+                maxHeight={400}
+              />
+            </div>
+
+            {/* Form Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+              <div className="group">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Nama Lengkap & Gelar</label>
+                <div className="relative">
+                  <input
+                    className="w-full bg-gray-50 border-2 border-transparent border-b-gray-200 p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
+                    value={profile.nama}
+                    onChange={(e) => setProfile({ ...profile, nama: e.target.value })}
+                  />
+                  <User className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                </div>
+              </div>
+
+              <div className="group">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Alamat Email Aktif</label>
+                <div className="relative">
+                  <input
+                    className="w-full bg-gray-50 border-2 border-transparent border-b-gray-200 p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
+                    value={profile.email}
+                    onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                  />
+                  <Mail className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                </div>
+              </div>
+
+              <div className="group">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">NIP / NUPTK</label>
+                <input
+                  className="w-full bg-gray-50 border-2 border-transparent border-b-gray-200 p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
+                  value={profile.nip}
+                  onChange={(e) => setProfile({ ...profile, nip: e.target.value })}
+                />
+              </div>
+
+              <div className="group">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Jabatan Struktural</label>
+                <input
+                  className="w-full bg-gray-50 border-2 border-transparent border-b-gray-200 p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
+                  value={profile.jabatan}
+                  onChange={(e) =>
+                    setProfile({ ...profile, jabatan: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="group">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Satuan Pendidikan</label>
+                <input
+                  className="w-full bg-gray-50 border-2 border-transparent border-b-gray-200 p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
+                  value={profile.sekolah}
+                  onChange={(e) =>
+                    setProfile({ ...profile, sekolah: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="group">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Golongan / Pangkat</label>
+                <input
+                  className="w-full bg-gray-50 border-2 border-transparent border-b-gray-200 p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
+                  value={profile.pangkat}
+                  onChange={(e) =>
+                    setProfile({ ...profile, pangkat: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="group col-span-full">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Status Kepegawaian</label>
+                <select
+                  className="w-full bg-gray-50 border-2 border-transparent border-b-gray-200 p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all appearance-none"
+                  value={profile.kepegawaian}
+                  onChange={(e) =>
+                    setProfile({ ...profile, kepegawaian: e.target.value })
+                  }
+                >
+                  <option value="">Pilih Status</option>
+                  <option value="PNS">Pegawai Negeri Sipil (PNS)</option>
+                  <option value="PPPK">PPPK</option>
+                  <option value="GTT">Guru Tidak Tetap (GTT)</option>
+                  <option value="Honor">Guru Honorer Sekolah</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="pt-10">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-5 bg-gradient-to-r from-slate-800 to-slate-950 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-2xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+              >
+                {loading ? (
+                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                   <CheckCircle className="w-5 h-5" />
+                )}
+                {loading ? "Menyimpan Data..." : "Perbarui Profil Saya"}
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -7124,30 +7160,39 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
-            <Icon className="w-6 h-6" />
+    <div className="space-y-10">
+      {/* Modern Management Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-gray-800 via-slate-900 to-black p-10 rounded-[3rem] shadow-2xl shadow-slate-900/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-main-blue/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/5 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/10 shadow-2xl">
+              <Icon className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Manajemen Data</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                {title}
+              </h2>
+              <p className="text-base text-white/60 font-medium max-w-lg leading-relaxed">
+                Kelola koleksi {title.toLowerCase()} Anda dengan sistem administrasi yang efisien dan terorganisir.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold font-heading">{title}</h2>
-            <p className="text-xs text-gray-500">
-              Kelola data {title.toLowerCase()} didatabase.
-            </p>
-          </div>
+          
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-b-4 border-gray-200"
+          >
+            {showForm ? <X className="w-5 h-5" /> : <PlusCircle className="w-5 h-5" />}
+            {showForm ? "Tutup Form" : `Tambah ${title.split(" ").pop()}`}
+          </button>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="px-6 py-2.5 bg-main-blue text-white rounded-xl font-bold shadow-lg shadow-main-blue/20 transition-all flex items-center gap-2"
-        >
-          {showForm ? (
-            <X className="w-4 h-4" />
-          ) : (
-            <PlusCircle className="w-4 h-4" />
-          )}
-          {showForm ? "Batal" : "Tambah Data"}
-        </button>
       </div>
 
       <AnimatePresence>
@@ -7381,72 +7426,93 @@ function DataViewList({
   }, [table, filterColumn, filterValue]);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div className="w-12 h-12 bg-leaf-green/10 rounded-2xl flex items-center justify-center text-leaf-green">
-          <Icon className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold font-heading">{title}</h2>
-          <p className="text-xs text-gray-500">
-            Lihat daftar {title.toLowerCase()} untuk menunjang kegiatan KKG.
-          </p>
+    <div className="space-y-10">
+      {/* Dynamic Modern Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 p-10 rounded-[3rem] shadow-2xl shadow-indigo-500/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/30 shadow-2xl">
+              <Icon className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Akses Konten</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                {title}
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Kelola dan telusuri {title.toLowerCase()} untuk menunjang kegiatan belajar-mengajar Anda.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         {loading ? (
-          <div className="col-span-full py-20 text-center text-gray-400 italic">
-            Memuat data...
+          <div className="col-span-full py-20 text-center">
+            <div className="animate-spin w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Menyelaraskan Data...</p>
           </div>
         ) : data.length === 0 ? (
-          <div className="col-span-full py-20 text-center text-gray-400 italic">
-            Belum ada data tersedia.
+          <div className="col-span-full py-20 text-center bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-200">
+            <Icon className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+            <p className="text-gray-400 font-bold italic">Belum ada {title.toLowerCase()} yang diterbitkan.</p>
           </div>
         ) : (
           data.map((item) => (
             <motion.div
-              whileHover={{ y: -5 }}
+              whileHover={{ y: -10 }}
               key={item.id}
-              className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 hover:shadow-xl transition-all"
+              className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200 border border-gray-100 overflow-hidden flex flex-col group h-full"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-2 bg-gray-50 rounded-lg">
-                  <Icon className="w-5 h-5 text-gray-400" />
+              <div className="p-8 pb-4">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-all shadow-inner">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <div className="px-4 py-1.5 bg-gray-50 rounded-full border border-gray-100">
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                      {new Date(item.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
                 </div>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                  {new Date(item.created_at).toLocaleDateString()}
-                </span>
+                <h3 className="font-black text-soft-black text-xl mb-3 leading-tight tracking-tight group-hover:text-indigo-600 transition-colors">
+                  {item.title}
+                </h3>
+                <p className="text-sm text-gray-500 mb-6 line-clamp-3 leading-relaxed flex-1">
+                  {item.description || item.content || "Konten tersedia untuk dilihat dan diunduh."}
+                </p>
               </div>
-              <h3 className="font-bold text-soft-black mb-2 line-clamp-2">
-                {item.title}
-              </h3>
-              <p className="text-xs text-gray-500 mb-4 line-clamp-3">
-                {item.description ||
-                  item.content ||
-                  "Klik tombol dibawah untuk detail."}
-              </p>
-              <div className="flex gap-2">
-                {item.file_url && (
-                  <a
-                    href={item.file_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 py-2 bg-main-blue/10 text-main-blue rounded-lg text-xs font-bold text-center hover:bg-main-blue hover:text-white transition-all"
-                  >
-                    Download / Lihat File
-                  </a>
-                )}
-                {item.video_url && (
-                  <a
-                    href={item.video_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 py-2 bg-main-orange/10 text-main-orange rounded-lg text-xs font-bold text-center hover:bg-main-orange hover:text-white transition-all"
-                  >
-                    Lihat Video
-                  </a>
-                )}
+              
+              <div className="mt-auto p-8 pt-0">
+                <div className="flex flex-col gap-3">
+                  {item.file_url && (
+                    <a
+                      href={item.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full py-4 bg-gradient-to-r from-main-blue to-indigo-600 text-white rounded-2xl text-[10px] font-black tracking-widest text-center uppercase shadow-lg shadow-main-blue/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                      Buka Dokumen
+                    </a>
+                  )}
+                  {item.video_url && (
+                    <a
+                      href={item.video_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full py-4 bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-2xl text-[10px] font-black tracking-widest text-center uppercase shadow-lg shadow-orange-500/20 hover:scale-105 active:scale-95 transition-all"
+                    >
+                      Putar Materi
+                    </a>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))
@@ -7483,7 +7549,7 @@ function TeacherAttendance() {
     try {
       const { error } = await supabase
         .from("training_attendance")
-        .insert([{ training_id: trainingId }]); // user_id will be handled by RLS or manually if needed
+        .insert([{ training_id: trainingId }]); // user_id handled by RLS if configured
       if (error) throw error;
       await alert("Absensi Berhasil Dicatat!", "Sukses", "success");
     } catch (err: any) {
@@ -7492,50 +7558,81 @@ function TeacherAttendance() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
-          <CheckSquare className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold font-heading">Presensi Pelatihan</h2>
-          <p className="text-xs text-gray-500">
-            Lakukan absensi pada pelatihan yang sedang berlangsung.
-          </p>
+    <div className="space-y-10">
+      {/* Modern Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-600 p-10 rounded-[3rem] shadow-2xl shadow-emerald-500/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-yellow-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/30 shadow-2xl">
+              <CheckSquare className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Waktu Presensi</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Presensi Pelatihan
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Catat kehadiran Anda secara digital untuk setiap sesi pelatihan yang sedang berlangsung.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-gray-400">
-          Memuat pelatihan aktif...
+        <div className="py-20 text-center">
+          <div className="animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Memverifikasi Program...</p>
         </div>
       ) : trainings.length === 0 ? (
-        <div className="bg-gray-50/50 p-10 rounded-3xl text-center border-2 border-dashed border-gray-200">
-          <Activity className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 font-medium">
-            Tidak ada pelatihan yang sedang berlangsung saat ini.
+        <div className="bg-gray-50/50 p-16 rounded-[3rem] text-center border-2 border-dashed border-gray-200">
+          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl text-gray-200 border border-gray-100">
+             <Activity className="w-10 h-10" />
+          </div>
+          <p className="text-gray-500 font-bold text-lg mb-2">
+            Tidak ada pelatihan aktif saat ini.
+          </p>
+          <p className="text-gray-400 text-sm max-w-sm mx-auto">
+            Silakan periksa jadwal pelatihan mendatang untuk melakukan pendaftaran terlebih dahulu.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {trainings.map((t) => (
-            <div
+            <motion.div
+              whileHover={{ scale: 1.02 }}
               key={t.id}
-              className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex justify-between items-center"
+              className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6 group"
             >
-              <div>
-                <h3 className="font-bold text-soft-black">{t.title}</h3>
-                <p className="text-xs text-gray-500">
-                  {t.location} | {new Date(t.date_start).toLocaleDateString()}
-                </p>
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-inner">
+                   <Clock className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="font-black text-soft-black text-xl mb-1 group-hover:text-emerald-600 transition-colors">{t.title}</h3>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                       <MapPin className="w-3 h-3" /> {t.location}
+                    </span>
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
+                       <Calendar className="w-3 h-3" /> {new Date(t.date_start).toLocaleDateString("id-ID")}
+                    </span>
+                  </div>
+                </div>
               </div>
               <button
                 onClick={() => handleAbsen(t.id)}
-                className="px-6 py-2 bg-main-blue text-white rounded-xl font-bold text-sm shadow-lg shadow-main-blue/20"
+                className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
               >
-                Absen Sekarang
+                Konfirmasi Kehadiran
               </button>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
@@ -7583,38 +7680,49 @@ function ForumSystem({ user }: { user: any }) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-main-blue/10 rounded-2xl flex items-center justify-center text-main-blue">
-            <MessageSquare className="w-6 h-6" />
+    <div className="space-y-10">
+      {/* Modern Forum Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-700 to-violet-800 p-10 rounded-[3rem] shadow-2xl shadow-indigo-500/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/30 shadow-2xl">
+              <MessageSquare className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Kolaborasi Aktif</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Forum Diskusi
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Ruang kolektif untuk berbagi ide, memecahkan masalah, dan menginspirasi sesama pendidik di Gugus 3.
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold font-heading">
-              Forum Diskusi KKG
-            </h2>
-            <p className="text-xs text-gray-500">
-              Ruang berbagi ide, pertanyaan, dan pengalaman antar guru.
-            </p>
-          </div>
+          
+          {activeView === "list" ? (
+            <button
+              onClick={() => setActiveView("create")}
+              className="bg-white text-indigo-700 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3"
+            >
+              <PlusCircle className="w-5 h-5" />
+              Mulai Diskusi Baru
+            </button>
+          ) : (
+            <button
+              onClick={() => setActiveView("list")}
+              className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all flex items-center gap-3"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Kembali ke Daftar
+            </button>
+          )}
         </div>
-        {activeView === "list" ? (
-          <button
-            onClick={() => setActiveView("create")}
-            className="px-6 py-2.5 bg-main-blue text-white rounded-xl font-bold shadow-lg shadow-main-blue/20 flex items-center gap-2"
-          >
-            <PlusCircle className="w-4 h-4" />
-            Buat Topik Baru
-          </button>
-        ) : (
-          <button
-            onClick={() => setActiveView("list")}
-            className="px-6 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Kembali ke Daftar
-          </button>
-        )}
       </div>
 
       {loading ? (
@@ -7997,89 +8105,104 @@ function TeacherJadwalCards() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex items-center gap-4">
-        <div className="w-12 h-12 bg-main-orange/10 rounded-2xl flex items-center justify-center text-main-orange">
-          <Calendar className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="text-xl font-bold font-heading">
-            Jadwal Kegiatan KKG
-          </h2>
-          <p className="text-xs text-gray-500">
-            Daftar agenda kegiatan yang akan datang.
-          </p>
+    <div className="space-y-10">
+      {/* Modern Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-orange-400 via-red-500 to-pink-600 p-10 rounded-[3rem] shadow-2xl shadow-orange-500/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/30 shadow-2xl">
+              <Calendar className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Informasi Agenda</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Jadwal Kegiatan
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Pantau agenda kegiatan KKG mendatang agar tidak terlewatkan sesi kolaborasi penting.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="py-20 text-center text-gray-400">Memuat jadwal...</div>
+        <div className="py-20 text-center">
+          <div className="animate-spin w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Menyiapkan Jadwal...</p>
+        </div>
       ) : agendas.length === 0 ? (
-        <div className="bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
-          <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500">Belum ada agenda kegiatan mendatang.</p>
+        <div className="bg-gray-50/50 p-16 rounded-[3rem] text-center border-2 border-dashed border-gray-200">
+          <Calendar className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+          <p className="text-gray-500 font-bold italic">Belum ada agenda kegiatan mendatang.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {agendas.map((item) => (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -10 }}
               key={item.id}
-              className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-main-orange/5 transition-all group"
+              className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200 border border-gray-100 overflow-hidden flex flex-col group h-full relative"
             >
-              <div className="bg-main-orange/5 p-6 border-b border-orange-50">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="w-12 h-12 bg-white rounded-2xl flex flex-col items-center justify-center shadow-sm border border-orange-100">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase leading-none">
+              {/* Top Section with Date Badge */}
+              <div className="bg-gradient-to-br from-gray-50 to-white p-8 border-b border-gray-50 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
+                
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-16 h-16 bg-white rounded-[1.25rem] flex flex-col items-center justify-center shadow-xl border border-gray-100 group-hover:border-orange-200 transition-colors">
+                    <span className="text-[10px] font-black text-gray-400 uppercase leading-none">
                       {new Date(item.date).toLocaleString("id-ID", {
                         month: "short",
                       })}
                     </span>
-                    <span className="text-lg font-bold text-main-orange leading-none mt-1">
+                    <span className="text-3xl font-black text-orange-500 leading-none mt-1 group-hover:scale-110 transition-transform">
                       {new Date(item.date).getDate()}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full border border-orange-100">
-                    <PenTool className="w-3 h-3 text-main-orange" />
-                    <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">
+                  <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm">
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
                       {item.type || "Kegiatan"}
                     </span>
                   </div>
                 </div>
-                <h3 className="font-bold text-soft-black text-lg group-hover:text-main-orange transition-colors line-clamp-2 min-h-[3.5rem]">
+                <h3 className="font-black text-soft-black text-xl group-hover:text-orange-600 transition-colors line-clamp-2 min-h-[3.5rem] leading-tight">
                   {item.title}
                 </h3>
               </div>
 
-              <div className="p-6 space-y-4">
-                <div className="flex items-center gap-3 text-gray-500">
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <PenTool className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <div className="text-xs">
-                    <p className="text-gray-400 font-medium">Lokasi / Media</p>
-                    <p className="font-bold text-soft-black">
-                      {item.location || "Online / Sekolah"}
-                    </p>
-                  </div>
+              <div className="p-8 space-y-6 flex-1 flex flex-col">
+                <div className="space-y-4">
+                   <div className="flex items-center gap-4 group/item">
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover/item:bg-orange-50 group-hover/item:text-orange-500 transition-colors">
+                        <MapPin className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Lokasi</p>
+                        <p className="text-sm font-bold text-soft-black line-clamp-1">{item.location || "Sekolah / Online"}</p>
+                      </div>
+                   </div>
+
+                   <div className="flex items-center gap-4 group/item">
+                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover/item:bg-orange-50 group-hover/item:text-orange-500 transition-colors">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Waktu</p>
+                        <p className="text-sm font-bold text-soft-black">Pukul {item.time || "08:00"} WIB</p>
+                      </div>
+                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-gray-500">
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                  </div>
-                  <div className="text-xs">
-                    <p className="text-gray-400 font-medium">Waktu</p>
-                    <p className="font-bold text-soft-black">
-                      Pukul {item.time || "08:00"} - Selesai
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-gray-50">
-                  <p className="text-xs text-gray-400 mb-2 leading-relaxed line-clamp-3">
-                    {item.description || "Tidak ada deskripsi tambahan."}
+                <div className="pt-6 border-t border-gray-50 mt-auto">
+                  <p className="text-xs text-gray-500 italic leading-relaxed line-clamp-3">
+                    "{item.description || "Agenda rutin pengembangan keprofesian berkelanjutan."}"
                   </p>
                 </div>
               </div>

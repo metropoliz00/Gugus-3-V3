@@ -82,32 +82,45 @@ export function SharingPractices({ user }: { user: any }) {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center bg-white/60 backdrop-blur-md p-8 rounded-[3rem] border border-gray-100 shadow-2xl shadow-blue-500/5">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-main-blue/10 rounded-full mb-3">
-             <Award className="w-3 h-3 text-main-blue" />
-             <span className="text-[10px] font-black text-main-blue uppercase tracking-widest">Inspirasi Kolektif</span>
+    <div className="space-y-10">
+      {/* Modern Sharing Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-indigo-600 to-violet-700 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/30 shadow-2xl">
+              <Award className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/30 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Inspirasi Kolektif</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Sharing Praktik Baik
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Wadah kolaborasi untuk berbagi inovasi pengajaran guna memajukan pendidikan di lingkungan Gugus 3.
+              </p>
+            </div>
           </div>
-          <h2 className="text-3xl font-black font-heading text-soft-black leading-tight">
-            Sharing Praktik Baik
-          </h2>
-          <p className="text-sm text-gray-500 font-medium">
-            Berbagi inspirasi mengajar untuk memajukan pendidikan di lingkungan Gugus 3.
-          </p>
+          
+          <button
+            onClick={handleAdd}
+            disabled={isAdding}
+            className="group relative bg-white text-main-blue px-10 py-5 rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-black/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-main-blue opacity-0 group-hover:opacity-5 transition-opacity" />
+            {isAdding ? (
+              <div className="w-5 h-5 border-2 border-main-blue/30 border-t-main-blue rounded-full animate-spin" />
+            ) : (
+              <PlusCircle className="w-5 h-5" />
+            )}
+            {isAdding ? "Menyiapkan..." : "Bagikan Karya"}
+          </button>
         </div>
-        <button
-          onClick={handleAdd}
-          disabled={isAdding}
-          className="flex items-center gap-3 bg-gradient-to-r from-main-blue to-indigo-600 text-white px-8 py-4 rounded-[1.5rem] text-sm font-black transition-all shadow-xl shadow-main-blue/30 hover:scale-105 active:scale-95 disabled:opacity-50"
-        >
-          {isAdding ? (
-            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          ) : (
-            <PlusCircle className="w-5 h-5" />
-          )}
-          {isAdding ? "Memproses..." : "Bagikan Inspirasi"}
-        </button>
       </div>
 
       {/* Modal for Editing/Adding */}
