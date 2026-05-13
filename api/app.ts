@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
+import { createServer as createViteServer } from "vite";
 
 dotenv.config();
 
@@ -328,6 +329,7 @@ app.get("/api/debug/list-users", async (req, res) => {
 
 app.post("/api/admin/update-user", async (req, res) => {
   const { id, username, email, role, nama, nip, kepegawaian, pangkat, jabatan, sekolah, password, foto } = req.body;
+  console.log("Updating user:", req.body);
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
@@ -506,12 +508,28 @@ app.delete("/api/finance/records/:id", async (req, res) => {
 });
 
 // For production static serving
-if (process.env.NODE_ENV === "production") {
+async function startServer() {
+  if (process.env.NODE_ENV !== "production") {
+    // Vite middleware for development
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
+  } else {
+    // Production static serving
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
 }
+
+startServer();
 
 export default app;
