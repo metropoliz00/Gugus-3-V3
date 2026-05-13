@@ -1644,7 +1644,9 @@ function AdminUserManagement() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {previewUsers.map((user, idx) => {
-                    const isDuplicate = previewUsers.some((u, i) => i !== idx && u.username === user.username);
+                    const isDuplicateInExcel = previewUsers.some((u, i) => i !== idx && u.username === user.username);
+                    const alreadyExistsInDB = userList.some(u => u.username === user.username);
+                    const isDuplicate = isDuplicateInExcel || alreadyExistsInDB;
                     const hasMissingInfo = !user.nama || !user.username;
                     
                     return (
@@ -1660,7 +1662,8 @@ function AdminUserManagement() {
                         </td>
                         <td className={`p-4 font-mono text-xs ${isDuplicate ? 'text-red-600 font-bold' : 'text-blue-600'}`}>
                           {user.username}
-                          {isDuplicate && <span className="ml-1 text-[8px] uppercase">(Duplikat)</span>}
+                          {isDuplicateInExcel && <span className="ml-1 text-[8px] uppercase">(Duplikat Excel)</span>}
+                          {alreadyExistsInDB && <span className="ml-1 text-[8px] uppercase">(Sudah ada di Sistem)</span>}
                         </td>
                         <td className="p-4 font-mono text-xs text-gray-500">
                           {user.email}
@@ -1732,19 +1735,6 @@ function AdminUserManagement() {
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase">
-                  Email (Opsional)
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="guru@example.com"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
                   Password
                 </label>
                 <input
@@ -1759,18 +1749,16 @@ function AdminUserManagement() {
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase">
-                  Peran (Role)
+                  Email (Opsional)
                 </label>
-                <select
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none bg-white"
-                  value={formData.role}
+                <input
+                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                  value={formData.email}
                   onChange={(e) =>
-                    setFormData({ ...formData, role: e.target.value })
+                    setFormData({ ...formData, email: e.target.value })
                   }
-                >
-                  <option value="guru">Guru</option>
-                  <option value="admin">Administrator</option>
-                </select>
+                  placeholder="guru@example.com"
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-500 uppercase">
@@ -1796,6 +1784,47 @@ function AdminUserManagement() {
                     setFormData({ ...formData, nip: e.target.value })
                   }
                   placeholder="NIP (jika ada)"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Peran (Role)
+                </label>
+                <select
+                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none bg-white"
+                  value={formData.role}
+                  onChange={(e) =>
+                    setFormData({ ...formData, role: e.target.value })
+                  }
+                >
+                  <option value="guru">Guru</option>
+                  <option value="admin">Administrator</option>
+                </select>
+              </div>
+              <div className="space-y-1 lg:col-span-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Sekolah
+                </label>
+                <input
+                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                  value={formData.sekolah}
+                  onChange={(e) =>
+                    setFormData({ ...formData, sekolah: e.target.value })
+                  }
+                  placeholder="Asal Sekolah"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-500 uppercase">
+                  Jabatan
+                </label>
+                <input
+                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                  value={formData.jabatan}
+                  onChange={(e) =>
+                    setFormData({ ...formData, jabatan: e.target.value })
+                  }
+                  placeholder="e.g. Guru Kelas IV"
                 />
               </div>
               <div className="space-y-1">
@@ -1827,32 +1856,6 @@ function AdminUserManagement() {
                     setFormData({ ...formData, pangkat: e.target.value })
                   }
                   placeholder="e.g. Penata / IIIc"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Jabatan
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.jabatan}
-                  onChange={(e) =>
-                    setFormData({ ...formData, jabatan: e.target.value })
-                  }
-                  placeholder="e.g. Guru Kelas IV"
-                />
-              </div>
-              <div className="space-y-1 lg:col-span-3">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Sekolah
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.sekolah}
-                  onChange={(e) =>
-                    setFormData({ ...formData, sekolah: e.target.value })
-                  }
-                  placeholder="Asal Sekolah"
                 />
               </div>
               <div className="md:col-span-2 lg:col-span-3 flex justify-end gap-3 pt-4">

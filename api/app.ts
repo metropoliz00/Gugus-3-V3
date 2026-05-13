@@ -48,8 +48,29 @@ app.post("/api/admin/bulk-create-users", async (req, res) => {
     const results = [];
     const errors = [];
 
+    // Pre-fetch existing usernames and emails to avoid trigger-level conflicts
+    const { data: existingProfiles } = await supabaseAdmin
+      .from('user_profiles')
+      .select('username, email');
+    
+    const existingUsernames = new Set(existingProfiles?.map(p => p.username.toLowerCase()) || []);
+    const existingEmails = new Set(existingProfiles?.map(p => p.email?.toLowerCase()) || []);
+
     for (const user of users) {
       try {
+        const usernameLower = user.username.toLowerCase();
+        const emailLower = user.email.toLowerCase();
+
+        if (existingUsernames.has(usernameLower)) {
+          errors.push({ username: user.username, error: "Username sudah terdaftar di sistem." });
+          continue;
+        }
+
+        if (existingEmails.has(emailLower)) {
+          errors.push({ username: user.username, error: "Email sudah terdaftar di sistem." });
+          continue;
+        }
+
         // Create Auth User
         const { data, error: authError } = await supabaseAdmin.auth.admin.createUser({
           email: user.email,
@@ -163,6 +184,18 @@ app.post("/api/setup/create-user", async (req, res) => {
 
   try {
     const supabaseAdmin = getSupabaseAdmin();
+
+    // Check if username already exists in profiles
+    const { data: existingUser } = await supabaseAdmin
+      .from('user_profiles')
+      .select('id')
+      .eq('username', username)
+      .single();
+    
+    if (existingUser) {
+      return res.status(400).json({ error: `Username '${username}' sudah digunakan oleh akun lain.` });
+    }
+
     // Use a unique dummy email
     const email = `${username.toLowerCase()}_${Date.now()}@gugus3melati.local`;
 
