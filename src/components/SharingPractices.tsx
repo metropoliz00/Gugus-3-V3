@@ -3,23 +3,27 @@ import { supabase } from '../lib/supabase';
 import { PlusCircle, X, Award, Play, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ImageUpload from './ImageUpload';
+import { useAlert } from '../contexts/AlertContext';
 
 export function SharingPractices({ user }: { user: any }) {
   const [practices, setPractices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const { alert } = useAlert();
 
   useEffect(() => {
     async function loadPractices() {
       if (!supabase) return;
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("best_practices")
-          .select("*")
+          .select("*, user_profiles(nama, full_name, username, foto)")
           .order("created_at", { ascending: false });
+        
+        if (error) throw error;
         setPractices(data || []);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching sharing practices:", err);
       } finally {
         setIsLoading(false);
@@ -30,54 +34,84 @@ export function SharingPractices({ user }: { user: any }) {
 
   const handleAdd = async () => {
     if (!supabase || isAdding) return;
+    
+    if (!user || !user.id) {
+       await alert("Sesi anda berakhir atau data user tidak lengkap. Harap login kembali.", "Error", "error");
+       return;
+    }
+
     setIsAdding(true);
     try {
       const newPractice = {
         user_id: user.id,
         title: "Praktik Baik Baru",
-        author_name: user.nama || user.full_name || user.username || "Guru Gugus 3",
         description: "Bagikan pengalaman mengajar Anda di sini...",
-        image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80",
+        thumbnail_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80",
       };
+      
       const { data, error } = await supabase
         .from("best_practices")
         .insert([newPractice])
-        .select();
+        .select("*, user_profiles(nama, full_name, username, foto)");
       
       if (error) throw error;
-      if (data) {
+      if (data && data.length > 0) {
         setPractices([data[0], ...practices]);
         setEditingId(data[0].id);
-        // Scroll to top to see the new form
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        await alert("Draft praktik baik berhasil dibuat. Silakan lengkapi detailnya.", "Sukses", "success");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error adding practice:", err);
+      await alert(`Gagal menambah praktik baik: ${err.message}`, "Kesalahan", "error");
     } finally {
       setIsAdding(false);
     }
   };
 
   const handleUpdate = async (id: string, updates: any) => {
-    const { error } = await supabase
-      .from("best_practices")
-      .update(updates)
-      .eq("id", id);
-    if (!error) {
+    try {
+      // Map UI field names to DB field names if necessary
+      const dbUpdates = { ...updates };
+      if (dbUpdates.image_url) {
+        dbUpdates.thumbnail_url = dbUpdates.image_url;
+        delete dbUpdates.image_url;
+      }
+      if (dbUpdates.author_name) {
+        delete dbUpdates.author_name; // This is from join, not updatable directly here
+      }
+
+      const { error } = await supabase
+        .from("best_practices")
+        .update(dbUpdates)
+        .eq("id", id);
+      
+      if (error) throw error;
+      
       setPractices(
         practices.map((p) => (p.id === id ? { ...p, ...updates } : p)),
       );
+    } catch (err: any) {
+      console.error("Error updating practice:", err);
+      await alert(`Gagal memperbarui: ${err.message}`, "Kesalahan", "error");
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Hapus praktik baik ini?")) return;
-    const { error } = await supabase
-      .from("best_practices")
-      .delete()
-      .eq("id", id);
-    if (!error) {
+    try {
+      const { error } = await supabase
+        .from("best_practices")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+      
       setPractices(practices.filter((p) => p.id !== id));
+      await alert("Praktik baik berhasil dihapus.", "Sukses", "success");
+    } catch (err: any) {
+      console.error("Error deleting practice:", err);
+      await alert(`Gagal menghapus: ${err.message}`, "Kesalahan", "error");
     }
   };
 
@@ -151,7 +185,7 @@ export function SharingPractices({ user }: { user: any }) {
                   </button>
                 </div>
 
-                <div className="p-8 overflow-y-auto space-y-6 modern-scrollbar">
+                 <div className="p-8 overflow-y-auto space-y-6 modern-scrollbar">
                   {practices.filter(p => p.id === editingId).map(p => (
                     <div key={p.id} className="space-y-6">
                       <div className="group">
@@ -164,13 +198,11 @@ export function SharingPractices({ user }: { user: any }) {
                         />
                       </div>
                       <div className="group">
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Nama Penulis</label>
-                        <input
-                          className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
-                          value={p.author_name || ""}
-                          onChange={(e) => handleUpdate(p.id, { author_name: e.target.value })}
-                          placeholder="Ketik Nama Lengkap Anda"
-                        />
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Nama Penulis</label>
+                        <div className="w-full bg-gray-100/50 border-2 border-transparent rounded-2xl p-4 text-sm font-bold text-gray-400 cursor-not-allowed">
+                          {p.user_profiles?.nama || p.user_profiles?.full_name || p.user_profiles?.username || "Profil Anda"}
+                        </div>
+                        <p className="text-[9px] text-gray-400 mt-2 ml-1 italic">*Nama penulis diambil otomatis dari profil akun Anda.</p>
                       </div>
                       <div className="group">
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Deskripsi Inspirasi</label>
@@ -184,7 +216,7 @@ export function SharingPractices({ user }: { user: any }) {
                       <div className="pt-2">
                         <ImageUpload
                           label="Upload Foto Sampul"
-                          value={p.image_url || ""}
+                          value={p.image_url || p.thumbnail_url || ""}
                           onChange={(url) => handleUpdate(p.id, { image_url: url })}
                         />
                       </div>
@@ -213,7 +245,12 @@ export function SharingPractices({ user }: { user: any }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 pb-20">
-          {practices.map((p) => (
+          {practices.map((p) => {
+            const author = p.user_profiles;
+            const authorName = author?.nama || author?.full_name || author?.username || "Guru Gugus 3";
+            const imageUrl = p.thumbnail_url || p.image_url || "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&q=80";
+
+            return (
             <motion.div
               key={p.id}
               initial={{ opacity: 0, y: 20 }}
@@ -224,7 +261,7 @@ export function SharingPractices({ user }: { user: any }) {
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                 style={{
-                  backgroundImage: `url(${p.image_url || "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&q=80"})`,
+                  backgroundImage: `url(${imageUrl})`,
                 }}
               />
               {/* Gradient Overlay */}
@@ -278,17 +315,22 @@ export function SharingPractices({ user }: { user: any }) {
                     <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest leading-none mb-2">Penulis</p>
                     <div className="flex items-center justify-end gap-3 text-white">
                       <span className="text-base font-black truncate max-w-[140px] drop-shadow-lg">
-                        {p.author_name || "Guru Gugus 3"}
+                        {authorName}
                       </span>
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-main-blue to-leaf-green flex items-center justify-center shadow-xl border border-white/10">
-                        <Award className="w-4 h-4 text-white" />
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-main-blue to-leaf-green flex items-center justify-center shadow-xl border border-white/10 overflow-hidden">
+                        {author?.foto ? (
+                          <img src={author.foto} className="w-full h-full object-cover" alt={authorName} />
+                        ) : (
+                          <Award className="w-4 h-4 text-white" />
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
