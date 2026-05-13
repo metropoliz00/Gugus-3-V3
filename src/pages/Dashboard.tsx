@@ -2647,7 +2647,7 @@ function GuruOverview({ user }: { user: any }) {
     <div className="space-y-10">
       {/* Guru Clean Header */}
       <div className="bg-white p-8 rounded-[2rem] border-l-8 border-main-blue shadow-sm mb-10 flex flex-col md:flex-row items-center gap-8">
-        <div className="w-24 h-24 rounded-3xl bg-gray-100 p-1 overflow-hidden shadow-inner shrink-0 scale-95 border border-gray-200">
+        <div className="w-[90px] h-[120px] rounded-3xl bg-gray-100 p-1 overflow-hidden shadow-inner shrink-0 scale-95 border border-gray-200">
           <img
             src={
               user.foto ||
@@ -2663,9 +2663,10 @@ function GuruOverview({ user }: { user: any }) {
             <div className="w-1.5 h-1.5 rounded-full bg-main-blue animate-pulse" />
             <span className="text-[10px] font-black text-main-blue uppercase tracking-widest leading-none">Pendidik GUGUS 3</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-black font-heading text-soft-black mb-2">
-            Selamat Datang, {user.nama || user.full_name || "Guru"}! 👋
-          </h2>
+          <div className="text-3xl md:text-4xl font-black font-heading leading-tight mb-2">
+            <span className="text-leaf-green">Selamat Datang,</span><br/>
+            <span className="text-main-blue">{user.nama || user.full_name || "Guru"}! 👋</span>
+          </div>
           <p className="text-sm text-gray-500 font-medium max-w-lg">
             Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan di lingkungan GUGUS 3.
           </p>
