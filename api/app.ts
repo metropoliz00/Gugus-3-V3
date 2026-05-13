@@ -107,7 +107,7 @@ app.post("/api/admin/bulk-create-users", async (req, res) => {
 
           if (!profile) {
             console.log("Bulk: Trigger profile creation failed, creating manually for user:", userId);
-            // Try inserting manually. We try 'foto' first, then 'avatar_url' if it fails
+            // Try inserting manually. We try 'foto' first.
             const profileData: any = {
               id: userId,
               username: user.username,
@@ -119,19 +119,13 @@ app.post("/api/admin/bulk-create-users", async (req, res) => {
               kepegawaian: user.kepegawaian,
               pangkat: user.pangkat,
               jabatan: user.jabatan,
-              password_text: user.password
+              password_text: user.password,
+              foto: user.foto || ""
             };
 
             const { error: insertError } = await supabaseAdmin
               .from('user_profiles')
               .insert([profileData]);
-            
-            if (insertError && insertError.message.includes('foto')) {
-               // Fallback to avatar_url if 'foto' doesn't exist yet
-               delete profileData.foto;
-               profileData.avatar_url = user.foto;
-               await supabaseAdmin.from('user_profiles').insert([profileData]);
-            }
           }
 
           results.push({ username: user.username, status: "success" });
@@ -263,7 +257,7 @@ app.post("/api/setup/create-user", async (req, res) => {
           pangkat,
           jabatan,
           password_text: password,
-          avatar_url: foto
+          foto: foto || ""
         }]);
       
       if (profileError) {
@@ -345,7 +339,7 @@ app.post("/api/admin/update-user", async (req, res) => {
         pangkat,
         jabatan,
         sekolah,
-        avatar_url: foto,
+        foto: foto,
         ...(password ? { password_text: password } : {})
       })
       .eq('id', id);

@@ -1516,7 +1516,7 @@ function AdminUserManagement() {
       if (successCount === 0 && failureCount > 0) {
         alert("Peringatan: Tidak ada akun yang berhasil dibuat. Ini kemungkinan besar masalah konfigurasi database yang perlu diperbaiki dengan SQL FIX.", "Gagal Total", "error");
       } else if (failureCount > 0) {
-        alert(`Berhasil: ${successCount}, Gagal: ${failureCount}. Periksa daftar kesalahan di bawah.`, "Selesai dengan Error", "warning");
+        alert(`Berhasil: ${successCount}, Gagal: ${failureCount}. Periksa daftar kesalahan di bawah.`, "Selesai dengan Error", "info");
       } else {
         alert(`Berhasil mengimpor ${successCount} akun.`, "Sukses", "success");
       }
@@ -6124,11 +6124,11 @@ function AdminGuruForm({ user }: { user: any }) {
   const handleUpdateGuru = async (id: string, updates: any) => {
     if (!supabase) return;
     try {
-      // Map foto to avatar_url for DB
+      // Gunakan field foto untuk DB yang telah dimigrasi
       const dbUpdates = { ...updates };
-      if (dbUpdates.foto !== undefined) {
-        dbUpdates.avatar_url = dbUpdates.foto;
-        // Keep both to be safe during transition
+      // Hapus jika ada properti avatar_url bawaan lama agar tidak error
+      if ('avatar_url' in dbUpdates) {
+        delete dbUpdates.avatar_url;
       }
 
       const { error } = await supabase
