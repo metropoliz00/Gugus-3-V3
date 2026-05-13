@@ -186,6 +186,13 @@ export default function Dashboard({
   onLogout: () => void;
 }) {
   const [user, setUser] = useState(initialUser);
+
+  // Set Page Title
+  useEffect(() => {
+    const fullName = user.nama || user.full_name || user.username || "User";
+    document.title = `Dashboard ${fullName} | Gugus 3 Melati`;
+  }, [user]);
+
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
     {
@@ -460,14 +467,9 @@ export default function Dashboard({
               />
             </motion.div>
             <div>
-              <div className="flex flex-col leading-none">
-                <span className="font-heading font-black bg-clip-text text-transparent bg-gradient-to-r from-main-blue to-leaf-green text-xl">
-                  Gugus 3
-                </span>
-                <span className="font-heading font-black bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500 text-lg uppercase tracking-wider">
-                  Melati
-                </span>
-              </div>
+              <h1 className="font-heading font-black bg-clip-text text-transparent bg-gradient-to-r from-main-blue to-leaf-green text-xl leading-tight">
+                Gugus 3
+              </h1>
               <div className="mt-1">
                 <span className="text-[10px] uppercase tracking-wider text-main-blue font-bold px-2 py-0.5 bg-main-blue/10 rounded-full">
                   {user.role}
