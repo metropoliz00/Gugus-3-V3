@@ -24,6 +24,7 @@ import {
   PenTool,
   Trophy,
   Award,
+  CheckCircle,
   UploadCloud,
   Activity,
   Bell,
@@ -8062,6 +8063,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
   const [registrations, setRegistrations] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
   const [certConfig, setCertConfig] = useState<any>(null);
+  const [certRecords, setCertRecords] = useState<Record<string, any>>({});
   const [activeSubTab, setActiveSubTab] = useState<
     "daftar" | "absensi" | "sertifikat"
   >("daftar");
@@ -8094,6 +8096,18 @@ function TeacherTrainingCards({ user }: { user: any }) {
         regMap[reg.training_id] = reg;
       });
       setRegistrations(regMap);
+      
+      // Fetch User Certificate Records
+      const { data: certData } = await supabase
+        .from("training_certificates")
+        .select("*")
+        .eq("user_id", user.id);
+        
+      const certMap: Record<string, any> = {};
+      certData?.forEach((cert) => {
+        certMap[cert.training_id] = cert;
+      });
+      setCertRecords(certMap);
 
       // Fetch Certificate Config
       const { data: sData } = await supabase
@@ -8194,12 +8208,14 @@ function TeacherTrainingCards({ user }: { user: any }) {
           const randomPart = Math.floor(1000 + Math.random() * 9000);
           certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
 
-          await supabase.from("training_certificates").insert({
+          const { data: newCert } = await supabase.from("training_certificates").insert({
             user_id: user.id,
             training_id: training.id,
             certificate_number: certNumber,
             certificate_url: "Generated Individually",
-          });
+          }).select().single();
+
+          if (newCert) setCertRecords((prev) => ({ ...prev, [training.id]: newCert }));
 
           logActivity(
             user,
@@ -8501,23 +8517,29 @@ function TeacherTrainingCards({ user }: { user: any }) {
                       >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
-                            <Award className="w-6 h-6" />
+                            {certRecords[reg.training_id] ? (
+                                <CheckCircle className="w-6 h-6" />
+                            ) : (
+                                <Award className="w-6 h-6" />
+                            )}
                           </div>
                           <div>
                             <h4 className="font-bold text-soft-black text-sm">
                               {training?.title}
                             </h4>
                             <p className="text-[10px] text-gray-400">
-                              {isDownloadEnabled
-                                ? "Sertifikat tersedia untuk diunduh"
-                                : "Sertifikat belum tersedia untuk diunduh"}
+                              {certRecords[reg.training_id]
+                                ? "Sertifikat sudah diunduh"
+                                : isDownloadEnabled
+                                  ? "Sertifikat tersedia untuk diunduh"
+                                  : "Sertifikat belum tersedia untuk diunduh"}
                             </p>
                           </div>
                         </div>
                         {isDownloadEnabled && (
                           <button
                             onClick={() => handleDownload(training)}
-                            className="p-3 bg-amber-500 text-white rounded-xl hover:bg-amber-600 transition-all shadow-lg shadow-amber-500/20"
+                            className={`p-3 text-white rounded-xl transition-all shadow-lg ${certRecords[reg.training_id] ? "bg-green-500 hover:bg-green-600 shadow-green-500/20" : "bg-amber-500 hover:bg-amber-600 shadow-amber-500/20"}`}
                           >
                             <Download className="w-5 h-5" />
                           </button>
