@@ -74,6 +74,7 @@ import { logActivity, ActivityLog } from "../lib/activity";
 import AdminCertificateEditor, {
   useCertificateGenerator,
 } from "../components/AdminCertificateEditor";
+import { SharingPractices } from "../components/SharingPractices";
 
 import * as XLSX from "xlsx";
 
@@ -978,24 +979,7 @@ export default function Dashboard({
                       />
                       <Route
                         path="sharing"
-                        element={
-                          <DataManagementTable
-                            user={user}
-                            table="best_practices"
-                            title="Sharing Praktik Baik"
-                            icon={Play}
-                            fields={[
-                              { name: "title", label: "Judul" },
-                              { name: "description", label: "Deskripsi" },
-                              { name: "video_url", label: "URL Video" },
-                              {
-                                name: "file_url",
-                                label: "URL File",
-                                type: "file",
-                              },
-                            ]}
-                          />
-                        }
+                        element={<SharingPractices user={user} />}
                       />
                       <Route
                         path="hasil_karya"
@@ -5833,6 +5817,7 @@ function AdminPenghargaanForm() {
     if (!supabase) return;
     const newAward = {
       title: "Penghargaan Baru",
+      category: "Guru",
       year: new Date().getFullYear(),
       description: "Deskripsi penghargaan...",
       image_url:
@@ -5911,11 +5896,16 @@ function AdminPenghargaanForm() {
               key={item.id}
               className="flex gap-4 p-4 border border-gray-100 rounded-xl bg-gray-50 group relative"
             >
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 pr-8">
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 pr-8">
                 <div className="md:col-span-2">
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                    Judul Penghargaan
-                  </label>
+                  <div className="flex gap-2 items-center mb-1">
+                    <label className="block text-[10px] uppercase font-bold text-gray-400">
+                        Judul Penghargaan
+                    </label>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 uppercase">
+                        {item.category}
+                    </span>
+                  </div>
                   <input
                     className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
                     value={item.title}
@@ -5937,7 +5927,24 @@ function AdminPenghargaanForm() {
                     }
                   />
                 </div>
-                <div className="md:col-span-3">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    Kategori
+                  </label>
+                  <select
+                    className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                    value={item.category}
+                    onChange={(e) =>
+                      handleUpdate(item.id, { category: e.target.value })
+                    }
+                  >
+                    <option value="Siswa">Siswa</option>
+                    <option value="Guru">Guru</option>
+                    <option value="Kepala Sekolah">Kepala Sekolah</option>
+                    <option value="Sekolah">Sekolah</option>
+                  </select>
+                </div>
+                <div className="md:col-span-4">
                   <ImageUpload
                     label="Foto Penghargaan"
                     value={item.image_url || ""}
@@ -5947,6 +5954,8 @@ function AdminPenghargaanForm() {
                     maxWidth={600}
                     maxHeight={400}
                   />
+                </div>
+
                 </div>
                 <div className="md:col-span-3">
                   <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
