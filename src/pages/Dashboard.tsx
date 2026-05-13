@@ -205,7 +205,31 @@ export default function Dashboard({
 
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [readIds, setReadIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem("readNotifs");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const notificationRef = useRef<HTMLDivElement>(null);
+
+  const hasUnread = notifications.some(
+    (n) => !readIds.includes(`${n.type}-${n.id}`),
+  );
+
+  const handleOpenNotifications = () => {
+    if (!isNotificationsOpen) {
+      // Mark all displayed notifications as read
+      const newReadIds = Array.from(
+        new Set([...readIds, ...notifications.map((n) => `${n.type}-${n.id}`)]),
+      );
+      setReadIds(newReadIds);
+      localStorage.setItem("readNotifs", JSON.stringify(newReadIds));
+    }
+    setNotificationsOpen(!isNotificationsOpen);
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -597,11 +621,11 @@ export default function Dashboard({
           <div className="flex items-center gap-4 md:gap-6">
             <div className="relative" ref={notificationRef}>
               <button
-                onClick={() => setNotificationsOpen(!isNotificationsOpen)}
+                onClick={handleOpenNotifications}
                 className="relative p-2 text-gray-400 hover:text-main-blue hover:bg-main-blue/5 rounded-xl transition-all"
               >
                 <Bell className="w-6 h-6" />
-                {notifications.length > 0 && (
+                {hasUnread && (
                   <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                 )}
               </button>
