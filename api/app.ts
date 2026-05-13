@@ -3,15 +3,13 @@ import path from "path";
 import fs from "fs";
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
-import { createServer as createViteServer } from "vite";
 
 dotenv.config();
 
 export const app = express();
 const PORT = 3000;
 
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json());
 
 // Lazy initialization for Supabase Admin client
 let _supabaseAdmin: any = null;
@@ -251,36 +249,24 @@ app.post("/api/setup/create-user", async (req, res) => {
 
     if (!profile) {
       console.log("Trigger profile creation failed, creating manually for user:", userId);
-      const insertData: any = {
-        id: userId,
-        username,
-        email,
-        role: role === 'admin' ? 'admin' : 'guru',
-        nama: nama || username,
-        sekolah,
-        nip,
-        kepegawaian,
-        pangkat,
-        jabatan,
-        password_text: password,
-        foto
-      };
-
       const { error: profileError } = await supabaseAdmin
         .from('user_profiles')
-        .insert([insertData]);
+        .insert([{
+          id: userId,
+          username,
+          email,
+          role: role === 'admin' ? 'admin' : 'guru',
+          nama: nama || username,
+          sekolah,
+          nip,
+          kepegawaian,
+          pangkat,
+          jabatan,
+          password_text: password,
+          avatar_url: foto
+        }]);
       
-      if (profileError && profileError.message.includes('foto')) {
-        delete insertData.foto;
-        insertData.avatar_url = foto;
-        const { error: fallbackError } = await supabaseAdmin
-          .from('user_profiles')
-          .insert([insertData]);
-        
-        if (fallbackError) {
-          console.error("Manual profile creation error (fallback):", fallbackError);
-        }
-      } else if (profileError) {
+      if (profileError) {
         console.error("Manual profile creation error:", profileError);
       }
     }
@@ -330,67 +316,41 @@ app.get("/api/debug/list-users", async (req, res) => {
 
 app.post("/api/admin/update-user", async (req, res) => {
   const { id, username, email, role, nama, nip, kepegawaian, pangkat, jabatan, sekolah, password, foto } = req.body;
-  console.log("Updating user:", req.body);
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
-    const authUpdates: any = {};
-    if (email !== undefined) authUpdates.email = email;
-    if (password) authUpdates.password = password; // password cannot be empty string
-    
-    // Auth metadata
-    const userMetadata: any = {};
-    if (role !== undefined) userMetadata.role = role;
-    if (nama !== undefined) userMetadata.nama = nama;
-    if (sekolah !== undefined) userMetadata.school = sekolah;
-    if (password) userMetadata.password_text = password;
-    
-    if (Object.keys(userMetadata).length > 0) {
-      authUpdates.user_metadata = userMetadata;
+    // Update Auth
+    const authUpdates: any = {
+      email,
+      user_metadata: { role, nama, school: sekolah }
+    };
+    if (password) {
+      authUpdates.password = password;
+      authUpdates.user_metadata.password_text = password;
     }
 
-    if (Object.keys(authUpdates).length > 0) {
-      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
-      if (authError) throw authError;
-    }
+    const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
+    if (authError) throw authError;
     
     // Update Profile
-    const profileUpdates: any = {};
-    if (username !== undefined) profileUpdates.username = username;
-    if (email !== undefined) profileUpdates.email = email;
-    if (role !== undefined) profileUpdates.role = role;
-    if (nama !== undefined) profileUpdates.nama = nama;
-    if (nip !== undefined) profileUpdates.nip = nip;
-    if (kepegawaian !== undefined) profileUpdates.kepegawaian = kepegawaian;
-    if (pangkat !== undefined) profileUpdates.pangkat = pangkat;
-    if (jabatan !== undefined) profileUpdates.jabatan = jabatan;
-    if (sekolah !== undefined) profileUpdates.sekolah = sekolah;
-    if (foto !== undefined) profileUpdates.foto = foto;
-    if (password) profileUpdates.password_text = password;
-
-    if (Object.keys(profileUpdates).length === 0) {
-      return res.json({ success: true, message: "No profile updates provided" });
-    }
-
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
-      .update(profileUpdates)
+      .update({
+        username,
+        email,
+        role,
+        nama,
+        nip,
+        kepegawaian,
+        pangkat,
+        jabatan,
+        sekolah,
+        avatar_url: foto,
+        ...(password ? { password_text: password } : {})
+      })
       .eq('id', id);
       
-    if (profileError && profileError.message.includes('foto')) {
-      // Fallback to avatar_url
-      delete profileUpdates.foto;
-      profileUpdates.avatar_url = foto;
-      
-      const { error: fallbackError } = await supabaseAdmin
-        .from('user_profiles')
-        .update(profileUpdates)
-        .eq('id', id);
-        
-      if (fallbackError) throw fallbackError;
-    } else if (profileError) {
-      throw profileError;
-    }
+    if (profileError) throw profileError;
     
     res.json({ success: true });
   } catch (err: any) {
@@ -509,28 +469,12 @@ app.delete("/api/finance/records/:id", async (req, res) => {
 });
 
 // For production static serving
-async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
-    // Vite middleware for development
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    // Production static serving
+if (process.env.NODE_ENV === "production") {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
-  }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
 }
-
-startServer();
 
 export default app;
