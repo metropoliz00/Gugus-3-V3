@@ -90,7 +90,11 @@ app.post("/api/admin/bulk-create-users", async (req, res) => {
         });
 
         if (authError) {
-          errors.push({ username: user.username, error: authError.message });
+          let errorMsg = authError.message;
+          if (errorMsg.includes("Database error creating new user")) {
+            errorMsg = "Gagal membuat User. Ini kemungkinan besar disebabkan oleh Trigger Database (handle_new_user) yang bermasalah. Harap jalankan SQL FIX di dashboard Supabase.";
+          }
+          errors.push({ username: user.username, error: errorMsg });
         } else {
           const userId = data.user.id;
           
@@ -103,21 +107,31 @@ app.post("/api/admin/bulk-create-users", async (req, res) => {
 
           if (!profile) {
             console.log("Bulk: Trigger profile creation failed, creating manually for user:", userId);
-            await supabaseAdmin
+            // Try inserting manually. We try 'foto' first, then 'avatar_url' if it fails
+            const profileData: any = {
+              id: userId,
+              username: user.username,
+              email: user.email,
+              role: user.role || 'guru',
+              nama: user.nama || user.username,
+              sekolah: user.sekolah,
+              nip: user.nip,
+              kepegawaian: user.kepegawaian,
+              pangkat: user.pangkat,
+              jabatan: user.jabatan,
+              password_text: user.password
+            };
+
+            const { error: insertError } = await supabaseAdmin
               .from('user_profiles')
-              .insert([{
-                id: userId,
-                username: user.username,
-                email: user.email,
-                role: user.role || 'guru',
-                nama: user.nama || user.username,
-                sekolah: user.sekolah,
-                nip: user.nip,
-                kepegawaian: user.kepegawaian,
-                pangkat: user.pangkat,
-                jabatan: user.jabatan,
-                password_text: user.password
-              }]);
+              .insert([profileData]);
+            
+            if (insertError && insertError.message.includes('foto')) {
+               // Fallback to avatar_url if 'foto' doesn't exist yet
+               delete profileData.foto;
+               profileData.avatar_url = user.foto;
+               await supabaseAdmin.from('user_profiles').insert([profileData]);
+            }
           }
 
           results.push({ username: user.username, status: "success" });

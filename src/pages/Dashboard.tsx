@@ -1513,6 +1513,14 @@ function AdminUserManagement() {
         errors: result.errors || [],
       });
 
+      if (successCount === 0 && failureCount > 0) {
+        alert("Peringatan: Tidak ada akun yang berhasil dibuat. Ini kemungkinan besar masalah konfigurasi database yang perlu diperbaiki dengan SQL FIX.", "Gagal Total", "error");
+      } else if (failureCount > 0) {
+        alert(`Berhasil: ${successCount}, Gagal: ${failureCount}. Periksa daftar kesalahan di bawah.`, "Selesai dengan Error", "warning");
+      } else {
+        alert(`Berhasil mengimpor ${successCount} akun.`, "Sukses", "success");
+      }
+
       if (successCount > 0) {
         fetchUsers();
       }
@@ -1908,15 +1916,98 @@ function AdminUserManagement() {
               </button>
             </div>
             {uploadResult.errors && uploadResult.errors.length > 0 && (
-              <div className="mt-2 bg-white/60 p-4 rounded-xl max-h-48 overflow-y-auto">
-                <h4 className="text-xs font-bold text-red-600 uppercase mb-2">
-                  Daftar Akun Gagal:
-                </h4>
+              <div className="mt-2 bg-white/60 p-4 rounded-xl max-h-64 overflow-y-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-bold text-red-600 uppercase">
+                    Daftar Akun Gagal:
+                  </h4>
+                  {uploadResult.errors.some(e => e.error?.includes("Trigger Database")) && (
+                    <button 
+                      onClick={() => {
+                        const win = window.open("", "_blank");
+                        if (win) {
+                          win.document.write(`
+                            <html>
+                              <head>
+                                <title>SQL FIX - GUGUS 3 MELATI</title>
+                                <style>
+                                  body { font-family: monospace; background: #1a1a1a; color: #00ff00; padding: 20px; }
+                                  pre { white-space: pre-wrap; word-wrap: break-word; }
+                                  button { padding: 10px 20px; background: #00ff00; color: #000; border: none; cursor: pointer; font-weight: bold; margin-bottom: 20px; border-radius: 5px; }
+                                </style>
+                              </head>
+                              <body>
+                                <h1>SQL FIX UNTUK TRIGGER DATABASE</h1>
+                                <p>Salin kode di bawah ini dan jalankan di SQL Editor Supabase Anda.</p>
+                                <button onclick="navigator.clipboard.writeText(document.getElementById('sqlcode').innerText).then(() => alert('Teks SQL disalin!'))">SALIN KODE SQL</button>
+                                <pre id="sqlcode">
+-- 1. Pastikan kolom foto/avatar_url sinkron
+DO $$ 
+BEGIN 
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_profiles' AND column_name='avatar_url') 
+     AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_profiles' AND column_name='foto') THEN
+    ALTER TABLE public.user_profiles RENAME COLUMN avatar_url TO foto;
+  ELSIF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_profiles' AND column_name='foto') THEN
+    ALTER TABLE public.user_profiles ADD COLUMN foto TEXT;
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_profiles' AND column_name='password_text') THEN
+    ALTER TABLE public.user_profiles ADD COLUMN password_text TEXT;
+  END IF;
+END $$;
+
+-- 2. Perbaiki Trigger Function
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+DECLARE
+  default_username TEXT;
+  target_role public.user_role;
+  final_username TEXT;
+  counter INTEGER := 0;
+BEGIN
+  default_username := LEFT(COALESCE(NULLIF(new.raw_user_meta_data->>'username', ''), split_part(new.email, '@', 1)), 50);
+  final_username := default_username;
+  WHILE EXISTS (SELECT 1 FROM public.user_profiles WHERE username = final_username AND id != new.id) LOOP
+    counter := counter + 1;
+    final_username := LEFT(default_username, 40) || '_' || counter || '_' || SUBSTRING(new.id::text, 1, 4);
+  END LOOP;
+  IF (new.raw_user_meta_data->>'role' = 'admin') THEN
+    target_role := 'admin'::public.user_role;
+  ELSE
+    target_role := 'guru'::public.user_role;
+  END IF;
+  INSERT INTO public.user_profiles (id, username, email, role, nama, foto, nip, kepegawaian, pangkat, jabatan, sekolah, password_text, created_at)
+  VALUES (new.id, final_username, new.email, target_role, COALESCE(new.raw_user_meta_data->>'nama', new.raw_user_meta_data->>'full_name', final_username), COALESCE(new.raw_user_meta_data->>'foto', new.raw_user_meta_data->>'avatar_url', ''), COALESCE(new.raw_user_meta_data->>'nip', ''), COALESCE(new.raw_user_meta_data->>'kepegawaian', ''), COALESCE(new.raw_user_meta_data->>'pangkat', ''), COALESCE(new.raw_user_meta_data->>'jabatan', ''), COALESCE(new.raw_user_meta_data->>'sekolah', ''), new.raw_user_meta_data->>'password_text', now())
+  ON CONFLICT (id) DO UPDATE SET username = EXCLUDED.username, email = EXCLUDED.email, nama = EXCLUDED.nama, role = EXCLUDED.role, nip = EXCLUDED.nip, kepegawaian = EXCLUDED.kepegawaian, pangkat = EXCLUDED.pangkat, jabatan = EXCLUDED.jabatan, sekolah = EXCLUDED.sekolah, foto = EXCLUDED.foto, password_text = COALESCE(EXCLUDED.password_text, public.user_profiles.password_text);
+  RETURN new;
+EXCEPTION WHEN OTHERS THEN
+    BEGIN
+      INSERT INTO public.user_profiles (id, username, email, role)
+      VALUES (new.id, 'user_' || SUBSTRING(new.id::text, 1, 8), new.email, 'guru'::public.user_role)
+      ON CONFLICT (id) DO NOTHING;
+    EXCEPTION WHEN OTHERS THEN END;
+    RETURN new;
+END; $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+                                </pre>
+                              </body>
+                            </html>
+                          `);
+                        }
+                      }}
+                      className="px-3 py-1 bg-red-600 text-white text-[10px] font-bold rounded-lg hover:bg-red-700 animate-pulse"
+                    >
+                      SOLUSI: PERBAIKI DATABASE
+                    </button>
+                  )}
+                </div>
                 <ul className="text-xs text-red-500 space-y-1">
                   {uploadResult.errors.map((error: any, i: number) => (
-                    <li key={i}>
-                      <b>{error.username || error.email || "Unknown"}:</b>{" "}
-                      {error.error || "Gagal membuat akun."}
+                    <li key={i} className="flex gap-2">
+                      <span className="font-bold whitespace-nowrap min-w-[100px]">{error.username || error.email || "Unknown"}:</span>
+                      <span>{error.error || "Gagal membuat akun."}</span>
                     </li>
                   ))}
                 </ul>
