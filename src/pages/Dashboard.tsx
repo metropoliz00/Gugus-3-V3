@@ -8489,16 +8489,26 @@ function TeacherTrainingCards({ user }: { user: any }) {
                           {!isRegistered ? (
                             <button
                               onClick={() => handleRegister(item.id)}
-                              className="px-8 py-3 bg-main-blue text-white rounded-2xl text-xs font-black shadow-xl shadow-main-blue/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                              disabled={autoStatus === "completed"}
+                              className={`px-8 py-3 rounded-2xl text-xs font-black transition-all flex items-center gap-2 shadow-xl ${
+                                autoStatus === "completed"
+                                  ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
+                                  : "bg-main-blue text-white shadow-main-blue/20 hover:scale-105 active:scale-95"
+                              }`}
                             >
-                              <PlusCircle className="w-4 h-4" /> Daftar Sekarang
+                              <PlusCircle className="w-4 h-4" /> {autoStatus === "completed" ? "Pelatihan Selesai" : "Daftar Sekarang"}
                             </button>
                           ) : !hasAttended ? (
                             <button
                               onClick={() => handleAttendance(item.id)}
-                              className="px-8 py-3 bg-leaf-green text-white rounded-2xl text-xs font-black shadow-xl shadow-leaf-green/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                              disabled={autoStatus === "completed"}
+                              className={`px-8 py-3 rounded-2xl text-xs font-black shadow-xl transition-all flex items-center gap-2 ${
+                                autoStatus === "completed"
+                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200"
+                                  : "bg-leaf-green text-white shadow-leaf-green/20 hover:scale-105 active:scale-95"
+                              }`}
                             >
-                              <UserCheck className="w-4 h-4" /> Konfirmasi Hadir
+                              <UserCheck className="w-4 h-4" /> {autoStatus === "completed" ? "Waktu Berakhir" : "Konfirmasi Hadir"}
                             </button>
                           ) : (
                             <div className="px-6 py-3 bg-white text-gray-400 rounded-2xl text-xs font-black border border-gray-100 shadow-sm flex items-center gap-2">
