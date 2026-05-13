@@ -10,7 +10,15 @@ export function SharingPractices({ user }: { user: any }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
   const { alert } = useAlert();
+
+  const getYouTubeId = (url: string) => {
+    if (!url) return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
 
   useEffect(() => {
     async function loadPractices() {
@@ -237,6 +245,31 @@ export function SharingPractices({ user }: { user: any }) {
                           placeholder="Contoh: Metode Belajar Seru di Luar Kelas"
                         />
                       </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="group">
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Kategori</label>
+                          <select
+                            className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all appearance-none"
+                            value={p.category || "Inovasi"}
+                            onChange={(e) => handleUpdate(p.id, { category: e.target.value })}
+                          >
+                            <option value="Inovasi">Inovasi</option>
+                            <option value="Inovasi Pembelajaran">Inovasi Pembelajaran</option>
+                            <option value="Manajemen Kelas">Manajemen Kelas</option>
+                            <option value="Media Digital">Media Digital</option>
+                            <option value="Lainnya">Lainnya</option>
+                          </select>
+                        </div>
+                        <div className="group">
+                          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Link Video YouTube</label>
+                          <input
+                            className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
+                            value={p.video_url || ""}
+                            onChange={(e) => handleUpdate(p.id, { video_url: e.target.value })}
+                            placeholder="https://youtube.com/watch?v=..."
+                          />
+                        </div>
+                      </div>
                       <div className="group">
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Nama Penulis</label>
                         <div className="w-full bg-gray-100/50 border-2 border-transparent rounded-2xl p-4 text-sm font-bold text-gray-400 cursor-not-allowed">
@@ -331,7 +364,7 @@ export function SharingPractices({ user }: { user: any }) {
 
                 <div className="flex items-center gap-2 mb-6">
                   <span className="bg-leaf-green text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-leaf-green/20">
-                    Praktik Baik
+                    {p.category || "Praktik Baik"}
                   </span>
                 </div>
 
@@ -345,10 +378,19 @@ export function SharingPractices({ user }: { user: any }) {
 
                 <div className="pt-8 border-t border-white/10 flex items-center justify-between mt-auto">
                   <div className="flex items-center gap-3">
-                     <div className="w-10 h-10 rounded-full bg-main-blue/20 backdrop-blur-md flex items-center justify-center border border-main-blue/30">
-                        <Play className="w-4 h-4 text-main-blue fill-main-blue" />
-                     </div>
-                     <span className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">Inovasi</span>
+                     {p.video_url ? (
+                       <button 
+                        onClick={() => setActiveVideoUrl(p.video_url)}
+                        className="w-10 h-10 rounded-full bg-main-blue text-white flex items-center justify-center border border-white/30 shadow-lg hover:scale-110 active:scale-95 transition-all group/play"
+                       >
+                          <Play className="w-4 h-4 fill-white group-hover/play:scale-110 transition-transform" />
+                       </button>
+                     ) : (
+                       <div className="w-10 h-10 rounded-full bg-main-blue/20 backdrop-blur-md flex items-center justify-center border border-main-blue/30">
+                          <Play className="w-4 h-4 text-main-blue fill-main-blue" />
+                       </div>
+                     )}
+                     <span className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">{p.category || "Inovasi"}</span>
                   </div>
                   
                   <div className="text-right">
@@ -373,6 +415,50 @@ export function SharingPractices({ user }: { user: any }) {
           })}
         </div>
       )}
+      {/* Video Modal Player */}
+      <AnimatePresence>
+        {activeVideoUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/95 backdrop-blur-md z-[200] flex items-center justify-center p-4 md:p-10"
+            onClick={() => setActiveVideoUrl(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-5xl aspect-video bg-black rounded-[2rem] overflow-hidden shadow-[0_0_100px_rgba(31,143,229,0.3)] border border-white/10"
+            >
+              <button 
+                onClick={() => setActiveVideoUrl(null)}
+                className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md text-white flex items-center justify-center hover:bg-red-500 transition-all z-50 border border-white/20 shadow-2xl"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {getYouTubeId(activeVideoUrl) ? (
+                <iframe
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/${getYouTubeId(activeVideoUrl)}?autoplay=1`}
+                  title="Video Praktik Baik"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-white p-10 text-center">
+                  <Play className="w-20 h-20 text-main-blue mb-6 opacity-20" />
+                  <h4 className="text-2xl font-black mb-2">Video Tidak Dapat Diputar</h4>
+                  <p className="text-gray-400 max-w-md">Pastikan Anda memasukkan link YouTube yang valid. Link saat ini: <br/><span className="text-main-blue text-xs break-all">{activeVideoUrl}</span></p>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
