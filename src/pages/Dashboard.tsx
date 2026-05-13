@@ -47,6 +47,8 @@ import {
   MapPin,
   Clock,
   UserCheck,
+  User as UserIcon,
+  Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -2160,6 +2162,7 @@ function AdminOverview() {
     kegiatan: 0,
     user: 0,
     murid: 0,
+    sharing: 0,
   });
   const [activities, setActivities] = useState<ActivityLog[]>([]);
   const [chartData, setChartData] = useState<any[]>(dataChart);
@@ -2169,7 +2172,7 @@ function AdminOverview() {
     const fetchStatsAndLogs = async () => {
       setIsStatsLoading(true);
       try {
-        const [postRes, docRes, eventRes, userRes, schoolRes, logsRes] =
+        const [postRes, docRes, eventRes, userRes, schoolRes, logsRes, sharingRes] =
           await Promise.all([
             supabase
               .from("posts")
@@ -2196,6 +2199,9 @@ function AdminOverview() {
               .select("*")
               .order("created_at", { ascending: false })
               .limit(50),
+            supabase
+              .from("best_practices")
+              .select("*", { count: "exact", head: true }),
           ]);
 
         const postCount = postRes.count || 0;
@@ -2204,6 +2210,7 @@ function AdminOverview() {
         const userCount = userRes.count || 0;
         const schoolsData = schoolRes.data || [];
         const logsData = logsRes.data || [];
+        const sharingCount = sharingRes.count || 0;
 
         const totalStudents = schoolsData.reduce(
           (acc: number, curr: any) => acc + (Number(curr.student_count) || 0),
@@ -2231,6 +2238,7 @@ function AdminOverview() {
           kegiatan: eventCount || 0,
           user: userCount || 0,
           murid: totalStudents,
+          sharing: sharingCount,
         });
 
         setActivities(logsData as ActivityLog[]);
@@ -2315,6 +2323,12 @@ function AdminOverview() {
       value: isStatsLoading ? "..." : dbStats.user.toString(),
       icon: Shield,
       color: "from-indigo-500 to-violet-400",
+    },
+    {
+      label: "Praktik Baik",
+      value: isStatsLoading ? "..." : dbStats.sharing.toString(),
+      icon: Play,
+      color: "from-amber-500 to-orange-400",
     },
   ];
 
@@ -2593,6 +2607,13 @@ function GuruOverview({ user }: { user: any }) {
       color: "from-purple-500 to-fuchsia-400",
       value: `${events.length} Agenda Aktif`,
       link: "/dashboard/jadwal",
+    },
+    {
+      title: "Praktik Baik",
+      icon: Play,
+      color: "from-indigo-500 to-violet-400",
+      value: "Bagikan Inspirasi",
+      link: "/dashboard/sharing",
     },
     {
       title: "Materi KKG",
@@ -6940,7 +6961,7 @@ function UserProfileEdit({
                </div>
             </div>
             <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-main-blue rounded-full flex items-center justify-center text-white border-4 border-slate-800 shadow-xl">
-               <User className="w-5 h-5" />
+               <UserIcon className="w-5 h-5" />
             </div>
           </div>
           
@@ -6991,7 +7012,7 @@ function UserProfileEdit({
                     value={profile.nama}
                     onChange={(e) => setProfile({ ...profile, nama: e.target.value })}
                   />
-                  <User className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                  <UserIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
                 </div>
               </div>
 
