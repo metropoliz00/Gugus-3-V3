@@ -436,7 +436,7 @@ CREATE TABLE IF NOT EXISTS public.kkg_materials (
   file_url TEXT,
   category TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-  created_by UUID REFERENCES auth.users(id)
+  created_by UUID REFERENCES public.user_profiles(id)
 );
 
 CREATE TABLE IF NOT EXISTS public.meeting_minutes (
@@ -446,20 +446,20 @@ CREATE TABLE IF NOT EXISTS public.meeting_minutes (
   content TEXT,
   file_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-  created_by UUID REFERENCES auth.users(id)
+  created_by UUID REFERENCES public.user_profiles(id)
 );
 
 CREATE TABLE IF NOT EXISTS public.training_certificates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   training_id UUID REFERENCES public.trainings(id),
-  user_id UUID REFERENCES auth.users(id),
+  user_id UUID REFERENCES public.user_profiles(id),
   certificate_url TEXT NOT NULL,
   issued_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 CREATE TABLE IF NOT EXISTS public.forum_posts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id),
+  user_id UUID REFERENCES public.user_profiles(id),
   title TEXT NOT NULL,
   content TEXT NOT NULL,
   category TEXT,
@@ -469,14 +469,14 @@ CREATE TABLE IF NOT EXISTS public.forum_posts (
 CREATE TABLE IF NOT EXISTS public.forum_comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   post_id UUID REFERENCES public.forum_posts(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES auth.users(id),
+  user_id UUID REFERENCES public.user_profiles(id),
   content TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 CREATE TABLE IF NOT EXISTS public.best_practices (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id),
+  user_id UUID REFERENCES public.user_profiles(id),
   title TEXT NOT NULL,
   description TEXT,
   video_url TEXT,
@@ -487,7 +487,7 @@ CREATE TABLE IF NOT EXISTS public.best_practices (
 
 CREATE TABLE IF NOT EXISTS public.teacher_works (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id),
+  user_id UUID REFERENCES public.user_profiles(id),
   title TEXT NOT NULL,
   description TEXT,
   file_url TEXT,

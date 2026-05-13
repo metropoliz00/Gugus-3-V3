@@ -16,15 +16,42 @@ export function SharingPractices({ user }: { user: any }) {
     async function loadPractices() {
       if (!supabase) return;
       try {
-        const { data, error } = await supabase
+        // Step 1: Fetch best practices
+        const { data: practicesData, error: practicesError } = await supabase
           .from("best_practices")
-          .select("*, user_profiles(nama, full_name, username, foto)")
+          .select("*")
           .order("created_at", { ascending: false });
         
-        if (error) throw error;
-        setPractices(data || []);
+        if (practicesError) throw practicesError;
+        
+        if (!practicesData || practicesData.length === 0) {
+          setPractices([]);
+          return;
+        }
+
+        // Step 2: Fetch profiles for the authors
+        const userIds = [...new Set(practicesData.map(p => p.user_id).filter(Boolean))];
+        const { data: profilesData, error: profilesError } = await supabase
+          .from("user_profiles")
+          .select("id, nama, full_name, username, foto")
+          .in("id", userIds);
+
+        if (profilesError) {
+          console.warn("Could not fetch profiles, showing practices without author details", profilesError);
+          setPractices(practicesData);
+          return;
+        }
+
+        // Step 3: Map profiles to practices locally
+        const joinedData = practicesData.map(practice => ({
+          ...practice,
+          user_profiles: profilesData.find(profile => profile.id === practice.user_id)
+        }));
+
+        setPractices(joinedData);
       } catch (err: any) {
         console.error("Error fetching sharing practices:", err);
+        // Fallback: search without join if the above fails (though we already split it to be safe)
       } finally {
         setIsLoading(false);
       }
@@ -52,11 +79,24 @@ export function SharingPractices({ user }: { user: any }) {
       const { data, error } = await supabase
         .from("best_practices")
         .insert([newPractice])
-        .select("*, user_profiles(nama, full_name, username, foto)");
+        .select("*");
       
       if (error) throw error;
+
       if (data && data.length > 0) {
-        setPractices([data[0], ...practices]);
+        // Fetch the user profile for the newly inserted record
+        const { data: profileData } = await supabase
+          .from("user_profiles")
+          .select("id, nama, full_name, username, foto")
+          .eq("id", user.id)
+          .single();
+
+        const fullNewRecord = {
+          ...data[0],
+          user_profiles: profileData
+        };
+
+        setPractices([fullNewRecord, ...practices]);
         setEditingId(data[0].id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         await alert("Draft praktik baik berhasil dibuat. Silakan lengkapi detailnya.", "Sukses", "success");

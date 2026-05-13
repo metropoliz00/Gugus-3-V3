@@ -7149,7 +7149,11 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
         logActivity(user, `update_${table}`, `Memperbarui data di ${title}`);
         await alert("Data Berhasil Diperbarui");
       } else {
-        const { error } = await supabase.from(table).insert([formData]);
+        const insertData = { ...formData };
+        if (user?.id && !insertData.user_id) {
+          insertData.user_id = user.id;
+        }
+        const { error } = await supabase.from(table).insert([insertData]);
         if (error) throw error;
         logActivity(user, `create_${table}`, `Menambah data baru di ${title}`);
         await alert("Data Berhasil Ditambahkan");
@@ -7672,13 +7676,33 @@ function ForumSystem({ user }: { user: any }) {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Step 1: Fetch posts
+      const { data: postsData, error: postsError } = await supabase
         .from("forum_posts")
-        .select(`*, author:user_id (*)`)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setPosts(data || []);
+      if (postsError) throw postsError;
+
+      if (!postsData || postsData.length === 0) {
+        setPosts([]);
+        return;
+      }
+
+      // Step 2: Fetch profiles for authors
+      const authorIds = [...new Set(postsData.map(p => p.user_id).filter(Boolean))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("user_profiles")
+        .select("id, nama, full_name, username, foto")
+        .in("id", authorIds);
+
+      // Step 3: Join locally
+      const joinedData = postsData.map(post => ({
+        ...post,
+        author: profilesData?.find(profile => profile.id === post.user_id)
+      }));
+
+      setPosts(joinedData);
     } catch (err) {
       console.error(err);
     } finally {
@@ -7937,14 +7961,34 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
   const fetchComments = async () => {
     setLoadingComments(true);
     try {
-      const { data, error } = await supabase
+      // Step 1: Fetch comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from("forum_comments")
-        .select(`*, author:user_id (*)`)
+        .select("*")
         .eq("post_id", post.id)
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
-      setComments(data || []);
+      if (commentsError) throw commentsError;
+
+      if (!commentsData || commentsData.length === 0) {
+        setComments([]);
+        return;
+      }
+
+      // Step 2: Fetch profiles for commentators
+      const userIds = [...new Set(commentsData.map(c => c.user_id).filter(Boolean))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("user_profiles")
+        .select("id, nama, full_name, username, foto")
+        .in("id", userIds);
+
+      // Step 3: Join locally
+      const joinedData = commentsData.map(comment => ({
+        ...comment,
+        author: profilesData?.find(profile => profile.id === comment.user_id)
+      }));
+
+      setComments(joinedData || []);
     } catch (err) {
       console.error(err);
     } finally {
