@@ -193,7 +193,7 @@ export default function Dashboard({
   // Set Page Title
   useEffect(() => {
     const fullName = user.nama || user.full_name || user.username || "User";
-    document.title = `Dashboard ${fullName} | Gugus 3 Melati`;
+    document.title = `Dasbord ${fullName} | Gugus 3 Melati`;
   }, [user]);
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -2329,7 +2329,7 @@ function AdminOverview() {
           Selamat Datang di Portal Resmi
         </h2>
         <p className="text-xl font-bold tracking-tight text-main-orange">
-          GUGUS 3 MELATI
+          GUGUS 3
         </p>
         <p className="text-lg text-dark-green">KECAMATAN JENU</p>
       </motion.div>
@@ -2637,7 +2637,7 @@ function GuruOverview({ user }: { user: any }) {
             </h2>
             <p className="text-blue-50/90 text-lg md:text-xl font-light mb-8 max-w-2xl">
               Platform terintegrasi untuk administrasi, berbagi perangkat ajar,
-              dan informasi kegiatan di lingkungan Gugus 3 Melati.
+              dan informasi kegiatan di lingkungan Gugus 3.
             </p>
             <div className="flex flex-wrap gap-4 justify-center md:justify-start">
               <button
@@ -8298,44 +8298,52 @@ function TeacherTrainingCards({ user }: { user: any }) {
   return (
     <div className="space-y-8">
       {/* Header with Background Gradient */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-blue-600 to-indigo-700 p-8 rounded-[2.5rem] shadow-2xl shadow-blue-500/20">
-        {/* Abstract background blobs */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-leaf-green/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-blue-600 to-main-blue p-10 rounded-[3rem] shadow-2xl shadow-blue-500/20">
+        {/* Abstract background blobs with more color */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-leaf-green/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4" />
+        <div className="absolute top-1/2 left-1/2 w-48 h-48 bg-white/5 rounded-full blur-xl -translate-x-1/2 -translate-y-1/2" />
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-          <div className="flex items-center gap-6">
-            <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border border-white/30 shadow-inner">
-              <GraduationCap className="w-8 h-8" />
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-3xl flex items-center justify-center text-white border border-white/30 shadow-2xl transform hover:rotate-3 transition-transform">
+              <GraduationCap className="w-10 h-10 drop-shadow-lg" />
             </div>
             <div>
-              <h2 className="text-3xl font-black font-heading text-white tracking-tight leading-tight">
-                Portal Pelatihan <span className="text-leaf-green">Guru</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-leaf-green/20 backdrop-blur-md rounded-full border border-leaf-green/30 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-leaf-green animate-ping" />
+                 <span className="text-[10px] font-black text-leaf-green uppercase tracking-widest">Pusat Belajar</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2 drop-shadow-xl">
+                Portal Pelatihan <span className="text-transparent bg-clip-text bg-gradient-to-r from-leaf-green to-emerald-400">Guru</span>
               </h2>
-              <p className="text-sm text-blue-100 font-medium opacity-90 mt-1 max-w-md leading-relaxed">
-                Tingkatkan kompetensi Anda melalui program pelatihan berkualitas dan pantau riwayat sertifikasi Anda.
+              <p className="text-base text-blue-100 font-medium opacity-80 max-w-lg leading-relaxed">
+                Akses materi eksklusif, tingkatkan kompetensi profesional, dan kelola sertifikasi Anda dalam satu platform modern.
               </p>
             </div>
           </div>
 
-          {/* Tab System Modernized */}
-          <div className="flex bg-white/10 backdrop-blur-md p-1.5 rounded-[1.5rem] shrink-0 border border-white/20 shadow-xl">
+          {/* Tab System Modernized with more color */}
+          <div className="flex bg-black/20 backdrop-blur-xl p-2 rounded-[2rem] shrink-0 border border-white/10 shadow-2xl">
             {[
-              { id: "daftar", label: "Program", icon: Calendar },
-              { id: "absensi", label: "Riwayat", icon: CheckSquare },
-              { id: "sertifikat", label: "Sertifikat", icon: Award },
+              { id: "daftar", label: "Program", icon: Calendar, color: "text-leaf-green" },
+              { id: "absensi", label: "Riwayat", icon: CheckSquare, color: "text-orange-400" },
+              { id: "sertifikat", label: "Sertifikat", icon: Award, color: "text-amber-400" },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveSubTab(tab.id as any)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-black transition-all duration-300 ${
+                className={`flex items-center gap-3 px-8 py-4 rounded-2xl text-xs font-black transition-all duration-500 relative group ${
                   activeSubTab === tab.id
-                    ? "bg-white text-main-blue shadow-lg shadow-black/10 scale-105"
-                    : "text-white/70 hover:text-white hover:bg-white/5"
+                    ? "bg-white text-main-blue shadow-2xl shadow-black/20 scale-105"
+                    : "text-white/60 hover:text-white hover:bg-white/5"
                 }`}
               >
-                <tab.icon className={`w-4 h-4 ${activeSubTab === tab.id ? 'text-main-blue' : 'text-current'}`} />
+                <tab.icon className={`w-5 h-5 transition-colors ${activeSubTab === tab.id ? tab.color : 'text-current group-hover:text-white'}`} />
                 {tab.label}
+                {activeSubTab === tab.id && (
+                  <motion.div layoutId="tab-underline" className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-main-blue rounded-full" />
+                )}
               </button>
             ))}
           </div>

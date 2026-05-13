@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { PlusCircle, X, Award, Play, Trash2 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import ImageUpload from './ImageUpload';
 
 export function SharingPractices({ user }: { user: any }) {
@@ -83,42 +83,129 @@ export function SharingPractices({ user }: { user: any }) {
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center bg-white/60 backdrop-blur-md p-6 rounded-[2rem] border border-gray-100 shadow-xl shadow-blue-500/5">
+      <div className="flex justify-between items-center bg-white/60 backdrop-blur-md p-8 rounded-[3rem] border border-gray-100 shadow-2xl shadow-blue-500/5">
         <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-main-blue/10 rounded-full mb-3">
+             <Award className="w-3 h-3 text-main-blue" />
+             <span className="text-[10px] font-black text-main-blue uppercase tracking-widest">Inspirasi Kolektif</span>
+          </div>
+          <h2 className="text-3xl font-black font-heading text-soft-black leading-tight">
             Sharing Praktik Baik
           </h2>
-          <p className="text-sm text-gray-500">
-            Wadah berbagi inspirasi dan pengalaman mengajar antar guru
+          <p className="text-sm text-gray-500 font-medium">
+            Berbagi inspirasi mengajar untuk memajukan pendidikan di lingkungan Gugus 3.
           </p>
         </div>
         <button
           onClick={handleAdd}
           disabled={isAdding}
-          className="flex items-center gap-2 bg-main-blue text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-main-blue/20 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+          className="flex items-center gap-3 bg-gradient-to-r from-main-blue to-indigo-600 text-white px-8 py-4 rounded-[1.5rem] text-sm font-black transition-all shadow-xl shadow-main-blue/30 hover:scale-105 active:scale-95 disabled:opacity-50"
         >
           {isAdding ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
             <PlusCircle className="w-5 h-5" />
           )}
-          {isAdding ? "Menyiapkan..." : "Bagikan Praktik Baik"}
+          {isAdding ? "Memproses..." : "Bagikan Inspirasi"}
         </button>
       </div>
 
+      {/* Modal for Editing/Adding */}
+      <AnimatePresence>
+        {editingId && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingId(null)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              >
+                <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                  <div>
+                    <h3 className="text-xl font-black text-soft-black">Form Praktik Baik</h3>
+                    <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Lengkapi Detail Inspirasi Anda</p>
+                  </div>
+                  <button onClick={() => setEditingId(null)} className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 hover:text-soft-black transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-8 overflow-y-auto space-y-6 modern-scrollbar">
+                  {practices.filter(p => p.id === editingId).map(p => (
+                    <div key={p.id} className="space-y-6">
+                      <div className="group">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Judul Praktik</label>
+                        <input
+                          className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
+                          value={p.title}
+                          onChange={(e) => handleUpdate(p.id, { title: e.target.value })}
+                          placeholder="Contoh: Metode Belajar Seru di Luar Kelas"
+                        />
+                      </div>
+                      <div className="group">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Nama Penulis</label>
+                        <input
+                          className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
+                          value={p.author_name || ""}
+                          onChange={(e) => handleUpdate(p.id, { author_name: e.target.value })}
+                          placeholder="Ketik Nama Lengkap Anda"
+                        />
+                      </div>
+                      <div className="group">
+                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Deskripsi Inspirasi</label>
+                        <textarea
+                          className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-medium h-40 focus:border-main-blue focus:bg-white outline-none transition-all leading-relaxed"
+                          value={p.description}
+                          onChange={(e) => handleUpdate(p.id, { description: e.target.value })}
+                          placeholder="Ceritakan tantangan, langkah-langkah, dan keberhasilan praktik baik yang Anda lakukan..."
+                        />
+                      </div>
+                      <div className="pt-2">
+                        <ImageUpload
+                          label="Upload Foto Sampul"
+                          value={p.image_url || ""}
+                          onChange={(url) => handleUpdate(p.id, { image_url: url })}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-8 bg-gray-50/50 border-t border-gray-100">
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="w-full bg-gradient-to-r from-main-blue to-indigo-600 text-white py-4 rounded-2xl text-sm font-black shadow-xl shadow-main-blue/20 hover:scale-[1.02] active:scale-95 transition-all"
+                  >
+                    Simpan & Publikasikan Sekarang
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {isLoading ? (
         <div className="text-center py-20">
-          <div className="animate-spin w-8 h-8 border-4 border-main-blue border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-400 font-medium">Memuat inspirasi...</p>
+          <div className="animate-spin w-10 h-10 border-4 border-main-blue border-t-transparent rounded-full mx-auto mb-4 shadow-lg shadow-main-blue/10"></div>
+          <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Menyiapkan Inspirasi...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 pb-20">
           {practices.map((p) => (
             <motion.div
               key={p.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-2xl shadow-gray-200/50 flex flex-col group h-full relative"
+              className="bg-white rounded-[3rem] overflow-hidden border border-gray-100 shadow-2xl shadow-gray-200 flex flex-col group h-full relative"
             >
               {/* Card Background Image (Full) */}
               <div
@@ -128,123 +215,64 @@ export function SharingPractices({ user }: { user: any }) {
                 }}
               />
               {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/60 to-black/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 transition-opacity group-hover:opacity-100" />
 
               {/* Card Content Overlaid */}
-              <div className="relative z-10 p-8 h-full flex flex-col justify-end min-h-[450px]">
+              <div className="relative z-10 p-10 h-full flex flex-col justify-end min-h-[500px]">
                 {/* Admin/Owner Controls */}
                 {(p.user_id === user.id || user.role === "admin") && (
-                  <div className="absolute top-6 right-6 flex gap-2">
+                  <div className="absolute top-8 right-8 flex gap-3">
                     <button
-                      onClick={() => setEditingId(editingId === p.id ? null : p.id)}
-                      className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-main-blue transition-all border border-white/20 shadow-lg"
-                      title="Edit Konten"
+                      onClick={() => setEditingId(p.id)}
+                      className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-white hover:bg-main-blue transition-all border border-white/20 shadow-2xl group/btn"
+                      title="Edit Praktik Baik"
                     >
-                      {editingId === p.id ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                      <PlusCircle className="w-5 h-5 group-hover/btn:rotate-90 transition-transform" />
                     </button>
                     <button
                       onClick={() => handleDelete(p.id)}
-                      className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-500 transition-all border border-white/20 shadow-lg"
-                      title="Hapus Konten"
+                      className="w-12 h-12 rounded-2xl bg-red-500/10 backdrop-blur-xl flex items-center justify-center text-white hover:bg-red-500 transition-all border border-white/20 shadow-2xl"
+                      title="Hapus"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 )}
 
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="bg-leaf-green/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-lg">
+                <div className="flex items-center gap-2 mb-6">
+                  <span className="bg-leaf-green text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-leaf-green/20">
                     Praktik Baik
                   </span>
                 </div>
 
-                <h3 className="text-2xl font-bold text-white mb-4 leading-tight drop-shadow-md">
+                <h3 className="text-3xl font-black text-white mb-4 leading-tight tracking-tight drop-shadow-2xl group-hover:text-main-blue transition-colors duration-500">
                   {p.title}
                 </h3>
 
-                <p className="text-gray-200 text-sm mb-8 line-clamp-3 leading-relaxed drop-shadow-sm flex-1">
-                  {p.description}
+                <p className="text-gray-300 text-sm mb-10 line-clamp-3 leading-relaxed drop-shadow-lg flex-1 font-medium italic">
+                  "{p.description}"
                 </p>
 
-                <div className="pt-6 border-t border-white/20 flex items-center justify-between mt-auto">
-                  <div className="flex items-center gap-2 text-[10px] text-white/60 font-bold uppercase tracking-widest">
-                    <Play className="w-4 h-4 text-main-blue" />
-                    Inspirasi Guru
+                <div className="pt-8 border-t border-white/10 flex items-center justify-between mt-auto">
+                  <div className="flex items-center gap-3">
+                     <div className="w-10 h-10 rounded-full bg-main-blue/20 backdrop-blur-md flex items-center justify-center border border-main-blue/30">
+                        <Play className="w-4 h-4 text-main-blue fill-main-blue" />
+                     </div>
+                     <span className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">Inovasi</span>
                   </div>
                   
-                  {/* Author Name at Bottom Right */}
                   <div className="text-right">
-                    <p className="text-[9px] text-gray-400 font-bold uppercase leading-none mb-1">
-                      Karya Oleh
-                    </p>
-                    <div className="flex items-center justify-end gap-2 text-white">
-                      <span className="text-sm font-bold truncate max-w-[120px]">
+                    <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest leading-none mb-2">Penulis</p>
+                    <div className="flex items-center justify-end gap-3 text-white">
+                      <span className="text-base font-black truncate max-w-[140px] drop-shadow-lg">
                         {p.author_name || "Guru Gugus 3"}
                       </span>
-                      <div className="w-6 h-6 rounded-full bg-main-blue/30 backdrop-blur-sm flex items-center justify-center border border-main-blue/50">
-                        <Award className="w-3.4 h-3.4 text-white" />
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-main-blue to-leaf-green flex items-center justify-center shadow-xl border border-white/10">
+                        <Award className="w-4 h-4 text-white" />
                       </div>
                     </div>
                   </div>
                 </div>
-
-                {/* Inline Editing Form */}
-                {editingId === p.id && (
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="absolute inset-4 z-50 bg-white rounded-[2rem] p-6 shadow-2xl flex flex-col space-y-4 overflow-y-auto"
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                       <h4 className="text-sm font-bold text-soft-black">Edit Praktik Baik</h4>
-                       <button onClick={() => setEditingId(null)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200">
-                          <X className="w-4 h-4" />
-                       </button>
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Judul Praktik</label>
-                        <input
-                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold focus:border-main-blue outline-none"
-                          value={p.title}
-                          onChange={(e) => handleUpdate(p.id, { title: e.target.value })}
-                          placeholder="Contoh: Pembelajaran Berbasis Game"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nama Lengkap Penulis</label>
-                        <input
-                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs font-bold focus:border-main-blue outline-none"
-                          value={p.author_name || ""}
-                          onChange={(e) => handleUpdate(p.id, { author_name: e.target.value })}
-                          placeholder="Nama lengkap Anda"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Deskripsi</label>
-                        <textarea
-                          className="w-full bg-gray-50 border border-gray-100 rounded-xl p-3 text-xs h-32 focus:border-main-blue outline-none"
-                          value={p.description}
-                          onChange={(e) => handleUpdate(p.id, { description: e.target.value })}
-                          placeholder="Ceritakan metode dan hasil praktik baik Anda..."
-                        />
-                      </div>
-                      <ImageUpload
-                        label="Ganti Foto Sampul"
-                        value={p.image_url || ""}
-                        onChange={(url) => handleUpdate(p.id, { image_url: url })}
-                      />
-                    </div>
-
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="w-full bg-main-blue text-white py-3 rounded-2xl text-xs font-bold hover:bg-blue-600 transition-all shadow-lg mt-auto"
-                    >
-                      Simpan & Publikasikan
-                    </button>
-                  </motion.div>
-                )}
               </div>
             </motion.div>
           ))}

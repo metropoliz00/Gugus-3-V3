@@ -180,13 +180,11 @@ export default function App() {
       '/dashboard': 'Dashboard Admin',
     };
 
-    let title = 'Halaman';
     if (location.pathname.startsWith('/dashboard')) {
-      title = 'Dashboard Admin';
-    } else {
-      title = titles[location.pathname] || 'Website Gugus 3';
+      return; // Dashboard.tsx will handle its own title
     }
 
+    const title = titles[location.pathname] || 'Website Gugus 3';
     document.title = `${title} | Gugus 3 Melati`;
   }, [location]);
 
