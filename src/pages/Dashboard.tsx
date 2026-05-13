@@ -49,6 +49,10 @@ import {
   UserCheck,
   User as UserIcon,
   Mail,
+  ShieldCheck,
+  Newspaper,
+  Camera,
+  School,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -1550,65 +1554,82 @@ function AdminUserManagement() {
   };
 
   return (
-    <div className="space-y-8">
-      {/* Header & Actions */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Manajemen User
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Kelola akun Admin dan Guru dalam sistem.
-          </p>
+    <div className="space-y-10">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <Users className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Keamanan & Akses</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Manajemen User
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Kelola akun Admin dan Guru dalam sistem dengan kontrol akses yang presisi.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => {
+                if (showAddForm) {
+                  setShowAddForm(false);
+                  setEditId(null);
+                  setFormData({
+                    username: "",
+                    password: "",
+                    email: "",
+                    nama: "",
+                    nip: "",
+                    role: "guru",
+                    sekolah: "",
+                    jabatan: "",
+                    kepegawaian: "",
+                    pangkat: "",
+                    foto: "",
+                  });
+                } else {
+                  setShowAddForm(true);
+                }
+              }}
+              className="px-8 py-4 bg-white text-slate-900 flex items-center gap-2 font-black text-xs uppercase tracking-widest rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-2xl border-b-4 border-gray-200"
+            >
+              {showAddForm ? <X className="w-5 h-5" /> : <PlusCircle className="w-5 h-5" />}
+              {showAddForm ? "Tutup Form" : "Tambah User"}
+            </button>
+
+            <label className="px-8 py-4 bg-leaf-green text-white flex items-center gap-2 font-black text-xs uppercase tracking-widest rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-2xl border-b-4 border-dark-green cursor-pointer">
+              <UploadCloud className="w-5 h-5" />
+              {isUploading ? "Mengunggah..." : "Mass Upload"}
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                onChange={handleFileUpload}
+                disabled={isUploading}
+                className="hidden"
+              />
+            </label>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => {
-              if (showAddForm) {
-                setShowAddForm(false);
-                setEditId(null);
-                setFormData({
-                  username: "",
-                  password: "",
-                  email: "",
-                  nama: "",
-                  nip: "",
-                  role: "guru",
-                  sekolah: "",
-                  jabatan: "",
-                  kepegawaian: "",
-                  pangkat: "",
-                  foto: "",
-                });
-              } else {
-                setShowAddForm(true);
-              }
-            }}
-            className="px-6 py-2.5 bg-main-blue text-white flex items-center gap-2 font-bold rounded-xl hover:bg-dark-blue transition-all shadow-lg shadow-main-blue/20"
-          >
-            <PlusCircle className="w-5 h-5" />{" "}
-            {showAddForm ? "Tutup Form" : "Tambah User Manual"}
-          </button>
+      </div>
 
-          <label className="px-6 py-2.5 bg-green-600 text-white flex items-center gap-2 font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-500/20 cursor-pointer">
-            <UploadCloud className="w-5 h-5" />{" "}
-            {isUploading ? "Mengunggah..." : "Upload Excel Massal"}
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileUpload}
-              disabled={isUploading}
-              className="hidden"
-            />
-          </label>
-
+      <div className="flex justify-end pr-2">
           <button
             onClick={downloadTemplate}
-            className="px-6 py-2.5 bg-gray-100 text-gray-700 flex items-center gap-2 font-bold rounded-xl hover:bg-gray-200 transition-all font-sans"
+            className="px-6 py-2.5 bg-gray-100 text-gray-600 flex items-center gap-2 font-bold rounded-xl hover:bg-gray-200 transition-all text-xs uppercase tracking-widest border border-gray-200"
           >
-            <Download className="w-5 h-5" /> Download Template Excel
+            <Download className="w-4 h-4" /> Download Template Excel
           </button>
-        </div>
       </div>
 
       <AnimatePresence>
@@ -2333,20 +2354,31 @@ function AdminOverview() {
   ];
 
   return (
-    <div className="space-y-8">
-      <motion.div
-        whileHover={{ scale: 1.02 }}
-        transition={{ duration: 0.3 }}
-        className="bg-white border-2 border-main-orange/20 p-8 rounded-3xl shadow-xl shadow-main-orange/10 text-center"
-      >
-        <h2 className="text-3xl font-black font-heading mb-2 text-main-blue">
-          Selamat Datang di Portal Resmi
-        </h2>
-        <p className="text-xl font-bold tracking-tight text-main-orange">
-          GUGUS 3
-        </p>
-        <p className="text-lg text-dark-green">KECAMATAN JENU</p>
-      </motion.div>
+    <div className="space-y-10">
+      {/* Admin Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-12 rounded-[3.5rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-white/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-400/20 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4 animate-pulse" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+          <div className="w-28 h-28 bg-white/15 backdrop-blur-2xl rounded-[2.5rem] flex items-center justify-center text-white border border-white/25 shadow-2xl transform rotate-3">
+            <ShieldCheck className="w-14 h-14" />
+          </div>
+          <div className="text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-4">
+               <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+               <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Administrator System</span>
+            </div>
+            <h1 className="text-5xl md:text-6xl font-black font-heading text-white tracking-tighter leading-none mb-4">
+              Selamat Datang <br />
+              <span className="text-white/80">Admin Gugus 3</span>
+            </h1>
+            <p className="text-lg text-white/90 font-medium max-w-xl leading-relaxed">
+              Pusat kendali operasional GUGUS 3 Kecamatan Jenu. Monitor, kelola, dan tingkatkan performa ekosistem pendidikan kita.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2627,17 +2659,14 @@ function GuruOverview({ user }: { user: any }) {
   const navigate = useNavigate();
 
   return (
-    <div className="space-y-8">
-      {/* Welcome Banner */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-main-blue via-blue-600 to-leaf-green p-8 md:p-10 rounded-[2rem] text-white relative overflow-hidden shadow-xl"
-      >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-          <div className="w-48 md:w-64 aspect-[3/4] rounded-2xl bg-white p-1 overflow-hidden shadow-2xl shrink-0">
+    <div className="space-y-10">
+      {/* Guru Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
+          <div className="w-32 h-32 md:w-48 md:h-48 rounded-[2.5rem] bg-white p-1.5 overflow-hidden shadow-2xl shrink-0 rotate-3 hover:rotate-0 transition-transform duration-500 border border-white/20">
             <img
               src={
                 user.foto ||
@@ -2645,38 +2674,39 @@ function GuruOverview({ user }: { user: any }) {
                 `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.username || "U")}&background=6366f1&color=fff&size=512`
               }
               alt="User"
-              className="w-full h-full object-cover rounded-xl"
+              className="w-full h-full object-cover rounded-[2rem]"
             />
           </div>
-          <div className="max-w-4xl text-center md:text-left select-none overflow-visible">
-            <h2 className="text-2xl md:text-5xl font-heading font-black mb-4 tracking-tight leading-tight text-white drop-shadow-lg">
-              Selamat Datang,
-              <br />
-              <span className="block mt-2 drop-shadow-sm">
-                {user.nama || user.full_name || "Guru"}! 👋
-              </span>
-            </h2>
-            <p className="text-blue-50/90 text-lg md:text-xl font-light mb-8 max-w-2xl">
-              Platform terintegrasi untuk administrasi, berbagi perangkat ajar,
-              dan informasi kegiatan di lingkungan Gugus 3.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center md:justify-start">
-              <button
-                onClick={() => navigate("/dashboard/upload_karya")}
-                className="px-6 py-3 bg-white text-main-blue rounded-xl font-bold hover:bg-gray-50 transition-colors shadow-lg flex items-center gap-2"
-              >
-                <UploadCloud className="w-5 h-5" /> Upload Hasil Karya
-              </button>
-              <button
-                onClick={() => navigate("/dashboard/pelatihan")}
-                className="px-6 py-3 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-xl font-bold hover:bg-white/30 transition-colors flex items-center gap-2"
-              >
-                <GraduationCap className="w-5 h-5" /> Ikuti Pelatihan
-              </button>
+          <div className="max-w-4xl text-center md:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-4">
+               <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+               <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Pendidik GUGUS 3</span>
             </div>
+            <h2 className="text-4xl md:text-6xl font-black font-heading text-white tracking-tight leading-[0.9] mb-4">
+              Selamat Datang,<br />
+              <span className="text-orange-100">{user.nama || user.full_name || "Guru"}! 👋</span>
+            </h2>
+            <p className="text-lg text-white/80 font-medium max-w-lg leading-relaxed">
+              Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan di lingkungan GUGUS 3.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 shrink-0">
+            <button
+               onClick={() => navigate("/dashboard/upload_karya")}
+               className="px-8 py-4 bg-white text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-b-4 border-gray-200"
+            >
+              <UploadCloud className="w-5 h-5" /> Upload Hasil Karya
+            </button>
+            <button
+               onClick={() => navigate("/dashboard/pelatihan")}
+               className="px-8 py-4 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl hover:bg-white/30 transition-all flex items-center gap-3 active:scale-95"
+            >
+              <GraduationCap className="w-5 h-5" /> Ikuti Pelatihan
+            </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Quick Menu */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -2828,16 +2858,29 @@ function AdminSettingsForm() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
+      className="space-y-10"
     >
-      <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Pengaturan Website
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Kelola konten halaman utama website public.
-          </p>
+      {/* Website Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-10">
+          <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+            <Settings className="w-10 h-10" />
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+               <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+               <span className="text-[10px] font-black text-white uppercase tracking-widest">Konfigurasi Sistem</span>
+            </div>
+            <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+              Pengaturan Website
+            </h2>
+            <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+              Sesuaikan konten dan tampilan website publik GUGUS 3.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -3287,27 +3330,38 @@ function AdminBeritaForm({ user }: { user: any }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
-    >
-      <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Kelola Berita & Pengumuman
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Publikasikan informasi terbaru ke tabel{" "}
-            <code className="bg-gray-100 px-1 rounded">posts</code>.
-          </p>
+    <div className="space-y-10">
+      {/* Berita Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <Newspaper className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Media Informasi</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Kelola Berita & Pengumuman
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Publikasikan artikel dan informasi terbaru ke portal GUGUS 3.
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleCreate}
+            className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-b-4 border-gray-200"
+          >
+            <PlusCircle className="w-5 h-5" /> Buat Berita Baru
+          </button>
         </div>
-        <button
-          onClick={handleCreate}
-          className="px-4 py-2 bg-main-blue/10 text-main-blue flex items-center gap-2 font-bold rounded-xl hover:bg-main-blue/20 transition-colors"
-        >
-          <PlusCircle className="w-5 h-5" /> Buat Berita
-        </button>
       </div>
 
       <div className="space-y-6">
@@ -3391,7 +3445,7 @@ function AdminBeritaForm({ user }: { user: any }) {
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -3565,35 +3619,46 @@ function AdminGaleriForm({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
-    >
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-4 border-b border-gray-100 gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Kelola Galeri Kegiatan
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Unggah dokumentasi aktivitas sekolah (Tabel{" "}
-            <code className="bg-gray-100 px-1 rounded">gallery</code>).
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowBulkUpload(!showBulkUpload)}
-            className={`px-4 py-2 flex items-center gap-2 font-bold rounded-xl transition-colors ${showBulkUpload ? "bg-orange-500 text-white" : "bg-orange-50 text-orange-600 hover:bg-orange-100"}`}
-          >
-            <UploadCloud className="w-5 h-5" />{" "}
-            {showBulkUpload ? "Batal" : "Upload Massal"}
-          </button>
-          <button
-            onClick={handleCreate}
-            className="px-4 py-2 bg-leaf-green/10 text-leaf-green flex items-center gap-2 font-bold rounded-xl hover:bg-leaf-green/20 transition-colors"
-          >
-            <PlusCircle className="w-5 h-5" /> Tambah Satuan
-          </button>
+    <div className="space-y-10">
+      {/* Galeri Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <Camera className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Dokumentasi Visual</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Kelola Galeri
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Kelola koleksi foto kegiatan dan dokumentasi penting GUGUS 3.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-4">
+            <button
+              onClick={() => setShowBulkUpload(!showBulkUpload)}
+              className={`px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-b-4 ${showBulkUpload ? "bg-orange-500 text-white border-orange-700" : "bg-white text-slate-900 border-gray-200"}`}
+            >
+              <UploadCloud className="w-5 h-5" />
+              {showBulkUpload ? "Batal Massal" : "Upload Massal"}
+            </button>
+            <button
+              onClick={handleCreate}
+              className="bg-leaf-green text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-b-4 border-dark-green"
+            >
+              <PlusCircle className="w-5 h-5" /> Tambah Satuan
+            </button>
+          </div>
         </div>
       </div>
 
@@ -3758,7 +3823,7 @@ function AdminGaleriForm({
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -3842,26 +3907,38 @@ function AdminAgendaForm({ user }: { user: any }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
-    >
-      <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Kelola Agenda Kegiatan
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Atur jadwal pertemuan dan kegiatan terdaftar di database.
-          </p>
+    <div className="space-y-10">
+      {/* Agenda Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <Calendar className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Manajemen Agenda</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Kelola Agenda
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Atur jadwal pertemuan dan kegiatan KKG terdaftar di database.
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleCreate}
+            className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-b-4 border-gray-200"
+          >
+            <PlusCircle className="w-5 h-5" /> Tambah Agenda
+          </button>
         </div>
-        <button
-          onClick={handleCreate}
-          className="px-4 py-2 bg-leaf-green/10 text-leaf-green flex items-center gap-2 font-bold rounded-xl hover:bg-leaf-green/20 transition-colors"
-        >
-          <PlusCircle className="w-5 h-5" /> Tambah Agenda
-        </button>
       </div>
 
       <div className="space-y-6">
@@ -4004,7 +4081,7 @@ function AdminAgendaForm({ user }: { user: any }) {
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -4121,38 +4198,49 @@ function AdminSekolahForm({ user }: { user: any }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
-    >
-      <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Kelola Sekolah Inti/Imbas
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Tambah, edit, atau hapus profil sekolah di tabel{" "}
-            <code className="bg-gray-100 px-1 rounded">schools</code>.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            className="px-4 py-2 rounded-xl bg-gray-50 border border-gray-100 text-sm font-bold text-gray-600 focus:ring-2 focus:ring-main-blue/20 outline-none transition-all cursor-pointer"
-            value={newSchoolType}
-            onChange={(e) => setNewSchoolType(e.target.value)}
-          >
-            <option value="Sekolah Inti">Sekolah Inti</option>
-            <option value="Sekolah Imbas">Sekolah Imbas</option>
-          </select>
-          <button
-            onClick={handleCreate}
-            disabled={isCreating}
-            className="px-4 py-2 bg-main-blue text-white flex items-center gap-2 font-bold rounded-xl hover:bg-dark-blue transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50"
-          >
-            <PlusCircle className="w-5 h-5" />{" "}
-            {isCreating ? "Menyimpan..." : "Tambah Sekolah"}
-          </button>
+    <div className="space-y-10">
+      {/* Sekolah Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <School className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Data Satker</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Kelola Sekolah
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Manajemen data sekolah inti dan imbas di lingkungan GUGUS 3.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <select
+              className="px-6 py-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold outline-none cursor-pointer appearance-none"
+              value={newSchoolType}
+              onChange={(e) => setNewSchoolType(e.target.value)}
+            >
+              <option value="Sekolah Inti" className="text-slate-900">Sekolah Inti</option>
+              <option value="Sekolah Imbas" className="text-slate-900">Sekolah Imbas</option>
+            </select>
+            <button
+              onClick={handleCreate}
+              disabled={isCreating}
+              className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-b-4 border-gray-200 disabled:opacity-50"
+            >
+              <PlusCircle className="w-5 h-5" />
+              {isCreating ? "Menyimpan..." : "Tambah Sekolah"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -4409,7 +4497,7 @@ function AdminSekolahForm({ user }: { user: any }) {
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -4535,53 +4623,67 @@ function AdminKKGForm({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
-    >
-      <div className="flex flex-col md:flex-row justify-between md:items-center mb-8 pb-4 border-b border-gray-100 gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Kelola KKG
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Kelola Profil, Struktur Organisasi, dan Program.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 bg-gray-100/50 p-1 rounded-xl">
-          <button
-            onClick={() => setActiveKkgTab("profil")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeKkgTab === "profil" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Profil & Visi
-          </button>
-          <button
-            onClick={() => setActiveKkgTab("dokumen")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeKkgTab === "dokumen" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Dokumen Link
-          </button>
-          <button
-            onClick={() => setActiveKkgTab("struktur")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeKkgTab === "struktur" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Struktur Organisasi
-          </button>
-          <button
-            onClick={() => setActiveKkgTab("program")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeKkgTab === "program" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Program KKG
-          </button>
-          <button
-            onClick={() => setActiveKkgTab("pengumuman")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeKkgTab === "pengumuman" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Pengumuman Khusus
-          </button>
+    <div className="space-y-10">
+      {/* KKG Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <Users className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Kolaborasi Guru</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Kelola KKG
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Manajemen data Kelompok Kerja Guru (KKG) di wilayah GUGUS 3.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-2 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+            <button
+              onClick={() => setActiveKkgTab("profil")}
+              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeKkgTab === "profil" ? "bg-white text-slate-900 shadow-xl scale-105" : "text-white/70 hover:text-white"}`}
+            >
+              Profil & Visi
+            </button>
+            <button
+              onClick={() => setActiveKkgTab("dokumen")}
+              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeKkgTab === "dokumen" ? "bg-white text-slate-900 shadow-xl scale-105" : "text-white/70 hover:text-white"}`}
+            >
+              Dokumen Link
+            </button>
+            <button
+              onClick={() => setActiveKkgTab("struktur")}
+              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeKkgTab === "struktur" ? "bg-white text-slate-900 shadow-xl scale-105" : "text-white/70 hover:text-white"}`}
+            >
+              Struktur Organisasi
+            </button>
+            <button
+              onClick={() => setActiveKkgTab("program")}
+              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeKkgTab === "program" ? "bg-white text-slate-900 shadow-xl scale-105" : "text-white/70 hover:text-white"}`}
+            >
+              Program KKG
+            </button>
+            <button
+              onClick={() => setActiveKkgTab("pengumuman")}
+              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeKkgTab === "pengumuman" ? "bg-white text-slate-900 shadow-xl scale-105" : "text-white/70 hover:text-white"}`}
+            >
+              Pengumuman Khusus
+            </button>
+          </div>
         </div>
       </div>
+
+      <div className="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-main-orange/20 shadow-xl shadow-blue-500/5">
 
       <form onSubmit={handleSaveContent} className="space-y-6">
         {activeKkgTab === "profil" && (
@@ -5286,8 +5388,9 @@ function AdminKKGForm({
           </button>
         </div>
       </form>
-    </motion.div>
-  );
+    </div>
+  </div>
+);
 }
 
 function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
@@ -5396,44 +5499,58 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
-    >
-      <div className="flex flex-col md:flex-row justify-between md:items-center mb-8 pb-4 border-b border-gray-100 gap-4">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Kelola Profil Gugus
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Kelola Sejarah, Visi Misi, Struktur, dan Program Gugus.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 bg-gray-100/50 p-1 rounded-xl">
-          <button
-            type="button"
-            onClick={() => setActiveTab("profil")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "profil" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Profil & Visi
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("struktur")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "struktur" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Struktur
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("program")}
-            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === "program" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            Program
-          </button>
+    <div className="space-y-10">
+      {/* Gugus Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <Globe className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Identitas Gugus</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Kelola Gugus
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Manajemen profil, sejarah, visi misi, dan program kerja Gugus.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-2 bg-white/10 backdrop-blur-md p-1.5 rounded-2xl border border-white/20">
+            <button
+              type="button"
+              onClick={() => setActiveTab("profil")}
+              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "profil" ? "bg-white text-slate-900 shadow-xl scale-105" : "text-white/70 hover:text-white"}`}
+            >
+              Profil & Visi
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("struktur")}
+              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "struktur" ? "bg-white text-slate-900 shadow-xl scale-105" : "text-white/70 hover:text-white"}`}
+            >
+              Struktur
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("program")}
+              className={`px-6 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === "program" ? "bg-white text-slate-900 shadow-xl scale-105" : "text-white/70 hover:text-white"}`}
+            >
+              Program
+            </button>
+          </div>
         </div>
       </div>
+
+      <div className="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-main-orange/20 shadow-xl shadow-blue-500/5">
 
       <form onSubmit={handleSaveContent} className="space-y-6">
         {activeTab === "profil" && (
@@ -5813,8 +5930,9 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
           </button>
         </div>
       </form>
-    </motion.div>
-  );
+    </div>
+  </div>
+);
 }
 
 function AdminPenghargaanForm() {
@@ -5887,27 +6005,38 @@ function AdminPenghargaanForm() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
-    >
-      <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Kelola Penghargaan
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Kelola data penghargaan di tabel{" "}
-            <code className="bg-gray-100 px-1 rounded">awards</code>.
-          </p>
+    <div className="space-y-10">
+      {/* Penghargaan Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <Trophy className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Apresiasi & Prestasi</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Kelola Penghargaan
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Kelola data penghargaan dan sertifikat prestasi di lingkungan GUGUS 3.
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleCreate}
+            className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-b-4 border-gray-200"
+          >
+            <PlusCircle className="w-5 h-5" /> Tambah Penghargaan
+          </button>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 bg-leaf-green hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-green-500/20"
-        >
-          <PlusCircle className="w-5 h-5" /> Tambah Penghargaan
-        </button>
       </div>
 
       <div className="space-y-6">
@@ -6007,7 +6136,7 @@ function AdminPenghargaanForm() {
           ))
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -6071,27 +6200,38 @@ function AdminPengumumanForm() {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
-    >
-      <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-soft-black">
-            Kelola Pengumuman
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Publikasikan pengumuman ke tabel{" "}
-            <code className="bg-gray-100 px-1 rounded">posts</code>.
-          </p>
+    <div className="space-y-10">
+      {/* Pengumuman Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <Megaphone className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Informasi Penting</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Kelola Pengumuman
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Publikasikan pengumuman mendesak dan informasi resmi Gugus 3.
+              </p>
+            </div>
+          </div>
+          
+          <button
+            onClick={handleCreate}
+            className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 border-b-4 border-gray-200"
+          >
+            <PlusCircle className="w-5 h-5" /> Buat Pengumuman
+          </button>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 bg-leaf-green hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-green-500/20"
-        >
-          <PlusCircle className="w-5 h-5" /> Buat Pengumuman
-        </button>
       </div>
 
       <div className="space-y-6">
@@ -6149,7 +6289,7 @@ function AdminPengumumanForm() {
           )}
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -6248,19 +6388,29 @@ function AdminGuruForm({ user }: { user: any }) {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5"
-    >
-      <div className="mb-8 pb-4 border-b border-gray-100">
-        <h2 className="text-2xl font-bold font-heading text-soft-black">
-          Kelola Guru
-        </h2>
-        <p className="text-gray-500 text-sm mt-1">
-          Daftar profil guru yang terdaftar dalam sistem (diambil langsung dari
-          database).
-        </p>
+    <div className="space-y-10">
+      {/* Guru Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-10">
+          <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+            <GraduationCap className="w-10 h-10" />
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+               <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+               <span className="text-[10px] font-black text-white uppercase tracking-widest">Database Pendidik</span>
+            </div>
+            <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+              Kelola Guru
+            </h2>
+            <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+              Daftar profil guru yang terdaftar dalam sistem GUGUS 3.
+            </p>
+          </div>
+        </div>
       </div>
       <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <table className="w-full text-left text-sm">
@@ -6347,7 +6497,7 @@ function AdminGuruForm({ user }: { user: any }) {
           </tbody>
         </table>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -6441,22 +6591,36 @@ function AdminFinanceManagement({ user }: { user: any }) {
   const balance = totalIncome - totalExpense;
 
   return (
-    <div className="space-y-8">
-      <div className="bg-white/80 backdrop-blur-xl p-8 rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5">
-        <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-100">
-          <div>
-            <h2 className="text-2xl font-bold font-heading text-soft-black">
-              Kelola Keuangan
-            </h2>
-            <p className="text-gray-500 text-sm mt-1">
-              Atur pemasukan, pengeluaran, dan saldo KAS Gugus.
-            </p>
+    <div className="space-y-10">
+      {/* Keuangan Hero Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
+              <Wallet className="w-10 h-10" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
+                 <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                 <span className="text-[10px] font-black text-white uppercase tracking-widest">Akuntansi Gugus</span>
+              </div>
+              <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
+                Kelola Keuangan
+              </h2>
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
+                Manajemen arus kas, pemasukan, dan pengeluaran operasional GUGUS 3.
+              </p>
+            </div>
           </div>
-          <div className="text-right">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          
+          <div className="text-right bg-white/10 backdrop-blur-xl px-8 py-4 rounded-3xl border border-white/20 shadow-2xl">
+            <p className="text-[10px] font-black text-white uppercase tracking-widest mb-1">
               Saldo Saat Ini
             </p>
-            <h3 className="text-2xl font-black text-main-blue truncate">
+            <h3 className="text-3xl font-black text-white truncate">
               {new Intl.NumberFormat("id-ID", {
                 style: "currency",
                 currency: "IDR",
@@ -6465,6 +6629,9 @@ function AdminFinanceManagement({ user }: { user: any }) {
             </h3>
           </div>
         </div>
+      </div>
+
+      <div className="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-main-orange/20 shadow-xl shadow-blue-500/5">
 
         <form
           onSubmit={handleSubmit}
@@ -7187,24 +7354,24 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
   return (
     <div className="space-y-10">
       {/* Modern Management Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-main-blue to-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-main-blue/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-leaf-green to-orange-400 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-400/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
           <div className="flex items-center gap-8">
-            <div className="w-20 h-20 bg-white/5 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/10 shadow-2xl">
+            <div className="w-20 h-20 bg-white/10 backdrop-blur-xl rounded-[2rem] flex items-center justify-center text-white border border-white/20 shadow-2xl">
               <Icon className="w-10 h-10" />
             </div>
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10 mb-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/20 mb-3">
                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                  <span className="text-[10px] font-black text-white uppercase tracking-widest">Manajemen Data</span>
               </div>
               <h2 className="text-4xl font-black font-heading text-white tracking-tight leading-none mb-2">
                 {title}
               </h2>
-              <p className="text-base text-white/60 font-medium max-w-lg leading-relaxed">
+              <p className="text-base text-white/80 font-medium max-w-lg leading-relaxed">
                 Kelola koleksi {title.toLowerCase()} Anda dengan sistem administrasi yang efisien dan terorganisir.
               </p>
             </div>
