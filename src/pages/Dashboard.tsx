@@ -6801,7 +6801,12 @@ function UserProfileEdit({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...profile, id: user.id }),
       });
-      if (!response.ok) throw new Error("Gagal memperbarui profil");
+      
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "Gagal memperbarui profil");
+      }
+      
       logActivity(user, "update_profil", `Memperbarui profil pribadi`);
       onUpdate(profile);
       await alert("Profil berhasil diperbarui.", "Sukses", "success");

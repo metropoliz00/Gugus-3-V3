@@ -249,24 +249,36 @@ app.post("/api/setup/create-user", async (req, res) => {
 
     if (!profile) {
       console.log("Trigger profile creation failed, creating manually for user:", userId);
+      const insertData: any = {
+        id: userId,
+        username,
+        email,
+        role: role === 'admin' ? 'admin' : 'guru',
+        nama: nama || username,
+        sekolah,
+        nip,
+        kepegawaian,
+        pangkat,
+        jabatan,
+        password_text: password,
+        foto
+      };
+
       const { error: profileError } = await supabaseAdmin
         .from('user_profiles')
-        .insert([{
-          id: userId,
-          username,
-          email,
-          role: role === 'admin' ? 'admin' : 'guru',
-          nama: nama || username,
-          sekolah,
-          nip,
-          kepegawaian,
-          pangkat,
-          jabatan,
-          password_text: password,
-          avatar_url: foto
-        }]);
+        .insert([insertData]);
       
-      if (profileError) {
+      if (profileError && profileError.message.includes('foto')) {
+        delete insertData.foto;
+        insertData.avatar_url = foto;
+        const { error: fallbackError } = await supabaseAdmin
+          .from('user_profiles')
+          .insert([insertData]);
+        
+        if (fallbackError) {
+          console.error("Manual profile creation error (fallback):", fallbackError);
+        }
+      } else if (profileError) {
         console.error("Manual profile creation error:", profileError);
       }
     }
@@ -319,38 +331,63 @@ app.post("/api/admin/update-user", async (req, res) => {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     
-    // Update Auth
-    const authUpdates: any = {
-      email,
-      user_metadata: { role, nama, school: sekolah }
-    };
-    if (password) {
-      authUpdates.password = password;
-      authUpdates.user_metadata.password_text = password;
+    const authUpdates: any = {};
+    if (email !== undefined) authUpdates.email = email;
+    if (password) authUpdates.password = password; // password cannot be empty string
+    
+    // Auth metadata
+    const userMetadata: any = {};
+    if (role !== undefined) userMetadata.role = role;
+    if (nama !== undefined) userMetadata.nama = nama;
+    if (sekolah !== undefined) userMetadata.school = sekolah;
+    if (password) userMetadata.password_text = password;
+    
+    if (Object.keys(userMetadata).length > 0) {
+      authUpdates.user_metadata = userMetadata;
     }
 
-    const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
-    if (authError) throw authError;
+    if (Object.keys(authUpdates).length > 0) {
+      const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, authUpdates);
+      if (authError) throw authError;
+    }
     
     // Update Profile
+    const profileUpdates: any = {};
+    if (username !== undefined) profileUpdates.username = username;
+    if (email !== undefined) profileUpdates.email = email;
+    if (role !== undefined) profileUpdates.role = role;
+    if (nama !== undefined) profileUpdates.nama = nama;
+    if (nip !== undefined) profileUpdates.nip = nip;
+    if (kepegawaian !== undefined) profileUpdates.kepegawaian = kepegawaian;
+    if (pangkat !== undefined) profileUpdates.pangkat = pangkat;
+    if (jabatan !== undefined) profileUpdates.jabatan = jabatan;
+    if (sekolah !== undefined) profileUpdates.sekolah = sekolah;
+    if (foto !== undefined) profileUpdates.foto = foto;
+    if (password) profileUpdates.password_text = password;
+
+    if (Object.keys(profileUpdates).length === 0) {
+      return res.json({ success: true, message: "No profile updates provided" });
+    }
+
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
-      .update({
-        username,
-        email,
-        role,
-        nama,
-        nip,
-        kepegawaian,
-        pangkat,
-        jabatan,
-        sekolah,
-        avatar_url: foto,
-        ...(password ? { password_text: password } : {})
-      })
+      .update(profileUpdates)
       .eq('id', id);
       
-    if (profileError) throw profileError;
+    if (profileError && profileError.message.includes('foto')) {
+      // Fallback to avatar_url
+      delete profileUpdates.foto;
+      profileUpdates.avatar_url = foto;
+      
+      const { error: fallbackError } = await supabaseAdmin
+        .from('user_profiles')
+        .update(profileUpdates)
+        .eq('id', id);
+        
+      if (fallbackError) throw fallbackError;
+    } else if (profileError) {
+      throw profileError;
+    }
     
     res.json({ success: true });
   } catch (err: any) {
