@@ -16,9 +16,9 @@ export default function ImageUpload({
   label = "Upload Foto", 
   value, 
   onChange, 
-  maxWidth = 800, 
-  maxHeight = 800,
-  quality = 0.8,
+  maxWidth = 600, 
+  maxHeight = 600,
+  quality = 0.6,
   className = "",
   compact = false
 }: ImageUploadProps) {
@@ -62,9 +62,8 @@ export default function ImageUpload({
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
           
-          // Use original file type if it's jpeg or png, otherwise default to png
-          // For JPEG, we use the quality parameter to reduce file size
-          const outputType = file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+          // Default to webp for better compression and smaller base64 size
+          const outputType = 'image/webp';
           const dataUrl = canvas.toDataURL(outputType, quality);
           onChange(dataUrl);
         }
