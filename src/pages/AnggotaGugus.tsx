@@ -16,7 +16,54 @@ export default function AnggotaGugusPage() {
           .eq('role', 'guru');
         
         if (error) throw error;
-        setGurus(data || []);
+        
+        // Custom sorting
+        const sortedData = (data || []).sort((a, b) => {
+          // 1. Sort by School (A-Z)
+          const schoolA = (a.sekolah || "").toLowerCase();
+          const schoolB = (b.sekolah || "").toLowerCase();
+          if (schoolA < schoolB) return -1;
+          if (schoolA > schoolB) return 1;
+          
+          // 2. If same school, sort by Position priority
+          const normalizeJab = (val: string) => {
+            let j = val.toLowerCase().trim();
+            // Normalize Roman numerals and numbers
+            if (j.includes("kelas 1")) j = j.replace("kelas 1", "kelas i");
+            if (j.includes("kelas 2")) j = j.replace("kelas 2", "kelas ii");
+            if (j.includes("kelas 3")) j = j.replace("kelas 3", "kelas iii");
+            if (j.includes("kelas 4")) j = j.replace("kelas 4", "kelas iv");
+            if (j.includes("kelas 5")) j = j.replace("kelas 5", "kelas v");
+            if (j.includes("kelas 6")) j = j.replace("kelas 6", "kelas vi");
+            return j;
+          };
+
+          const jabA = normalizeJab(a.jabatan || "");
+          const jabB = normalizeJab(b.jabatan || "");
+          
+          const priority: Record<string, number> = {
+            "kepala sekolah": 1,
+            "guru kelas i": 2,
+            "guru kelas ii": 3,
+            "guru kelas iii": 4,
+            "guru kelas iv": 5,
+            "guru kelas v": 6,
+            "guru kelas vi": 7,
+            "guru pjok": 8,
+            "guru paibp": 9,
+            "guru pai": 9
+          };
+
+          const pA = priority[jabA] || 99;
+          const pB = priority[jabB] || 99;
+          
+          if (pA !== pB) return pA - pB;
+          
+          // 3. If same position, sort by Name (A-Z)
+          return (a.nama || "").localeCompare(b.nama || "");
+        });
+
+        setGurus(sortedData);
       } catch (err) {
         console.error("Error fetching guru:", err);
       } finally {
