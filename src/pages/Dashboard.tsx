@@ -6941,7 +6941,7 @@ function UserProfileEdit({
   return (
     <div className="space-y-10 max-w-5xl mx-auto pb-20">
       {/* Modern Profile Hero */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-700 via-slate-800 to-slate-950 p-10 rounded-[3rem] shadow-2xl shadow-slate-900/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 via-main-blue to-indigo-700 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-main-blue/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-leaf-green/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         
@@ -7183,7 +7183,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
   return (
     <div className="space-y-10">
       {/* Modern Management Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-gray-800 via-slate-900 to-black p-10 rounded-[3rem] shadow-2xl shadow-slate-900/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-slate-700 to-slate-900 p-10 rounded-[3rem] shadow-2xl shadow-indigo-500/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-main-blue/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         

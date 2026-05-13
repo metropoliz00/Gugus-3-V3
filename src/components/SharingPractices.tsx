@@ -84,7 +84,7 @@ export function SharingPractices({ user }: { user: any }) {
   return (
     <div className="space-y-10">
       {/* Modern Sharing Hero Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-main-blue via-indigo-600 to-violet-700 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-main-blue to-indigo-600 p-10 rounded-[3rem] shadow-2xl shadow-main-blue/20">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         
