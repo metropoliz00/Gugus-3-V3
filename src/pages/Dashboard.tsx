@@ -460,12 +460,19 @@ export default function Dashboard({
               />
             </motion.div>
             <div>
-              <h1 className="font-heading font-black bg-clip-text text-transparent bg-gradient-to-r from-main-blue to-leaf-green leading-tight text-xl">
-                Gugus 3
-              </h1>
-              <span className="text-[10px] uppercase tracking-wider text-main-blue font-bold px-2 py-0.5 bg-main-blue/10 rounded-full">
-                {user.role}
-              </span>
+              <div className="flex flex-col leading-none">
+                <span className="font-heading font-black bg-clip-text text-transparent bg-gradient-to-r from-main-blue to-leaf-green text-xl">
+                  Gugus 3
+                </span>
+                <span className="font-heading font-black bg-clip-text text-transparent bg-gradient-to-r from-orange-500 to-amber-500 text-lg uppercase tracking-wider">
+                  Melati
+                </span>
+              </div>
+              <div className="mt-1">
+                <span className="text-[10px] uppercase tracking-wider text-main-blue font-bold px-2 py-0.5 bg-main-blue/10 rounded-full">
+                  {user.role}
+                </span>
+              </div>
             </div>
           </div>
           <button
@@ -1074,13 +1081,7 @@ export default function Dashboard({
                       />
                       <Route
                         path="sharing"
-                        element={
-                          <DataViewList
-                            table="best_practices"
-                            title="Sharing Praktik Baik"
-                            icon={Play}
-                          />
-                        }
+                        element={<SharingPractices user={user} />}
                       />
                       <Route
                         path="upload_karya"
@@ -5955,9 +5956,7 @@ function AdminPenghargaanForm() {
                     maxHeight={400}
                   />
                 </div>
-
-                </div>
-                <div className="md:col-span-3">
+                <div className="md:col-span-4">
                   <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
                     Deskripsi
                   </label>

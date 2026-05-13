@@ -24,16 +24,44 @@ export default function Prestasi() {
     { title: "Juara 2 Guru Berprestasi Kabupaten", name: "Ahmad Fauzi, S.Pd", year: "2024", icon: Medal, bg: "bg-main-blue/10", color: "text-main-blue", border: 'border-main-blue/30' },
   ];
 
-  const items = achievements.length > 0 ? achievements.map(a => ({
-    title: a.title,
-    name: a.description,
-    year: a.year,
-    image_url: a.image_url,
-    icon: Trophy,
-    bg: "bg-yellow-50",
-    color: "text-yellow-600",
-    border: 'border-yellow-200'
-  })) : defaultAchievements;
+  const items = achievements.length > 0 ? achievements.map(a => {
+    let bg = "bg-yellow-50";
+    let color = "text-yellow-600";
+    let border = 'border-yellow-200';
+    let icon = Trophy;
+
+    if (a.category === 'Guru') {
+      bg = "bg-leaf-green/10";
+      color = "text-leaf-green";
+      border = 'border-leaf-green/30';
+      icon = Medal;
+    } else if (a.category === 'Siswa') {
+      bg = "bg-main-blue/10";
+      color = "text-main-blue";
+      border = 'border-main-blue/30';
+      icon = Star;
+    } else if (a.category === 'Sekolah') {
+      bg = "bg-indigo-50";
+      color = "text-indigo-600";
+      border = 'border-indigo-200';
+    } else if (a.category === 'Kepala Sekolah') {
+      bg = "bg-amber-50";
+      color = "text-amber-600";
+      border = 'border-amber-200';
+    }
+
+    return {
+      title: a.title,
+      name: a.description,
+      year: a.year,
+      category: a.category,
+      image_url: a.image_url,
+      icon: icon,
+      bg: bg,
+      color: color,
+      border: border
+    };
+  }) : defaultAchievements;
 
   return (
     <section id="prestasi" className="py-24 bg-transparent relative">
@@ -52,7 +80,7 @@ export default function Prestasi() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-10">
-          {items.map((item, i) => {
+          {items.map((item: any, i) => {
             const Icon = item.icon;
             return (
               <motion.div
@@ -71,17 +99,33 @@ export default function Prestasi() {
                   {item.image_url ? (
                     <div className="w-full h-40 rounded-xl overflow-hidden mb-6 border border-gray-100 shadow-sm relative shrink-0">
                       <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                      <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-gray-600 shadow-sm">
-                        {item.year}
+                      <div className="absolute top-2 right-2 flex flex-col items-end gap-2">
+                        <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-gray-600 shadow-sm">
+                          {item.year}
+                        </div>
+                        {item.category && (
+                          <div className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase shadow-sm ${item.bg} ${item.color} border ${item.border}`}>
+                            {item.category}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-4 mb-6">
-                      <div className={`w-16 h-16 rounded-2xl ${item.bg} flex items-center justify-center shrink-0 border ${item.border}`}>
-                        <Icon className={`w-8 h-8 ${item.color}`} />
-                      </div>
-                      <div className="inline-block px-3 py-1 bg-light-gray rounded-full text-xs font-bold text-gray-500 shrink-0">
-                        {item.year}
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-16 h-16 rounded-2xl ${item.bg} flex items-center justify-center shrink-0 border ${item.border}`}>
+                          <Icon className={`w-8 h-8 ${item.color}`} />
+                        </div>
+                        <div>
+                          <div className="inline-block px-3 py-1 bg-light-gray rounded-full text-xs font-bold text-gray-500 mb-1">
+                            {item.year}
+                          </div>
+                          {item.category && (
+                            <div className={`block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${item.bg} ${item.color} border ${item.border} w-fit`}>
+                              {item.category}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -95,5 +139,5 @@ export default function Prestasi() {
         </div>
       </div>
     </section>
-  )
+  );
 }
