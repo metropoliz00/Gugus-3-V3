@@ -876,8 +876,8 @@ export default function Dashboard({
                               { name: "category", label: "Kategori" },
                               {
                                 name: "file_url",
-                                label: "URL File",
-                                type: "file",
+                                label: "URL Link Materi",
+                                type: "text",
                               },
                             ]}
                           />
@@ -905,8 +905,8 @@ export default function Dashboard({
                               },
                               {
                                 name: "file_url",
-                                label: "Lampiran (Opsional)",
-                                type: "file",
+                                label: "URL Lampiran (Opsional)",
+                                type: "text",
                               },
                             ]}
                           />
@@ -7301,11 +7301,15 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
         await alert("Data Berhasil Diperbarui");
       } else {
         const insertData = { ...formData };
+        console.log("Saving insertData:", insertData);
         if (user?.id && !insertData.user_id) {
           insertData.user_id = user.id;
         }
-        const { error } = await supabase.from(table).insert([insertData]);
-        if (error) throw error;
+        const { data, error } = await supabase.from(table).insert([insertData]).select();
+        if (error) {
+          console.error("Supabase insert error:", error);
+          throw error;
+        }
         logActivity(user, `create_${table}`, `Menambah data baru di ${title}`);
         await alert("Data Berhasil Ditambahkan");
       }
