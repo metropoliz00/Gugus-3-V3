@@ -11,7 +11,7 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
       className={`bg-white rounded-2xl p-4 text-center border border-gray-200 shadow-sm transition-all relative ${size === "md" ? "w-52" : "w-56"} z-10 hover:-translate-y-1 hover:shadow-md hover:border-main-blue/50 group`}
     >
       <div className={`mx-auto bg-gray-100 rounded-full mb-3 overflow-hidden border-2 border-white shadow-sm ${size === "md" ? "w-16 h-16" : "w-12 h-12"}`}>
-        <img src={member?.photo_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${member?.name || "default"}`} alt={member?.name || "member"} className="w-full h-full object-cover" />
+        <img src={member?.photo_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${member?.name || "default"}`} alt={member?.name || "member"} className="w-full h-full object-cover object-top" />
       </div>
       <h4 className="font-bold text-soft-black text-sm mb-0.5 leading-tight">{member?.name || "-"}</h4>
       <p className="text-main-blue font-semibold text-xs mb-1">{member?.role || "Jabatan"}</p>
