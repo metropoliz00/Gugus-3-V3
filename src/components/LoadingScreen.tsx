@@ -66,7 +66,7 @@ export default function LoadingScreen() {
           <h1 className="text-xl md:text-2xl font-heading font-black text-dark-green tracking-tight uppercase">
             GUGUS 3 MELATI
           </h1>
-          <p className="text-xs md:text-sm font-bold text-main-blue tracking-[0.2em] uppercase opacity-70 mt-4">
+          <p className="text-xs md:text-sm font-bold text-main-blue tracking-[0.2em] uppercase opacity-70 mt-1">
             Kecamatan Jenu
           </p>
         </motion.div>
