@@ -105,7 +105,7 @@ export default function AnggotaGugusPage() {
                   <h2 className="text-xl font-bold text-main-blue">{schoolName}</h2>
                   <img src={logoUrl} alt={schoolName} className="w-12 h-12 rounded-full border-2 border-white shadow-md object-contain" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {members.map((g, i) => (
                     <motion.div
                       key={i}
