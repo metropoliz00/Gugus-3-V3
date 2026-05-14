@@ -145,24 +145,24 @@ export default function AnggotaGugusPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-[2rem] p-8 max-w-lg w-full relative shadow-2xl border border-gray-100"
+              className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-lg w-full relative shadow-2xl border border-gray-100"
               onClick={e => e.stopPropagation()}
             >
               <button onClick={() => setSelectedGuru(null)} className="absolute top-6 right-6 text-gray-400 hover:text-soft-black bg-gray-50 hover:bg-gray-100 p-2 rounded-full transition-all">
                 <X size={20} />
               </button>
-              <div className="flex flex-col items-center">
-                  <div className="w-32 h-32 rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 mb-6 shadow-xl">
+              <div className="flex flex-col items-center text-center">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 mb-4 sm:mb-6 shadow-xl">
                       <img src={selectedGuru.foto || selectedGuru.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedGuru.nama || 'G')}&background=random`} alt={selectedGuru.nama} className="w-full h-full object-cover object-top rounded-xl border-4 border-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-soft-black mb-1">{selectedGuru.nama}</h2>
-                  <p className="text-main-blue font-medium mb-6">{selectedGuru.jabatan}</p>
+                  <h2 className="text-lg sm:text-2xl font-bold text-soft-black mb-1 leading-tight">{selectedGuru.nama}</h2>
+                  <p className="text-sm sm:text-base text-main-blue font-medium mb-4 sm:mb-6 leading-tight">{selectedGuru.jabatan}</p>
                   
-                  <div className="w-full grid grid-cols-2 gap-4 text-sm text-gray-600 text-left">
-                      <div><p className="text-gray-400 text-xs">NIP</p><p className="font-mono">{selectedGuru.nip || '-'}</p></div>
-                      <div><p className="text-gray-400 text-xs">Pangkat/Gol</p><p>{selectedGuru.pangkat || '-'}</p></div>
-                      <div><p className="text-gray-400 text-xs">Kepegawaian</p><p>{selectedGuru.kepegawaian || '-'}</p></div>
-                      <div><p className="text-gray-400 text-xs">Sekolah</p><p>{selectedGuru.sekolah || '-'}</p></div>
+                  <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 text-left">
+                      <div><p className="text-gray-400 text-[10px] sm:text-xs">NIP</p><p className="font-mono break-all">{selectedGuru.nip || '-'}</p></div>
+                      <div><p className="text-gray-400 text-[10px] sm:text-xs">Pangkat/Gol</p><p>{selectedGuru.pangkat || '-'}</p></div>
+                      <div><p className="text-gray-400 text-[10px] sm:text-xs">Kepegawaian</p><p>{selectedGuru.kepegawaian || '-'}</p></div>
+                      <div><p className="text-gray-400 text-[10px] sm:text-xs">Sekolah</p><p className="line-clamp-2">{selectedGuru.sekolah || '-'}</p></div>
                   </div>
               </div>
             </motion.div>
