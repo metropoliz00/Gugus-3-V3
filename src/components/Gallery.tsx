@@ -103,7 +103,7 @@ export default function Gallery() {
                   className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-4 p-4"
                 >
                   {groups[currentIndex].map((item, idx) => (
-                    <div key={idx} className="relative rounded-xl overflow-hidden shadow-md aspect-video">
+                    <div key={idx} className="relative rounded-xl overflow-hidden shadow-md">
                       <img 
                         src={item.media_url} 
                         alt={item.title || `Gallery Slide ${currentIndex} - Photo ${idx}`} 
