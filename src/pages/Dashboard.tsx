@@ -933,8 +933,13 @@ export default function Dashboard({
                               },
                               {
                                 name: "date_start",
-                                label: "Tanggal Pelaksanaan",
-                                type: "date",
+                                label: "Tanggal Mulai",
+                                type: "datetime-local",
+                              },
+                              {
+                                name: "date_end",
+                                label: "Tanggal Berakhir",
+                                type: "datetime-local",
                               },
                               {
                                 name: "materi_url",
@@ -8779,16 +8784,18 @@ function TeacherTrainingCards({ user }: { user: any }) {
                   const isRegistered = !!reg;
                   const hasAttended = reg?.status === "attended";
 
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  const trainingDate = new Date(item.date_start);
-                  trainingDate.setHours(0, 0, 0, 0);
+                  const now = new Date();
+                  const startDate = new Date(item.date_start);
+                  const endDate = item.date_end ? new Date(item.date_end) : new Date(startDate.getTime() + 8 * 60 * 60 * 1000); // Default 8 jam jika tidak diset
 
                   let autoStatus = item.status || "planned";
-                  if (trainingDate > today) autoStatus = "planned";
-                  else if (trainingDate.getTime() === today.getTime())
-                    autoStatus = "ongoing";
+                  if (now < startDate) autoStatus = "planned";
+                  else if (now >= startDate && now <= endDate) autoStatus = "ongoing";
                   else autoStatus = "completed";
+
+                  const canRegister = now < startDate;
+                  const isOngoing = now >= startDate && now <= endDate;
+                  const isFinished = now > endDate;
 
                   return (
                     <motion.div
@@ -8867,7 +8874,9 @@ function TeacherTrainingCards({ user }: { user: any }) {
                                </div>
                                <div className="min-w-0">
                                   <p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-0.5">Waktu</p>
-                                  <p className="text-[10px] font-bold text-soft-black truncate">{new Date(item.date_start).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" })} WIB</p>
+                                  <p className="text-[10px] font-bold text-soft-black truncate">
+                                    {new Date(item.date_start).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" })} - {item.date_end ? new Date(item.date_end).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" }) : "Selesai"} WIB
+                                  </p>
                                </div>
                             </div>
                           </div>
@@ -8917,26 +8926,26 @@ function TeacherTrainingCards({ user }: { user: any }) {
                           {!isRegistered ? (
                             <button
                               onClick={() => handleRegister(item.id)}
-                              disabled={autoStatus === "completed"}
+                              disabled={!canRegister}
                               className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-[10px] font-black transition-all flex justify-center items-center gap-2 shadow-lg shrink-0 ${
-                                autoStatus === "completed"
+                                !canRegister
                                   ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                                   : "bg-main-blue text-white shadow-main-blue/20 hover:scale-105 active:scale-95"
                               }`}
                             >
-                              <PlusCircle className="w-4 h-4 shrink-0" /> <span className="truncate">{autoStatus === "completed" ? "Pelatihan Selesai" : "Daftar Sekarang"}</span>
+                              <PlusCircle className="w-4 h-4 shrink-0" /> <span className="truncate">{!canRegister ? "Pendaftaran Tutup" : "Daftar Sekarang"}</span>
                             </button>
                           ) : !hasAttended ? (
                             <button
                               onClick={() => handleAttendance(item.id)}
-                              disabled={autoStatus === "completed"}
+                              disabled={isFinished || !isOngoing}
                               className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-[10px] font-black shadow-lg transition-all flex justify-center items-center gap-2 shrink-0 ${
-                                autoStatus === "completed"
+                                isFinished || !isOngoing
                                   ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200"
                                   : "bg-leaf-green text-white shadow-leaf-green/20 hover:scale-105 active:scale-95"
                               }`}
                             >
-                              <UserCheck className="w-4 h-4 shrink-0" /> <span className="truncate">{autoStatus === "completed" ? "Waktu Berakhir" : "Konfirmasi Hadir"}</span>
+                              <UserCheck className="w-4 h-4 shrink-0" /> <span className="truncate">{isFinished ? "Waktu Berakhir" : !isOngoing ? "Belum Dimulai" : "Konfirmasi Hadir"}</span>
                             </button>
                           ) : (
                             <div className="w-full sm:w-auto px-5 py-2.5 bg-white text-gray-400 rounded-xl text-[10px] font-black border border-gray-100 shadow-sm flex justify-center items-center gap-2 shrink-0">
