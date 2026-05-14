@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 
 interface Props {
   value: string;
@@ -17,18 +16,23 @@ const ClientRichTextEditor: React.FC<Props> = ({ value, onChange, className, pla
   }, []);
 
   if (!mounted) {
-    return <div className={`border border-gray-200 rounded-xl p-3 ${className}`}>Memuat Editor...</div>;
+    return <div className={`border border-gray-200 rounded-xl p-3 bg-gray-50 flex items-center justify-center text-gray-400 ${className}`}>Memuat Editor...</div>;
   }
 
-  return (
-    <ReactQuill
-      theme="snow"
-      value={value}
-      onChange={onChange}
-      className={className}
-      placeholder={placeholder}
-    />
-  );
+  try {
+    return (
+      <ReactQuill
+        theme="snow"
+        value={value || ""}
+        onChange={onChange}
+        className={className}
+        placeholder={placeholder}
+      />
+    );
+  } catch (error) {
+    console.error("ReactQuill render error:", error);
+    return <div className={`p-3 bg-red-50 text-red-500 rounded-xl ${className}`}>Error memuat editor.</div>;
+  }
 };
 
 export default ClientRichTextEditor;
