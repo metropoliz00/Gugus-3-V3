@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"; // Updated
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import {
   LogOut,
   LayoutDashboard,
@@ -5320,18 +5322,19 @@ function AdminKKGForm({
                     <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
                       Isi Pesan Pengumuman
                     </label>
-                    <textarea
-                      className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:border-yellow-500 outline-none bg-gray-50/50 min-h-[120px] transition-all"
+                    <ReactQuill
+                      theme="snow"
                       value={form.pengumuman?.desc || ""}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         setKkgForm({
                           ...form,
                           pengumuman: {
                             ...(form.pengumuman || {}),
-                            desc: e.target.value,
+                            desc: value,
                           },
                         })
                       }
+                      className="w-full border border-gray-200 rounded-xl text-sm focus:border-yellow-500 outline-none bg-gray-50/50 min-h-[120px] transition-all"
                       placeholder="Tuliskan detail pengumuman yang ingin disampaikan kepada guru-guru..."
                     />
                   </div>
