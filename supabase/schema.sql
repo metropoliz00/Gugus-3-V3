@@ -395,6 +395,8 @@ CREATE TABLE IF NOT EXISTS public.trainings (
     date_end TIMESTAMP WITH TIME ZONE,
     location TEXT,
     status TEXT DEFAULT 'planned',
+    materi_url TEXT,
+    video_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
