@@ -4505,6 +4505,23 @@ function AdminKKGForm({
     }
   }, [kkgForm.pengumuman?.isActive]);
 
+  const [localPengumuman, setLocalPengumuman] = useState(kkgForm.pengumuman || { title: "", desc: "", isActive: false });
+
+  // Sync with prop if it changes externally
+  useEffect(() => {
+    if (kkgForm.pengumuman && JSON.stringify(kkgForm.pengumuman) !== JSON.stringify(localPengumuman)) {
+      setLocalPengumuman(kkgForm.pengumuman);
+    }
+  }, [kkgForm.pengumuman]);
+
+  // Debounced update to global state
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setKkgForm((prev: any) => ({ ...prev, pengumuman: localPengumuman }));
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [localPengumuman]);
+
   // Use default values if current form fields are empty/missing
   const form = {
     ...defaultContent.kkg,
@@ -5311,15 +5328,9 @@ function AdminKKGForm({
                     <input
                       type="text"
                       className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:border-yellow-500 outline-none bg-gray-50/50 font-bold transition-all"
-                      value={form.pengumuman?.title || ""}
+                      value={localPengumuman.title || ""}
                       onChange={(e) =>
-                        setKkgForm({
-                          ...form,
-                          pengumuman: {
-                            ...(form.pengumuman || {}),
-                            title: e.target.value,
-                          },
-                        })
+                        setLocalPengumuman(prev => ({ ...prev, title: e.target.value }))
                       }
                       placeholder="Masukkan judul (misal: Rapat Koordinasi)"
                     />
@@ -5331,15 +5342,9 @@ function AdminKKGForm({
                     </label>
                     <ReactQuill
                       theme="snow"
-                      value={form.pengumuman?.desc || ""}
+                      value={localPengumuman.desc || ""}
                       onChange={(value) =>
-                        setKkgForm({
-                          ...form,
-                          pengumuman: {
-                            ...(form.pengumuman || {}),
-                            desc: value,
-                          },
-                        })
+                        setLocalPengumuman(prev => ({ ...prev, desc: value }))
                       }
                       className="w-full border border-gray-200 rounded-xl text-sm focus:border-yellow-500 outline-none bg-gray-50/50 min-h-[120px] transition-all"
                       placeholder="Tuliskan detail pengumuman yang ingin disampaikan kepada guru-guru..."
