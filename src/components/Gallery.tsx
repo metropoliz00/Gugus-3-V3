@@ -9,6 +9,11 @@ export default function Gallery() {
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
 
+  const groups = [];
+  for (let i = 0; i < items.length; i += 4) {
+    groups.push(items.slice(i, i + 4));
+  }
+
   useEffect(() => {
     async function fetchGallery() {
       if (!supabase) return;
@@ -26,23 +31,23 @@ export default function Gallery() {
   }, []);
 
   useEffect(() => {
-    if (!isAutoPlay || items.length === 0) return;
+    if (!isAutoPlay || groups.length === 0) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % items.length);
+      setCurrentIndex((prev) => (prev + 1) % groups.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [items.length, isAutoPlay]);
+  }, [groups.length, isAutoPlay]);
 
   const next = () => {
-    if (items.length === 0) return;
+    if (groups.length === 0) return;
     setIsAutoPlay(false);
-    setCurrentIndex((prev) => (prev + 1) % items.length);
+    setCurrentIndex((prev) => (prev + 1) % groups.length);
   };
 
   const prev = () => {
-    if (items.length === 0) return;
+    if (groups.length === 0) return;
     setIsAutoPlay(false);
-    setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+    setCurrentIndex((prev) => (prev - 1 + groups.length) % groups.length);
   };
 
   return (
@@ -67,14 +72,14 @@ export default function Gallery() {
             <button 
               onClick={prev}
               className="w-12 h-12 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-main-blue hover:text-white hover:border-main-blue transition-all shadow-sm active:scale-95 disabled:opacity-50"
-              disabled={items.length <= 1}
+              disabled={groups.length <= 1}
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button 
               onClick={next}
               className="w-12 h-12 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-main-blue hover:text-white hover:border-main-blue transition-all shadow-sm active:scale-95 disabled:opacity-50"
-              disabled={items.length <= 1}
+              disabled={groups.length <= 1}
             >
               <ChevronRight className="w-6 h-6" />
             </button>
@@ -83,48 +88,36 @@ export default function Gallery() {
 
         {isLoading ? (
            <div className="text-center text-gray-400 font-medium py-10">Memuat galeri foto...</div>
-        ) : items.length === 0 ? (
+        ) : groups.length === 0 ? (
            <div className="text-center text-gray-400 font-medium py-10">Galeri belum tersedia.</div>
         ) : (
           <div className="relative group">
-            <div className="aspect-[16/9] md:aspect-[21/9] rounded-[2rem] overflow-hidden bg-gray-100 shadow-2xl relative">
+            <div className="aspect-video md:aspect-[21/9] rounded-[2rem] overflow-hidden bg-gray-100 shadow-2xl relative">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentIndex}
-                  initial={{ opacity: 0, scale: 1.1 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-                  className="absolute inset-0"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-4 p-4"
                 >
-                  <img 
-                    src={items[currentIndex].media_url} 
-                    alt={items[currentIndex].title || `Gallery ${currentIndex}`} 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                  
-                  <div className="absolute bottom-10 left-10 right-10 flex items-end justify-between">
-                    <div className="text-white max-w-xl">
-                      <motion.div 
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}
-                      >
-                        <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold mb-3 border border-main-orange/40 uppercase tracking-widest">
-                          {items[currentIndex].type === 'video' ? 'Video Kegiatan' : 'Foto Kegiatan'}
-                        </span>
-                        <h4 className="text-2xl md:text-3xl font-bold font-heading mb-2">{items[currentIndex].title || 'Dokumentasi Aktivitas KKG'}</h4>
-                      </motion.div>
+                  {groups[currentIndex].map((item, idx) => (
+                    <div key={idx} className="relative rounded-xl overflow-hidden shadow-md">
+                      <img 
+                        src={item.media_url} 
+                        alt={item.title || `Gallery Slide ${currentIndex} - Photo ${idx}`} 
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                  </div>
+                  ))}
                 </motion.div>
               </AnimatePresence>
             </div>
 
             {/* Indicators */}
             <div className="flex justify-center gap-2 mt-8">
-              {items.map((_, i) => (
+              {groups.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => {
