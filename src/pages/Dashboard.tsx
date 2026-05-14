@@ -5938,6 +5938,7 @@ function AdminPenghargaanForm() {
   }, []);
 
   const handleCreate = async () => {
+    console.log("handleCreate clicked - starting insert...");
     if (!supabase) return;
     const newAward = {
       title: "Penghargaan Baru",

@@ -6,9 +6,28 @@ const rawAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const supabase = createClient(rawUrl, rawAnonKey);
 
 async function test() {
-  const { data, error } = await supabase.from('awards').select('id, title, description, year').limit(5);
-  console.log('Error:', error);
-  console.log('Data:', data);
+  const { data: { session }, error: authError } = await supabase.auth.signInWithPassword({
+    email: 'dedysaputra05@guru.sd.belajar.id',
+    password: 'password'
+  });
+
+  const newAward = {
+    title: "Penghargaan Baru Test",
+    year: new Date().getFullYear(),
+    description: JSON.stringify({
+      text: "Deskripsi penghargaan...",
+      category: "Guru",
+      image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80"
+    })
+  };
+
+  const { data, error } = await supabase
+    .from("awards")
+    .insert([newAward])
+    .select();
+
+  console.log('Insert Error:', error);
+  console.log('Insert Data:', data);
 }
 
 test();
