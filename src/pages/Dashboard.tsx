@@ -5915,6 +5915,7 @@ function AdminPenghargaanForm() {
     loadAwards();
   }, []);
 
+  const { alert } = useAlert();
   const [newAward, setNewAward] = useState({
     title: "",
     category: "Guru",
@@ -5935,8 +5936,10 @@ function AdminPenghargaanForm() {
       setAwards([data[0], ...awards]);
       setNewAward({ title: "", category: "Guru", year: new Date().getFullYear(), description: "", image_url: "" });
       setIsAdding(false);
+      alert("Penghargaan berhasil ditambahkan!", "Sukses", "success");
     } else {
       console.error("Error adding award:", error);
+      alert("Gagal menambahkan penghargaan: " + (error?.message || "Terjadi kesalahan"), "Error", "error");
     }
   };
 
