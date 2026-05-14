@@ -84,6 +84,7 @@ import AdminCertificateEditor, {
   useCertificateGenerator,
 } from "../components/AdminCertificateEditor";
 import { SharingPractices } from "../components/SharingPractices";
+import { CKEditor } from "../components/CKEditor";
 
 import * as XLSX from "xlsx";
 
@@ -2955,17 +2956,18 @@ function AdminSettingsForm() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Popup Description
               </label>
-              <textarea
-                className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all"
-                rows={3}
-                value={announcementForm.desc}
-                onChange={(e) =>
-                  setAnnouncementForm({
-                    ...announcementForm,
-                    desc: e.target.value,
-                  })
-                }
-              />
+              <div className="bg-white border rounded-xl overflow-hidden">
+                <CKEditor
+                  id="editor-announcement-desc"
+                  value={announcementForm.desc || ""}
+                  onChange={(val) =>
+                    setAnnouncementForm({
+                      ...announcementForm,
+                      desc: val,
+                    })
+                  }
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -7339,14 +7341,15 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                     {f.label}
                   </label>
                   {f.type === "textarea" ? (
-                    <textarea
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none"
-                      rows={4}
-                      value={formData[f.name] || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, [f.name]: e.target.value })
-                      }
-                    />
+                    <div className="bg-white border rounded-xl overflow-hidden">
+                      <CKEditor
+                        id={`editor-${f.name}`}
+                        value={formData[f.name] || ""}
+                        onChange={(val) =>
+                          setFormData({ ...formData, [f.name]: val })
+                        }
+                      />
+                    </div>
                   ) : f.type === "select" ? (
                     <select
                       className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none bg-white"
@@ -7475,9 +7478,11 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                                   ? opt
                                   : opt?.label || val || "-";
                               })()
-                            : f.type === "file"
-                              ? (item[f.name] ? "Terisi" : "-")
-                              : item[f.name] || "-"}
+                            : f.type === "textarea"
+                              ? (item[f.name]?.replace(/<[^>]*>?/gm, '').substring(0, 100) || "-")
+                              : f.type === "file"
+                                ? (item[f.name] ? "Terisi" : "-")
+                                : item[f.name] || "-"}
                       </td>
                     ))}
                     <td className="px-6 py-4 text-right">

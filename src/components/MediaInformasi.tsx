@@ -87,9 +87,10 @@ export default function MediaInformasi() {
                     {item.title}
                   </h4>
                   {item.content && (
-                     <p className="text-gray-500 text-sm mb-6 line-clamp-3 leading-relaxed flex-1">
-                        {item.content}
-                     </p>
+                     <div 
+                        className="text-gray-500 text-sm mb-6 line-clamp-3 leading-relaxed flex-1 prose prose-sm max-w-none"
+                        dangerouslySetInnerHTML={{ __html: item.content }}
+                     />
                   )}
                   <a href={item.url || "#"} target={item.url ? "_blank" : "_self"} rel={item.url ? "noopener noreferrer" : ""} className="font-semibold text-leaf-green flex items-center gap-1 group-hover:gap-2 transition-all text-sm mt-auto">
                     Baca Selengkapnya <ArrowRight className="w-4 h-4" />
