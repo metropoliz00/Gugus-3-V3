@@ -7378,12 +7378,12 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                     {f.label}
                   </label>
                   {f.type === "textarea" ? (
-                    <textarea
-                      className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none"
-                      rows={4}
+                    <ReactQuill
+                      theme="snow"
+                      className="w-full border border-gray-200 rounded-xl focus:border-main-blue outline-none"
                       value={formData[f.name] || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, [f.name]: e.target.value })
+                      onChange={(value) =>
+                        setFormData({ ...formData, [f.name]: value })
                       }
                     />
                   ) : f.type === "select" ? (
