@@ -15,7 +15,7 @@ export default function AnggotaGugusPage() {
       try {
         const [gurusRes, schoolsRes] = await Promise.all([
           supabase.from('user_profiles').select('*').eq('role', 'guru'),
-          supabase.from('schools').select('name, logo_url, principal_img_url')
+          supabase.from('schools').select('name, logo_url')
         ]);
         
         if (gurusRes.error) throw gurusRes.error;
@@ -98,18 +98,14 @@ export default function AnggotaGugusPage() {
           Object.entries(groupedGurus).map(([schoolName, members]) => {
             const schoolData = schools.find(s => s.name && s.name.trim().toLowerCase() === schoolName.trim().toLowerCase());
             const logoUrl = schoolData?.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(schoolName)}&background=0284c7&color=fff&size=128&rounded=true`;
-            const bgImg = schoolData?.principal_img_url;
             
             return (
               <div key={schoolName} className="mb-12 bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm relative overflow-hidden ring-1 ring-black/5">
-                {bgImg && (
-                   <div className="absolute inset-0 z-0 opacity-5" style={{ backgroundImage: `url(${bgImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}></div>
-                )}
-                <div className="flex items-center justify-between mb-8 relative z-10">
+                <div className="flex items-center justify-between mb-8">
                   <h2 className="text-xl font-bold text-main-blue">{schoolName}</h2>
-                  <img src={logoUrl} alt={schoolName} className="w-12 h-12 rounded-full border-2 border-white shadow-md object-contain transition-transform duration-300 hover:scale-90" />
+                  <img src={logoUrl} alt={schoolName} className="w-12 h-12 rounded-full border-2 border-white shadow-md object-contain" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 relative z-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {members.map((g, i) => (
                     <motion.div
                       key={i}
