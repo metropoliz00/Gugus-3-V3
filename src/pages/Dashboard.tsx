@@ -5946,17 +5946,21 @@ function AdminPenghargaanForm() {
         text: "Deskripsi penghargaan...",
         category: "Guru",
         image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80"
-      }),
+      })
     };
-    const { data, error } = await supabase
-      .from("awards")
-      .insert([newAward])
-      .select();
-    if (!error && data) {
-      setAwards([{ ...data[0], description: "Deskripsi penghargaan...", category: "Guru", image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80" }, ...awards]);
-    } else {
-        alert("Gagal menambahkan penghargaan, silakan coba lagi.");
-        console.error("Insert error:", error);
+    try {
+      const { data, error } = await supabase
+        .from("awards")
+        .insert([newAward])
+        .select();
+      if (!error && data) {
+        setAwards([{ ...data[0], description: "Deskripsi penghargaan...", category: "Guru", image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80" }, ...awards]);
+      } else {
+          alert(`Gagal menambahkan penghargaan ke database. Kemungkinan ini karena masalah izin (RLS) di Supabase. Error: ${error?.message}`);
+          console.error("Insert error:", error);
+      }
+    } catch (e: any) {
+      alert(`Server error: ${e.message}`);
     }
   };
 
@@ -5973,20 +5977,25 @@ function AdminPenghargaanForm() {
       
       const dbPayload = {
         title: target.title,
-        year: target.year,
+        year: parseInt(target.year) || new Date().getFullYear(),
         description: JSON.stringify({
-          text: target.description,
-          category: target.category,
-          image_url: target.image_url
+          text: target.description || "Deskripsi penghargaan...",
+          category: target.category || "Guru",
+          image_url: target.image_url || ""
         })
       };
 
-      const { error } = await supabase
-        .from("awards")
-        .update(dbPayload)
-        .eq("id", id);
-      if (error) {
-        console.error("Error updating award:", error);
+      try {
+        const { error } = await supabase
+          .from("awards")
+          .update(dbPayload)
+          .eq("id", id);
+        if (error) {
+          console.error("Error updating award:", error);
+          alert(`Gagal menyimpan perubahan. Cek izin tabel "awards" (RLS). Error: ${error.message}`);
+        }
+      } catch (e: any) {
+        console.error(e);
       }
     }, 800);
   };
