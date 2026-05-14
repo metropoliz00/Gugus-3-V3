@@ -14,16 +14,18 @@ export default function Prestasi() {
           const parsedData = data.map(item => {
             let text = item.description || "";
             let category = "Guru";
+            let image_url = "";
             try {
               if (text.startsWith("{")) {
                 const parsed = JSON.parse(text);
-                if (parsed && typeof parsed === 'object' && parsed.text !== undefined) {
-                  text = parsed.text;
+                if (parsed && typeof parsed === 'object') {
+                  text = parsed.text || "";
                   category = parsed.category || "Guru";
+                  image_url = parsed.image_url || "";
                 }
               }
             } catch (e) {}
-            return { ...item, description: text, category };
+            return { ...item, description: text, category, image_url };
           });
           setAchievements(parsedData);
         }

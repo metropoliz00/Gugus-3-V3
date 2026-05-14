@@ -5911,16 +5911,18 @@ function AdminPenghargaanForm() {
           const parsedData = data.map(item => {
             let text = item.description || "";
             let category = "Guru";
+            let image_url = "";
             try {
               if (text.startsWith("{")) {
                 const parsed = JSON.parse(text);
-                if (parsed && typeof parsed === 'object' && parsed.text !== undefined) {
-                  text = parsed.text;
+                if (parsed && typeof parsed === 'object') {
+                  text = parsed.text || "Deskripsi penghargaan...";
                   category = parsed.category || "Guru";
+                  image_url = parsed.image_url || "";
                 }
               }
             } catch (e) {}
-            return { ...item, description: text, category };
+            return { ...item, description: text, category, image_url };
           });
           setAwards(parsedData);
         } else {
@@ -5942,17 +5944,19 @@ function AdminPenghargaanForm() {
       year: new Date().getFullYear(),
       description: JSON.stringify({
         text: "Deskripsi penghargaan...",
-        category: "Guru"
+        category: "Guru",
+        image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80"
       }),
-      image_url:
-        "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80",
     };
     const { data, error } = await supabase
       .from("awards")
       .insert([newAward])
       .select();
     if (!error && data) {
-      setAwards([{ ...data[0], description: "Deskripsi penghargaan...", category: "Guru" }, ...awards]);
+      setAwards([{ ...data[0], description: "Deskripsi penghargaan...", category: "Guru", image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80" }, ...awards]);
+    } else {
+        alert("Gagal menambahkan penghargaan, silakan coba lagi.");
+        console.error("Insert error:", error);
     }
   };
 
@@ -5970,10 +5974,10 @@ function AdminPenghargaanForm() {
       const dbPayload = {
         title: target.title,
         year: target.year,
-        image_url: target.image_url,
         description: JSON.stringify({
           text: target.description,
-          category: target.category
+          category: target.category,
+          image_url: target.image_url
         })
       };
 
