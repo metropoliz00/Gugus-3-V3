@@ -8764,7 +8764,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {trainings.length === 0 ? (
                 <div className="md:col-span-2 bg-gray-50 p-12 rounded-3xl text-center border-2 border-dashed border-gray-200">
@@ -8811,7 +8811,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
 
                       <div className="flex flex-col sm:flex-row flex-1">
                         {/* Day & Month Badge Section */}
-                        <div className={`sm:w-32 flex flex-col items-center justify-center p-6 border-b sm:border-b-0 sm:border-r border-gray-50 bg-gradient-to-b ${
+                        <div className={`sm:w-24 flex flex-col items-center justify-center p-4 border-b sm:border-b-0 sm:border-r border-gray-50 bg-gradient-to-b ${
                            autoStatus === 'ongoing' ? 'from-leaf-green/5 to-white' :
                            autoStatus === 'planned' ? 'from-main-blue/5 to-white' :
                            'from-gray-50 to-white'
@@ -8843,31 +8843,31 @@ function TeacherTrainingCards({ user }: { user: any }) {
                         </div>
 
                         {/* Content Section */}
-                        <div className="p-8 flex-1">
-                          <h3 className="font-black text-soft-black text-2xl mb-3 leading-tight tracking-tight group-hover:text-main-blue transition-colors">
+                        <div className="p-5 flex-1">
+                          <h3 className="font-black text-soft-black text-lg mb-2 leading-tight tracking-tight group-hover:text-main-blue transition-colors line-clamp-1">
                             {item.title}
                           </h3>
-                          <p className="text-sm text-gray-500 line-clamp-2 mb-6 leading-relaxed">
+                          <p className="text-[11px] text-gray-500 line-clamp-2 mb-4 leading-relaxed">
                             {item.description}
                           </p>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-2xl border border-gray-100 overflow-hidden">
-                               <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm text-main-blue shrink-0">
-                                  <MapPin className="w-4 h-4" />
+                          <div className="grid grid-cols-1 gap-2">
+                            <div className="flex items-center gap-2 bg-gray-50/80 p-2 rounded-xl border border-gray-100 overflow-hidden">
+                               <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shadow-sm text-main-blue shrink-0">
+                                  <MapPin className="w-3 h-3" />
                                </div>
                                <div className="min-w-0">
-                                  <p className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Lokasi</p>
-                                  <p className="text-[11px] font-bold text-soft-black truncate">{item.location}</p>
+                                  <p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-0.5">Lokasi</p>
+                                  <p className="text-[10px] font-bold text-soft-black truncate">{item.location}</p>
                                </div>
                             </div>
-                            <div className="flex items-center gap-3 bg-gray-50/80 p-3 rounded-2xl border border-gray-100 overflow-hidden">
-                               <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm text-leaf-green shrink-0">
-                                  <Clock className="w-4 h-4" />
+                            <div className="flex items-center gap-2 bg-gray-50/80 p-2 rounded-xl border border-gray-100 overflow-hidden">
+                               <div className="w-6 h-6 rounded-lg bg-white flex items-center justify-center shadow-sm text-leaf-green shrink-0">
+                                  <Clock className="w-3 h-3" />
                                </div>
                                <div className="min-w-0">
-                                  <p className="text-[9px] font-black text-gray-400 uppercase leading-none mb-1">Waktu</p>
-                                  <p className="text-[11px] font-bold text-soft-black truncate">{new Date(item.date_start).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" })} WIB</p>
+                                  <p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-0.5">Waktu</p>
+                                  <p className="text-[10px] font-bold text-soft-black truncate">{new Date(item.date_start).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" })} WIB</p>
                                </div>
                             </div>
                           </div>
@@ -8875,7 +8875,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                       </div>
 
                       {/* Footer / Actions */}
-                      <div className="p-6 bg-gradient-to-r from-gray-50/50 to-white border-t border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                      <div className="p-4 bg-gradient-to-r from-gray-50/50 to-white border-t border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div className="flex flex-col gap-2">
                            {isRegistered ? (
                              <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-2 rounded-xl border border-green-100 self-start">
@@ -8918,7 +8918,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                             <button
                               onClick={() => handleRegister(item.id)}
                               disabled={autoStatus === "completed"}
-                              className={`w-full sm:w-auto px-8 py-3 rounded-2xl text-xs font-black transition-all flex justify-center items-center gap-2 shadow-xl shrink-0 ${
+                              className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-[10px] font-black transition-all flex justify-center items-center gap-2 shadow-lg shrink-0 ${
                                 autoStatus === "completed"
                                   ? "bg-gray-200 text-gray-400 cursor-not-allowed shadow-none"
                                   : "bg-main-blue text-white shadow-main-blue/20 hover:scale-105 active:scale-95"
@@ -8930,7 +8930,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                             <button
                               onClick={() => handleAttendance(item.id)}
                               disabled={autoStatus === "completed"}
-                              className={`w-full sm:w-auto px-8 py-3 rounded-2xl text-xs font-black shadow-xl transition-all flex justify-center items-center gap-2 shrink-0 ${
+                              className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-[10px] font-black shadow-lg transition-all flex justify-center items-center gap-2 shrink-0 ${
                                 autoStatus === "completed"
                                   ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200"
                                   : "bg-leaf-green text-white shadow-leaf-green/20 hover:scale-105 active:scale-95"
@@ -8939,7 +8939,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                               <UserCheck className="w-4 h-4 shrink-0" /> <span className="truncate">{autoStatus === "completed" ? "Waktu Berakhir" : "Konfirmasi Hadir"}</span>
                             </button>
                           ) : (
-                            <div className="w-full sm:w-auto px-6 py-3 bg-white text-gray-400 rounded-2xl text-xs font-black border border-gray-100 shadow-sm flex justify-center items-center gap-2 shrink-0">
+                            <div className="w-full sm:w-auto px-5 py-2.5 bg-white text-gray-400 rounded-xl text-[10px] font-black border border-gray-100 shadow-sm flex justify-center items-center gap-2 shrink-0">
                                <Award className="w-4 h-4 text-amber-500" /> <span className="truncate">Selesai</span>
                             </div>
                           )}
