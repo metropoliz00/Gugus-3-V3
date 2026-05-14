@@ -4450,7 +4450,7 @@ function AdminSekolahForm({ user }: { user: any }) {
                             <a
                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(school.name)}`}
                               target="_blank"
-                              rel="noreferrer"
+                              rel="noopener noreferrer"
                               className="bg-white hover:bg-main-blue hover:text-white transition-colors p-1.5 rounded-lg border border-gray-100 shadow-sm opacity-0 group-hover/map:opacity-100"
                               title="Buka di Google Maps"
                             >
@@ -7691,7 +7691,7 @@ function DataViewList({
                     <a
                       href={item.file_url}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="w-full py-4 bg-gradient-to-r from-main-blue to-indigo-600 text-white rounded-2xl text-[10px] font-black tracking-widest text-center uppercase shadow-lg shadow-main-blue/20 hover:scale-105 active:scale-95 transition-all"
                     >
                       Buka Dokumen
@@ -7701,7 +7701,7 @@ function DataViewList({
                     <a
                       href={item.video_url}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="w-full py-4 bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-2xl text-[10px] font-black tracking-widest text-center uppercase shadow-lg shadow-orange-500/20 hover:scale-105 active:scale-95 transition-all"
                     >
                       Putar Materi
@@ -8890,12 +8890,22 @@ function TeacherTrainingCards({ user }: { user: any }) {
                            {hasAttended && (item.materi_url || item.video_url) && (
                              <div className="flex flex-wrap items-center gap-2 mt-1">
                                {item.materi_url && (
-                                 <a href={item.materi_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-main-blue rounded-lg text-[10px] font-black uppercase hover:bg-blue-100 transition-colors border border-blue-100">
+                                 <a 
+                                   href={item.materi_url} 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-main-blue rounded-lg text-[10px] font-black uppercase hover:bg-blue-100 transition-colors border border-blue-100"
+                                 >
                                    <BookOpen className="w-3 h-3" /> Unduh Materi
                                  </a>
                                )}
                                {item.video_url && (
-                                 <a href={item.video_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-[10px] font-black uppercase hover:bg-red-100 transition-colors border border-red-100">
+                                 <a 
+                                   href={item.video_url} 
+                                   target="_blank" 
+                                   rel="noopener noreferrer" 
+                                   className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-[10px] font-black uppercase hover:bg-red-100 transition-colors border border-red-100"
+                                 >
                                    <Play className="w-3 h-3" /> Rekaman Video
                                  </a>
                                )}
