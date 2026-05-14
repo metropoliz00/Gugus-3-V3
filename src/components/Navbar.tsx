@@ -53,6 +53,7 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
     { label: "Keuangan", href: "/keuangan", type: 'nav' },
     { label: "Galeri", href: "/#galeri", type: 'anchor' },
     { label: "Anggota Gugus", href: "/anggota-gugus", type: 'nav' },
+    { label: "Hasil Karya", href: "/hasil-karya", type: 'nav' },
   ];
 
   const isKkgPage = location.pathname === '/kkg';

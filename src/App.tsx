@@ -16,6 +16,7 @@ import LoginModal from './components/LoginModal';
 import AnnouncementPopup from './components/AnnouncementPopup';
 import LoadingScreen from './components/LoadingScreen';
 import Dashboard from './pages/Dashboard';
+import KaryaPage from './pages/KaryaPage';
 import { supabase } from './lib/supabase';
 import { useSiteContent } from './contexts/SiteContext';
 
@@ -207,6 +208,7 @@ export default function App() {
             <Route path="/" element={<HomePage onLoginClick={() => setIsLoginOpen(true)} user={user} />} />
             <Route path="/halaman-utama" element={<HomePage onLoginClick={() => setIsLoginOpen(true)} user={user} />} />
             <Route path="/kkg" element={<KkgPage />} />
+            <Route path="/hasil-karya" element={<KaryaPage />} />
             <Route path="/kkg/program" element={<KkgProgramPage />} />
             <Route path="/kkg/agenda" element={<KkgAgendaPage />} />
             <Route path="/anggota-gugus" element={<AnggotaGugusPage />} />
