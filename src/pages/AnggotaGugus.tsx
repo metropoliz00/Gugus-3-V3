@@ -149,15 +149,7 @@ export default function AnggotaGugusPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className={`bg-white rounded-3xl p-8 max-w-lg w-full relative border-4 ${(() => {
-                const colors = ['border-blue-500', 'border-green-500', 'border-amber-500', 'border-rose-500', 'border-indigo-500'];
-                let hash = 0;
-                const name = selectedGuru.nama || '';
-                for (let i = 0; i < name.length; i++) {
-                  hash = name.charCodeAt(i) + ((hash << 5) - hash);
-                }
-                return colors[Math.abs(hash) % colors.length];
-              })()}`}
+              className="bg-white rounded-3xl p-8 max-w-lg w-full relative"
               onClick={e => e.stopPropagation()}
             >
               <button onClick={() => setSelectedGuru(null)} className="absolute top-4 right-4 text-gray-400 hover:text-soft-black">
