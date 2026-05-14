@@ -31,6 +31,7 @@ import MonitoringPembelajaran from './pages/MonitoringPembelajaran';
 import ELearning from './pages/ELearning';
 import AnggotaGugusPage from './pages/AnggotaGugus';
 import KeuanganPage from './pages/KeuanganPage';
+import PraktikBaikPage from './pages/PraktikBaikPage';
 import { AlertProvider } from './contexts/AlertContext';
 import { logActivity } from './lib/activity';
 
@@ -170,6 +171,7 @@ export default function App() {
       '/kkg/agenda': 'Agenda KKG',
       '/anggota-gugus': 'Anggota Gugus',
       '/profil-gugus': 'Profil Gugus',
+      '/praktik-baik': 'Sharing Praktik Baik',
       '/kegiatan': 'Kegiatan',
       '/keuangan': 'Laporan Keuangan',
       '/layanan/administrasi': 'Administrasi Online',
@@ -209,6 +211,7 @@ export default function App() {
             <Route path="/kkg/agenda" element={<KkgAgendaPage />} />
             <Route path="/anggota-gugus" element={<AnggotaGugusPage />} />
             <Route path="/profil-gugus" element={<GugusPage />} />
+            <Route path="/praktik-baik" element={<PraktikBaikPage />} />
             <Route path="/kegiatan" element={<KegiatanPage />} />
             <Route path="/keuangan" element={<KeuanganPage />} />
             <Route path="/layanan/administrasi" element={<AdministrasiOnline />} />

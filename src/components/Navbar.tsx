@@ -46,6 +46,7 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
     { label: "Beranda", href: "/", type: 'nav' },
     { label: "Profil Gugus", href: "/profil-gugus", type: 'nav' },
     { label: "Anggota Gugus", href: "/anggota-gugus", type: 'nav' },
+    { label: "Praktik Baik", href: "/praktik-baik", type: 'nav' },
     { label: "KKG", href: "/kkg", type: 'nav' },
     { label: "Sekolah", href: "/#sekolah", type: 'anchor' },
     { label: "Kegiatan", href: "/kegiatan", type: 'nav' },
