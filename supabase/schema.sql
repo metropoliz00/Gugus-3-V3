@@ -238,6 +238,16 @@ CREATE TABLE IF NOT EXISTS public.achievements (
 );
 
 -- Table for Awards (Penghargaan)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='awards' AND column_name='category') THEN
+        ALTER TABLE public.awards ADD COLUMN category VARCHAR(50);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='awards' AND column_name='image_url') THEN
+        ALTER TABLE public.awards ADD COLUMN image_url TEXT;
+    END IF;
+END $$;
+
 CREATE TABLE IF NOT EXISTS public.awards (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title VARCHAR(255) NOT NULL,

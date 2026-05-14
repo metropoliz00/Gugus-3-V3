@@ -6016,8 +6016,9 @@ function AdminPenghargaanForm() {
                 <option value="Kepala Sekolah">Kepala Sekolah</option>
                 <option value="Sekolah">Sekolah</option>
             </select>
-            <input placeholder="URL Gambar" className="p-2 border rounded" value={newAward.image_url} onChange={e => setNewAward({...newAward, image_url: e.target.value})}/>
+            <input placeholder="URL Foto Penghargaan" className="p-2 border rounded" value={newAward.image_url} onChange={e => setNewAward({...newAward, image_url: e.target.value})}/>
           </div>
+          <p className="text-xs text-gray-500">Catatan: Masukkan URL foto penghargaan. Fitur unggah foto langsung sedang dalam pengembangan.</p>
           <textarea placeholder="Deskripsi" className="w-full p-2 border rounded" value={newAward.description} onChange={e => setNewAward({...newAward, description: e.target.value})} />
           <div className="flex gap-2">
             <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">Simpan</button>
