@@ -5941,7 +5941,6 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
 
     const newAward = {
       title: "Penghargaan Baru",
-      winner_name: "Nama Penerima",
       year: new Date().getFullYear(),
       description: "Deskripsi penghargaan...",
       image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80"
