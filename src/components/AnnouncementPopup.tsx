@@ -66,10 +66,9 @@ export default function AnnouncementPopup({ isReady = true }: { isReady?: boolea
             <div className="p-8 md:w-2/3 flex flex-col justify-center bg-white">
               <h4 className="text-xs font-bold uppercase tracking-wider text-main-blue mb-2">{announcement.title}</h4>
               <h3 className="font-heading text-xl font-bold text-soft-black mb-3 leading-tight">{announcement.subtitle}</h3>
-              <div 
-                className="text-gray-500 text-sm leading-relaxed mb-6 prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: announcement.desc }}
-              />
+              <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                {announcement.desc}
+              </p>
               
               <button 
                 onClick={handleClose}

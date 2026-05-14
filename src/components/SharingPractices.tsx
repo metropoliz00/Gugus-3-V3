@@ -4,7 +4,6 @@ import { PlusCircle, X, Award, Play, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ImageUpload from './ImageUpload';
 import { useAlert } from '../contexts/AlertContext';
-import { CKEditor } from './CKEditor';
 
 export function SharingPractices({ user }: { user: any }) {
   const [practices, setPractices] = useState<any[]>([]);
@@ -277,10 +276,10 @@ export function SharingPractices({ user }: { user: any }) {
                       </div>
                       <div className="group">
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Deskripsi Inspirasi</label>
-                        <CKEditor
-                          id={`editor-sharing-${p.id}`}
-                          value={p.description || ""}
-                          onChange={(val) => handleUpdate(p.id, { description: val })}
+                        <textarea
+                          className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-medium h-40 focus:border-main-blue focus:bg-white outline-none transition-all leading-relaxed"
+                          value={p.description}
+                          onChange={(e) => handleUpdate(p.id, { description: e.target.value })}
                           placeholder="Ceritakan tantangan, langkah-langkah, dan keberhasilan praktik baik yang Anda lakukan..."
                         />
                       </div>

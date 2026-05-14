@@ -84,8 +84,6 @@ import AdminCertificateEditor, {
   useCertificateGenerator,
 } from "../components/AdminCertificateEditor";
 import { SharingPractices } from "../components/SharingPractices";
-import AdminPengumumanForm from "../components/AdminPengumumanForm";
-import AdminPenghargaanForm from "../components/AdminPenghargaanForm";
 
 import * as XLSX from "xlsx";
 
@@ -2957,18 +2955,17 @@ function AdminSettingsForm() {
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Popup Description
               </label>
-              <div className="bg-white border rounded-xl overflow-hidden">
-                <CKEditor
-                  id="editor-announcement-desc"
-                  value={announcementForm.desc || ""}
-                  onChange={(val) =>
-                    setAnnouncementForm({
-                      ...announcementForm,
-                      desc: val,
-                    })
-                  }
-                />
-              </div>
+              <textarea
+                className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all"
+                rows={3}
+                value={announcementForm.desc}
+                onChange={(e) =>
+                  setAnnouncementForm({
+                    ...announcementForm,
+                    desc: e.target.value,
+                  })
+                }
+              />
             </div>
           </div>
         </div>
@@ -5890,21 +5887,341 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
           </button>
         </div>
       </form>
+    </div>
+  </div>
+);
+}
 
+function AdminPenghargaanForm() {
+  const [awards, setAwards] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const debouncedSave = useRef<NodeJS.Timeout | null>(null);
 
+  React.useEffect(() => {
+    async function loadAwards() {
+      if (!supabase) return;
+      try {
+        const { data } = await supabase
+          .from("awards")
+          .select("*")
+          .order("created_at", { ascending: false });
+        setAwards(data || []);
+      } catch (err) {
+        console.error("Error fetching awards:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadAwards();
+  }, []);
 
+  const handleCreate = async () => {
+    if (!supabase) return;
+    const newAward = {
+      title: "Penghargaan Baru",
+      category: "Guru",
+      year: new Date().getFullYear(),
+      description: "Deskripsi penghargaan...",
+      image_url:
+        "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80",
+    };
+    const { data, error } = await supabase
+      .from("awards")
+      .insert([newAward])
+      .select();
+    if (!error && data) {
+      setAwards([data[0], ...awards]);
+    }
+  };
 
+  const handleUpdate = (id: string, updates: any) => {
+    setAwards(awards.map((a: any) => (a.id === id ? { ...a, ...updates } : a)));
 
+    if (debouncedSave.current) clearTimeout(debouncedSave.current);
 
-                    <div className="bg-white border rounded-xl overflow-hidden mt-2">
-                      <CKEditor
-                        id={`editor-pengumuman-${item.id}`}
-                        value={item.content || ""}
-                        onChange={(val) =>
-                          handleUpdate(item.id, { content: val })
-                        }
-                      />
-                    </div>
+    debouncedSave.current = setTimeout(async () => {
+      if (!supabase) return;
+      const { error } = await supabase
+        .from("awards")
+        .update(updates)
+        .eq("id", id);
+      if (error) {
+        console.error("Error updating award:", error);
+      }
+    }, 800);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!supabase) return;
+    if (window.confirm("Hapus penghargaan ini?")) {
+      const { error } = await supabase.from("awards").delete().eq("id", id);
+      if (!error) {
+        setAwards(awards.filter((a: any) => a.id !== id));
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-10">
+      {/* Penghargaan Clean Header */}
+      <div className="bg-white p-8 rounded-[2rem] border-l-8 border-amber-500 shadow-sm mb-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+        <div className="flex items-center gap-8">
+          <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-100">
+            <Trophy className="w-8 h-8" />
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-amber-50 rounded-full border border-amber-100 mb-2">
+              <div className="w-1 h-1 rounded-full bg-amber-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest font-heading">Apresiasi & Prestasi</span>
+            </div>
+            <h2 className="text-2xl font-bold font-heading text-soft-black">
+              Kelola Penghargaan
+            </h2>
+            <p className="text-sm text-gray-500">
+              Kelola data penghargaan dan sertifikat prestasi di lingkungan GUGUS 3.
+            </p>
+          </div>
+        </div>
+        
+        <button
+          onClick={handleCreate}
+          className="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-md hover:bg-amber-600 active:scale-95 transition-all flex items-center gap-3"
+        >
+          <PlusCircle className="w-4 h-4" /> Tambah Penghargaan
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {isLoading ? (
+          <div className="text-center text-gray-400 py-10">Memuat data...</div>
+        ) : awards.length === 0 ? (
+          <div className="text-center text-gray-400 py-10">
+            Belum ada penghargaan.
+          </div>
+        ) : (
+          awards.map((item: any) => (
+            <div
+              key={item.id}
+              className="flex gap-4 p-4 border border-gray-100 rounded-xl bg-gray-50 group relative"
+            >
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4 pr-8">
+                <div className="md:col-span-2">
+                  <div className="flex gap-2 items-center mb-1">
+                    <label className="block text-[10px] uppercase font-bold text-gray-400">
+                        Judul Penghargaan
+                    </label>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 uppercase">
+                        {item.category}
+                    </span>
+                  </div>
+                  <input
+                    className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                    value={item.title}
+                    onChange={(e) =>
+                      handleUpdate(item.id, { title: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    Tahun
+                  </label>
+                  <input
+                    className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                    type="number"
+                    value={item.year}
+                    onChange={(e) =>
+                      handleUpdate(item.id, { year: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    Kategori
+                  </label>
+                  <select
+                    className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                    value={item.category}
+                    onChange={(e) =>
+                      handleUpdate(item.id, { category: e.target.value })
+                    }
+                  >
+                    <option value="Siswa">Siswa</option>
+                    <option value="Guru">Guru</option>
+                    <option value="Kepala Sekolah">Kepala Sekolah</option>
+                    <option value="Sekolah">Sekolah</option>
+                  </select>
+                </div>
+                <div className="md:col-span-4">
+                  <ImageUpload
+                    label="Foto Penghargaan"
+                    value={item.image_url || ""}
+                    onChange={(base64) =>
+                      handleUpdate(item.id, { image_url: base64 })
+                    }
+                    maxWidth={600}
+                    maxHeight={400}
+                  />
+                </div>
+                <div className="md:col-span-4">
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    Deskripsi
+                  </label>
+                  <textarea
+                    className="w-full border-b border-gray-200 text-sm text-soft-black outline-none bg-transparent"
+                    value={item.description}
+                    rows={2}
+                    onChange={(e) =>
+                      handleUpdate(item.id, { description: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDelete(item.id)}
+                className="opacity-0 group-hover:opacity-100 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AdminPengumumanForm() {
+  const [news, setNews] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    async function loadNews() {
+      if (!supabase) return;
+      try {
+        const { data } = await supabase
+          .from("posts")
+          .select("*")
+          .eq("category", "pengumuman")
+          .order("created_at", { ascending: false });
+        setNews(data || []);
+      } catch (err) {
+        console.error("Error fetching pengumuman:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadNews();
+  }, []);
+
+  const handleCreate = async () => {
+    if (!supabase) return;
+    const newPost = {
+      title: "Pengumuman Baru",
+      slug: `pengumuman-baru-${Date.now()}`,
+      content: "Konten pengumuman...",
+      featured_image_url: "",
+      category: "pengumuman",
+    };
+    const { data, error } = await supabase
+      .from("posts")
+      .insert([newPost])
+      .select();
+    if (!error && data) {
+      setNews([data[0], ...news]);
+    }
+  };
+
+  const handleUpdate = async (id: string, updates: any) => {
+    if (!supabase) return;
+    const { error } = await supabase.from("posts").update(updates).eq("id", id);
+    if (!error) {
+      setNews(news.map((n: any) => (n.id === id ? { ...n, ...updates } : n)));
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!supabase) return;
+    if (window.confirm("Hapus pengumuman ini?")) {
+      const { error } = await supabase.from("posts").delete().eq("id", id);
+      if (!error) {
+        setNews(news.filter((n: any) => n.id !== id));
+      }
+    }
+  };
+
+  return (
+    <div className="space-y-10">
+      {/* Pengumuman Clean Header */}
+      <div className="bg-white p-8 rounded-[2rem] border-l-8 border-red-500 shadow-sm mb-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+        <div className="flex items-center gap-8">
+          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 border border-red-100">
+            <Megaphone className="w-8 h-8" />
+          </div>
+          <div>
+            <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-red-50 rounded-full border border-red-100 mb-2">
+              <div className="w-1 h-1 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest font-heading">Informasi Penting</span>
+            </div>
+            <h2 className="text-2xl font-bold font-heading text-soft-black">
+              Kelola Pengumuman
+            </h2>
+            <p className="text-sm text-gray-500">
+              Publikasikan pengumuman mendesak dan informasi resmi Gugus 3.
+            </p>
+          </div>
+        </div>
+        
+        <button
+          onClick={handleCreate}
+          className="bg-red-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-md hover:bg-red-600 active:scale-95 transition-all flex items-center gap-3"
+        >
+          <PlusCircle className="w-4 h-4" /> Buat Pengumuman
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 mb-6">
+          {isLoading ? (
+            <div className="text-center text-gray-400 py-10">
+              Memuat data...
+            </div>
+          ) : news.length === 0 ? (
+            <div className="text-center text-gray-400 py-10">
+              Belum ada pengumuman.
+            </div>
+          ) : (
+            news.map((item: any) => (
+              <div
+                key={item.id}
+                className="flex gap-4 p-4 border border-gray-100 rounded-xl bg-gray-50 group"
+              >
+                <div className="flex-1 grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                      Judul Pengumuman
+                    </label>
+                    <input
+                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                      value={item.title}
+                      onChange={(e) =>
+                        handleUpdate(item.id, { title: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                      Isi Singkat Pengumuman
+                    </label>
+                    <textarea
+                      className="w-full border-b border-gray-200 text-sm text-soft-black outline-none bg-transparent"
+                      value={item.content}
+                      rows={2}
+                      onChange={(e) =>
+                        handleUpdate(item.id, { content: e.target.value })
+                      }
+                    />
                   </div>
                 </div>
                 <button
@@ -7022,15 +7339,14 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                     {f.label}
                   </label>
                   {f.type === "textarea" ? (
-                    <div className="bg-white border rounded-xl overflow-hidden">
-                      <CKEditor
-                        id={`editor-${f.name}`}
-                        value={formData[f.name] || ""}
-                        onChange={(val) =>
-                          setFormData({ ...formData, [f.name]: val })
-                        }
-                      />
-                    </div>
+                    <textarea
+                      className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none"
+                      rows={4}
+                      value={formData[f.name] || ""}
+                      onChange={(e) =>
+                        setFormData({ ...formData, [f.name]: e.target.value })
+                      }
+                    />
                   ) : f.type === "select" ? (
                     <select
                       className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none bg-white"
@@ -7159,11 +7475,9 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                                   ? opt
                                   : opt?.label || val || "-";
                               })()
-                            : f.type === "textarea"
-                              ? (item[f.name]?.replace(/<[^>]*>?/gm, '').substring(0, 100) || "-")
-                              : f.type === "file"
-                                ? (item[f.name] ? "Terisi" : "-")
-                                : item[f.name] || "-"}
+                            : f.type === "file"
+                              ? (item[f.name] ? "Terisi" : "-")
+                              : item[f.name] || "-"}
                       </td>
                     ))}
                     <td className="px-6 py-4 text-right">
@@ -7694,16 +8008,15 @@ function CreateForumPostForm({
           <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
             Detail Pembahasan
           </label>
-          <div className="bg-white border rounded-2xl overflow-hidden shadow-sm">
-            <CKEditor
-              id="editor-forum"
-              value={formData.content || ""}
-              onChange={(val) =>
-                setFormData({ ...formData, content: val })
-              }
-              placeholder="Tuliskan detail pertanyaan atau pengalaman Anda..."
-            />
-          </div>
+          <textarea
+            placeholder="Tuliskan detail pertanyaan atau pengalaman Anda..."
+            rows={8}
+            className="w-full border border-gray-100 p-4 rounded-2xl focus:border-main-blue outline-none bg-gray-50/50"
+            value={formData.content}
+            onChange={(e) =>
+              setFormData({ ...formData, content: e.target.value })
+            }
+          />
         </div>
         <button
           type="submit"
@@ -7821,10 +8134,9 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
         <h1 className="text-2xl font-bold font-heading text-soft-black mb-4">
           {post.title}
         </h1>
-        <div 
-          className="prose prose-sm max-w-none text-gray-600 mb-6 bg-gray-50/50 p-6 rounded-2xl"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        <div className="prose prose-blue max-w-none text-gray-600 mb-6 bg-gray-50/50 p-6 rounded-2xl whitespace-pre-wrap">
+          {post.content}
+        </div>
         <div className="flex items-center gap-4 py-4 border-t border-gray-50">
           <span className="text-[10px] font-extrabold text-main-blue bg-main-blue/10 px-3 py-1 rounded-full uppercase tracking-widest">
             {post.category}
@@ -7875,10 +8187,9 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
                   </p>
                 </div>
               </div>
-              <div 
-                className="text-sm text-gray-600 leading-relaxed pl-11 prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: comment.content }}
-              />
+              <p className="text-sm text-gray-600 leading-relaxed pl-11">
+                {comment.content}
+              </p>
             </motion.div>
           ))
         )}
@@ -7887,14 +8198,13 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
       <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl border border-main-blue/20 sticky bottom-4 z-10 transition-all focus-within:shadow-main-blue/20">
         <form onSubmit={handleReply} className="flex gap-4 items-end">
           <div className="flex-1">
-            <div className="bg-white border rounded-xl overflow-hidden mt-1 shadow-inner focus-within:ring-2 focus-within:ring-main-blue/20 transition-all">
-              <CKEditor
-                id="editor-reply"
-                value={newComment || ""}
-                onChange={(val) => setNewComment(val)}
-                placeholder="Ketik tanggapan konstruktif Anda..."
-              />
-            </div>
+            <textarea
+              placeholder="Ketik tanggapan konstruktif Anda..."
+              rows={1}
+              className="w-full border-b border-gray-200 focus:border-main-blue outline-none resize-none p-2 text-sm transition-all"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+            />
           </div>
           <button
             type="submit"

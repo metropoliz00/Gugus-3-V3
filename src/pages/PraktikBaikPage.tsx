@@ -197,10 +197,9 @@ export default function PraktikBaikPage() {
                       <h3 className="text-2xl font-black text-soft-black mb-4 leading-tight line-clamp-2 group-hover:text-main-blue transition-colors">
                         {p.title}
                       </h3>
-                      <div 
-                        className="text-gray-500 text-sm leading-relaxed mb-8 line-clamp-3 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: p.description }}
-                      />
+                      <p className="text-gray-500 text-sm leading-relaxed mb-8 line-clamp-3 italic">
+                        "{p.description}"
+                      </p>
 
                       <div className="mt-auto pt-6 border-t border-gray-50 flex items-center justify-between">
                         <div className="flex items-center gap-3">
