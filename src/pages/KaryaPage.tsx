@@ -24,31 +24,38 @@ export default function KaryaPage() {
       {loading ? (
         <p>Memuat...</p>
       ) : (
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-gray-100">
-                <th className="pb-4 font-semibold text-gray-500">Guru</th>
-                <th className="pb-4 font-semibold text-gray-500">Judul Karya</th>
-                <th className="pb-4 font-semibold text-gray-500">Jenis</th>
-                <th className="pb-4 font-semibold text-gray-500">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {works.map((work) => (
-                <tr key={work.id} className="border-t border-gray-50">
-                  <td className="py-4 font-medium">{work.profiles?.full_name || "Guru"}</td>
-                  <td className="py-4">{work.title}</td>
-                  <td className="py-4 uppercase text-xs font-bold text-main-blue">{work.work_type}</td>
-                  <td className="py-4">
-                    <button onClick={() => setSelectedWork(work)} className="text-main-blue hover:text-leaf-green">
-                      <ExternalLink className="w-5 h-5" />
-                    </button>
-                  </td>
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left min-w-[500px]">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500">Guru</th>
+                  <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500">Judul Karya</th>
+                  <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500">Jenis</th>
+                  <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500 text-right">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {works.map((work) => (
+                  <tr key={work.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-4 px-6 font-medium text-soft-black text-sm">{work.profiles?.full_name || "Guru"}</td>
+                    <td className="py-4 px-6 text-gray-600 text-sm font-medium">{work.title}</td>
+                    <td className="py-4 px-6 uppercase text-[10px] tracking-widest font-bold text-main-blue">{work.work_type}</td>
+                    <td className="py-4 px-6 text-right">
+                      <button onClick={() => setSelectedWork(work)} className="inline-flex items-center gap-2 px-4 py-2 bg-main-blue/10 text-main-blue hover:bg-main-blue hover:text-white rounded-xl transition-colors font-bold text-xs">
+                        <ExternalLink className="w-4 h-4" /> Buka
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {works.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="py-10 text-center text-gray-400 italic">Belum ada karya yang diunggah.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -59,9 +66,22 @@ export default function KaryaPage() {
             {selectedWork.work_type === "video" ? (
               <video src={selectedWork.file_url} controls className="w-full rounded-xl" />
             ) : (
-              <iframe src={selectedWork.file_url} className="w-full h-96 rounded-xl" />
+              <div className="flex flex-col gap-4">
+                <iframe src={selectedWork.file_url} className="w-full h-96 rounded-xl border border-gray-200 hidden md:block" />
+                <div className="md:hidden bg-blue-50 p-6 rounded-xl text-center border border-blue-100">
+                   <FileText className="w-12 h-12 text-main-blue mx-auto mb-4" />
+                   <p className="text-sm text-gray-600 mb-4">Pratinjau dokumen mungkin tidak didukung di perangkat ini.</p>
+                </div>
+              </div>
             )}
-            <button onClick={() => setSelectedWork(null)} className="mt-4 px-4 py-2 bg-gray-200 rounded-lg">Tutup</button>
+            <div className="mt-6 flex flex-col md:flex-row gap-3 justify-end">
+              <a href={selectedWork.file_url} target="_blank" rel="noopener noreferrer" className="px-6 py-3 bg-main-blue text-white font-bold rounded-xl text-center hover:bg-main-blue/90 w-full md:w-auto">
+                Buka di Tab Baru
+              </a>
+              <button onClick={() => setSelectedWork(null)} className="px-6 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200">
+                Tutup
+              </button>
+            </div>
           </div>
         </div>
       )}

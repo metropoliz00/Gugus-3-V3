@@ -7546,6 +7546,8 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                               })()
                             : f.type === "file"
                               ? (item[f.name] ? "Terisi" : "-")
+                            : f.type === "url" 
+                              ? (item[f.name] ? <a href={item[f.name]} target="_blank" rel="noopener noreferrer" className="text-main-blue hover:underline whitespace-nowrap overflow-hidden text-ellipsis block w-full">{item[f.name]}</a> : "-")
                               : item[f.name] || "-"}
                       </td>
                     ))}
