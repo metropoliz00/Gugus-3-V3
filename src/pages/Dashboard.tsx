@@ -8714,7 +8714,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
         </div>
 
         {/* Tab System Modernized */}
-        <div className="flex bg-gray-50 p-1.5 rounded-2xl shrink-0 border border-gray-100 shadow-inner">
+        <div className="flex w-full md:w-auto overflow-x-auto hide-scrollbar bg-gray-50 p-1.5 rounded-2xl shrink-0 border border-gray-100 shadow-inner snap-x">
           {[
             { id: "daftar", label: "Program", icon: Calendar, activeColor: "bg-white text-main-blue shadow-sm" },
             { id: "absensi", label: "Riwayat", icon: CheckSquare, activeColor: "bg-white text-orange-500 shadow-sm" },
@@ -8723,7 +8723,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
             <button
               key={tab.id}
               onClick={() => setActiveSubTab(tab.id as any)}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 relative ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 relative shrink-0 snap-center whitespace-nowrap ${
                 activeSubTab === tab.id
                   ? tab.activeColor
                   : "text-gray-400 hover:text-gray-600 hover:bg-gray-100/50"
@@ -8921,8 +8921,9 @@ function TeacherTrainingCards({ user }: { user: any }) {
               exit={{ opacity: 0, y: -10 }}
               className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden"
             >
-              <table className="w-full text-left">
-                <thead className="bg-gray-50">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left min-w-[700px]">
+                  <thead className="bg-gray-50">
                   <tr className="text-[10px] font-bold uppercase text-gray-400 tracking-wider">
                     <th className="px-8 py-4">Pelatihan</th>
                     <th className="px-8 py-4">Tanggal Daftar</th>
@@ -9000,6 +9001,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                   )}
                 </tbody>
               </table>
+            </div>
             </motion.div>
           )}
 
