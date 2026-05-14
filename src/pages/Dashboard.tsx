@@ -5889,12 +5889,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
           </button>
         </div>
       </form>
-    </div>
-  </div>
-);
-}
-
-function AdminPenghargaanForm() {
+  function AdminPenghargaanForm() {
   const [awards, setAwards] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const debouncedSave = useRef<NodeJS.Timeout | null>(null);
@@ -5903,33 +5898,27 @@ function AdminPenghargaanForm() {
     async function loadAwards() {
       if (!supabase) return;
       try {
-        const { data } = await supabase
+        console.log("Loading awards from DB...");
+        const { data, error } = await supabase
           .from("awards")
           .select("*")
           .order("created_at", { ascending: false });
+        
+        if (error) {
+          console.error("Error fetching awards:", error);
+          return;
+        }
+
         if (data) {
-          const parsedData = data.map(item => {
-            let text = item.description || "";
-            let category = "Guru";
-            let image_url = "";
-            try {
-              if (text.startsWith("{")) {
-                const parsed = JSON.parse(text);
-                if (parsed && typeof parsed === 'object') {
-                  text = parsed.text || "Deskripsi penghargaan...";
-                  category = parsed.category || "Guru";
-                  image_url = parsed.image_url || "";
-                }
-              }
-            } catch (e) {}
-            return { ...item, description: text, category, image_url };
-          });
-          setAwards(parsedData);
-        } else {
-          setAwards([]);
+          setAwards(data.map(item => ({
+              ...item,
+              winner_name: item.winner_name || "Nama Penerima",
+              category: "guru",
+              image_url: item.image_url || ""
+          })));
         }
       } catch (err) {
-        console.error("Error fetching awards:", err);
+        console.error("Unexpected error in loadAwards:", err);
       } finally {
         setIsLoading(false);
       }
@@ -5938,52 +5927,64 @@ function AdminPenghargaanForm() {
   }, []);
 
   const handleCreate = async () => {
-    console.log("handleCreate clicked - starting insert...");
-    if (!supabase) return;
+    console.log("handleCreate clicked - starting insert to achievements...");
+    if (!supabase) {
+      alert("Supabase client not found.");
+      return;
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      alert("Sesi berakhir. Silakan login kembali.");
+      return;
+    }
+
     const newAward = {
       title: "Penghargaan Baru",
+      winner_name: "Nama Penerima",
       year: new Date().getFullYear(),
-      description: JSON.stringify({
-        text: "Deskripsi penghargaan...",
-        category: "Guru",
-        image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80"
-      })
+      description: "Deskripsi penghargaan...",
+      image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80"
     };
+    
     try {
       const { data, error } = await supabase
         .from("awards")
         .insert([newAward])
         .select();
-      if (!error && data) {
-        setAwards([{ ...data[0], description: "Deskripsi penghargaan...", category: "Guru", image_url: "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80" }, ...awards]);
-      } else {
-          alert(`Gagal menambahkan penghargaan ke database. Kemungkinan ini karena masalah izin (RLS) di Supabase. Error: ${error?.message}`);
-          console.error("Insert error:", error);
+        
+      if (error) {
+        console.error("Insert error:", error);
+        alert(`Gagal menambah: ${error.message}`);
+        return;
+      }
+      
+      if (data && data.length > 0) {
+        setAwards([data[0], ...awards]);
+        alert("Berhasil ditambahkan!");
       }
     } catch (e: any) {
-      alert(`Server error: ${e.message}`);
+      alert(`Error: ${e.message}`);
     }
   };
 
   const handleUpdate = (id: string, updates: any) => {
-    const newAwards = awards.map((a: any) => (a.id === id ? { ...a, ...updates } : a));
-    setAwards(newAwards);
+    const updatedAwards = awards.map((a: any) => (a.id === id ? { ...a, ...updates } : a));
+    setAwards(updatedAwards);
 
     if (debouncedSave.current) clearTimeout(debouncedSave.current);
 
     debouncedSave.current = setTimeout(async () => {
       if (!supabase) return;
-      const target = newAwards.find(a => a.id === id);
+      const target = updatedAwards.find(a => a.id === id);
       if (!target) return;
       
+      // Map back to DB fields, ensure category is lowercase if changed
       const dbPayload = {
         title: target.title,
         year: parseInt(target.year) || new Date().getFullYear(),
-        description: JSON.stringify({
-          text: target.description || "Deskripsi penghargaan...",
-          category: target.category || "Guru",
-          image_url: target.image_url || ""
-        })
+        description: target.description,
+        image_url: target.image_url
       };
 
       try {
@@ -5992,10 +5993,9 @@ function AdminPenghargaanForm() {
           .update(dbPayload)
           .eq("id", id);
         if (error) {
-          console.error("Error updating award:", error);
-          alert(`Gagal menyimpan perubahan. Cek izin tabel "awards" (RLS). Error: ${error.message}`);
+          console.error("Update error:", error);
         }
-      } catch (e: any) {
+      } catch (e) {
         console.error(e);
       }
     }, 800);
@@ -6003,17 +6003,18 @@ function AdminPenghargaanForm() {
 
   const handleDelete = async (id: string) => {
     if (!supabase) return;
-    if (window.confirm("Hapus penghargaan ini?")) {
+    if (window.confirm("Hapus data ini?")) {
       const { error } = await supabase.from("awards").delete().eq("id", id);
       if (!error) {
         setAwards(awards.filter((a: any) => a.id !== id));
+      } else {
+        alert("Gagal menghapus: " + error.message);
       }
     }
   };
 
   return (
     <div className="space-y-10">
-      {/* Penghargaan Clean Header */}
       <div className="bg-white p-8 rounded-[2rem] border-l-8 border-amber-500 shadow-sm mb-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
         <div className="flex items-center gap-8">
           <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-100">
@@ -6025,10 +6026,10 @@ function AdminPenghargaanForm() {
               <span className="text-[10px] font-bold text-amber-600 uppercase tracking-widest font-heading">Apresiasi & Prestasi</span>
             </div>
             <h2 className="text-2xl font-bold font-heading text-soft-black">
-              Kelola Penghargaan
+              Kelola Prestasi & Penghargaan
             </h2>
             <p className="text-sm text-gray-500">
-              Kelola data penghargaan dan sertifikat prestasi di lingkungan GUGUS 3.
+              Kelola data prestasi siswa, guru, dan sekolah di lingkungan GUGUS 3.
             </p>
           </div>
         </div>
@@ -6046,7 +6047,7 @@ function AdminPenghargaanForm() {
           <div className="text-center text-gray-400 py-10">Memuat data...</div>
         ) : awards.length === 0 ? (
           <div className="text-center text-gray-400 py-10">
-            Belum ada penghargaan.
+            Belum ada data prestasi.
           </div>
         ) : (
           awards.map((item: any) => (
@@ -6058,11 +6059,8 @@ function AdminPenghargaanForm() {
                 <div className="md:col-span-2">
                   <div className="flex gap-2 items-center mb-1">
                     <label className="block text-[10px] uppercase font-bold text-gray-400">
-                        Judul Penghargaan
+                        Nama Prestasi / Penghargaan
                     </label>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 uppercase">
-                        {item.category}
-                    </span>
                   </div>
                   <input
                     className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
@@ -6090,32 +6088,47 @@ function AdminPenghargaanForm() {
                     Kategori
                   </label>
                   <select
-                    className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                    className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent capitalize"
                     value={item.category}
                     onChange={(e) =>
                       handleUpdate(item.id, { category: e.target.value })
                     }
                   >
-                    <option value="Siswa">Siswa</option>
-                    <option value="Guru">Guru</option>
-                    <option value="Kepala Sekolah">Kepala Sekolah</option>
-                    <option value="Sekolah">Sekolah</option>
+                    <option value="siswa">Siswa</option>
+                    <option value="guru">Guru</option>
+                    <option value="kepala_sekolah">Kepala Sekolah</option>
+                    <option value="sekolah">Sekolah</option>
                   </select>
                 </div>
-                <div className="md:col-span-4">
+                
+                <div className="md:col-span-2">
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                    Penerima (Nama Siswa/Guru/dll)
+                  </label>
+                  <input
+                    className="w-full border-b border-gray-200 text-sm text-soft-black outline-none bg-transparent"
+                    value={item.winner_name || ""}
+                    onChange={(e) =>
+                      handleUpdate(item.id, { winner_name: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="md:col-span-4 mt-2">
                   <ImageUpload
                     label="Foto Penghargaan"
                     value={item.image_url || ""}
                     onChange={(base64) =>
                       handleUpdate(item.id, { image_url: base64 })
                     }
-                    maxWidth={600}
-                    maxHeight={400}
+                    maxWidth={800}
+                    maxHeight={600}
                   />
                 </div>
+                
                 <div className="md:col-span-4">
                   <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                    Deskripsi
+                    Deskripsi Singkat
                   </label>
                   <textarea
                     className="w-full border-b border-gray-200 text-sm text-soft-black outline-none bg-transparent"
@@ -6136,6 +6149,11 @@ function AdminPenghargaanForm() {
               </button>
             </div>
           ))
+        )}
+      </div>
+    </div>
+  );
+}
         )}
       </div>
     </div>
