@@ -135,6 +135,8 @@ const adminMenu = [
   { id: "komentar", label: "Kelola Komentar Forum", icon: MessageSquare },
   { id: "sharing", label: "Kelola Praktik Baik", icon: Play },
   { id: "hasil_karya", label: "Kelola Hasil Karya", icon: UploadCloud },
+  { id: "surat_masuk", label: "Surat Masuk", icon: Mail },
+  { id: "surat_keluar", label: "Surat Keluar", icon: Send },
   { id: "struktur_org", label: "Kelola KKG & Gugus", icon: Users },
   { id: "penghargaan", label: "Kelola Penghargaan", icon: Trophy },
   { id: "pengaturan", label: "Pengaturan Website", icon: Settings },
@@ -168,6 +170,10 @@ const adminMenuGroups = [
   {
     title: "Forum & Karya",
     items: ["forum", "komentar", "sharing", "hasil_karya", "penghargaan"],
+  },
+  {
+    title: "Arsip Surat",
+    items: ["surat_masuk", "surat_keluar"],
   },
   {
     title: "Sistem",
@@ -211,6 +217,7 @@ export default function Dashboard({
       "Konten Publik": true,
       Akademik: false,
       "Forum & Karya": false,
+      "Arsip Surat": true,
       Sistem: false,
     },
   );
@@ -1033,6 +1040,42 @@ export default function Dashboard({
                                 label: "URL File",
                                 type: "file",
                               },
+                            ]}
+                          />
+                        }
+                      />
+                      <Route
+                        path="surat_masuk"
+                        element={
+                          <DataManagementTable
+                            user={user}
+                            table="incoming_letters"
+                            title="Arsip Surat Masuk"
+                            icon={Mail}
+                            fields={[
+                              { name: "letter_number", label: "Nomor Surat" },
+                              { name: "title", label: "Perihal" },
+                              { name: "sender", label: "Pengirim" },
+                              { name: "date_received", label: "Tanggal Diterima", type: "date" },
+                              { name: "file_url", label: "URL Link Surat", type: "url" },
+                            ]}
+                          />
+                        }
+                      />
+                      <Route
+                        path="surat_keluar"
+                        element={
+                          <DataManagementTable
+                            user={user}
+                            table="outgoing_letters"
+                            title="Arsip Surat Keluar"
+                            icon={Send}
+                            fields={[
+                              { name: "letter_number", label: "Nomor Surat" },
+                              { name: "title", label: "Perihal" },
+                              { name: "recipient", label: "Penerima" },
+                              { name: "date_sent", label: "Tanggal Dikirim", type: "date" },
+                              { name: "file_url", label: "URL Link Surat", type: "url" },
                             ]}
                           />
                         }

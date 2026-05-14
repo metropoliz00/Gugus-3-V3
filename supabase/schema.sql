@@ -470,6 +470,40 @@ CREATE TABLE IF NOT EXISTS public.meeting_minutes (
   user_id UUID REFERENCES public.user_profiles(id)
 );
 
+CREATE TABLE IF NOT EXISTS public.incoming_letters (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  letter_number TEXT NOT NULL,
+  title TEXT NOT NULL,
+  sender TEXT NOT NULL,
+  date_received DATE NOT NULL,
+  file_url TEXT,
+  user_id UUID REFERENCES public.user_profiles(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS public.outgoing_letters (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  letter_number TEXT NOT NULL,
+  title TEXT NOT NULL,
+  recipient TEXT NOT NULL,
+  date_sent DATE NOT NULL,
+  file_url TEXT,
+  user_id UUID REFERENCES public.user_profiles(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+-- RLS for Letters
+ALTER TABLE public.incoming_letters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.outgoing_letters ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    DROP POLICY IF EXISTS "Auth all incoming_letters" ON public.incoming_letters;
+    CREATE POLICY "Auth all incoming_letters" ON public.incoming_letters FOR ALL TO authenticated USING (true);
+    
+    DROP POLICY IF EXISTS "Auth all outgoing_letters" ON public.outgoing_letters;
+    CREATE POLICY "Auth all outgoing_letters" ON public.outgoing_letters FOR ALL TO authenticated USING (true);
+EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
 CREATE TABLE IF NOT EXISTS public.training_certificates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   training_id UUID REFERENCES public.trainings(id),
