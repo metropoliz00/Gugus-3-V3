@@ -5907,7 +5907,25 @@ function AdminPenghargaanForm() {
           .from("awards")
           .select("*")
           .order("created_at", { ascending: false });
-        setAwards(data || []);
+        if (data) {
+          const parsedData = data.map(item => {
+            let text = item.description || "";
+            let category = "Guru";
+            try {
+              if (text.startsWith("{")) {
+                const parsed = JSON.parse(text);
+                if (parsed && typeof parsed === 'object' && parsed.text !== undefined) {
+                  text = parsed.text;
+                  category = parsed.category || "Guru";
+                }
+              }
+            } catch (e) {}
+            return { ...item, description: text, category };
+          });
+          setAwards(parsedData);
+        } else {
+          setAwards([]);
+        }
       } catch (err) {
         console.error("Error fetching awards:", err);
       } finally {
@@ -5921,9 +5939,11 @@ function AdminPenghargaanForm() {
     if (!supabase) return;
     const newAward = {
       title: "Penghargaan Baru",
-      category: "Guru",
       year: new Date().getFullYear(),
-      description: "Deskripsi penghargaan...",
+      description: JSON.stringify({
+        text: "Deskripsi penghargaan...",
+        category: "Guru"
+      }),
       image_url:
         "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80",
     };
@@ -5932,20 +5952,34 @@ function AdminPenghargaanForm() {
       .insert([newAward])
       .select();
     if (!error && data) {
-      setAwards([data[0], ...awards]);
+      setAwards([{ ...data[0], description: "Deskripsi penghargaan...", category: "Guru" }, ...awards]);
     }
   };
 
   const handleUpdate = (id: string, updates: any) => {
-    setAwards(awards.map((a: any) => (a.id === id ? { ...a, ...updates } : a)));
+    const newAwards = awards.map((a: any) => (a.id === id ? { ...a, ...updates } : a));
+    setAwards(newAwards);
 
     if (debouncedSave.current) clearTimeout(debouncedSave.current);
 
     debouncedSave.current = setTimeout(async () => {
       if (!supabase) return;
+      const target = newAwards.find(a => a.id === id);
+      if (!target) return;
+      
+      const dbPayload = {
+        title: target.title,
+        year: target.year,
+        image_url: target.image_url,
+        description: JSON.stringify({
+          text: target.description,
+          category: target.category
+        })
+      };
+
       const { error } = await supabase
         .from("awards")
-        .update(updates)
+        .update(dbPayload)
         .eq("id", id);
       if (error) {
         console.error("Error updating award:", error);
@@ -6216,14 +6250,15 @@ function AdminPengumumanForm() {
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
                       Isi Singkat Pengumuman
                     </label>
-                    <textarea
-                      className="w-full border-b border-gray-200 text-sm text-soft-black outline-none bg-transparent"
-                      value={item.content}
-                      rows={2}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { content: e.target.value })
-                      }
-                    />
+                    <div className="bg-white border rounded-xl overflow-hidden mt-2">
+                      <CKEditor
+                        id={`editor-pengumuman-${item.id}`}
+                        value={item.content || ""}
+                        onChange={(val) =>
+                          handleUpdate(item.id, { content: val })
+                        }
+                      />
+                    </div>
                   </div>
                 </div>
                 <button
@@ -8013,15 +8048,16 @@ function CreateForumPostForm({
           <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
             Detail Pembahasan
           </label>
-          <textarea
-            placeholder="Tuliskan detail pertanyaan atau pengalaman Anda..."
-            rows={8}
-            className="w-full border border-gray-100 p-4 rounded-2xl focus:border-main-blue outline-none bg-gray-50/50"
-            value={formData.content}
-            onChange={(e) =>
-              setFormData({ ...formData, content: e.target.value })
-            }
-          />
+          <div className="bg-white border rounded-2xl overflow-hidden shadow-sm">
+            <CKEditor
+              id="editor-forum"
+              value={formData.content || ""}
+              onChange={(val) =>
+                setFormData({ ...formData, content: val })
+              }
+              placeholder="Tuliskan detail pertanyaan atau pengalaman Anda..."
+            />
+          </div>
         </div>
         <button
           type="submit"
@@ -8139,9 +8175,10 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
         <h1 className="text-2xl font-bold font-heading text-soft-black mb-4">
           {post.title}
         </h1>
-        <div className="prose prose-blue max-w-none text-gray-600 mb-6 bg-gray-50/50 p-6 rounded-2xl whitespace-pre-wrap">
-          {post.content}
-        </div>
+        <div 
+          className="prose prose-sm max-w-none text-gray-600 mb-6 bg-gray-50/50 p-6 rounded-2xl"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
         <div className="flex items-center gap-4 py-4 border-t border-gray-50">
           <span className="text-[10px] font-extrabold text-main-blue bg-main-blue/10 px-3 py-1 rounded-full uppercase tracking-widest">
             {post.category}
@@ -8192,9 +8229,10 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed pl-11">
-                {comment.content}
-              </p>
+              <div 
+                className="text-sm text-gray-600 leading-relaxed pl-11 prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: comment.content }}
+              />
             </motion.div>
           ))
         )}
@@ -8203,13 +8241,14 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
       <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl border border-main-blue/20 sticky bottom-4 z-10 transition-all focus-within:shadow-main-blue/20">
         <form onSubmit={handleReply} className="flex gap-4 items-end">
           <div className="flex-1">
-            <textarea
-              placeholder="Ketik tanggapan konstruktif Anda..."
-              rows={1}
-              className="w-full border-b border-gray-200 focus:border-main-blue outline-none resize-none p-2 text-sm transition-all"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-            />
+            <div className="bg-white border rounded-xl overflow-hidden mt-1 shadow-inner focus-within:ring-2 focus-within:ring-main-blue/20 transition-all">
+              <CKEditor
+                id="editor-reply"
+                value={newComment || ""}
+                onChange={(val) => setNewComment(val)}
+                placeholder="Ketik tanggapan konstruktif Anda..."
+              />
+            </div>
           </div>
           <button
             type="submit"

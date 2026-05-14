@@ -11,7 +11,21 @@ export default function Prestasi() {
       if (supabase) {
         const { data } = await supabase.from('awards').select('*').order('created_at', { ascending: false });
         if (data && data.length > 0) {
-          setAchievements(data);
+          const parsedData = data.map(item => {
+            let text = item.description || "";
+            let category = "Guru";
+            try {
+              if (text.startsWith("{")) {
+                const parsed = JSON.parse(text);
+                if (parsed && typeof parsed === 'object' && parsed.text !== undefined) {
+                  text = parsed.text;
+                  category = parsed.category || "Guru";
+                }
+              }
+            } catch (e) {}
+            return { ...item, description: text, category };
+          });
+          setAchievements(parsedData);
         }
       }
     }
