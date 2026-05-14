@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"; // Updated
-import ClientRichTextEditor from "../components/ClientRichTextEditor";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import {
   LogOut,
   LayoutDashboard,
@@ -5321,7 +5322,8 @@ function AdminKKGForm({
                     <label className="block text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
                       Isi Pesan Pengumuman
                     </label>
-                    <ClientRichTextEditor
+                    <ReactQuill
+                      theme="snow"
                       value={form.pengumuman?.desc || ""}
                       onChange={(value) =>
                         setKkgForm({
@@ -7376,11 +7378,12 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                     {f.label}
                   </label>
                   {f.type === "textarea" ? (
-                    <ClientRichTextEditor
-                      className="w-full h-64 border border-gray-200 rounded-xl focus:border-main-blue outline-none"
+                    <textarea
+                      className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none"
+                      rows={4}
                       value={formData[f.name] || ""}
-                      onChange={(value) =>
-                        setFormData({ ...formData, [f.name]: value })
+                      onChange={(e) =>
+                        setFormData({ ...formData, [f.name]: e.target.value })
                       }
                     />
                   ) : f.type === "select" ? (
