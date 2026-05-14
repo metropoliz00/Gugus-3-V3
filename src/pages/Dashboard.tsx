@@ -2367,7 +2367,7 @@ function AdminOverview({ user }: { user: any }) {
             <div className="w-1.5 h-1.5 rounded-full bg-main-blue animate-pulse" />
             <span className="text-[10px] font-black text-main-blue uppercase tracking-widest">Administrator System</span>
           </div>
-          <div className="text-2xl font-black font-heading leading-tight mb-2">
+          <div className="text-xl md:text-2xl font-black font-heading leading-tight mb-2">
             <span className="text-orange-500">Selamat Datang,</span><br/>
             <span className="text-main-blue">{user.nama || user.full_name || "Admin Gugus 3"}</span>
           </div>
@@ -2675,7 +2675,7 @@ function GuruOverview({ user }: { user: any }) {
             <div className="w-1.5 h-1.5 rounded-full bg-main-blue animate-pulse" />
             <span className="text-[10px] font-black text-main-blue uppercase tracking-widest leading-none">Pendidik GUGUS 3</span>
           </div>
-          <div className="text-2xl md:text-3xl font-black font-heading leading-tight mb-2">
+          <div className="text-xl md:text-3xl font-black font-heading leading-tight mb-2">
             <span className="text-leaf-green">Selamat Datang,</span><br/>
             <span className="text-main-blue">{user.nama || user.full_name || "Guru"}! 👋</span>
           </div>
