@@ -1110,7 +1110,7 @@ export default function Dashboard({
                               {
                                 name: "file_url",
                                 label: "URL File",
-                                type: "file",
+                                type: "url",
                               },
                             ]}
                           />
