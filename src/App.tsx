@@ -47,7 +47,7 @@ function HomePage({ onLoginClick, user }: { onLoginClick: () => void; user?: any
         <div className="container mx-auto px-6 max-w-9xl">
           <div className="bg-gradient-to-br from-white/80 to-blue-50/50 backdrop-blur-xl rounded-[3rem] p-8 md:p-16 border border-main-orange/20 flex flex-col md:flex-row items-center gap-12 relative overflow-hidden shadow-2xl shadow-blue-500/5">
             <div className="absolute top-0 right-0 w-64 h-64 bg-main-blue/5 rounded-full blur-3xl" />
-            <div className="relative w-48 md:w-64 shrink-0 aspect-[4/6] rounded-2xl overflow-hidden border-4 border-white shadow-xl group">
+            <div className="relative w-48 md:w-64 shrink-0 aspect-[3/4] rounded-2xl overflow-hidden border-4 border-white shadow-xl group">
               <img 
                 src={content.profil.image} 
                 alt={content.profil.name} 
