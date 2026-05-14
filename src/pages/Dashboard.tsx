@@ -431,16 +431,11 @@ export default function Dashboard({
   const menuItems = isAdmin
     ? adminMenu
     : guruMenu.filter((item) => {
-        const activeMenus = (content as any).activeMenus;
         if (isLoading) return true;
-        // Default to visible if not explicitly hidden in settings
-        if (
-          !activeMenus ||
-          typeof activeMenus !== "object" ||
-          activeMenus[item.id] === undefined
-        )
-          return true;
-        return !!activeMenus[item.id];
+        const activeMenus = (content as any)?.activeMenus;
+        // If settings don't exist or specific menu not defined, show by default
+        if (!activeMenus || activeMenus[item.id] === undefined) return true;
+        return activeMenus[item.id] === true;
       });
 
   // Get active tab from path
@@ -2689,18 +2684,18 @@ function GuruOverview({ user }: { user: any }) {
       link: "/dashboard/upload_karya",
     },
     {
+      title: "Forum Diskusi",
+      icon: MessageSquare,
+      color: "from-indigo-600 to-blue-500",
+      value: "Diskusi & Tanya Jawab",
+      link: "/dashboard/forum",
+    },
+    {
       title: "Agenda KKG",
       icon: Users,
       color: "from-purple-500 to-fuchsia-400",
       value: `${events.length} Agenda Aktif`,
       link: "/dashboard/jadwal",
-    },
-    {
-      title: "Praktik Baik",
-      icon: Play,
-      color: "from-indigo-500 to-violet-400",
-      value: "Bagikan Inspirasi",
-      link: "/dashboard/sharing",
     },
     {
       title: "Materi KKG",
