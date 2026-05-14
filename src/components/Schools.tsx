@@ -242,7 +242,16 @@ export default function Schools() {
                       </div>
                       <p className="text-gray-600 leading-relaxed pl-13 whitespace-pre-wrap">{selectedSchool.vision || 'Visi belum ditentukan.'}</p>
                     </div>
-
+                    
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-leaf-green/10 text-leaf-green rounded-xl flex items-center justify-center">
+                          <Star className="w-5 h-5" />
+                        </div>
+                        <h4 className="text-xl font-bold font-heading">Keunggulan Sekolah</h4>
+                      </div>
+                      <p className="text-gray-600 leading-relaxed pl-13 whitespace-pre-wrap">{selectedSchool.keunggulan || 'Belum ada keunggulan yang dicantumkan.'}</p>
+                    </div>
                   </div>
 
                   <div>
