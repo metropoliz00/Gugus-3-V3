@@ -117,7 +117,7 @@ export default function AnggotaGugusPage() {
                         <img 
                           src={g.foto || g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.nama || 'G')}&background=random`} 
                           alt={g.nama} 
-                          className="w-full h-full object-cover" 
+                          className="w-full h-full object-cover object-top" 
                         />
                       </div>
                       <h3 className="font-bold text-soft-black text-sm mb-1 line-clamp-1">{g.nama}</h3>
@@ -153,7 +153,7 @@ export default function AnggotaGugusPage() {
               </button>
               <div className="flex flex-col items-center">
                   <div className="w-32 h-32 rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 mb-6 shadow-xl">
-                      <img src={selectedGuru.foto || selectedGuru.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedGuru.nama || 'G')}&background=random`} alt={selectedGuru.nama} className="w-full h-full object-cover rounded-xl border-4 border-white" />
+                      <img src={selectedGuru.foto || selectedGuru.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedGuru.nama || 'G')}&background=random`} alt={selectedGuru.nama} className="w-full h-full object-cover object-top rounded-xl border-4 border-white" />
                   </div>
                   <h2 className="text-2xl font-bold text-soft-black mb-1">{selectedGuru.nama}</h2>
                   <p className="text-main-blue font-medium mb-6">{selectedGuru.jabatan}</p>
