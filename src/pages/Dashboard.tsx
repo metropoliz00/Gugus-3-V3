@@ -4384,6 +4384,19 @@ function AdminSekolahForm({ user }: { user: any }) {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 mb-1">
+                      Keunggulan Sekolah
+                    </label>
+                    <textarea
+                      className="w-full border-gray-200 border p-2.5 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors"
+                      rows={3}
+                      value={school.keunggulan || ""}
+                      onChange={(e) =>
+                        handleUpdate(school.id, { keunggulan: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">
                       Google Maps Embed URL
                     </label>
                     <input
