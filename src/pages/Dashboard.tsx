@@ -8022,8 +8022,7 @@ function ForumSystem({ user }: { user: any }) {
                     <img
                       src={
                         post.author?.foto ||
-                        post.author?.avatar_url ||
-                        `https://ui-avatars.com/api/?name=${post.author?.nama || "Guru"}&background=random`
+                        `https://ui-avatars.com/api/?name=${post.author?.full_name || post.author?.nama || "Guru"}&background=random`
                       }
                       alt="Author"
                       className="w-full h-full object-cover"
@@ -8038,8 +8037,8 @@ function ForumSystem({ user }: { user: any }) {
                     </h3>
                     <div className="flex items-center gap-3 text-xs text-gray-400">
                       <span>
-                        Oleh:{" "}
-                        {post.author?.nama || post.user_id?.substring(0, 8)}
+                        Dibuat oleh:{" "}
+                        {post.author?.full_name || post.author?.nama || post.user_id?.substring(0, 8)}
                       </span>
                       <span>•</span>
                       <span>
@@ -8258,8 +8257,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
             <img
               src={
                 post.author?.foto ||
-                post.author?.avatar_url ||
-                `https://ui-avatars.com/api/?name=${post.author?.nama || "Guru"}&background=random`
+                `https://ui-avatars.com/api/?name=${post.author?.full_name || post.author?.nama || "Guru"}&background=random`
               }
               alt="Author"
               className="w-full h-full object-cover"
@@ -8267,7 +8265,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
           </div>
           <div>
             <p className="text-sm font-bold text-soft-black">
-              {post.author?.nama || "Pengguna"}
+              Dibuat oleh: {post.author?.full_name || post.author?.nama || "Pengguna"}
             </p>
             <p className="text-xs text-gray-400">
               {new Date(post.created_at).toLocaleString("id-ID")}
@@ -8314,8 +8312,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
                   <img
                     src={
                       comment.author?.foto ||
-                      comment.author?.avatar_url ||
-                      `https://ui-avatars.com/api/?name=${comment.author?.nama || "Guru"}&background=random`
+                      `https://ui-avatars.com/api/?name=${comment.author?.full_name || comment.author?.nama || "Guru"}&background=random`
                     }
                     alt="Commenter"
                     className="w-full h-full object-cover"
@@ -8323,7 +8320,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-soft-black">
-                    {comment.author?.nama || "Guru"}
+                    {comment.author?.full_name || comment.author?.nama || "Guru"}
                   </p>
                   <p className="text-[10px] text-gray-400">
                     {new Date(comment.created_at).toLocaleString("id-ID")}
