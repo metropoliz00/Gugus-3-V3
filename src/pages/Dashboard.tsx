@@ -6013,6 +6013,7 @@ function AdminPenghargaanForm() {
             <select className="p-2 border rounded" value={newAward.category} onChange={e => setNewAward({...newAward, category: e.target.value})}>
                 <option value="Guru">Guru</option>
                 <option value="Siswa">Siswa</option>
+                <option value="Kepala Sekolah">Kepala Sekolah</option>
                 <option value="Sekolah">Sekolah</option>
             </select>
             <input placeholder="URL Gambar" className="p-2 border rounded" value={newAward.image_url} onChange={e => setNewAward({...newAward, image_url: e.target.value})}/>
