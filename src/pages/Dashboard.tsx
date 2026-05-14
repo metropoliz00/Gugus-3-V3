@@ -788,7 +788,7 @@ export default function Dashboard({
                     path="overview"
                     element={
                       user.role?.toLowerCase() === "admin" ? (
-                        <AdminOverview />
+                        <AdminOverview user={user} />
                       ) : (
                         <GuruOverview user={user} />
                       )
@@ -2162,7 +2162,7 @@ CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXEC
   );
 }
 
-function AdminOverview() {
+function AdminOverview({ user }: { user: any }) {
   const { content } = useSiteContent();
   const [dbStats, setDbStats] = useState({
     guru: 0,
@@ -2348,17 +2348,27 @@ function AdminOverview() {
     <div className="space-y-10">
       {/* Admin Clean Header */}
       <div className="bg-white p-8 rounded-[2rem] border-l-8 border-main-blue shadow-sm mb-10 flex flex-col md:flex-row md:items-center gap-8">
-        <div className="w-20 h-20 bg-main-blue/10 rounded-[2rem] flex items-center justify-center text-main-blue border border-main-blue/20">
-          <ShieldCheck className="w-10 h-10" />
+        <div className="w-[90px] h-[120px] rounded-3xl bg-gray-100 p-1 overflow-hidden shadow-inner shrink-0 scale-95 border border-gray-200">
+          <img
+            src={
+              user.foto ||
+              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                user.nama || user.full_name || "Admin"
+              )}&background=1F8FE5&color=fff`
+            }
+            className="w-full h-full object-cover rounded-2xl"
+            alt="Profile"
+          />
         </div>
         <div className="flex-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-main-blue/10 rounded-full border border-main-blue/10 mb-2">
             <div className="w-1.5 h-1.5 rounded-full bg-main-blue animate-pulse" />
             <span className="text-[10px] font-black text-main-blue uppercase tracking-widest">Administrator System</span>
           </div>
-          <h1 className="text-3xl font-black font-heading text-soft-black mb-1">
-            Selamat Datang, Admin Gugus 3
-          </h1>
+          <div className="text-3xl font-black font-heading leading-tight mb-2">
+            <span className="text-orange-500">Selamat Datang,</span><br/>
+            <span className="text-main-blue">{user.nama || user.full_name || "Admin Gugus 3"}</span>
+          </div>
           <p className="text-sm text-gray-500 font-medium max-w-xl">
             Pusat kendali operasional GUGUS 3 Kecamatan Jenu. Monitor, kelola, dan tingkatkan performa ekosistem pendidikan kita.
           </p>
@@ -2366,7 +2376,7 @@ function AdminOverview() {
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, i) => (
           <motion.div
             initial={{ opacity: 0, y: 20 }}

@@ -62,7 +62,8 @@ export default function PraktikBaikPage() {
   const filteredPractices = practices.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           p.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === "Semua" || p.category === categoryFilter;
+    const practiceCategory = p.category || "Inovasi";
+    const matchesCategory = categoryFilter === "Semua" || practiceCategory === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
