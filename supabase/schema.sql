@@ -427,6 +427,9 @@ ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
     DROP POLICY IF EXISTS "Public view trainings" ON public.trainings;
     CREATE POLICY "Public view trainings" ON public.trainings FOR SELECT USING (true);
+
+    DROP POLICY IF EXISTS "Auth all trainings" ON public.trainings;
+    CREATE POLICY "Auth all trainings" ON public.trainings FOR ALL TO authenticated USING (true);
     
     DROP POLICY IF EXISTS "Users can view their own registrations" ON public.training_participants;
     CREATE POLICY "Users can view their own registrations" ON public.training_participants FOR SELECT USING (true);

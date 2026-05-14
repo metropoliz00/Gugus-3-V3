@@ -939,12 +939,12 @@ export default function Dashboard({
                               {
                                 name: "materi_url",
                                 label: "URL Materi / Slide (Opsional)",
-                                type: "text",
+                                type: "url",
                               },
                               {
                                 name: "video_url",
                                 label: "URL Video / Rekaman (Opsional)",
-                                type: "text",
+                                type: "url",
                               },
                               {
                                 name: "status",
