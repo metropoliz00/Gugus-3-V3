@@ -55,6 +55,7 @@ export default function Prestasi() {
       name: a.description,
       year: a.year,
       category: a.category,
+      rank: a.rank,
       image_url: a.image_url,
       icon: icon,
       bg: bg,
@@ -144,6 +145,11 @@ export default function Prestasi() {
                   )}
                   
                   <div className="flex-1 flex flex-col relative z-10">
+                    {item.rank && (
+                      <div className="text-main-blue font-bold text-sm mb-2 uppercase tracking-wider">
+                        {item.rank}
+                      </div>
+                    )}
                     <h4 className="font-heading font-black text-2xl sm:text-[22px] text-soft-black mb-4 leading-snug group-hover:text-main-blue transition-colors duration-300">
                       {item.title}
                     </h4>
