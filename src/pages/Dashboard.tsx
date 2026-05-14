@@ -6025,7 +6025,7 @@ function AdminPenghargaanForm() {
         <form onSubmit={handleAddNewAward} className="bg-white p-6 rounded-2xl border border-amber-100 shadow-sm space-y-4">
           <h3 className="font-bold text-gray-700">Tambah Penghargaan Baru</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input placeholder="Kategori Kejuaraan" className="p-2 border rounded" value={newAward.title} onChange={e => setNewAward({...newAward, title: e.target.value})} required/>
+            <input placeholder="Nama Penghargaan" className="p-2 border rounded" value={newAward.title} onChange={e => setNewAward({...newAward, title: e.target.value})} required/>
             <input placeholder="Peringkat Kejuaraan (misal: Juara 1)" className="p-2 border rounded" value={newAward.rank} onChange={e => setNewAward({...newAward, rank: e.target.value})}/>
             <input placeholder="Tahun" type="number" className="p-2 border rounded" value={newAward.year} onChange={e => setNewAward({...newAward, year: parseInt(e.target.value)})} required/>
             <select className="p-2 border rounded" value={newAward.category} onChange={e => setNewAward({...newAward, category: e.target.value})}>
@@ -6062,7 +6062,7 @@ function AdminPenghargaanForm() {
                 <div className="md:col-span-2">
                   <div className="flex gap-2 items-center mb-1">
                     <label className="block text-[10px] uppercase font-bold text-gray-400">
-                        Kategori Kejuaraan
+                        Nama Penghargaan
                     </label>
                     <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700 uppercase">
                         {item.category}

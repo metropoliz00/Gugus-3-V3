@@ -109,12 +109,14 @@ export default function Prestasi() {
                       <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
                       
-                      <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+                      <div className="absolute top-3 left-3 flex flex-col items-start gap-2">
                         {item.category && (
                           <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${item.bg} ${item.color} border ${item.border} backdrop-blur-md`}>
                             {item.category}
                           </div>
                         )}
+                      </div>
+                      <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
                         <div className="bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-white shadow-sm border border-white/20">
                           {item.year}
                         </div>
@@ -127,19 +129,23 @@ export default function Prestasi() {
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-start justify-between mb-8 relative">
-                      <div className={`w-16 h-16 rounded-2xl ${item.bg} flex items-center justify-center shrink-0 border ${item.border} shadow-inner group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 relative z-10`}>
-                        <Icon className={`w-8 h-8 ${item.color}`} />
-                      </div>
-                      <div className="flex flex-col items-end gap-2 z-10">
-                        <div className="bg-gray-100/80 backdrop-blur-sm px-3 py-1 rounded-full text-[11px] font-black text-gray-500 tracking-widest shadow-sm">
-                          {item.year}
+                    <div className="relative">
+                      <div className="flex items-start justify-between mb-8 relative">
+                        <div className="flex flex-col gap-2 z-10 shrink-0">
+                          {item.category && (
+                            <div className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${item.bg} flex items-center gap-1 ${item.color} border ${item.border} shadow-sm backdrop-blur-sm self-start`}>
+                              {item.category}
+                            </div>
+                          )}
                         </div>
-                        {item.category && (
-                          <div className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${item.bg} flex items-center gap-1 ${item.color} border ${item.border} shadow-sm backdrop-blur-sm`}>
-                            {item.category}
+                        <div className="flex flex-col items-end gap-2 z-10">
+                          <div className="bg-gray-100/80 backdrop-blur-sm px-3 py-1 rounded-full text-[11px] font-black text-gray-500 tracking-widest shadow-sm">
+                            {item.year}
                           </div>
-                        )}
+                        </div>
+                      </div>
+                      <div className={`w-16 h-16 rounded-2xl ${item.bg} flex items-center justify-center shrink-0 border ${item.border} shadow-inner group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 relative z-10 mx-auto mb-6`}>
+                        <Icon className={`w-8 h-8 ${item.color}`} />
                       </div>
                     </div>
                   )}
