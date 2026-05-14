@@ -91,22 +91,33 @@ export default function AnggotaGugusPage() {
           <div className="text-center p-10 text-gray-400">Belum ada data anggota</div>
         ) : (
           Object.entries(groupedGurus).map(([school, members]) => (
-            <div key={school} className="mb-12">
-              <h2 className="text-xl font-bold text-main-blue mb-6">{school}</h2>
+            <div key={school} className="mb-12 bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm relative overflow-hidden ring-1 ring-black/5">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-bold text-main-blue">{school}</h2>
+                <img 
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(school)}&background=0284c7&color=fff&size=128&rounded=true`} 
+                  alt={school} 
+                  className="w-12 h-12 rounded-full border-2 border-white shadow-md"
+                />
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
                 {members.map((g, i) => (
                   <motion.div
                     key={i}
                     whileHover={{ y: -5 }}
                     onClick={() => setSelectedGuru(g)}
-                    className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all text-center"
+                    className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all text-center flex flex-col"
                   >
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-main-blue to-leaf-green p-0.5 mx-auto mb-4">
-                        <img src={g.foto || g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.nama || 'G')}&background=random`} alt={g.nama} className="w-full h-full object-cover rounded-full border-2 border-white" />
+                    <div className="w-full aspect-[3/4] rounded-xl overflow-hidden mb-4 shadow-sm bg-gray-200">
+                      <img 
+                        src={g.foto || g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.nama || 'G')}&background=random`} 
+                        alt={g.nama} 
+                        className="w-full h-full object-cover" 
+                      />
                     </div>
-                    <h3 className="font-bold text-soft-black text-sm mb-1 line-clamp-2">{g.nama}</h3>
-                    <p className="text-xs text-gray-500 font-mono mb-2">{g.nip || '-'}</p>
-                    <div className="text-[10px] bg-gray-100 text-gray-600 rounded-lg px-2 py-1 inline-block truncate w-full">{g.jabatan || '-'}</div>
+                    <h3 className="font-bold text-soft-black text-sm mb-1 line-clamp-1">{g.nama}</h3>
+                    <p className="text-[10px] text-gray-400 font-mono mb-2">{g.nip || '-'}</p>
+                    <div className="text-[10px] bg-main-blue/10 text-main-blue font-medium rounded-lg px-2 py-1 inline-block truncate w-full">{g.jabatan || '-'}</div>
                   </motion.div>
                 ))}
               </div>
