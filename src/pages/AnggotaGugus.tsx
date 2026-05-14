@@ -96,7 +96,7 @@ export default function AnggotaGugusPage() {
           <div className="text-center p-10 text-gray-400">Belum ada data anggota</div>
         ) : (
           Object.entries(groupedGurus).map(([schoolName, members]) => {
-            const schoolData = schools.find(s => s.name === schoolName);
+            const schoolData = schools.find(s => s.name && s.name.trim().toLowerCase() === schoolName.trim().toLowerCase());
             const logoUrl = schoolData?.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(schoolName)}&background=0284c7&color=fff&size=128&rounded=true`;
             
             return (
@@ -111,9 +111,9 @@ export default function AnggotaGugusPage() {
                       key={i}
                       whileHover={{ y: -5 }}
                       onClick={() => setSelectedGuru(g)}
-                      className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all text-center flex flex-col"
+                      className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all text-center flex flex-col items-center"
                     >
-                      <div className="w-full aspect-[3/4] rounded-xl overflow-hidden mb-4 shadow-sm bg-gray-200">
+                      <div className="w-20 h-24 rounded-lg overflow-hidden mb-3 shadow-sm bg-gray-200">
                         <img 
                           src={g.foto || g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.nama || 'G')}&background=random`} 
                           alt={g.nama} 
