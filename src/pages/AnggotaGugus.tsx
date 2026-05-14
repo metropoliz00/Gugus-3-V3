@@ -8,18 +8,23 @@ export default function AnggotaGugusPage() {
   const [groupedGurus, setGroupedGurus] = useState<Record<string, any[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [selectedGuru, setSelectedGuru] = useState<any>(null);
+  const [schools, setSchools] = useState<any[]>([]);
 
   useEffect(() => {
-    async function loadGurus() {
+    async function loadData() {
       try {
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('role', 'guru');
+        const [gurusRes, schoolsRes] = await Promise.all([
+          supabase.from('user_profiles').select('*').eq('role', 'guru'),
+          supabase.from('schools').select('name, logo_url')
+        ]);
         
-        if (error) throw error;
+        if (gurusRes.error) throw gurusRes.error;
+        if (schoolsRes.error) throw schoolsRes.error;
         
-        const sortedData = (data || []).sort((a, b) => {
+        setSchools(schoolsRes.data || []);
+        
+        const sortedData = (gurusRes.data || []).sort((a, b) => {
+          // ... (keep same sorting logic as before) ...
           const schoolA = (a.sekolah || "").toLowerCase();
           const schoolB = (b.sekolah || "").toLowerCase();
           if (schoolA < schoolB) return -1;
@@ -69,18 +74,18 @@ export default function AnggotaGugusPage() {
         setGroupedGurus(grouped);
 
       } catch (err) {
-        console.error("Error fetching guru:", err);
+        console.error("Error fetching data:", err);
       } finally {
         setIsLoading(false);
       }
     }
-    loadGurus();
+    loadData();
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-6">
+    <div className="min-h-screen bg-gray-50 py-20 px-6">
       <div className="container mx-auto max-w-7xl">
-        <div className="mb-12">
+        <div className="mb-12 text-center">
             <h1 className="text-3xl font-heading font-extrabold text-soft-black">Anggota Gugus</h1>
             <p className="text-gray-600 mt-2">Daftar tenaga pendidik profesional anggota Gugus 3 Melati.</p>
         </div>
@@ -90,39 +95,40 @@ export default function AnggotaGugusPage() {
         ) : Object.keys(groupedGurus).length === 0 ? (
           <div className="text-center p-10 text-gray-400">Belum ada data anggota</div>
         ) : (
-          Object.entries(groupedGurus).map(([school, members]) => (
-            <div key={school} className="mb-12 bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm relative overflow-hidden ring-1 ring-black/5">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-bold text-main-blue">{school}</h2>
-                <img 
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(school)}&background=0284c7&color=fff&size=128&rounded=true`} 
-                  alt={school} 
-                  className="w-12 h-12 rounded-full border-2 border-white shadow-md"
-                />
+          Object.entries(groupedGurus).map(([schoolName, members]) => {
+            const schoolData = schools.find(s => s.name === schoolName);
+            const logoUrl = schoolData?.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(schoolName)}&background=0284c7&color=fff&size=128&rounded=true`;
+            
+            return (
+              <div key={schoolName} className="mb-12 bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm relative overflow-hidden ring-1 ring-black/5">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-xl font-bold text-main-blue">{schoolName}</h2>
+                  <img src={logoUrl} alt={schoolName} className="w-12 h-12 rounded-full border-2 border-white shadow-md object-contain" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                  {members.map((g, i) => (
+                    <motion.div
+                      key={i}
+                      whileHover={{ y: -5 }}
+                      onClick={() => setSelectedGuru(g)}
+                      className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all text-center flex flex-col"
+                    >
+                      <div className="w-full aspect-[3/4] rounded-xl overflow-hidden mb-4 shadow-sm bg-gray-200">
+                        <img 
+                          src={g.foto || g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.nama || 'G')}&background=random`} 
+                          alt={g.nama} 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                      <h3 className="font-bold text-soft-black text-sm mb-1 line-clamp-1">{g.nama}</h3>
+                      <p className="text-[10px] text-gray-400 font-mono mb-2">{g.nip || '-'}</p>
+                      <div className="text-[10px] bg-main-blue/10 text-main-blue font-medium rounded-lg px-2 py-1 inline-block truncate w-full">{g.jabatan || '-'}</div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {members.map((g, i) => (
-                  <motion.div
-                    key={i}
-                    whileHover={{ y: -5 }}
-                    onClick={() => setSelectedGuru(g)}
-                    className="bg-gray-50/50 rounded-2xl p-4 border border-gray-100 hover:shadow-lg hover:shadow-blue-500/10 cursor-pointer transition-all text-center flex flex-col"
-                  >
-                    <div className="w-full aspect-[3/4] rounded-xl overflow-hidden mb-4 shadow-sm bg-gray-200">
-                      <img 
-                        src={g.foto || g.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(g.nama || 'G')}&background=random`} 
-                        alt={g.nama} 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-                    <h3 className="font-bold text-soft-black text-sm mb-1 line-clamp-1">{g.nama}</h3>
-                    <p className="text-[10px] text-gray-400 font-mono mb-2">{g.nip || '-'}</p>
-                    <div className="text-[10px] bg-main-blue/10 text-main-blue font-medium rounded-lg px-2 py-1 inline-block truncate w-full">{g.jabatan || '-'}</div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
