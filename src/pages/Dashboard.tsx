@@ -7380,7 +7380,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                   {f.type === "textarea" ? (
                     <ReactQuill
                       theme="snow"
-                      className="w-full border border-gray-200 rounded-xl focus:border-main-blue outline-none"
+                      className="w-full h-64 border border-gray-200 rounded-xl focus:border-main-blue outline-none"
                       value={formData[f.name] || ""}
                       onChange={(value) =>
                         setFormData({ ...formData, [f.name]: value })
