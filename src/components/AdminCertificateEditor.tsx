@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+// @ts-ignore
 import { Stage, Layer, Text, Image as KonvaImage } from "react-konva";
 import useImage from "use-image";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";

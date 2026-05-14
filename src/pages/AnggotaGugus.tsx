@@ -106,7 +106,7 @@ export default function AnggotaGugusPage() {
                   <img src={logoUrl} alt={schoolName} className="w-12 h-12 rounded-full border-2 border-white shadow-md object-contain group-hover:scale-105 transition-transform" />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {members.map((g, i) => (
+                  {(members as any[]).map((g, i) => (
                     <motion.div
                       key={i}
                       whileHover={{ y: -5 }}

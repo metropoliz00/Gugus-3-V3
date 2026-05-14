@@ -8303,10 +8303,10 @@ function TeacherJadwalCards() {
       setLoading(true);
       try {
         const { data, error } = await supabase
-          .from("kkg_agendas")
+          .from("events")
           .select("*")
-          .order("date", { ascending: true })
-          .gte("date", new Date().toISOString().split("T")[0]); // Only future/current events
+          .order("date_start", { ascending: true })
+          .gte("date_start", new Date().toISOString().split("T")[0]); // Only future/current events
 
         if (error) throw error;
         setAgendas(data || []);
@@ -8367,18 +8367,18 @@ function TeacherJadwalCards() {
                 <div className="flex justify-between items-start mb-6">
                   <div className="w-16 h-16 bg-white rounded-[1.25rem] flex flex-col items-center justify-center shadow-xl border border-gray-100 group-hover:border-orange-200 transition-colors">
                     <span className="text-[10px] font-black text-gray-400 uppercase leading-none">
-                      {new Date(item.date).toLocaleString("id-ID", {
+                      {new Date(item.date_start).toLocaleString("id-ID", {
                         month: "short",
                       })}
                     </span>
                     <span className="text-3xl font-black text-orange-500 leading-none mt-1 group-hover:scale-110 transition-transform">
-                      {new Date(item.date).getDate()}
+                      {new Date(item.date_start).getDate()}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm">
                     <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
                     <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
-                      {item.type || "Kegiatan"}
+                      {item.category || "Kegiatan"}
                     </span>
                   </div>
                 </div>
@@ -8405,7 +8405,7 @@ function TeacherJadwalCards() {
                       </div>
                       <div>
                         <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Waktu</p>
-                        <p className="text-sm font-bold text-soft-black">Pukul {item.time || "08:00"} WIB</p>
+                        <p className="text-sm font-bold text-soft-black">Pukul {new Date(item.date_start).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" })} WIB</p>
                       </div>
                    </div>
                 </div>
@@ -8949,7 +8949,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
               className="grid grid-cols-1 md:grid-cols-2 gap-8"
             >
               {Object.values(registrations).filter(
-                (r) => r.status === "attended",
+                (r: any) => r.status === "attended",
               ).length === 0 ? (
                 <div className="md:col-span-2 bg-gray-50 p-20 rounded-[3rem] text-center border-2 border-dashed border-gray-200">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6 text-gray-300">
@@ -8962,7 +8962,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                 </div>
               ) : (
                 Object.values(registrations)
-                  .filter((r) => r.status === "attended")
+                  .filter((r: any) => r.status === "attended")
                   .map((reg: any) => {
                     const training = trainings.find(
                       (t) => t.id === reg.training_id,
