@@ -7719,10 +7719,19 @@ function DataViewList({
                   <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-all shadow-inner">
                     <Icon className="w-6 h-6" />
                   </div>
-                  <div className="px-4 py-1.5 bg-gray-50 rounded-full border border-gray-100">
-                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                      {new Date(item.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
-                    </span>
+                  <div className="flex flex-col items-end gap-2">
+                    {item.category && (
+                      <div className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100">
+                        <span className="text-[8px] font-black uppercase tracking-wider">
+                          {item.category}
+                        </span>
+                      </div>
+                    )}
+                    <div className="px-4 py-1.5 bg-gray-50 rounded-full border border-gray-100">
+                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                        {new Date(item.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <h3 className="font-black text-soft-black text-xl mb-3 leading-tight tracking-tight group-hover:text-indigo-600 transition-colors">
