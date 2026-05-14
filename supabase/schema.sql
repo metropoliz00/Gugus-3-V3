@@ -241,6 +241,7 @@ CREATE TABLE IF NOT EXISTS public.achievements (
 CREATE TABLE IF NOT EXISTS public.awards (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
+    category VARCHAR(50),
     year INT NOT NULL,
     description TEXT,
     image_url TEXT,

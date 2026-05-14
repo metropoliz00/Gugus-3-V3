@@ -5915,23 +5915,33 @@ function AdminPenghargaanForm() {
     loadAwards();
   }, []);
 
-  const handleCreate = async () => {
+  const [newAward, setNewAward] = useState({
+    title: "",
+    category: "Guru",
+    year: new Date().getFullYear(),
+    description: "",
+    image_url: ""
+  });
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddNewAward = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!supabase) return;
-    const newAward = {
-      title: "Penghargaan Baru",
-      category: "Guru",
-      year: new Date().getFullYear(),
-      description: "Deskripsi penghargaan...",
-      image_url:
-        "https://images.unsplash.com/photo-1544928147-79a2dbc1f389?w=800&q=80",
-    };
     const { data, error } = await supabase
       .from("awards")
       .insert([newAward])
       .select();
     if (!error && data) {
       setAwards([data[0], ...awards]);
+      setNewAward({ title: "", category: "Guru", year: new Date().getFullYear(), description: "", image_url: "" });
+      setIsAdding(false);
+    } else {
+      console.error("Error adding award:", error);
     }
+  };
+
+  const handleCreate = async () => {
+    setIsAdding(true);
   };
 
   const handleUpdate = (id: string, updates: any) => {
@@ -5990,6 +6000,27 @@ function AdminPenghargaanForm() {
           <PlusCircle className="w-4 h-4" /> Tambah Penghargaan
         </button>
       </div>
+
+      {isAdding && (
+        <form onSubmit={handleAddNewAward} className="bg-white p-6 rounded-2xl border border-amber-100 shadow-sm space-y-4">
+          <h3 className="font-bold text-gray-700">Tambah Penghargaan Baru</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input placeholder="Judul" className="p-2 border rounded" value={newAward.title} onChange={e => setNewAward({...newAward, title: e.target.value})} required/>
+            <input placeholder="Tahun" type="number" className="p-2 border rounded" value={newAward.year} onChange={e => setNewAward({...newAward, year: parseInt(e.target.value)})} required/>
+            <select className="p-2 border rounded" value={newAward.category} onChange={e => setNewAward({...newAward, category: e.target.value})}>
+                <option value="Guru">Guru</option>
+                <option value="Siswa">Siswa</option>
+                <option value="Sekolah">Sekolah</option>
+            </select>
+            <input placeholder="URL Gambar" className="p-2 border rounded" value={newAward.image_url} onChange={e => setNewAward({...newAward, image_url: e.target.value})}/>
+          </div>
+          <textarea placeholder="Deskripsi" className="w-full p-2 border rounded" value={newAward.description} onChange={e => setNewAward({...newAward, description: e.target.value})} />
+          <div className="flex gap-2">
+            <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">Simpan</button>
+            <button type="button" onClick={() => setIsAdding(false)} className="bg-gray-200 px-4 py-2 rounded">Batal</button>
+          </div>
+        </form>
+      )}
 
       <div className="space-y-6">
         {isLoading ? (
