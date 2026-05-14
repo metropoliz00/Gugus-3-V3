@@ -8298,26 +8298,62 @@ function TeacherJadwalCards() {
   const [agendas, setAgendas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchAgendas = async () => {
-      setLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("events")
-          .select("*")
-          .order("date_start", { ascending: true })
-          .gte("date_start", new Date().toISOString().split("T")[0]); // Only future/current events
+  const fetchAgendas = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .order("date_start", { ascending: false }); // Show newest first
 
-        if (error) throw error;
-        setAgendas(data || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      if (error) throw error;
+      setAgendas(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchAgendas();
   }, []);
+
+  const handleSeedData = async () => {
+    setLoading(true);
+    const dummyEvents = [
+      {
+        title: "Workshop Kurikulum Merdeka",
+        description: "Membahas implementasi Kurikulum Merdeka di sekolah masing-masing.",
+        category: "guru",
+        date_start: new Date(Date.now() + 86400000 * 2).toISOString(), // 2 days from now
+        location: "Aula SDN 1 Melati",
+      },
+      {
+        title: "Seminar Teknologi Pendidikan",
+        description: "Penggunaan media interaktif untuk pembelajaran efektif.",
+        category: "seminar",
+        date_start: new Date(Date.now() + 86400000 * 5).toISOString(), // 5 days from now
+        location: "Gedung Serbaguna",
+      },
+      {
+        title: "Rapat Koordinasi KKG",
+        description: "Rapat rutin untuk mengevaluasi program kerja bulan ini.",
+        category: "guru",
+        date_start: new Date(Date.now() - 86400000 * 1).toISOString(), // 1 day ago
+        location: "Ruang Guru",
+      }
+    ];
+
+    try {
+      await supabase.from("events").insert(dummyEvents);
+      await fetchAgendas();
+    } catch(err) {
+      console.error("Error seeding:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-10">
@@ -8336,7 +8372,7 @@ function TeacherJadwalCards() {
               Jadwal Kegiatan
             </h2>
             <p className="text-sm text-gray-500">
-              Pantau agenda kegiatan KKG mendatang agar tidak terlewatkan sesi kolaborasi penting.
+              Pantau agenda kegiatan KKG mendatang dan riwayat agar tidak terlewatkan.
             </p>
           </div>
         </div>
@@ -8350,74 +8386,101 @@ function TeacherJadwalCards() {
       ) : agendas.length === 0 ? (
         <div className="bg-gray-50/50 p-16 rounded-[3rem] text-center border-2 border-dashed border-gray-200">
           <Calendar className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-          <p className="text-gray-500 font-bold italic">Belum ada agenda kegiatan mendatang.</p>
+          <p className="text-gray-500 font-bold italic mb-6">Belum ada agenda kegiatan.</p>
+          <button 
+            onClick={handleSeedData}
+            className="px-6 py-3 bg-main-blue text-white font-bold rounded-xl shadow-lg hover:scale-105 active:scale-95 transition-all"
+          >
+            Isi Data Contoh Sekarang
+          </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {agendas.map((item) => (
-            <motion.div
-              whileHover={{ y: -10 }}
-              key={item.id}
-              className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200 border border-gray-100 overflow-hidden flex flex-col group h-full relative"
-            >
-              {/* Top Section with Date Badge */}
-              <div className="bg-gradient-to-br from-gray-50 to-white p-8 border-b border-gray-50 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
-                
-                <div className="flex justify-between items-start mb-6">
-                  <div className="w-16 h-16 bg-white rounded-[1.25rem] flex flex-col items-center justify-center shadow-xl border border-gray-100 group-hover:border-orange-200 transition-colors">
-                    <span className="text-[10px] font-black text-gray-400 uppercase leading-none">
-                      {new Date(item.date_start).toLocaleString("id-ID", {
-                        month: "short",
-                      })}
-                    </span>
-                    <span className="text-3xl font-black text-orange-500 leading-none mt-1 group-hover:scale-110 transition-transform">
-                      {new Date(item.date_start).getDate()}
-                    </span>
+        <div className="relative border-l-4 border-orange-500/20 ml-4 md:ml-8 space-y-12 pb-10 mt-8">
+          {agendas.map((item, index) => {
+            const dateObj = new Date(item.date_start);
+            const isPast = dateObj < new Date();
+            return (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                key={item.id}
+                className="relative pl-8 md:pl-12 group"
+              >
+                {/* Node Marker */}
+                <div className={`absolute -left-[14px] top-8 w-6 h-6 bg-white border-4 ${isPast ? 'border-gray-400 shadow-gray-400/40' : 'border-orange-500 shadow-orange-500/40'} rounded-full shadow-lg group-hover:scale-125 transition-transform z-10`} />
+                <div className={`absolute -left-12 top-6 text-right w-12 hidden md:block`}>
+                   <p className="text-xl font-black text-gray-800 leading-none">{dateObj.getDate()}</p>
+                   <p className="text-xs font-bold text-gray-500 uppercase">{dateObj.toLocaleString("id-ID", { month: "short" })}</p>
+                </div>
+
+                {/* Content Card */}
+                <div className={`bg-white rounded-[2rem] shadow-xl shadow-gray-200 border border-gray-100 overflow-hidden flex flex-col md:flex-row relative transition-all hover:shadow-2xl hover:-translate-y-1 ${isPast ? 'opacity-80 grayscale-[20%]' : ''}`}>
+                  {/* Left Side: Date Banner (Mobile only) */}
+                  <div className={`md:hidden bg-gradient-to-br ${isPast ? 'from-gray-100 to-gray-200' : 'from-orange-50 to-orange-100'} p-6 border-b border-gray-50 flex items-center gap-4`}>
+                     <div className={`w-16 h-16 bg-white rounded-[1.25rem] flex flex-col items-center justify-center shadow-md border border-gray-100`}>
+                        <span className="text-[10px] font-black text-gray-400 uppercase leading-none">
+                          {dateObj.toLocaleString("id-ID", { month: "short" })}
+                        </span>
+                        <span className={`text-3xl font-black ${isPast ? 'text-gray-500' : 'text-orange-500'} leading-none mt-1`}>
+                          {dateObj.getDate()}
+                        </span>
+                     </div>
+                     <div>
+                       <h3 className="font-black text-soft-black text-xl line-clamp-2 leading-tight">
+                         {item.title}
+                       </h3>
+                       <div className="flex items-center gap-2 mt-2">
+                         <span className={`text-[10px] font-black ${isPast ? 'text-gray-500 bg-gray-100' : 'text-orange-600 bg-orange-100'} px-3 py-1 bg-white rounded-full uppercase tracking-widest`}>
+                           {item.category || "Kegiatan"}
+                         </span>
+                       </div>
+                     </div>
                   </div>
-                  <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-100 shadow-sm">
-                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest">
-                      {item.category || "Kegiatan"}
-                    </span>
+
+                  {/* Desktop Title & Details Area */}
+                  <div className="p-6 md:p-8 flex-1 flex flex-col">
+                    <div className="hidden md:flex justify-between items-start mb-4">
+                       <h3 className="font-black text-soft-black text-2xl group-hover:text-orange-600 transition-colors line-clamp-2 leading-tight pr-4">
+                         {item.title}
+                       </h3>
+                       <span className={`text-[10px] whitespace-nowrap font-black ${isPast ? 'text-gray-500 bg-gray-100' : 'text-orange-600 bg-orange-100'} px-4 py-2 rounded-full uppercase tracking-widest`}>
+                          {item.category || "Kegiatan"}
+                       </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                       <div className="flex items-center gap-4 group/item">
+                          <div className={`w-10 h-10 rounded-xl ${isPast ? 'bg-gray-100 text-gray-500' : 'bg-orange-50 text-orange-500'} flex items-center justify-center transition-colors shrink-0`}>
+                            <MapPin className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Lokasi</p>
+                            <p className="text-sm font-bold text-soft-black line-clamp-1">{item.location || "Sekolah / Online"}</p>
+                          </div>
+                       </div>
+
+                       <div className="flex items-center gap-4 group/item">
+                          <div className={`w-10 h-10 rounded-xl ${isPast ? 'bg-gray-100 text-gray-500' : 'bg-orange-50 text-orange-500'} flex items-center justify-center transition-colors shrink-0`}>
+                            <Clock className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Waktu</p>
+                            <p className="text-sm font-bold text-soft-black">Pukul {dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" })} WIB</p>
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className={`pt-6 mt-6 border-t ${isPast ? 'border-gray-200' : 'border-gray-50'}`}>
+                      <p className="text-xs text-gray-500 italic leading-relaxed line-clamp-3">
+                        "{item.description || "Agenda rutin pengembangan keprofesian berkelanjutan."}"
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <h3 className="font-black text-soft-black text-xl group-hover:text-orange-600 transition-colors line-clamp-2 min-h-[3.5rem] leading-tight">
-                  {item.title}
-                </h3>
-              </div>
-
-              <div className="p-8 space-y-6 flex-1 flex flex-col">
-                <div className="space-y-4">
-                   <div className="flex items-center gap-4 group/item">
-                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover/item:bg-orange-50 group-hover/item:text-orange-500 transition-colors">
-                        <MapPin className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Lokasi</p>
-                        <p className="text-sm font-bold text-soft-black line-clamp-1">{item.location || "Sekolah / Online"}</p>
-                      </div>
-                   </div>
-
-                   <div className="flex items-center gap-4 group/item">
-                      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover/item:bg-orange-50 group-hover/item:text-orange-500 transition-colors">
-                        <Clock className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Waktu</p>
-                        <p className="text-sm font-bold text-soft-black">Pukul {new Date(item.date_start).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" })} WIB</p>
-                      </div>
-                   </div>
-                </div>
-
-                <div className="pt-6 border-t border-gray-50 mt-auto">
-                  <p className="text-xs text-gray-500 italic leading-relaxed line-clamp-3">
-                    "{item.description || "Agenda rutin pengembangan keprofesian berkelanjutan."}"
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>
