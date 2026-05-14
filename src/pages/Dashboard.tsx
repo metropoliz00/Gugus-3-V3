@@ -7898,22 +7898,37 @@ function ForumSystem({ user }: { user: any }) {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Step 1: Fetch posts
+      const { data: postsData, error: postsError } = await supabase
         .from("forum_posts")
-        .select(`
-          *,
-          author:user_profiles (
-            id,
-            nama,
-            foto
-          )
-        `)
+        .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      setPosts(data || []);
+      if (postsError) throw postsError;
+
+      if (!postsData || postsData.length === 0) {
+        setPosts([]);
+        return;
+      }
+
+      // Step 2: Fetch profiles for authors manually
+      const authorIds = [...new Set(postsData.map(p => p.user_id).filter(Boolean))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("user_profiles")
+        .select("id, nama, foto")
+        .in("id", authorIds);
+
+      if (profilesError) console.error("Error fetching profiles:", profilesError);
+
+      // Step 3: Join locally
+      const joinedData = postsData.map(post => ({
+        ...post,
+        author: profilesData?.find(profile => profile.id === post.user_id)
+      }));
+
+      setPosts(joinedData);
     } catch (err) {
-      console.error(err);
+      console.error("Forum fetch error:", err);
     } finally {
       setLoading(false);
     }
@@ -8164,23 +8179,38 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
   const fetchComments = async () => {
     setLoadingComments(true);
     try {
-      const { data, error } = await supabase
+      // Step 1: Fetch comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from("forum_comments")
-        .select(`
-          *,
-          author:user_profiles (
-            id,
-            nama,
-            foto
-          )
-        `)
+        .select("*")
         .eq("post_id", post.id)
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
-      setComments(data || []);
+      if (commentsError) throw commentsError;
+
+      if (!commentsData || commentsData.length === 0) {
+        setComments([]);
+        return;
+      }
+
+      // Step 2: Fetch profiles for commentators manually
+      const userIds = [...new Set(commentsData.map(c => c.user_id).filter(Boolean))];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("user_profiles")
+        .select("id, nama, foto")
+        .in("id", userIds);
+
+      if (profilesError) console.error("Error fetching comment profiles:", profilesError);
+
+      // Step 3: Join locally
+      const joinedData = commentsData.map(comment => ({
+        ...comment,
+        author: profilesData?.find(profile => profile.id === comment.user_id)
+      }));
+
+      setComments(joinedData);
     } catch (err) {
-      console.error(err);
+      console.error("Comments fetch error:", err);
     } finally {
       setLoadingComments(false);
     }
