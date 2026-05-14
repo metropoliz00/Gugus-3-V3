@@ -145,7 +145,15 @@ export default function Footer() {
 
         <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-500 text-sm text-center md:text-left">
-            © {new Date().getFullYear()} Gugus 3 Melati Kecamatan Jenu. All rights reserved | Dev. MeyGa
+            © {new Date().getFullYear()} Gugus 3 Melati Kecamatan Jenu. All rights reserved | 
+            <a 
+              href={`https://wa.me/${content.footer.waNumber || '6281234567890'}`}
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-soft-black hover:text-main-blue transition-colors font-semibold"
+            >
+              Dev. MeyGa
+            </a>
           </p>
           <div className="flex gap-4 text-sm text-gray-500">
             <a href="#" className="hover:text-main-blue transition-colors">Privacy Policy</a>
