@@ -4651,12 +4651,6 @@ function AdminKKGForm({
           >
             Program KKG
           </button>
-          <button
-            onClick={() => setActiveKkgTab("pengumuman")}
-            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${activeKkgTab === "pengumuman" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-main-blue"}`}
-          >
-            Pengumuman
-          </button>
         </div>
       </div>
 
