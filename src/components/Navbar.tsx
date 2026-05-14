@@ -45,14 +45,14 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
   const menuItems: NavItem[] = [
     { label: "Beranda", href: "/", type: 'nav' },
     { label: "Profil Gugus", href: "/profil-gugus", type: 'nav' },
-    { label: "Anggota Gugus", href: "/anggota-gugus", type: 'nav' },
-    { label: "Praktik Baik", href: "/praktik-baik", type: 'nav' },
     { label: "KKG", href: "/kkg", type: 'nav' },
     { label: "Sekolah", href: "/#sekolah", type: 'anchor' },
     { label: "Kegiatan", href: "/kegiatan", type: 'nav' },
-    { label: "Keuangan", href: "/keuangan", type: 'nav' },
     { label: "Media & Informasi", href: "/#media", type: 'anchor' },
+    { label: "Praktik Baik", href: "/praktik-baik", type: 'nav' },
+    { label: "Keuangan", href: "/keuangan", type: 'nav' },
     { label: "Galeri", href: "/#galeri", type: 'anchor' },
+    { label: "Anggota Gugus", href: "/anggota-gugus", type: 'nav' },
   ];
 
   const isKkgPage = location.pathname === '/kkg';
