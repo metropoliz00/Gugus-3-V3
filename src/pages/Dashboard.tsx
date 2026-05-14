@@ -7903,33 +7903,20 @@ function ForumSystem({ user }: { user: any }) {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      // Step 1: Fetch posts
-      const { data: postsData, error: postsError } = await supabase
+      const { data, error } = await supabase
         .from("forum_posts")
-        .select("*")
+        .select(`
+          *,
+          author:user_profiles (
+            id,
+            nama,
+            foto
+          )
+        `)
         .order("created_at", { ascending: false });
 
-      if (postsError) throw postsError;
-
-      if (!postsData || postsData.length === 0) {
-        setPosts([]);
-        return;
-      }
-
-      // Step 2: Fetch profiles for authors
-      const authorIds = [...new Set(postsData.map(p => p.user_id).filter(Boolean))];
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("user_profiles")
-        .select("id, nama, full_name, username, foto")
-        .in("id", authorIds);
-
-      // Step 3: Join locally
-      const joinedData = postsData.map(post => ({
-        ...post,
-        author: profilesData?.find(profile => profile.id === post.user_id)
-      }));
-
-      setPosts(joinedData);
+      if (error) throw error;
+      setPosts(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -8022,7 +8009,7 @@ function ForumSystem({ user }: { user: any }) {
                     <img
                       src={
                         post.author?.foto ||
-                        `https://ui-avatars.com/api/?name=${post.author?.full_name || post.author?.nama || "Guru"}&background=random`
+                        `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.nama || "Guru")}&background=random`
                       }
                       alt="Author"
                       className="w-full h-full object-cover"
@@ -8038,7 +8025,7 @@ function ForumSystem({ user }: { user: any }) {
                     <div className="flex items-center gap-3 text-xs text-gray-400">
                       <span>
                         Dibuat oleh:{" "}
-                        {post.author?.full_name || post.author?.nama || post.user_id?.substring(0, 8)}
+                        {post.author?.nama || "Guru"}
                       </span>
                       <span>•</span>
                       <span>
@@ -8182,34 +8169,21 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
   const fetchComments = async () => {
     setLoadingComments(true);
     try {
-      // Step 1: Fetch comments
-      const { data: commentsData, error: commentsError } = await supabase
+      const { data, error } = await supabase
         .from("forum_comments")
-        .select("*")
+        .select(`
+          *,
+          author:user_profiles (
+            id,
+            nama,
+            foto
+          )
+        `)
         .eq("post_id", post.id)
         .order("created_at", { ascending: true });
 
-      if (commentsError) throw commentsError;
-
-      if (!commentsData || commentsData.length === 0) {
-        setComments([]);
-        return;
-      }
-
-      // Step 2: Fetch profiles for commentators
-      const userIds = [...new Set(commentsData.map(c => c.user_id).filter(Boolean))];
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("user_profiles")
-        .select("id, nama, full_name, username, foto")
-        .in("id", userIds);
-
-      // Step 3: Join locally
-      const joinedData = commentsData.map(comment => ({
-        ...comment,
-        author: profilesData?.find(profile => profile.id === comment.user_id)
-      }));
-
-      setComments(joinedData || []);
+      if (error) throw error;
+      setComments(data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -8257,7 +8231,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
             <img
               src={
                 post.author?.foto ||
-                `https://ui-avatars.com/api/?name=${post.author?.full_name || post.author?.nama || "Guru"}&background=random`
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.nama || "Guru")}&background=random`
               }
               alt="Author"
               className="w-full h-full object-cover"
@@ -8265,7 +8239,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
           </div>
           <div>
             <p className="text-sm font-bold text-soft-black">
-              Dibuat oleh: {post.author?.full_name || post.author?.nama || "Pengguna"}
+              Dibuat oleh: {post.author?.nama || "Guru"}
             </p>
             <p className="text-xs text-gray-400">
               {new Date(post.created_at).toLocaleString("id-ID")}
@@ -8312,7 +8286,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
                   <img
                     src={
                       comment.author?.foto ||
-                      `https://ui-avatars.com/api/?name=${comment.author?.full_name || comment.author?.nama || "Guru"}&background=random`
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author?.nama || "Guru")}&background=random`
                     }
                     alt="Commenter"
                     className="w-full h-full object-cover"
@@ -8320,7 +8294,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-soft-black">
-                    {comment.author?.full_name || comment.author?.nama || "Guru"}
+                    {comment.author?.nama || "Guru"}
                   </p>
                   <p className="text-[10px] text-gray-400">
                     {new Date(comment.created_at).toLocaleString("id-ID")}
