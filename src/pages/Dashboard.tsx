@@ -1085,7 +1085,7 @@ export default function Dashboard({
                         path="pelatihan"
                         element={<TeacherTrainingCards user={user} />}
                       />
-                      <Route path="absensi" element={<TeacherAttendance />} />
+                      <Route path="absensi" element={<TeacherAttendance user={user} />} />
                       <Route
                         path="sertifikat"
                         element={
@@ -7717,7 +7717,7 @@ function DataViewList({
   );
 }
 
-function TeacherAttendance() {
+function TeacherAttendance({ user }: { user: any }) {
   const { alert } = useAlert();
   const [trainings, setTrainings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -7743,8 +7743,13 @@ function TeacherAttendance() {
   const handleAbsen = async (trainingId: string) => {
     try {
       const { error } = await supabase
-        .from("training_attendance")
-        .insert([{ training_id: trainingId }]); // user_id handled by RLS if configured
+        .from("training_participants")
+        .upsert([{ 
+          training_id: trainingId, 
+          user_id: user.id,
+          status: 'attended',
+          attended_at: new Date().toISOString()
+        }], { onConflict: 'training_id,user_id' });
       if (error) throw error;
       await alert("Absensi Berhasil Dicatat!", "Sukses", "success");
     } catch (err: any) {

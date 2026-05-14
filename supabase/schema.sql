@@ -397,6 +397,7 @@ CREATE TABLE IF NOT EXISTS public.trainings (
     status TEXT DEFAULT 'planned',
     materi_url TEXT,
     video_url TEXT,
+    user_id UUID REFERENCES public.user_profiles(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -407,7 +408,8 @@ CREATE TABLE IF NOT EXISTS public.training_participants (
     status TEXT DEFAULT 'registered',
     registered_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     attended_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    UNIQUE(training_id, user_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.activity_logs (
@@ -455,7 +457,7 @@ CREATE TABLE IF NOT EXISTS public.kkg_materials (
   file_url TEXT,
   category TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-  created_by UUID REFERENCES public.user_profiles(id)
+  user_id UUID REFERENCES public.user_profiles(id)
 );
 
 CREATE TABLE IF NOT EXISTS public.meeting_minutes (
@@ -465,7 +467,7 @@ CREATE TABLE IF NOT EXISTS public.meeting_minutes (
   content TEXT,
   file_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-  created_by UUID REFERENCES public.user_profiles(id)
+  user_id UUID REFERENCES public.user_profiles(id)
 );
 
 CREATE TABLE IF NOT EXISTS public.training_certificates (
