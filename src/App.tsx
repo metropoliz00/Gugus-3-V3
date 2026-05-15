@@ -136,7 +136,11 @@ export default function App() {
         if (session?.user) {
           fetchUserProfile(session.user.id);
         } else {
-          setUser(null);
+          // Check if it's a guest session before clearing
+          const guestSession = localStorage.getItem("guest_session");
+          if (!guestSession) {
+            setUser(null);
+          }
           setIsInitialAuthLoading(false);
         }
       });

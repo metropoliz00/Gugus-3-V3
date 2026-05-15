@@ -2772,6 +2772,57 @@ function TamuOverview({ user }: { user: any }) {
         </button>
       </div>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-3 bg-indigo-50 rounded-xl text-indigo-600">
+               <Users className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-soft-black">Data Profil Tamu</h3>
+          </div>
+          <div className="space-y-4">
+             <div className="flex justify-between border-b pb-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Nama Lengkap</span>
+                <span className="text-sm font-bold text-soft-black">{user.nama || "-"}</span>
+             </div>
+             <div className="flex justify-between border-b pb-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400">NIP / Identitas</span>
+                <span className="text-sm font-bold text-soft-black font-mono">{user.nip || "-"}</span>
+             </div>
+             <div className="flex justify-between border-b pb-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Pangkat/Golongan</span>
+                <span className="text-sm font-bold text-main-blue">{user.pangkat || "-"}</span>
+             </div>
+             <div className="flex justify-between border-b pb-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Jabatan</span>
+                <span className="text-sm font-bold text-soft-black">{user.jabatan || "-"}</span>
+             </div>
+             <div className="flex justify-between border-b pb-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Instansi</span>
+                <span className="text-sm font-bold text-soft-black">{user.sekolah || "-"}</span>
+             </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-8 rounded-[2rem] text-white shadow-xl shadow-indigo-500/20 flex flex-col justify-between">
+           <div>
+              <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                 <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Akses Terverifikasi</h3>
+              <p className="text-white/80 text-sm">
+                Akun Anda telah terdaftar sebagai Tamu Undangan resmi Gugus 3 Melati. Anda memiliki akses ke fitur-fitur eksklusif tamu.
+              </p>
+           </div>
+           <button 
+             onClick={() => navigate("/dashboard/profil")}
+             className="mt-6 w-full py-3 bg-white text-indigo-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-indigo-50 transition-colors"
+           >
+             Perbarui Profil
+           </button>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {guestActivities.map((item, i) => (
           <motion.div
@@ -10581,6 +10632,20 @@ function AdminGuestBookView() {
     setLoading(false);
   };
 
+  const handleDelete = async (id: string) => {
+    if (!supabase) return;
+    const { confirm, alert } = useAlert();
+    if (await confirm("Hapus rekapan buku tamu ini?")) {
+      const { error } = await supabase.from("guest_book").delete().eq("id", id);
+      if (error) {
+        alert(error.message, "Gagal", "error");
+      } else {
+        alert("Data dihapus", "Sukses", "success");
+        fetchEntries();
+      }
+    }
+  };
+
   return (
     <div className="space-y-10">
        <div className="bg-white p-8 rounded-[2rem] border-l-8 border-indigo-600 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-10">
@@ -10593,6 +10658,12 @@ function AdminGuestBookView() {
             <p className="text-sm text-gray-500">Daftar rekapan kunjungan tamu undangan ke portal KKG.</p>
           </div>
         </div>
+        <button 
+          onClick={fetchEntries}
+          className="p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-gray-600"
+        >
+          <RefreshCw className={loading ? "animate-spin" : ""} />
+        </button>
       </div>
 
       <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
@@ -10604,13 +10675,14 @@ function AdminGuestBookView() {
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama / NIP</th>
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instansi / Jabatan</th>
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tujuan</th>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Aksi</th>
                </tr>
              </thead>
              <tbody className="divide-y divide-gray-100">
                {loading ? (
-                 <tr><td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic">Memuat arsip...</td></tr>
+                 <tr><td colSpan={5} className="px-6 py-10 text-center text-gray-400 italic">Memuat arsip...</td></tr>
                ) : entries.length === 0 ? (
-                 <tr><td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic">Belum ada kunjungan tamu.</td></tr>
+                 <tr><td colSpan={5} className="px-6 py-10 text-center text-gray-400 italic">Belum ada kunjungan tamu.</td></tr>
                ) : (
                  entries.map((entry) => (
                    <tr key={entry.id} className="hover:bg-gray-50/50 transition-colors">
@@ -10638,6 +10710,14 @@ function AdminGuestBookView() {
                            <span className="text-sm font-bold text-soft-black">{entry.purpose}</span>
                            <span className="text-xs text-gray-500 line-clamp-1 italic">{entry.notes || "-"}</span>
                         </div>
+                     </td>
+                     <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => handleDelete(entry.id)}
+                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                      </td>
                    </tr>
                  ))
