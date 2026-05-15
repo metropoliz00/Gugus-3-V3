@@ -7239,10 +7239,12 @@ function AdminRekapAbsen() {
             @media print {
               @page {
                 size: A4;
-                margin: 1cm;
+                margin: 0.5cm;
               }
               body {
                 background: white !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
               }
               /* Hide all elements during print */
               body * {
@@ -7267,7 +7269,7 @@ function AdminRekapAbsen() {
           {/* KOP - Only visible in print */}
           <div className="hidden print:flex items-center justify-between border-b-4 border-double border-black pb-4 mb-8">
             <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/9/9c/Logo_of_Ministry_of_Education_and_Culture_of_Republic_of_Indonesia.png" 
+              src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
               className="w-24 h-24 object-contain" 
               alt="Logo Kemendikdasmen" 
             />
@@ -7293,14 +7295,14 @@ function AdminRekapAbsen() {
 
           <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs">
             <thead>
-              <tr className="bg-gray-100 print:bg-transparent font-bold uppercase tracking-wider">
+              <tr className="bg-gray-100 print:bg-gray-100 font-bold uppercase tracking-wider">
                 <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[26%] whitespace-normal">Nama</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[14%]">NIP</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[13%]">Jabatan</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[25%] whitespace-normal">Sekolah/Instansi</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[30%] whitespace-normal">Nama</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[20%]">NIP</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[12%]">Jabatan</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[18%] whitespace-normal">Instansi</th>
                 <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
-                <th className="border-2 border-black px-2 py-2 text-center w-[10%]">Status</th>
+                <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -7328,7 +7330,7 @@ function AdminRekapAbsen() {
                       <td className="border-2 border-black px-3 py-2.5 leading-snug">{p.profile?.jabatan || "-"}</td>
                       <td className="border-2 border-black px-3 py-2.5 leading-snug">{p.profile?.sekolah || "-"}</td>
                       <td className="border-2 border-black px-2 py-2.5 text-center">
-                        <span className="font-bold uppercase text-[9px] print:text-[10px]">Hadir</span>
+                        <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold uppercase text-[8px] print:text-[8px]">Hadir</span>
                       </td>
                       <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] print:text-[9px] leading-tight">
                         {status}
