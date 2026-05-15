@@ -5091,6 +5091,7 @@ function AdminKKGForm({
                   onEdit={(member) => {
                     const newRole = window.prompt("Edit Jabatan:", member.role);
                     const newName = window.prompt("Edit Nama:", member.name);
+                    const newNip = window.prompt("Edit NIP:", member.nip || "");
                     const newSchool = window.prompt(
                       "Edit Sekolah:",
                       member.school,
@@ -5098,11 +5099,13 @@ function AdminKKGForm({
                     if (
                       newRole !== null ||
                       newName !== null ||
+                      newNip !== null ||
                       newSchool !== null
                     ) {
                       handleOrgUpdate(member.id, {
                         role: newRole !== null ? newRole : member.role,
                         name: newName !== null ? newName : member.name,
+                        nip: newNip !== null ? newNip : member.nip,
                         school: newSchool !== null ? newSchool : member.school,
                       });
                     }
@@ -5157,6 +5160,20 @@ function AdminKKGForm({
                           onFieldChangeKkg(item.id, "name", e.target.value);
                           handleOrgUpdate(item.id, { name: e.target.value });
                         }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">
+                        NIP
+                      </label>
+                      <input
+                        className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent"
+                        value={item.nip || ""}
+                        onChange={(e) => {
+                          onFieldChangeKkg(item.id, "nip", e.target.value);
+                          handleOrgUpdate(item.id, { nip: e.target.value });
+                        }}
+                        placeholder="NIP Pengurus"
                       />
                     </div>
                     <div>
@@ -5769,6 +5786,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                   onEdit={(member) => {
                     const newRole = window.prompt("Edit Jabatan:", member.role);
                     const newName = window.prompt("Edit Nama:", member.name);
+                    const newNip = window.prompt("Edit NIP:", member.nip || "");
                     const newSchool = window.prompt(
                       "Edit Sekolah:",
                       member.school,
@@ -5776,11 +5794,13 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                     if (
                       newRole !== null ||
                       newName !== null ||
+                      newNip !== null ||
                       newSchool !== null
                     ) {
                       handleOrgUpdate(member.id, {
                         role: newRole !== null ? newRole : member.role,
                         name: newName !== null ? newName : member.name,
+                        nip: newNip !== null ? newNip : member.nip,
                         school: newSchool !== null ? newSchool : member.school,
                       });
                     }
@@ -5835,6 +5855,20 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                           onFieldChangeGugus(item.id, "name", e.target.value);
                           handleOrgUpdate(item.id, { name: e.target.value });
                         }}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">
+                        NIP
+                      </label>
+                      <input
+                        className="w-full border-b border-gray-200 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none transition-colors bg-transparent"
+                        value={item.nip || ""}
+                        onChange={(e) => {
+                          onFieldChangeGugus(item.id, "nip", e.target.value);
+                          handleOrgUpdate(item.id, { nip: e.target.value });
+                        }}
+                        placeholder="NIP Pengurus"
                       />
                     </div>
                     <div>
@@ -6902,10 +6936,26 @@ function AdminRekapAbsen() {
   const [selectedTrainingId, setSelectedTrainingId] = useState("");
   const [participants, setParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chairman, setChairman] = useState<any>(null);
 
   useEffect(() => {
     loadTrainings();
+    loadChairman();
   }, []);
+
+  async function loadChairman() {
+    try {
+      const { data } = await supabase
+        .from("org_kkg")
+        .select("name, nip")
+        .ilike("role", "%Ketua%")
+        .limit(1)
+        .maybeSingle();
+      if (data) setChairman(data);
+    } catch (err) {
+      console.error("Failed to load chairman:", err);
+    }
+  }
 
   useEffect(() => {
     if (selectedTrainingId) {
@@ -7038,8 +7088,8 @@ function AdminRekapAbsen() {
           <div className="mt-12 flex justify-end">
             <div className="text-center w-64">
               <p className="text-sm mb-20 text-left pl-4">Ketua KKG,</p>
-              <p className="text-sm font-bold uppercase underline">......................................</p>
-              <p className="text-sm mt-1 text-left pl-4">NIP. .....................................</p>
+              <p className="text-sm font-bold uppercase underline">{chairman?.name || "......................................"}</p>
+              <p className="text-sm mt-1 text-left pl-4">NIP. {chairman?.nip || "....................................."}</p>
             </div>
           </div>
         </div>

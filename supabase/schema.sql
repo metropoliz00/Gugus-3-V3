@@ -267,6 +267,7 @@ CREATE TABLE IF NOT EXISTS public.org_kkg (
     role VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     school VARCHAR(255),
+    nip VARCHAR(100),
     photo_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
@@ -277,6 +278,7 @@ CREATE TABLE IF NOT EXISTS public.org_gugus (
     role VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     school VARCHAR(255),
+    nip VARCHAR(100),
     photo_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );

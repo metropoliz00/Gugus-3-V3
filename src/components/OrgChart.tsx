@@ -14,6 +14,7 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
         <img src={member?.photo_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${member?.name || "default"}`} alt={member?.name || "member"} className="w-full h-full object-cover object-top" />
       </div>
       <h4 className="font-bold text-soft-black text-sm mb-0.5 leading-tight">{member?.name || "-"}</h4>
+      {member?.nip && <p className="text-[10px] text-gray-500 mb-1">NIP. {member.nip}</p>}
       <p className="text-main-blue font-semibold text-xs mb-1">{member?.role || "Jabatan"}</p>
       <div className="text-[10px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full leading-tight">{member?.school || "-"}</div>
       
