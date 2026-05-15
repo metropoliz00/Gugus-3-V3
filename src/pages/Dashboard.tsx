@@ -44,6 +44,7 @@ import {
   ChevronDown,
   Type,
   RefreshCw,
+  Printer,
   Upload,
   Info,
   MapPin,
@@ -130,6 +131,7 @@ const adminMenu = [
   { id: "materi", label: "Kelola Materi KKG", icon: BookOpen },
   { id: "notulen", label: "Kelola Notulen Rapat", icon: FileText },
   { id: "pelatihan", label: "Kelola Pelatihan", icon: GraduationCap },
+  { id: "rekap_absen", label: "Rekap Absen Pelatihan", icon: UserCheck },
   { id: "sertifikat", label: "Kelola Sertifikat", icon: Award },
   { id: "forum", label: "Kelola Forum Diskusi", icon: MessageSquare },
   { id: "komentar", label: "Kelola Komentar Forum", icon: MessageSquare },
@@ -165,7 +167,7 @@ const adminMenuGroups = [
   },
   {
     title: "Akademik",
-    items: ["agenda", "materi", "notulen", "pelatihan", "sertifikat"],
+    items: ["agenda", "materi", "notulen", "pelatihan", "rekap_absen", "sertifikat"],
   },
   {
     title: "Forum & Karya",
@@ -966,9 +968,23 @@ export default function Dashboard({
                                   { label: "Selesai", value: "completed" },
                                 ],
                               },
+                              {
+                                name: "banner_url",
+                                label: "Banner Pelatihan (Format 16:9)",
+                                type: "file",
+                              },
+                              {
+                                name: "is_attendance_open",
+                                label: "Buka Tombol Absen",
+                                type: "checkbox",
+                              },
                             ]}
                           />
                         }
+                      />
+                      <Route
+                        path="rekap_absen"
+                        element={<AdminRekapAbsen />}
                       />
                       <Route
                         path="sertifikat"
@@ -6881,6 +6897,157 @@ function AdminFinanceManagement({ user }: { user: any }) {
   );
 }
 
+function AdminRekapAbsen() {
+  const [trainings, setTrainings] = useState<any[]>([]);
+  const [selectedTrainingId, setSelectedTrainingId] = useState("");
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadTrainings();
+  }, []);
+
+  useEffect(() => {
+    if (selectedTrainingId) {
+      loadParticipants(selectedTrainingId);
+    } else {
+      setParticipants([]);
+    }
+  }, [selectedTrainingId]);
+
+  async function loadTrainings() {
+    setLoading(true);
+    const { data } = await supabase.from("trainings").select("id, title, date_start").order("date_start", { ascending: false });
+    setTrainings(data || []);
+    setLoading(false);
+  }
+
+  async function loadParticipants(id: string) {
+    setLoading(true);
+    
+    // Step 1: fetch participants
+    const { data: partData, error: partError } = await supabase
+      .from("training_participants")
+      .select("user_id, status, attended_at")
+      .eq("training_id", id);
+      
+    if (partError || !partData) {
+      setParticipants([]);
+      setLoading(false);
+      return;
+    }
+    
+    if (partData.length === 0) {
+      setParticipants([]);
+      setLoading(false);
+      return;
+    }
+
+    // Step 2: fetch user profiles
+    const userIds = partData.map(p => p.user_id).filter(Boolean);
+    const { data: profilesData } = await supabase
+      .from("user_profiles")
+      .select("id, nama, nip, sekolah")
+      .in("id", userIds);
+      
+    // Step 3: Join locally
+    const joined = partData.map(p => ({
+      ...p,
+      profile: profilesData?.find(prof => prof.id === p.user_id) || {}
+    }));
+    
+    setParticipants(joined);
+    setLoading(false);
+  }
+
+  const handlePrint = () => {
+    typeof window !== "undefined" && window.print();
+  };
+
+  const selectedTraining = trainings.find(t => t.id === selectedTrainingId);
+
+  return (
+    <div className="space-y-6">
+      {/* Hidden in print */}
+      <div className="print:hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 items-end">
+        <div className="flex-1">
+          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Pilih Pelatihan</label>
+          <select 
+            className="w-full p-3 border border-gray-200 rounded-xl bg-white focus:border-main-blue outline-none"
+            value={selectedTrainingId}
+            onChange={(e) => setSelectedTrainingId(e.target.value)}
+          >
+            <option value="">-- Pilih Pelatihan --</option>
+            {trainings.map(t => (
+              <option key={t.id} value={t.id}>{t.title} ({new Date(t.date_start).toLocaleDateString("id-ID")})</option>
+            ))}
+          </select>
+        </div>
+        <button onClick={handlePrint} disabled={!selectedTrainingId || participants.length === 0} className="px-6 py-3 bg-main-blue text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 disabled:opacity-50">
+          <Printer className="w-5 h-5"/> Print Rekap
+        </button>
+      </div>
+
+      {loading && selectedTrainingId && (
+        <div className="text-center p-8 text-gray-500 print:hidden">Memuat data...</div>
+      )}
+
+      {!loading && selectedTraining && (
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 print:shadow-none print:border-none print:p-0 w-full" id="print-area">
+          <div className="text-center mb-8">
+            <h2 className="text-xl font-bold uppercase underline mb-1">Rekap Daftar Hadir</h2>
+            <p className="text-lg font-bold">{selectedTraining.title}</p>
+            <p className="text-sm mt-1">Hari, Tanggal: {new Date(selectedTraining.date_start).toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+          </div>
+
+          <table className="w-full border-collapse border border-black text-xs sm:text-sm">
+            <thead>
+              <tr className="bg-gray-50 print:bg-white">
+                <th className="border border-black px-3 py-2 w-12 text-center">No</th>
+                <th className="border border-black px-3 py-2 text-left">Nama</th>
+                <th className="border border-black px-3 py-2 text-left">NIP</th>
+                <th className="border border-black px-3 py-2 text-left">Sekolah</th>
+                <th className="border border-black px-3 py-2 text-center">Kehadiran</th>
+                <th className="border border-black px-3 py-2 text-center">Ket</th>
+              </tr>
+            </thead>
+            <tbody>
+              {participants.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="border border-black px-4 py-8 text-center italic text-gray-500">Belum ada participant</td>
+                </tr>
+              ) : (
+                participants.map((p, idx) => (
+                  <tr key={idx}>
+                    <td className="border border-black px-3 py-2 text-center">{idx + 1}</td>
+                    <td className="border border-black px-3 py-2">{p.profile?.nama || "-"}</td>
+                    <td className="border border-black px-3 py-2">{p.profile?.nip || "-"}</td>
+                    <td className="border border-black px-3 py-2">{p.profile?.sekolah || "-"}</td>
+                    <td className="border border-black px-3 py-2 text-center">
+                      {p.status === "attended" ? "Hadir" : "Belum Hadir"}
+                    </td>
+                    <td className="border border-black px-3 py-2 text-center">
+                      {p.status === "attended" && p.attended_at ? new Date(p.attended_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" }) : "-"}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+
+          <div className="mt-12 flex justify-end">
+            <div className="text-center w-64">
+              <p className="text-sm mb-20 text-left pl-4">Ketua KKG,</p>
+              <p className="text-sm font-bold uppercase underline">......................................</p>
+              <p className="text-sm mt-1 text-left pl-4">NIP. .....................................</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdminCertificateManager({ user }: { user: any }) {
   const [activeSubTab, setActiveSubTab] = useState<"editor" | "list">("list");
   const [trainings, setTrainings] = useState<any[]>([]);
@@ -7496,6 +7663,18 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                         setFormData({ ...formData, [f.name]: base64 })
                       }
                     />
+                  ) : f.type === "checkbox" ? (
+                    <label className="flex items-center gap-2 cursor-pointer mt-2">
+                       <input
+                          type="checkbox"
+                          className="w-5 h-5 text-main-blue rounded border-gray-300 focus:ring-main-blue"
+                          checked={formData[f.name] || false}
+                          onChange={(e) =>
+                            setFormData({ ...formData, [f.name]: e.target.checked })
+                          }
+                       />
+                       <span className="text-sm text-gray-700">{f.label}</span>
+                    </label>
                   ) : (
                     <input
                       type={f.type || "text"}
@@ -7597,6 +7776,8 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                                   ? opt
                                   : opt?.label || val || "-";
                               })()
+                            : f.type === "checkbox"
+                              ? (item[f.name] ? "Ya" : "Tidak")
                             : f.type === "file"
                               ? (item[f.name] ? "Terisi" : "-")
                             : f.type === "url" 
@@ -8853,8 +9034,19 @@ function TeacherTrainingCards({ user }: { user: any }) {
                       whileHover={{ y: -8 }}
                       className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden transition-all flex flex-col group relative"
                     >
+                      {item.banner_url && (
+                        <div className="w-full aspect-[16/9] relative bg-gray-100 overflow-hidden shrink-0">
+                          <img 
+                            src={item.banner_url} 
+                            alt={item.title} 
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                        </div>
+                      )}
+
                       {/* Sub-header inside card for status */}
-                      <div className="absolute top-6 left-6 z-10">
+                      <div className={`absolute left-6 z-10 ${item.banner_url ? 'top-4' : 'top-6'}`}>
                         <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shadow-sm backdrop-blur-md ${
                           autoStatus === 'ongoing' ? 'bg-leaf-green/90 text-white border-leaf-green/20' :
                           autoStatus === 'planned' ? 'bg-main-blue/90 text-white border-main-blue/20' :
@@ -8984,17 +9176,18 @@ function TeacherTrainingCards({ user }: { user: any }) {
                               <PlusCircle className="w-4 h-4 shrink-0" /> <span className="truncate">{!canRegister ? "Pendaftaran Tutup" : "Daftar Sekarang"}</span>
                             </button>
                           ) : !hasAttended ? (
-                            <button
-                              onClick={() => handleAttendance(item.id)}
-                              disabled={isFinished || !isOngoing}
-                              className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-[10px] font-black shadow-lg transition-all flex justify-center items-center gap-2 shrink-0 ${
-                                isFinished || !isOngoing
-                                  ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none border border-gray-200"
-                                  : "bg-leaf-green text-white shadow-leaf-green/20 hover:scale-105 active:scale-95"
-                              }`}
-                            >
-                              <UserCheck className="w-4 h-4 shrink-0" /> <span className="truncate">{isFinished ? "Waktu Berakhir" : !isOngoing ? "Belum Dimulai" : "Konfirmasi Hadir"}</span>
-                            </button>
+                            item.is_attendance_open ? (
+                              <button
+                                onClick={() => handleAttendance(item.id)}
+                                className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-[10px] font-black shadow-lg transition-all flex justify-center items-center gap-2 shrink-0 bg-leaf-green text-white shadow-leaf-green/20 hover:scale-105 active:scale-95`}
+                              >
+                                <UserCheck className="w-4 h-4 shrink-0" /> <span className="truncate">Konfirmasi Hadir</span>
+                              </button>
+                            ) : (
+                               <div className="w-full sm:w-auto px-5 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-[10px] font-black border border-gray-200 shadow-sm flex justify-center items-center gap-2 shrink-0 cursor-not-allowed">
+                                 <UserCheck className="w-4 h-4 shrink-0" /> <span className="truncate">Absen Ditutup</span>
+                               </div>
+                            )
                           ) : (
                             <div className="w-full sm:w-auto px-5 py-2.5 bg-white text-gray-400 rounded-xl text-[10px] font-black border border-gray-100 shadow-sm flex justify-center items-center gap-2 shrink-0">
                                <Award className="w-4 h-4 text-amber-500" /> <span className="truncate">Selesai</span>

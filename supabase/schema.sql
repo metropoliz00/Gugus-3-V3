@@ -397,6 +397,8 @@ CREATE TABLE IF NOT EXISTS public.trainings (
     status TEXT DEFAULT 'planned',
     materi_url TEXT,
     video_url TEXT,
+    is_attendance_open BOOLEAN DEFAULT false,
+    banner_url TEXT,
     user_id UUID REFERENCES public.user_profiles(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );

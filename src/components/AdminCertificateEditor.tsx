@@ -1,10 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-// @ts-ignore
 import { Stage, Layer, Text, Image as KonvaImage } from "react-konva";
 import useImage from "use-image";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
 import { supabase } from "../lib/supabase";
+
+const StageComponent = Stage as any;
+const LayerComponent = Layer as any;
+const TextComponent = Text as any;
+const KonvaImageComponent = KonvaImage as any;
 import {
   Award,
   Save,
@@ -60,7 +64,7 @@ interface CertificateConfig {
 
 function URLImage({ src }: { src: string }) {
   const [image] = useImage(src, "anonymous");
-  return image ? <KonvaImage image={image} width={1000} height={700} /> : null;
+  return image ? <KonvaImageComponent image={image} width={1000} height={700} /> : null;
 }
 
 // =================================
@@ -297,6 +301,7 @@ function DraggableField({
   field,
   updateField,
 }: {
+  key?: string | number;
   field: FieldType;
   updateField: (id: string, updates: Partial<FieldType>) => void;
 }) {
@@ -315,7 +320,7 @@ function DraggableField({
   }, [field.text, field.fontSize, field.fontWeight, field.align]);
 
   return (
-    <Text
+    <TextComponent
       ref={textRef}
       text={field.text}
       x={field.x}
@@ -830,14 +835,14 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
             className="bg-white shadow-2xl relative overflow-auto max-w-full modern-scrollbar"
             style={{ width: CANVAS_WIDTH, height: CANVAS_HEIGHT }}
           >
-            <Stage width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={stageRef}>
-              <Layer listening={true}>
+            <StageComponent width={CANVAS_WIDTH} height={CANVAS_HEIGHT} ref={stageRef}>
+              <LayerComponent listening={true}>
                 {/* TEMPLATE */}
                 {activePage === 1 ? (
                   templateUrl ? (
                     <URLImage src={templateUrl} />
                   ) : (
-                    <KonvaImage
+                    <KonvaImageComponent
                       image={undefined as any}
                       width={CANVAS_WIDTH}
                       height={CANVAS_HEIGHT}
@@ -847,7 +852,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
                 ) : templateUrl2 ? (
                   <URLImage src={templateUrl2} />
                 ) : (
-                  <KonvaImage
+                  <KonvaImageComponent
                     image={undefined as any}
                     width={CANVAS_WIDTH}
                     height={CANVAS_HEIGHT}
@@ -865,8 +870,8 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
                       updateField={updateField}
                     />
                   ))}
-              </Layer>
-            </Stage>
+              </LayerComponent>
+            </StageComponent>
             {((activePage === 1 && !templateUrl) ||
               (activePage === 2 && !templateUrl2)) && (
               <div className="absolute inset-0 flex flex-col items-center justify-center p-10 text-center">
