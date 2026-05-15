@@ -3963,7 +3963,7 @@ function AdminGaleriForm({
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {isLoading ? (
           <div className="text-center text-gray-400 py-10">
             Memuat galeri...
@@ -3973,75 +3973,143 @@ function AdminGaleriForm({
             Belum ada media galeri.
           </div>
         ) : (
-          <div className="space-y-4">
-            {gallery.map((item: any) => (
-              <div
-                key={item.id}
-                className="p-4 border border-gray-100 rounded-2xl bg-white shadow-sm flex flex-col items-start gap-4 hover:shadow-md transition-all group relative"
-              >
-                <div className="w-full flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 pr-8">
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Judul Media
-                    </label>
-                    <input
-                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
-                      value={item.title || ""}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { title: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Tipe
-                    </label>
-                    <select
-                      className="w-full border-b border-gray-200 text-sm outline-none bg-transparent"
-                      value={item.type || "photo"}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { type: e.target.value })
-                      }
-                    >
-                      <option value="photo">Foto</option>
-                      <option value="video">Video</option>
-                    </select>
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Media
-                    </label>
-                    {item.type === "photo" ? (
-                      <ImageUpload
-                        label=""
-                        value={item.media_url || ""}
-                        onChange={(base64) =>
-                          handleUpdate(item.id, { media_url: base64 })
-                        }
-                        maxWidth={1200}
-                        maxHeight={1200}
-                      />
-                    ) : (
-                      <input
-                        className="w-full border-b border-gray-200 text-sm outline-none bg-transparent"
-                        placeholder="Video URL (https://youtube.com/...)"
-                        value={item.media_url || ""}
-                        onChange={(e) =>
-                          handleUpdate(item.id, { media_url: e.target.value })
-                        }
-                      />
-                    )}
+          <div className="space-y-8">
+            {(() => {
+              const groups = [];
+              for (let i = 0; i < gallery.length; i += 4) {
+                groups.push(gallery.slice(i, i + 4));
+              }
+              return groups.map((group: any[], groupIdx) => (
+                <div
+                  key={groupIdx}
+                  className="p-8 border border-gray-100 rounded-[2.5rem] bg-white shadow-sm hover:shadow-md transition-all group"
+                >
+                  <div className="flex flex-col lg:flex-row gap-8">
+                    <div className="w-full lg:w-1/2">
+                      <div className="grid grid-cols-2 gap-4 aspect-square md:aspect-video lg:aspect-square bg-gray-50 rounded-3xl p-4">
+                        {[0, 1, 2, 3].map((idx) => {
+                          const item = group[idx];
+                          return (
+                            <div key={idx} className="relative group/item aspect-square rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+                              {item ? (
+                                <>
+                                  {item.type === "photo" ? (
+                                    <img src={item.media_url} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-indigo-50 text-indigo-500">
+                                      <Play className="w-8 h-8 opacity-50" />
+                                      <span className="text-[10px] font-bold mt-2 uppercase tracking-widest">Video</span>
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                     <button 
+                                      onClick={() => handleDelete(item.id)}
+                                      className="p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors shadow-lg"
+                                      title="Hapus"
+                                     >
+                                       <X className="w-4 h-4" />
+                                     </button>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl">
+                                   <ImageIcon className="w-6 h-6 text-gray-300" />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="flex-1 space-y-6">
+                      <div>
+                        <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-pink-500" />
+                          Informasi Grup Galeri #{groups.length - groupIdx}
+                        </h4>
+                        
+                        <div className="space-y-4">
+                          {group.map((item, idx) => (
+                            <div key={item.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black text-pink-500 uppercase tracking-tighter">Media {idx + 1}</span>
+                                <div className="flex items-center gap-2">
+                                  <select
+                                    className="text-[10px] font-bold uppercase bg-white border border-gray-200 rounded-lg px-2 py-1 outline-none"
+                                    value={item.type || "photo"}
+                                    onChange={(e) => handleUpdate(item.id, { type: e.target.value })}
+                                  >
+                                    <option value="photo">Foto</option>
+                                    <option value="video">Video</option>
+                                  </select>
+                                </div>
+                              </div>
+                              
+                              <input
+                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-soft-black outline-none focus:border-pink-300 transition-all"
+                                placeholder="Judul Media..."
+                                value={item.title || ""}
+                                onChange={(e) => handleUpdate(item.id, { title: e.target.value })}
+                              />
+
+                              {item.type === "photo" ? (
+                                <div className="hidden md:block">
+                                  <ImageUpload
+                                    label=""
+                                    value={item.media_url || ""}
+                                    onChange={(base64) => handleUpdate(item.id, { media_url: base64 })}
+                                    maxWidth={1200}
+                                    maxHeight={1200}
+                                  />
+                                </div>
+                              ) : (
+                                <input
+                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-pink-300 transition-all font-mono"
+                                  placeholder="Video URL (Youtube/Vimeo)..."
+                                  value={item.media_url || ""}
+                                  onChange={(e) => handleUpdate(item.id, { media_url: e.target.value })}
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {group.length > 0 && group.every(i => i.title === group[0].title) && (
+                         <div className="p-4 bg-pink-50 rounded-2xl border border-pink-100">
+                            <p className="text-[10px] text-pink-600 font-bold uppercase mb-2">Update Judul Masal</p>
+                            <div className="flex gap-2">
+                               <input 
+                                 type="text" 
+                                 placeholder="Ganti judul untuk semua media di grup ini..."
+                                 className="flex-1 px-3 py-2 bg-white border border-pink-200 rounded-xl text-sm outline-none"
+                                 onKeyDown={(e) => {
+                                   if (e.key === 'Enter') {
+                                     const target = e.target as HTMLInputElement;
+                                     group.forEach(item => handleUpdate(item.id, { title: target.value }));
+                                   }
+                                 }}
+                               />
+                               <button 
+                                 className="px-4 py-2 bg-pink-500 text-white rounded-xl text-xs font-bold"
+                                 onClick={(e) => {
+                                   const input = (e.currentTarget.previousSibling as HTMLInputElement);
+                                   if (input.value) {
+                                     group.forEach(item => handleUpdate(item.id, { title: input.value }));
+                                   }
+                                 }}
+                               >
+                                 Apply
+                               </button>
+                            </div>
+                         </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(item.id)}
-                  className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         )}
       </div>
@@ -7333,7 +7401,7 @@ function AdminRekapAbsen() {
             @media print {
               @page {
                 size: A4 portrait;
-                margin: 0;
+                margin: 5mm 5mm 5mm 5mm;
               }
               html, body {
                 margin: 0 !important;
@@ -7355,18 +7423,11 @@ function AdminRekapAbsen() {
                 left: 0 !important;
                 top: 0 !important;
                 width: 100% !important;
+                height: 100% !important;
                 background: white !important;
                 padding: 0 !important;
                 margin: 0 !important;
                 border: none !important;
-              }
-              .page {
-                width: 210mm;
-                min-height: 297mm;
-                padding: 10mm;
-                box-sizing: border-box;
-                overflow: hidden;
-                page-break-after: avoid;
               }
               /* Background colors for print */
               .print-bg-emerald {
@@ -7374,182 +7435,99 @@ function AdminRekapAbsen() {
                 color: #047857 !important;
               }
             }
-            .page {
-              width: 210mm;
-              min-height: 297mm;
-              margin: auto;
-              background: white;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              padding: 12mm;
-              box-sizing: border-box;
-            }
           `}</style>
 
-          <div className="page flex flex-col justify-between hidden print:flex print:!flex">
-            <div>
-              {/* KOP - Only visible in print */}
-              <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
-                <img 
-                  src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
-                  className="w-24 h-24 object-contain" 
-                  alt="Logo Kemendikdasmen" 
-                />
-                <div className="text-center flex-1 px-4">
-                  <h1 className="text-xl font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
-                  <h2 className="text-2xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
-                  <p className="text-sm font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
-                </div>
-                <img 
-                  src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png" 
-                  className="w-24 h-24 object-contain" 
-                  alt="Logo KKG" 
-                />
-              </div>
-
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold uppercase underline mb-2 decoration-2 underline-offset-4">Rekap Daftar Hadir</h2>
-                <p className="text-xl font-bold text-soft-black mb-1">{selectedActivity.title}</p>
-                <p className="text-sm font-medium text-gray-500">
-                  Hari, Tanggal: {new Date(selectedActivity.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-                </p>
-              </div>
-
-              <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs">
-                <thead>
-                  <tr className="bg-gray-100 print:bg-gray-100 font-bold uppercase tracking-wider">
-                    <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
-                    <th className="border-2 border-black px-3 py-2 text-left w-[30%] whitespace-normal">Nama</th>
-                    <th className="border-2 border-black px-3 py-2 text-left w-[20%]">NIP</th>
-                    <th className="border-2 border-black px-3 py-2 text-left w-[12%]">Jabatan</th>
-                    <th className="border-2 border-black px-3 py-2 text-left w-[18%] whitespace-normal">Instansi</th>
-                    <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
-                    <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {participants.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
-                    </tr>
-                  ) : (
-                    participants.map((p, idx) => {
-                      let status = p.is_guest ? (p.profile?.jabatan || "Tamu Undangan") : "Anggota";
-                      
-                      // If member is pengurus (role is not just 'guru' or has specific jabatan)
-                      if (!p.is_guest && p.profile) {
-                        const role = p.profile.role?.toLowerCase();
-                        if (role && role !== "guru") {
-                          status = p.profile.jabatan || p.profile.role;
-                        }
-                      }
-
-                      return (
-                        <tr key={idx} className="hover:bg-gray-50 print:hover:bg-transparent transition-colors">
-                          <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
-                          <td className={`border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight break-words ${p.profile?.nama?.length > 35 ? "text-[8px]" : p.profile?.nama?.length > 25 ? "text-[9px]" : "text-[10px]"}`}>
-                            {formatName(p.profile?.nama)}
-                          </td>
-                          <td className={`border-2 border-black px-3 py-2.5 font-mono leading-tight ${p.profile?.nip?.length > 18 ? "text-[8px]" : "text-[9px]"}`}>
-                            {p.profile?.nip || "-"}
-                          </td>
-                          <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.jabatan?.length > 20 ? "text-[8px]" : "text-[9px]"}`}>
-                            {p.profile?.jabatan || "-"}
-                          </td>
-                          <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.sekolah?.length > 25 ? "text-[8px]" : "text-[9px]"}`}>
-                            {p.profile?.sekolah || "-"}
-                          </td>
-                          <td className="border-2 border-black px-2 py-2.5 text-center">
-                            <span className="px-2 py-1 bg-emerald-50 text-emerald-700 print:bg-emerald-50 print:print-bg-emerald rounded-full font-bold uppercase text-[8px]">Hadir</span>
-                          </td>
-                          <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] leading-tight">
-                            {status}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+          {/* KOP - Only visible in print */}
+          <div className="hidden print:flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0 print:m-0 print:p-0">
+            <img 
+              src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
+              className="w-24 h-24 object-contain" 
+              alt="Logo Kemendikdasmen" 
+            />
+            <div className="text-center flex-1 px-4">
+              <h1 className="text-xl font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
+              <h2 className="text-2xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
+              <p className="text-sm font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
             </div>
-
-            <div className="mt-12 flex justify-end">
-              <div className="text-center w-72">
-                <p className="text-sm italic mb-2">Jenu, {new Date().toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  year: "numeric", month: "long", day: "numeric" })}</p>
-                <p className="text-sm font-bold mb-20 uppercase tracking-wide">Ketua KKG,</p>
-                <p className="text-sm font-bold underline underline-offset-4 leading-none mb-1">{formatName(chairman?.name) || "......................................"}</p>
-                <p className="text-sm font-bold">NIP. {chairman?.nip || "....................................."}</p>
-              </div>
-            </div>
+            <img 
+              src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png" 
+              className="w-24 h-24 object-contain" 
+              alt="Logo KKG" 
+            />
           </div>
-          
-          {/* Regular preview section for desktop / non-print */}
-          <div className="print:hidden">
-            <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold uppercase underline mb-2 decoration-2 underline-offset-4">Rekap Daftar Hadir</h2>
-              <p className="text-xl font-bold text-soft-black mb-1">{selectedActivity.title}</p>
-              <p className="text-sm font-medium text-gray-500">
-                Hari, Tanggal: {new Date(selectedActivity.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-              </p>
-            </div>
 
-            <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs">
-              <thead>
-                <tr className="bg-gray-100 font-bold uppercase tracking-wider">
-                  <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
-                  <th className="border-2 border-black px-3 py-2 text-left w-[30%] whitespace-normal">Nama</th>
-                  <th className="border-2 border-black px-3 py-2 text-left w-[20%]">NIP</th>
-                  <th className="border-2 border-black px-3 py-2 text-left w-[12%]">Jabatan</th>
-                  <th className="border-2 border-black px-3 py-2 text-left w-[18%] whitespace-normal">Instansi</th>
-                  <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
-                  <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Status</th>
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold uppercase underline mb-2 decoration-2 underline-offset-4">Rekap Daftar Hadir</h2>
+            <p className="text-xl font-bold text-soft-black mb-1">{selectedActivity.title}</p>
+            <p className="text-sm font-medium text-gray-500">
+              Hari, Tanggal: {new Date(selectedActivity.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            </p>
+          </div>
+
+          <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs">
+            <thead>
+              <tr className="bg-gray-100 print:bg-gray-100 font-bold uppercase tracking-wider">
+                <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[30%] whitespace-normal">Nama</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[20%]">NIP</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[12%]">Jabatan</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[18%] whitespace-normal">Instansi</th>
+                <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
+                <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {participants.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
                 </tr>
-              </thead>
-              <tbody>
-                {participants.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
-                  </tr>
-                ) : (
-                  participants.map((p, idx) => {
-                    let status = p.is_guest ? (p.profile?.jabatan || "Tamu Undangan") : "Anggota";
-                    
-                    // If member is pengurus (role is not just 'guru' or has specific jabatan)
-                    if (!p.is_guest && p.profile) {
-                      const role = p.profile.role?.toLowerCase();
-                      if (role && role !== "guru") {
-                        status = p.profile.jabatan || p.profile.role;
-                      }
+              ) : (
+                participants.map((p, idx) => {
+                  let status = p.is_guest ? (p.profile?.jabatan || "Tamu Undangan") : "Anggota";
+                  
+                  // If member is pengurus (role is not just 'guru' or has specific jabatan)
+                  if (!p.is_guest && p.profile) {
+                    const role = p.profile.role?.toLowerCase();
+                    if (role && role !== "guru") {
+                      status = p.profile.jabatan || p.profile.role;
                     }
+                  }
 
-                    return (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                        <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
-                        <td className={`border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight break-words ${p.profile?.nama?.length > 35 ? "text-[8px]" : p.profile?.nama?.length > 25 ? "text-[9px]" : "text-[10px]"}`}>
-                          {formatName(p.profile?.nama)}
-                        </td>
-                        <td className={`border-2 border-black px-3 py-2.5 font-mono leading-tight ${p.profile?.nip?.length > 18 ? "text-[8px]" : "text-[9px]"}`}>
-                          {p.profile?.nip || "-"}
-                        </td>
-                        <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.jabatan?.length > 20 ? "text-[8px]" : "text-[9px]"}`}>
-                          {p.profile?.jabatan || "-"}
-                        </td>
-                        <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.sekolah?.length > 25 ? "text-[8px]" : "text-[9px]"}`}>
-                          {p.profile?.sekolah || "-"}
-                        </td>
-                        <td className="border-2 border-black px-2 py-2.5 text-center">
-                          <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold uppercase text-[8px]">Hadir</span>
-                        </td>
-                        <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] leading-tight">
-                          {status}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                  return (
+                    <tr key={idx} className="hover:bg-gray-50 print:hover:bg-transparent transition-colors">
+                      <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
+                      <td className={`border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight break-words ${p.profile?.nama?.length > 35 ? "text-[8px]" : p.profile?.nama?.length > 25 ? "text-[9px]" : "text-[10px]"}`}>
+                        {formatName(p.profile?.nama)}
+                      </td>
+                      <td className={`border-2 border-black px-3 py-2.5 font-mono leading-tight ${p.profile?.nip?.length > 18 ? "text-[8px]" : "text-[9px]"}`}>
+                        {p.profile?.nip || "-"}
+                      </td>
+                      <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.jabatan?.length > 20 ? "text-[8px]" : "text-[9px]"}`}>
+                        {p.profile?.jabatan || "-"}
+                      </td>
+                      <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.sekolah?.length > 25 ? "text-[8px]" : "text-[9px]"}`}>
+                        {p.profile?.sekolah || "-"}
+                      </td>
+                      <td className="border-2 border-black px-2 py-2.5 text-center">
+                        <span className="px-2 py-1 bg-emerald-50 text-emerald-700 print:bg-emerald-50 print:print-bg-emerald rounded-full font-bold uppercase text-[8px]">Hadir</span>
+                      </td>
+                      <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] leading-tight">
+                        {status}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+
+          <div className="mt-12 flex justify-end">
+            <div className="text-center w-72">
+              <p className="text-sm italic mb-2">Jenu, {new Date().toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  year: "numeric", month: "long", day: "numeric" })}</p>
+              <p className="text-sm font-bold mb-20 uppercase tracking-wide">Ketua KKG,</p>
+              <p className="text-sm font-bold underline underline-offset-4 leading-none mb-1">{formatName(chairman?.name) || "......................................"}</p>
+              <p className="text-sm font-bold">NIP. {chairman?.nip || "....................................."}</p>
+            </div>
           </div>
         </div>
       )}
