@@ -7241,7 +7241,9 @@ function AdminRekapAbsen() {
                 size: A4;
                 margin: 0.5cm;
               }
-              body {
+              html, body {
+                margin: 0 !important;
+                padding: 0 !important;
                 background: white !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
@@ -7257,17 +7259,18 @@ function AdminRekapAbsen() {
               #print-area {
                 position: absolute;
                 left: 0;
-                top: 0;
+                top: 0 !important;
                 width: 100% !important;
                 background: white !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                border: none !important;
               }
             }
           `}</style>
 
           {/* KOP - Only visible in print */}
-          <div className="hidden print:flex items-center justify-between border-b-4 border-double border-black pb-4 mb-8">
+          <div className="hidden print:flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0 print:m-0 print:p-0">
             <img 
               src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
               className="w-24 h-24 object-contain" 
