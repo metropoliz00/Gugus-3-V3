@@ -8893,32 +8893,42 @@ function TeacherAttendance({ user }: { user: any }) {
         attended_at: new Date().toISOString()
       };
       
-      if (type === 'training') payload.training_id = id;
-      else payload.event_id = id;
-      
-      if ((user as any).is_guest) {
+      const idField = type === 'training' ? 'training_id' : 'event_id';
+      payload[idField] = id;
+      const isGuest = !!(user as any).is_guest;
+      const queryKey = isGuest ? 'guest_account_id' : 'user_id';
+
+      if (isGuest) {
         payload.is_guest = true;
         payload.guest_account_id = user.id;
         payload.guest_name = user.nama;
         payload.guest_institution = user.sekolah;
         payload.guest_nip = user.nip;
         payload.guest_position = user.jabatan;
-
-        const { error } = await supabase
-          .from("training_participants")
-          .upsert([payload], { 
-            onConflict: type === 'training' 
-              ? 'training_id,guest_account_id' 
-              : 'event_id,guest_account_id' 
-          });
-        if (error) throw error;
       } else {
         payload.user_id = user.id;
+      }
+
+      // Instead of upsert which fails due to postgres partial unique index caveats, check manually:
+      const { data: existing, error: existErr } = await supabase
+        .from("training_participants")
+        .select("id")
+        .eq(idField, id)
+        .eq(queryKey, user.id)
+        .maybeSingle();
+
+      if (existErr) throw existErr;
+
+      if (existing) {
         const { error } = await supabase
           .from("training_participants")
-          .upsert([payload], { 
-            onConflict: type === 'training' ? 'training_id,user_id' : 'event_id,user_id' 
-          });
+          .update(payload)
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("training_participants")
+          .insert([payload]);
         if (error) throw error;
       }
 
@@ -9698,27 +9708,39 @@ function TeacherJadwalCards({ user }: { user?: any }) {
         event_id: selectedAgendaId
       };
       
-      if (user?.is_guest) {
+      const isGuest = !!user?.is_guest;
+      const queryKey = isGuest ? 'guest_account_id' : 'user_id';
+
+      if (isGuest) {
         payload.is_guest = true;
         payload.guest_account_id = user.id;
         payload.guest_name = user?.nama;
         payload.guest_institution = user?.sekolah;
         payload.guest_nip = user?.nip;
         payload.guest_position = user?.jabatan;
-
-        const { error } = await supabase
-          .from("training_participants")
-          .upsert([payload], { 
-            onConflict: 'event_id,guest_account_id' 
-          });
-        if (error) throw error;
       } else {
         payload.user_id = user?.id;
+      }
+
+      const { data: existing, error: existErr } = await supabase
+        .from("training_participants")
+        .select("id")
+        .eq("event_id", selectedAgendaId)
+        .eq(queryKey, user.id)
+        .maybeSingle();
+
+      if (existErr) throw existErr;
+
+      if (existing) {
         const { error } = await supabase
           .from("training_participants")
-          .upsert([payload], { 
-            onConflict: 'event_id,user_id' 
-          });
+          .update(payload)
+          .eq("id", existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("training_participants")
+          .insert([payload]);
         if (error) throw error;
       }
 
