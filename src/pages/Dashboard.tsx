@@ -4049,6 +4049,26 @@ function AdminGaleriForm({
   );
 }
 
+export const formatToJakartaDatetimeLocal = (isoString?: string) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  const options: Intl.DateTimeFormatOptions = { 
+    timeZone: 'Asia/Jakarta', 
+    year: 'numeric', month: '2-digit', day: '2-digit', 
+    hour: '2-digit', minute: '2-digit', hour12: false 
+  };
+  const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(d);
+  const z: any = {};
+  parts.forEach(p => z[p.type] = p.value);
+  let hr = z.hour === '24' ? '00' : z.hour;
+  return `${z.year}-${z.month}-${z.day}T${hr}:${z.minute}`;
+};
+
+export const parseJakartaDatetimeLocalToUTC = (localString: string) => {
+  if (!localString) return "";
+  return new Date(localString + "+07:00").toISOString();
+};
+
 function AdminAgendaForm({ user }: { user: any }) {
   const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
@@ -4072,26 +4092,6 @@ function AdminAgendaForm({ user }: { user: any }) {
     }
     loadEvents();
   }, []);
-
-  const formatToJakartaDatetimeLocal = (isoString?: string) => {
-    if (!isoString) return "";
-    const d = new Date(isoString);
-    const options: Intl.DateTimeFormatOptions = { 
-      timeZone: 'Asia/Jakarta', 
-      year: 'numeric', month: '2-digit', day: '2-digit', 
-      hour: '2-digit', minute: '2-digit', hour12: false 
-    };
-    const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(d);
-    const z: any = {};
-    parts.forEach(p => z[p.type] = p.value);
-    let hr = z.hour === '24' ? '00' : z.hour;
-    return `${z.year}-${z.month}-${z.day}T${hr}:${z.minute}`;
-  };
-
-  const parseJakartaDatetimeLocalToUTC = (localString: string) => {
-    if (!localString) return "";
-    return new Date(localString + "+07:00").toISOString();
-  };
 
   const handleCreate = async () => {
     if (!supabase) return;
@@ -8411,10 +8411,14 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                     <input
                       type={f.type || "text"}
                       className="w-full border border-gray-200 p-3 rounded-xl focus:border-main-blue outline-none"
-                      value={formData[f.name] || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, [f.name]: e.target.value })
-                      }
+                      value={f.type === "datetime-local" ? formatToJakartaDatetimeLocal(formData[f.name]) : (formData[f.name] || "")}
+                      onChange={(e) => {
+                        let newValue = e.target.value;
+                        if (f.type === "datetime-local") {
+                          newValue = parseJakartaDatetimeLocalToUTC(newValue);
+                        }
+                        setFormData({ ...formData, [f.name]: newValue });
+                      }}
                     />
                   )}
                 </div>
@@ -8482,6 +8486,8 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                       >
                         {f.type === "date"
                           ? new Date(item[f.name]).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })
+                          : f.type === "datetime-local"
+                            ? new Date(item[f.name]).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) + " WIB"
                           : f.type === "select"
                             ? (() => {
                                 let val = item[f.name];
