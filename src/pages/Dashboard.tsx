@@ -74,6 +74,7 @@ import {
   useNavigate,
   useLocation,
   Navigate,
+  useSearchParams,
 } from "react-router-dom";
 
 import { useSiteContent, defaultContent } from "../contexts/SiteContext";
@@ -134,7 +135,7 @@ const adminMenu = [
   { id: "materi", label: "Kelola Materi KKG", icon: BookOpen },
   { id: "notulen", label: "Kelola Notulen Rapat", icon: FileText },
   { id: "pelatihan", label: "Kelola Pelatihan", icon: GraduationCap },
-  { id: "rekap_absen", label: "Rekap Absen Pelatihan", icon: UserCheck },
+  { id: "rekap_absen", label: "Rekap Absensi", icon: UserCheck },
   { id: "sertifikat", label: "Kelola Sertifikat", icon: Award },
   { id: "guest_accounts", label: "Kelola Akun Tamu", icon: ShieldCheck },
   { id: "forum", label: "Kelola Forum Diskusi", icon: MessageSquare },
@@ -3994,6 +3995,7 @@ function AdminGaleriForm({
 }
 
 function AdminAgendaForm({ user }: { user: any }) {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const debouncedSave = useRef<NodeJS.Timeout | null>(null);
@@ -4239,6 +4241,14 @@ function AdminAgendaForm({ user }: { user: any }) {
                     >
                       {item.is_attendance_open ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                       {item.is_attendance_open ? "Buka (Online)" : "Tutup (Nonaktif)"}
+                    </button>
+                    
+                    <button
+                      onClick={() => navigate(`/dashboard/rekap_absen?type=event&id=${item.id}`)}
+                      className="mt-1 flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-widest bg-main-blue/10 text-main-blue hover:bg-main-blue/20 transition-all"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      Cetak Rekap
                     </button>
                   </div>
                 </div>
@@ -7062,12 +7072,13 @@ function AdminFinanceManagement({ user }: { user: any }) {
 }
 
 function AdminRekapAbsen() {
+  const [searchParams] = useSearchParams();
   const [activities, setActivities] = useState<any[]>([]);
-  const [selectedActivityId, setSelectedActivityId] = useState("");
+  const [selectedActivityId, setSelectedActivityId] = useState(searchParams.get("id") || "");
   const [participants, setParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [chairman, setChairman] = useState<any>(null);
-  const [activityType, setActivityType] = useState<'training' | 'event'>('training');
+  const [activityType, setActivityType] = useState<'training' | 'event'>((searchParams.get("type") as 'training' | 'event') || 'training');
 
   useEffect(() => {
     loadActivities();
@@ -7319,7 +7330,7 @@ function AdminRekapAbsen() {
                       <td className="border-2 border-black px-2 py-2.5 text-center">
                         <span className="font-bold uppercase text-[9px] print:text-[10px]">Hadir</span>
                       </td>
-                      <td className="border-2 border-black px-2 py-2.5 text-center font-bold uppercase text-[9px] print:text-[9px] leading-tight">
+                      <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] print:text-[9px] leading-tight">
                         {status}
                       </td>
                     </tr>
