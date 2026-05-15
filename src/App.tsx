@@ -116,6 +116,15 @@ export default function App() {
         if (session?.user) {
           fetchUserProfile(session.user.id);
         } else {
+          // Check for guest session
+          const guestSession = localStorage.getItem("guest_session");
+          if (guestSession) {
+            try {
+              setUser(JSON.parse(guestSession));
+            } catch (e) {
+              localStorage.removeItem("guest_session");
+            }
+          }
           setIsInitialAuthLoading(false);
         }
       }).catch((error) => {
@@ -151,6 +160,7 @@ export default function App() {
     if (supabase) {
       await supabase.auth.signOut();
     }
+    localStorage.removeItem("guest_session");
     setUser(null);
   };
 

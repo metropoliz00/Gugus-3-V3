@@ -136,6 +136,7 @@ const adminMenu = [
   { id: "pelatihan", label: "Kelola Pelatihan", icon: GraduationCap },
   { id: "rekap_absen", label: "Rekap Absen Pelatihan", icon: UserCheck },
   { id: "sertifikat", label: "Kelola Sertifikat", icon: Award },
+  { id: "guest_accounts", label: "Kelola Akun Tamu", icon: ShieldCheck },
   { id: "forum", label: "Kelola Forum Diskusi", icon: MessageSquare },
   { id: "komentar", label: "Kelola Komentar Forum", icon: MessageSquare },
   { id: "sharing", label: "Kelola Praktik Baik", icon: Play },
@@ -159,6 +160,12 @@ const guruMenu = [
   { id: "upload_karya", label: "Upload Hasil Karya", icon: UploadCloud },
 ];
 
+const guestMenu = [
+  { id: "overview", label: "Portal Tamu", icon: LayoutDashboard },
+  { id: "profil", label: "Data Tamu", icon: Users },
+  { id: "pelatihan", label: "Daftar Kegiatan", icon: GraduationCap },
+];
+
 const adminMenuGroups = [
   {
     title: "Ikhtisar",
@@ -170,7 +177,7 @@ const adminMenuGroups = [
   },
   {
     title: "Akademik",
-    items: ["agenda", "materi", "notulen", "pelatihan", "rekap_absen", "sertifikat"],
+    items: ["agenda", "materi", "notulen", "pelatihan", "rekap_absen", "sertifikat", "guest_accounts"],
   },
   {
     title: "Forum & Karya",
@@ -433,8 +440,12 @@ export default function Dashboard({
   };
 
   const isAdmin = user.role?.toLowerCase() === "admin";
+  const isGuestRole = user.role?.toLowerCase() === "tamu";
+  
   const menuItems = isAdmin
     ? adminMenu
+    : isGuestRole
+    ? guestMenu
     : guruMenu.filter((item) => {
         if (isLoading) return true;
         const activeMenus = (content as any)?.activeMenus;
@@ -798,6 +809,8 @@ export default function Dashboard({
                     element={
                       user.role?.toLowerCase() === "admin" ? (
                         <AdminOverview user={user} />
+                      ) : user.role?.toLowerCase() === "tamu" ? (
+                        <TamuOverview user={user} />
                       ) : (
                         <GuruOverview user={user} />
                       )
@@ -988,6 +1001,10 @@ export default function Dashboard({
                       <Route
                         path="rekap_absen"
                         element={<AdminRekapAbsen />}
+                      />
+                      <Route
+                        path="guest_accounts"
+                        element={<AdminGuestAccountsManager />}
                       />
                       <Route
                         path="sertifikat"
@@ -2634,6 +2651,104 @@ function AdminOverview({ user }: { user: any }) {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TamuOverview({ user }: { user: any }) {
+  const [events, setEvents] = useState<any[]>([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function loadData() {
+      if (!supabase) return;
+      try {
+        const { data: evData } = await supabase
+          .from("events")
+          .select("*")
+          .order("date_start", { ascending: true })
+          .limit(3);
+        if (evData) setEvents(evData);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadData();
+  }, []);
+
+  const guestActivities = [
+    {
+      title: "Kegiatan & Pelatihan",
+      icon: GraduationCap,
+      color: "from-blue-500 to-cyan-400",
+      value: "Lihat Daftar Kegiatan",
+      link: "/dashboard/pelatihan",
+    },
+    {
+      title: "Profil Tamu",
+      icon: Users,
+      color: "from-green-500 to-emerald-400",
+      value: "Cek Data Diri",
+      link: "/dashboard/profil",
+    },
+    {
+      title: "Buku Tamu KKG",
+      icon: Newspaper,
+      color: "from-indigo-600 to-blue-500",
+      value: "Portal Undangan Online",
+      link: "/dashboard/overview",
+    },
+  ];
+
+  return (
+    <div className="space-y-10">
+      <div className="bg-white p-8 rounded-[2rem] border-l-8 border-leaf-green shadow-sm mb-10 flex flex-col md:flex-row items-center gap-8">
+        <div className="w-[80px] h-[80px] rounded-full bg-gradient-to-br from-leaf-green to-emerald-400 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+          <UserIcon className="w-10 h-10 text-white" />
+        </div>
+        <div className="flex-1 text-center md:text-left">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-leaf-green/10 rounded-full border border-leaf-green/5 mb-3">
+            <div className="w-1.5 h-1.5 rounded-full bg-leaf-green animate-pulse" />
+            <span className="text-[10px] font-black text-leaf-green uppercase tracking-widest leading-none">Tamu Undangan KKG</span>
+          </div>
+          <div className="text-xl md:text-3xl font-black font-heading leading-tight mb-2">
+            <span className="text-leaf-green">Selamat Datang,</span><br/>
+            <span className="text-soft-black">{user.nama || "Tamu"}! 👋</span>
+          </div>
+          <p className="text-sm text-gray-500 font-medium max-w-lg">
+            Gunakan portal ini untuk melakukan absensi kegiatan dan mengakses materi pelatihan yang ditujukan bagi undangan.
+          </p>
+        </div>
+        <button
+          onClick={() => navigate("/dashboard/pelatihan")}
+          className="px-8 py-4 bg-leaf-green text-white rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-leaf-green/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shrink-0"
+        >
+          <GraduationCap className="w-5 h-5" /> Mulai Ke Absensi
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {guestActivities.map((item, i) => (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            key={i}
+            onClick={() => navigate(item.link)}
+            className="bg-white border border-gray-100 p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer"
+          >
+            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-6 shadow-lg shadow-gray-200 group-hover:rotate-6 transition-transform text-white`}>
+              <item.icon className="w-7 h-7" />
+            </div>
+            <h3 className="font-heading font-black text-soft-black text-lg mb-2">{item.title}</h3>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">{item.value}</p>
+            <div className="flex items-center gap-2 text-main-blue group-hover:gap-4 transition-all">
+              <span className="text-xs font-black uppercase tracking-widest">Akses Sekarang</span>
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );
@@ -7166,6 +7281,264 @@ function AdminRekapAbsen() {
   );
 }
 
+function AdminGuestAccountsManager() {
+  const { alert } = useAlert();
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    id: "",
+    username: "",
+    password: "",
+    name: "",
+    nip: "",
+    position: "",
+    institution: "",
+  });
+
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const fetchAccounts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("guest_accounts")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error) setAccounts(data || []);
+    setLoading(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (formData.id) {
+        const { error } = await supabase
+          .from("guest_accounts")
+          .update({
+            username: formData.username,
+            password: formData.password,
+            name: formData.name,
+            nip: formData.nip,
+            position: formData.position,
+            institution: formData.institution,
+          })
+          .eq("id", formData.id);
+        if (error) throw error;
+        await alert("Akun tamu berhasil diperbarui", "Sukses", "success");
+      } else {
+        const { error } = await supabase.from("guest_accounts").insert([
+          {
+            username: formData.username,
+            password: formData.password,
+            name: formData.name,
+            nip: formData.nip,
+            position: formData.position,
+            institution: formData.institution,
+          },
+        ]);
+        if (error) throw error;
+        await alert("Akun tamu berhasil dibuat", "Sukses", "success");
+      }
+      setIsModalOpen(false);
+      fetchAccounts();
+    } catch (err: any) {
+      alert(err.message, "Error", "error");
+    }
+  };
+
+  const handleEdit = (account: any) => {
+    setFormData(account);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Hapus akun tamu ini?")) return;
+    const { error } = await supabase.from("guest_accounts").delete().eq("id", id);
+    if (!error) {
+      alert("Akun tamu dihapus", "Sukses", "success");
+      fetchAccounts();
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold font-heading text-soft-black">Kelola Akun Tamu</h2>
+          <p className="text-sm text-gray-500">Buat dan kelola akun khusus untuk para tamu undangan.</p>
+        </div>
+        <button
+          onClick={() => {
+            setFormData({
+              id: "",
+              username: "",
+              password: "",
+              name: "",
+              nip: "",
+              position: "",
+              institution: "",
+            });
+            setIsModalOpen(true);
+          }}
+          className="px-6 py-3 bg-main-blue text-white rounded-xl font-bold flex items-center gap-2 hover:bg-dark-blue shadow-lg shadow-main-blue/20"
+        >
+          <PlusCircle className="w-5 h-5" /> Buat Akun Tamu
+        </button>
+      </div>
+
+      <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50/50 border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-12">No</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Username / Password</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama Lengkap</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instansi & Jabatan</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">Memuat data...</td>
+                </tr>
+              ) : accounts.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm italic">Belum ada akun tamu yang dibuat.</td>
+                </tr>
+              ) : (
+                accounts.map((acc, idx) => (
+                  <tr key={acc.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4 text-sm font-bold text-gray-400 text-center">{idx + 1}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-soft-black">{acc.username}</span>
+                        <span className="text-[10px] text-gray-400 font-mono italic">Pass: {acc.password}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-soft-black">{acc.name}</span>
+                        <span className="text-[10px] text-gray-400">NIP: {acc.nip || "-"}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-soft-black">{acc.institution || "-"}</span>
+                        <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">{acc.position || "Tamu"}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <button onClick={() => handleEdit(acc)} className="p-2 text-main-blue hover:bg-main-blue/10 rounded-lg transition-colors">
+                          <PenTool className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(acc.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative bg-white rounded-[2.5rem] p-10 w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]"
+          >
+            <h3 className="text-2xl font-bold mb-6 font-heading">{formData.id ? "Edit" : "Buat"} Akun Tamu</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Username</label>
+                  <input
+                    required
+                    className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Password Khusus</label>
+                  <input
+                    required
+                    className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Nama Lengkap</label>
+                <input
+                  required
+                  className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">NIP (Opsional)</label>
+                  <input
+                    className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
+                    value={formData.nip}
+                    onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Jabatan</label>
+                  <input
+                    required
+                    className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
+                    value={formData.position}
+                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Asal Instansi</label>
+                <input
+                  required
+                  className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
+                  value={formData.institution}
+                  onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
+                />
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-4 bg-gray-100 text-gray-500 rounded-2xl font-bold text-xs uppercase tracking-widest"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-4 bg-main-blue text-white rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-main-blue/20 hover:scale-[1.02] transition-transform"
+                >
+                  Simpan Akun
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdminCertificateManager({ user }: { user: any }) {
   const [activeSubTab, setActiveSubTab] = useState<"editor" | "list">("list");
   const [trainings, setTrainings] = useState<any[]>([]);
@@ -8282,13 +8655,32 @@ function TeacherAttendance({ user }: { user: any }) {
       if (type === 'training') payload.training_id = id;
       else payload.event_id = id;
       
-      payload.user_id = user.id;
+      if ((user as any).is_guest) {
+        payload.is_guest = true;
+        payload.guest_account_id = user.id;
+        payload.guest_name = user.nama;
+        payload.guest_institution = user.sekolah;
+        payload.guest_nip = user.nip;
+        payload.guest_position = user.jabatan;
 
-      const { error } = await supabase
-        .from("training_participants")
-        .upsert([payload], { onConflict: type === 'training' ? 'training_id,user_id' : 'event_id,user_id' });
-        
-      if (error) throw error;
+        const { error } = await supabase
+          .from("training_participants")
+          .upsert([payload], { 
+            onConflict: type === 'training' 
+              ? 'training_id,guest_account_id' 
+              : 'event_id,guest_account_id' 
+          });
+        if (error) throw error;
+      } else {
+        payload.user_id = user.id;
+        const { error } = await supabase
+          .from("training_participants")
+          .upsert([payload], { 
+            onConflict: type === 'training' ? 'training_id,user_id' : 'event_id,user_id' 
+          });
+        if (error) throw error;
+      }
+
       await alert("Absensi Berhasil Dicatat!", "Sukses", "success");
     } catch (err: any) {
       alert(err.message, "Error", "error");
@@ -9224,10 +9616,17 @@ function TeacherTrainingCards({ user }: { user: any }) {
       setTrainings(tData || []);
 
       // Fetch User Registrations
-      const { data: rData } = await supabase
+      const regQuery = supabase
         .from("training_participants")
-        .select("*")
-        .eq("user_id", user.id);
+        .select("*");
+      
+      if ((user as any).is_guest) {
+        regQuery.eq("guest_account_id", user.id);
+      } else {
+        regQuery.eq("user_id", user.id);
+      }
+      
+      const { data: rData } = await regQuery;
 
       const regMap: Record<string, any> = {};
       rData?.forEach((reg) => {
@@ -9236,10 +9635,17 @@ function TeacherTrainingCards({ user }: { user: any }) {
       setRegistrations(regMap);
       
       // Fetch User Certificate Records
-      const { data: certData } = await supabase
+      const certQuery = supabase
         .from("training_certificates")
-        .select("*")
-        .eq("user_id", user.id);
+        .select("*");
+        
+      if ((user as any).is_guest) {
+        certQuery.eq("guest_account_id", user.id); // Assuming we add this too if needed
+      } else {
+        certQuery.eq("user_id", user.id);
+      }
+      
+      const { data: certData } = await certQuery;
         
       const certMap: Record<string, any> = {};
       certData?.forEach((cert) => {
@@ -9267,12 +9673,24 @@ function TeacherTrainingCards({ user }: { user: any }) {
   const handleRegister = async (trainingId: string) => {
     if (!supabase || !user) return;
     try {
-      const { error } = await supabase.from("training_participants").insert({
-        user_id: user.id,
+      const payload: any = {
         training_id: trainingId,
         status: "registered",
         registered_at: new Date().toISOString(),
-      });
+      };
+
+      if ((user as any).is_guest) {
+        payload.is_guest = true;
+        payload.guest_account_id = user.id;
+        payload.guest_name = user.nama;
+        payload.guest_institution = user.sekolah;
+        payload.guest_nip = user.nip;
+        payload.guest_position = user.jabatan;
+      } else {
+        payload.user_id = user.id;
+      }
+
+      const { error } = await supabase.from("training_participants").insert(payload);
 
       if (error) throw error;
       alert("Pendaftaran berhasil!", "Sukses", "success");
@@ -9285,14 +9703,21 @@ function TeacherTrainingCards({ user }: { user: any }) {
   const handleAttendance = async (trainingId: string) => {
     if (!supabase || !user) return;
     try {
-      const { error } = await supabase
+      const query = supabase
         .from("training_participants")
         .update({
           status: "attended",
           attended_at: new Date().toISOString(),
         })
-        .eq("user_id", user.id)
         .eq("training_id", trainingId);
+
+      if ((user as any).is_guest) {
+        query.eq("guest_account_id", user.id);
+      } else {
+        query.eq("user_id", user.id);
+      }
+
+      const { error } = await query;
 
       if (error) throw error;
       alert("Daftar hadir berhasil diisi!", "Sukses", "success");
@@ -9315,12 +9740,18 @@ function TeacherTrainingCards({ user }: { user: any }) {
     if (supabase) {
       try {
         // Check if certificate record already exists
-        const { data: existingCert } = await supabase
+        const certQuery = supabase
           .from("training_certificates")
           .select("certificate_number")
-          .eq("user_id", user.id)
-          .eq("training_id", training.id)
-          .maybeSingle();
+          .eq("training_id", training.id);
+        
+        if ((user as any).is_guest) {
+          certQuery.eq("guest_account_id", user.id);
+        } else {
+          certQuery.eq("user_id", user.id);
+        }
+
+        const { data: existingCert } = await certQuery.maybeSingle();
 
         if (existingCert?.certificate_number) {
           certNumber = existingCert.certificate_number;
@@ -9346,12 +9777,19 @@ function TeacherTrainingCards({ user }: { user: any }) {
           const randomPart = Math.floor(1000 + Math.random() * 9000);
           certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
 
-          const { data: newCert } = await supabase.from("training_certificates").insert({
-            user_id: user.id,
+          const certPayload: any = {
             training_id: training.id,
             certificate_number: certNumber,
             certificate_url: "Generated Individually",
-          }).select().single();
+          };
+
+          if ((user as any).is_guest) {
+            certPayload.guest_account_id = user.id;
+          } else {
+            certPayload.user_id = user.id;
+          }
+
+          const { data: newCert } = await supabase.from("training_certificates").insert(certPayload).select().single();
 
           if (newCert) setCertRecords((prev) => ({ ...prev, [training.id]: newCert }));
 

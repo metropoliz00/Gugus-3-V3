@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 export default function LoginModal({ isOpen, onClose, onLoginSuccess }: { isOpen: boolean, onClose: () => void, onLoginSuccess: (user: any) => void }) {
   const { content } = useSiteContent(); 
   const navigate = useNavigate();
+  const [loginType, setLoginType] = useState<"member" | "guest">("member");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -27,43 +28,77 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: { isOpen
 
     try {
       const trimmedUsername = username.trim();
-      let loginEmail = trimmedUsername;
 
-      // If 'username' doesn't look like an email, try fetching it from user_profiles
-      if (!trimmedUsername.includes('@')) {
-        const { data: profile, error: findError } = await supabase
-          .from('user_profiles')
-          .select('email')
-          .eq('username', trimmedUsername)
-          .single();
-        
-        if (findError || !profile) {
-          throw new Error("Username tidak ditemukan.");
+      if (loginType === "member") {
+        let loginEmail = trimmedUsername;
+
+        // If 'username' doesn't look like an email, try fetching it from user_profiles
+        if (!trimmedUsername.includes('@')) {
+          const { data: profile, error: findError } = await supabase
+            .from('user_profiles')
+            .select('email')
+            .eq('username', trimmedUsername)
+            .single();
+          
+          if (findError || !profile) {
+            throw new Error("Username anggota tidak ditemukan.");
+          }
+          loginEmail = profile.email;
         }
-        loginEmail = profile.email;
-      }
 
-      const { data, error: supaError } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password
-      });
+        const { data, error: supaError } = await supabase.auth.signInWithPassword({
+          email: loginEmail,
+          password
+        });
 
-      if (supaError) {
-        if (supaError.message.includes("Invalid login credentials")) {
-          throw new Error("Kata sandi salah.");
+        if (supaError) {
+          if (supaError.message.includes("Invalid login credentials")) {
+            throw new Error("Kata sandi salah.");
+          }
+          throw supaError;
         }
-        throw supaError;
-      }
 
-      if (data.session) {
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
+        if (data.session) {
+          const { data: profile, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', data.session.user.id)
+            .single();
+
+          if (profileError) throw profileError;
+          onLoginSuccess(profile);
+          onClose();
+        }
+      } else {
+        // Guest Logic
+        const { data: guest, error: guestError } = await supabase
+          .from('guest_accounts')
           .select('*')
-          .eq('id', data.session.user.id)
+          .eq('username', trimmedUsername)
+          .eq('password', password) // Simple check for demo/user request
           .single();
 
-        if (profileError) throw profileError;
-        onLoginSuccess(profile);
+        if (guestError || !guest) {
+          throw new Error("Username atau Password Tamu salah.");
+        }
+
+        // Return a mock user profile with 'tamu' role
+        const guestUser = {
+          id: guest.id,
+          nama: guest.name,
+          username: guest.username,
+          role: 'tamu', // Role for Dashboard logic
+          nip: guest.nip,
+          jabatan: guest.position,
+          sekolah: guest.institution,
+          is_guest: true,
+          guest_id: guest.id
+        };
+
+        // For persistence of guest login (since it's not Supabase Auth), 
+        // we might need to store it in LocalStorage or handle it in App.tsx
+        localStorage.setItem("guest_session", JSON.stringify(guestUser));
+        onLoginSuccess(guestUser);
         onClose();
       }
     } catch (err: any) {
@@ -122,6 +157,23 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: { isOpen
 
             {/* Body */}
             <div className="p-8 pb-10">
+              <div className="flex bg-gray-100 p-1.5 rounded-2xl mb-8">
+                <button
+                  type="button"
+                  onClick={() => setLoginType("member")}
+                  className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${loginType === "member" ? "bg-white text-main-blue shadow-lg shadow-main-blue/10" : "text-gray-400"}`}
+                >
+                  Anggota KKG
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLoginType("guest")}
+                  className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${loginType === "guest" ? "bg-white text-main-blue shadow-lg shadow-main-blue/10" : "text-gray-400"}`}
+                >
+                  Tamu Undangan
+                </button>
+              </div>
+
               <form className="space-y-5" onSubmit={handleSubmit}>
                 {error && (
                   <div className={`p-3 text-sm rounded-lg border bg-red-50 text-red-600 border-red-100`}>
