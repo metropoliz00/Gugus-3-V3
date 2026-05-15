@@ -56,6 +56,7 @@ import {
   Newspaper,
   Camera,
   School,
+  XCircle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -7016,7 +7017,7 @@ function AdminRekapAbsen() {
     if (userIds.length > 0) {
       const { data } = await supabase
         .from("user_profiles")
-        .select("id, nama, nip, sekolah")
+        .select("id, nama, nip, sekolah, jabatan")
         .in("id", userIds);
       profilesData = data || [];
     }
@@ -7028,15 +7029,17 @@ function AdminRekapAbsen() {
           ...p,
           profile: {
             nama: p.guest_name,
-            nip: "-",
-            sekolah: p.guest_institution
+            nip: p.guest_nip || "-",
+            sekolah: p.guest_institution,
+            jabatan: p.guest_position || "-"
           },
           isGuestInfo: true
         };
       }
+      const prof = profilesData?.find(prof => prof.id === p.user_id) || {};
       return {
         ...p,
-        profile: profilesData?.find(prof => prof.id === p.user_id) || {}
+        profile: prof
       };
     });
     
@@ -7117,17 +7120,18 @@ function AdminRekapAbsen() {
             <thead>
               <tr className="bg-gray-100 print:bg-gray-50 font-bold uppercase tracking-wider">
                 <th className="border-2 border-black px-4 py-3 w-12 text-center">No</th>
-                <th className="border-2 border-black px-4 py-3 text-left">Nama</th>
-                <th className="border-2 border-black px-4 py-3 text-left">NIP</th>
-                <th className="border-2 border-black px-4 py-3 text-left">Sekolah / Instansi</th>
-                <th className="border-2 border-black px-4 py-3 text-center">Kehadiran</th>
-                <th className="border-2 border-black px-4 py-3 text-center">Tipe</th>
+                <th className="border-2 border-black px-4 py-2 text-left">Nama</th>
+                <th className="border-2 border-black px-4 py-2 text-left">NIP</th>
+                <th className="border-2 border-black px-4 py-2 text-left">Jabatan</th>
+                <th className="border-2 border-black px-4 py-2 text-left">Sekolah / Instansi</th>
+                <th className="border-2 border-black px-4 py-2 text-center">Kehadiran</th>
+                <th className="border-2 border-black px-4 py-2 text-center">Tipe</th>
               </tr>
             </thead>
             <tbody>
               {participants.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
+                  <td colSpan={7} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
                 </tr>
               ) : (
                 participants.map((p, idx) => (
@@ -7135,6 +7139,7 @@ function AdminRekapAbsen() {
                     <td className="border-2 border-black px-4 py-2.5 text-center font-bold">{idx + 1}</td>
                     <td className="border-2 border-black px-4 py-2.5 font-bold text-soft-black">{formatName(p.profile?.nama)}</td>
                     <td className="border-2 border-black px-4 py-2.5 font-mono">{p.profile?.nip || "-"}</td>
+                    <td className="border-2 border-black px-4 py-2.5">{p.profile?.jabatan || "-"}</td>
                     <td className="border-2 border-black px-4 py-2.5">{p.profile?.sekolah || "-"}</td>
                     <td className="border-2 border-black px-4 py-2.5 text-center">
                       <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold uppercase text-[9px]">Hadir</span>
@@ -8234,7 +8239,7 @@ function TeacherAttendance({ user }: { user: any }) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<{ id: string, type: 'training' | 'event' } | null>(null);
   const [showGuestForm, setShowGuestForm] = useState(false);
-  const [guestData, setGuestData] = useState({ name: "", institution: "", phone: "" });
+  const [guestData, setGuestData] = useState({ name: "", institution: "", nip: "", position: "" });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -8299,6 +8304,8 @@ function TeacherAttendance({ user }: { user: any }) {
         is_guest: true,
         guest_name: guestData.name,
         guest_institution: guestData.institution,
+        guest_nip: guestData.nip,
+        guest_position: guestData.position,
         status: 'attended',
         attended_at: new Date().toISOString()
       };
@@ -8313,7 +8320,7 @@ function TeacherAttendance({ user }: { user: any }) {
       if (error) throw error;
       
       setShowGuestForm(false);
-      setGuestData({ name: "", institution: "", phone: "" });
+      setGuestData({ name: "", institution: "", nip: "", position: "" });
       await alert("Absensi Tamu Berhasil!", "Sukses", "success");
     } catch (err: any) {
       alert(err.message, "Error", "error");
@@ -8348,6 +8355,27 @@ function TeacherAttendance({ user }: { user: any }) {
                   onChange={e => setGuestData({...guestData, name: e.target.value})}
                   placeholder="Nama Tamu"
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">NIP (Opsional)</label>
+                  <input 
+                    className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm"
+                    value={guestData.nip}
+                    onChange={e => setGuestData({...guestData, nip: e.target.value})}
+                    placeholder="NIP"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Jabatan</label>
+                  <input 
+                    required
+                    className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm"
+                    value={guestData.position}
+                    onChange={e => setGuestData({...guestData, position: e.target.value})}
+                    placeholder="Contoh: Guru / Kepala Sekolah"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Instansi / Asal</label>
