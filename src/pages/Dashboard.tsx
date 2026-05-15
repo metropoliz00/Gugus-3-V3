@@ -7231,17 +7231,24 @@ function AdminRekapAbsen() {
                 margin: 1cm;
               }
               body {
-                background: white;
-                font-family: serif;
+                background: white !important;
+              }
+              /* Hide all elements during print */
+              body * {
+                visibility: hidden;
+              }
+              /* Show only the print area and its contents */
+              #print-area, #print-area * {
+                visibility: visible;
               }
               #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100% !important;
+                background: white !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-              }
-              .no-print {
-                display: none !important;
               }
             }
           `}</style>
@@ -7257,7 +7264,6 @@ function AdminRekapAbsen() {
               <h1 className="text-xl font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
               <h2 className="text-2xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
               <p className="text-sm font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
-              <p className="text-[10px] font-medium font-serif italic mt-1">Alamat: Jl. Raya Tuban-Semarang No. 129, Jenu, Tuban, Jawa Timur</p>
             </div>
             <img 
               src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png" 
@@ -7327,7 +7333,7 @@ function AdminRekapAbsen() {
             <div className="text-center w-72">
               <p className="text-sm italic mb-2">Jenu, {new Date().toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" })}</p>
               <p className="text-sm font-bold mb-20 uppercase tracking-wide">Ketua KKG,</p>
-              <p className="text-sm font-bold underline underline-offset-4 leading-none mb-1 uppercase">{formatName(chairman?.name) || "......................................"}</p>
+              <p className="text-sm font-bold underline underline-offset-4 leading-none mb-1">{formatName(chairman?.name) || "......................................"}</p>
               <p className="text-sm font-bold">NIP. {chairman?.nip || "....................................."}</p>
             </div>
           </div>
