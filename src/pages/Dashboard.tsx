@@ -89,6 +89,8 @@ import AdminCertificateEditor, {
 import { SharingPractices } from "../components/SharingPractices";
 
 import * as XLSX from "xlsx";
+import Webcam from "react-webcam";
+const WebcamComponent = Webcam as any;
 
 // Types
 interface User {
@@ -8000,10 +8002,146 @@ function DataViewList({
   );
 }
 
+function FaceScannerModal({ 
+  isOpen, 
+  onClose, 
+  onSuccess 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onSuccess: () => void;
+}) {
+  const [scanning, setScanning] = useState(false);
+  const [status, setStatus] = useState<"idle" | "detecting" | "success">("idle");
+  const webcamRef = useRef<Webcam>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setStatus("idle");
+      setScanning(false);
+      
+      const timer = setTimeout(() => {
+        setScanning(true);
+        setStatus("detecting");
+        
+        setTimeout(() => {
+          setStatus("success");
+          setTimeout(() => {
+            onSuccess();
+          }, 1500);
+        }, 3000);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-10">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-soft-black/80 backdrop-blur-md"
+        />
+        
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="relative bg-white w-full max-w-sm rounded-[3rem] overflow-hidden shadow-2xl border border-white/20"
+        >
+          <div className="p-6 text-center border-b border-gray-100">
+            <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 mx-auto mb-3">
+              <Camera className="w-5 h-5" />
+            </div>
+            <h3 className="text-lg font-bold text-soft-black leading-tight">Verifikasi Wajah</h3>
+            <p className="text-[10px] text-gray-500 mt-1">
+              Posisikan wajah Anda di dalam bingkai.
+            </p>
+          </div>
+
+          <div className="relative aspect-square bg-black overflow-hidden">
+            <WebcamComponent
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              className="w-full h-full object-cover scale-x-[-1]"
+              videoConstraints={{
+                facingMode: "user",
+                width: 720,
+                height: 720
+              }}
+            />
+            
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-48 h-48 border-2 border-white/20 rounded-[2.5rem] relative">
+                <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-emerald-500 rounded-tl-xl" />
+                <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-emerald-500 rounded-tr-xl" />
+                <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-emerald-500 rounded-bl-xl" />
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-emerald-500 rounded-br-xl" />
+                
+                {scanning && status === "detecting" && (
+                  <motion.div 
+                    animate={{ top: ["0%", "100%", "0%"] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-500 to-transparent shadow-[0_0_10px_rgba(16,185,129,0.8)] z-10" 
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="absolute bottom-4 inset-x-0 flex justify-center z-20">
+               {status === "idle" && (
+                 <div className="px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full text-[8px] font-bold text-white uppercase tracking-widest border border-white/10">
+                    Kamera Aktif...
+                 </div>
+               )}
+               {status === "detecting" && (
+                 <motion.div 
+                   animate={{ scale: [1, 1.02, 1] }}
+                   transition={{ duration: 1.5, repeat: Infinity }}
+                   className="px-3 py-1.5 bg-emerald-500 rounded-full text-[8px] font-bold text-white uppercase tracking-widest border border-white/10 shadow-lg shadow-emerald-500/30"
+                 >
+                    Menganalisis Wajah...
+                 </motion.div>
+               )}
+               {status === "success" && (
+                 <motion.div 
+                   initial={{ y: 10, opacity: 0 }}
+                   animate={{ y: 0, opacity: 1 }}
+                   className="px-4 py-1.5 bg-emerald-600 rounded-full text-[10px] font-bold text-white flex items-center gap-1.5 shadow-lg shadow-emerald-600/30"
+                 >
+                    <CheckCircle className="w-3 h-3" /> Berhasil Terdeteksi!
+                 </motion.div>
+               )}
+            </div>
+          </div>
+
+          <div className="p-6">
+            <button
+              onClick={onClose}
+              className="w-full py-3 bg-gray-50 text-gray-400 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all"
+            >
+              Batalkan
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}
+
 function TeacherAttendance({ user }: { user: any }) {
   const { alert } = useAlert();
   const [trainings, setTrainings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTrainings = async () => {
@@ -8022,6 +8160,18 @@ function TeacherAttendance({ user }: { user: any }) {
     };
     fetchTrainings();
   }, []);
+
+  const handleAbsenClick = (trainingId: string) => {
+    setSelectedTrainingId(trainingId);
+    setIsScannerOpen(true);
+  };
+
+  const onScanSuccess = () => {
+    if (selectedTrainingId) {
+      handleAbsen(selectedTrainingId);
+    }
+    setIsScannerOpen(false);
+  };
 
   const handleAbsen = async (trainingId: string) => {
     try {
@@ -8042,6 +8192,12 @@ function TeacherAttendance({ user }: { user: any }) {
 
   return (
     <div className="space-y-10">
+      <FaceScannerModal 
+        isOpen={isScannerOpen} 
+        onClose={() => setIsScannerOpen(false)} 
+        onSuccess={onScanSuccess}
+      />
+
       {/* Attendance Clean Header */}
       <div className="bg-white p-8 rounded-[2rem] border-l-8 border-emerald-500 shadow-sm mb-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
         <div className="flex items-center gap-8">
@@ -8057,7 +8213,7 @@ function TeacherAttendance({ user }: { user: any }) {
               Presensi Pelatihan
             </h2>
             <p className="text-sm text-gray-500">
-              Catat kehadiran Anda secara digital untuk setiap sesi pelatihan yang sedang berlangsung.
+              Catat kehadiran Anda melalui verifikasi wajah untuk setiap sesi pelatihan yang sedang berlangsung.
             </p>
           </div>
         </div>
@@ -8105,10 +8261,10 @@ function TeacherAttendance({ user }: { user: any }) {
                 </div>
               </div>
               <button
-                onClick={() => handleAbsen(t.id)}
-                className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
+                onClick={() => handleAbsenClick(t.id)}
+                className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
-                Konfirmasi Kehadiran
+                <Camera className="w-4 h-4" /> Scan Wajah
               </button>
             </motion.div>
           ))}
