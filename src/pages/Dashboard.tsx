@@ -7089,9 +7089,9 @@ function AdminRekapAbsen() {
 
           <div className="mt-12 flex justify-end">
             <div className="text-center w-64">
-              <p className="text-sm mb-20 text-left pl-4">Ketua KKG,</p>
-              <p className="text-sm font-bold uppercase underline">{chairman?.name || "......................................"}</p>
-              <p className="text-sm mt-1 text-left pl-4">NIP. {chairman?.nip || "....................................."}</p>
+              <p className="text-sm mb-20">Ketua KKG,</p>
+              <p className="text-sm font-bold underline">{chairman?.name || "......................................"}</p>
+              <p className="text-sm mt-1">NIP. {chairman?.nip || "....................................."}</p>
             </div>
           </div>
         </div>
