@@ -2794,6 +2794,10 @@ function TamuOverview({ user }: { user: any }) {
                 <span className="text-sm font-bold text-main-blue">{user.pangkat || "-"}</span>
              </div>
              <div className="flex justify-between border-b pb-2">
+                <span className="text-[10px] uppercase font-bold text-gray-400">Peran</span>
+                <span className="text-sm font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{user.peran || "Tamu Undangan"}</span>
+             </div>
+             <div className="flex justify-between border-b pb-2">
                 <span className="text-[10px] uppercase font-bold text-gray-400">Jabatan</span>
                 <span className="text-sm font-bold text-soft-black">{user.jabatan || "-"}</span>
              </div>
@@ -7495,6 +7499,7 @@ function AdminGuestAccountsManager() {
     position: "",
     institution: "",
     pangkat_golongan: "",
+    peran: "Tamu Undangan",
   });
 
   useEffect(() => {
@@ -7525,6 +7530,7 @@ function AdminGuestAccountsManager() {
             position: formData.position,
             institution: formData.institution,
             pangkat_golongan: formData.pangkat_golongan,
+            peran: formData.peran || "Tamu Undangan",
           })
           .eq("id", formData.id);
         if (error) throw error;
@@ -7539,6 +7545,7 @@ function AdminGuestAccountsManager() {
             position: formData.position,
             institution: formData.institution,
             pangkat_golongan: formData.pangkat_golongan,
+            peran: formData.peran || "Tamu Undangan",
           },
         ]);
         if (error) throw error;
@@ -7583,6 +7590,7 @@ function AdminGuestAccountsManager() {
               position: "",
               institution: "",
               pangkat_golongan: "",
+              peran: "Tamu Undangan",
             });
             setIsModalOpen(true);
           }}
@@ -7626,7 +7634,10 @@ function AdminGuestAccountsManager() {
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-soft-black">{acc.name}</span>
-                        <span className="text-[10px] text-main-blue font-bold">{acc.pangkat_golongan || "-"}</span>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[10px] text-main-blue font-bold px-2 py-0.5 bg-main-blue/10 rounded-full">{acc.peran || "Tamu"}</span>
+                           <span className="text-[10px] text-gray-500 font-bold">{acc.pangkat_golongan || "-"}</span>
+                        </div>
                         <span className="text-[10px] text-gray-400">NIP: {acc.nip || "-"}</span>
                       </div>
                     </td>
@@ -7730,6 +7741,21 @@ function AdminGuestAccountsManager() {
                   value={formData.institution}
                   onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
                 />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Peran / Kategori Tamu</label>
+                <select
+                  className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
+                  value={formData.peran}
+                  onChange={(e) => setFormData({ ...formData, peran: e.target.value })}
+                >
+                  <option value="Tamu Undangan">Tamu Undangan</option>
+                  <option value="Narasumber">Narasumber</option>
+                  <option value="Pendamping">Pendamping</option>
+                  <option value="Fasilitator">Fasilitator</option>
+                  <option value="Pengawas">Pengawas</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
               </div>
               <div className="flex gap-4 pt-4">
                 <button
@@ -10536,6 +10562,7 @@ function GuestBookForm({ user }: { user: any }) {
         guest_pangkat: user.pangkat,
         guest_institution: user.sekolah,
         guest_position: user.jabatan,
+        guest_peran: user.peran,
         purpose: formData.purpose,
         notes: formData.notes,
         created_at: new Date().toISOString()
@@ -10695,6 +10722,7 @@ function AdminGuestBookView() {
                      <td className="px-6 py-4">
                         <div className="flex flex-col">
                            <span className="text-sm font-bold text-soft-black">{entry.guest_name}</span>
+                           <span className="text-[10px] text-indigo-600 font-bold">{entry.guest_peran || "Tamu"}</span>
                            <span className="text-[10px] text-gray-400">NIP: {entry.guest_nip || "-"}</span>
                         </div>
                      </td>

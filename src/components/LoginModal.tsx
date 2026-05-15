@@ -92,6 +92,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: { isOpen
           jabatan: guest.position,
           sekolah: guest.institution,
           pangkat: guest.pangkat_golongan,
+          peran: guest.peran || 'Tamu Undangan',
           is_guest: true,
           guest_id: guest.id
         };

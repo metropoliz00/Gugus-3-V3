@@ -13,13 +13,17 @@ CREATE TABLE IF NOT EXISTS guest_book (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Add pangkat_golongan to guest_accounts
+-- 2. Add pangkat_golongan and peran to guest_accounts
 -- Note: Replace 'guest_accounts' with your actual guest table name if different
 ALTER TABLE guest_accounts ADD COLUMN IF NOT EXISTS pangkat_golongan TEXT;
+ALTER TABLE guest_accounts ADD COLUMN IF NOT EXISTS peran TEXT DEFAULT 'Tamu Undangan';
 
 -- 3. Add is_open_for_guests to events and trainings
 ALTER TABLE events ADD COLUMN IF NOT EXISTS is_open_for_guests BOOLEAN DEFAULT FALSE;
 ALTER TABLE trainings ADD COLUMN IF NOT EXISTS is_open_for_guests BOOLEAN DEFAULT FALSE;
+
+-- 4. Add guest_peran to guest_book
+ALTER TABLE guest_book ADD COLUMN IF NOT EXISTS guest_peran TEXT;
 
 -- 4. Enable RLS and add policies (optional but recommended)
 ALTER TABLE guest_book ENABLE ROW LEVEL SECURITY;
