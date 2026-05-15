@@ -8079,20 +8079,49 @@ function FaceScannerModal({
             />
             
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-48 h-48 border-2 border-white/20 rounded-[2.5rem] relative">
-                <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-emerald-500 rounded-tl-xl" />
-                <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-emerald-500 rounded-tr-xl" />
-                <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-emerald-500 rounded-bl-xl" />
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-emerald-500 rounded-br-xl" />
+              {/* Professional Scanning Box */}
+              <motion.div 
+                animate={status === "detecting" ? { 
+                  scale: [1, 1.05, 1],
+                  borderColor: ["rgba(255,255,255,0.2)", "rgba(16,185,129,0.5)", "rgba(255,255,255,0.2)"]
+                } : {}}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-56 h-56 border border-white/20 rounded-[3rem] relative flex items-center justify-center transition-colors duration-500"
+              >
+                {/* Pulsing Corners */}
+                <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-emerald-500 rounded-tl-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-emerald-500 rounded-tr-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-emerald-500 rounded-bl-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-emerald-500 rounded-br-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
                 
+                {/* Searching Pulse */}
                 {scanning && status === "detecting" && (
-                  <motion.div 
-                    animate={{ top: ["0%", "100%", "0%"] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-500 to-transparent shadow-[0_0_10px_rgba(16,185,129,0.8)] z-10" 
-                  />
+                  <>
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.5 }}
+                      animate={{ opacity: [0, 0.2, 0], scale: [0.5, 1.2] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="absolute inset-0 bg-emerald-500/20 rounded-[3rem]"
+                    />
+                    <motion.div 
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="absolute inset-4 border border-emerald-500/30 rounded-[2rem] border-dashed"
+                    />
+                  </>
                 )}
-              </div>
+
+                {/* Success Indicator */}
+                {status === "success" && (
+                  <motion.div 
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-20 h-20 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center border border-emerald-500/50"
+                  >
+                    <CheckCircle className="w-10 h-10 text-emerald-500" />
+                  </motion.div>
+                )}
+              </motion.div>
             </div>
 
             <div className="absolute bottom-4 inset-x-0 flex justify-center z-20">
