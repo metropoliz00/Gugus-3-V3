@@ -139,6 +139,7 @@ const adminMenu = [
   { id: "rekap_absen", label: "Rekap Absensi", icon: UserCheck },
   { id: "sertifikat", label: "Kelola Sertifikat", icon: Award },
   { id: "guest_accounts", label: "Kelola Akun Tamu", icon: ShieldCheck },
+  { id: "buku_tamu", label: "Arsip Buku Tamu", icon: NotebookPen },
   { id: "forum", label: "Kelola Forum Diskusi", icon: MessageSquare },
   { id: "komentar", label: "Kelola Komentar Forum", icon: MessageSquare },
   { id: "sharing", label: "Kelola Praktik Baik", icon: Play },
@@ -184,7 +185,7 @@ const adminMenuGroups = [
   },
   {
     title: "Akademik",
-    items: ["agenda", "materi", "notulen", "pelatihan", "rekap_absen", "sertifikat", "guest_accounts"],
+    items: ["agenda", "materi", "notulen", "pelatihan", "rekap_absen", "sertifikat"],
   },
   {
     title: "Forum & Karya",
@@ -2695,31 +2696,7 @@ function AdminOverview({ user }: { user: any }) {
 }
 
 function TamuOverview({ user }: { user: any }) {
-  const [events, setEvents] = useState<any[]>([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    async function loadData() {
-      if (!supabase) return;
-      try {
-        const query = supabase
-          .from("events")
-          .select("*")
-          .order("date_start", { ascending: true })
-          .limit(3);
-        
-        if (user.is_guest) {
-          query.eq('is_open_for_guests', true);
-        }
-
-        const { data: evData } = await query;
-        if (evData) setEvents(evData);
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    loadData();
-  }, [user.is_guest]);
 
   const guestActivities = [
     {
@@ -2746,30 +2723,15 @@ function TamuOverview({ user }: { user: any }) {
   ];
 
   return (
-    <div className="space-y-10">
-      <div className="bg-white p-8 rounded-[2rem] border-l-8 border-leaf-green shadow-sm mb-10 flex flex-col md:flex-row items-center gap-8">
-        <div className="w-[80px] h-[80px] rounded-full bg-gradient-to-br from-leaf-green to-emerald-400 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
-          <UserIcon className="w-10 h-10 text-white" />
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h2 className="text-2xl font-black font-heading text-soft-black flex items-center gap-3">
+            <span className="w-2 h-8 bg-main-blue rounded-full"></span>
+            Portal Tamu Gugus 3
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">Selamat datang kembali, <span className="font-bold text-soft-black">{user.nama || "Tamu"}</span>! Silakan pilih menu di bawah ini.</p>
         </div>
-        <div className="flex-1 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-leaf-green/10 rounded-full border border-leaf-green/5 mb-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-leaf-green animate-pulse" />
-            <span className="text-[10px] font-black text-leaf-green uppercase tracking-widest leading-none">Tamu Undangan KKG</span>
-          </div>
-          <div className="text-xl md:text-3xl font-black font-heading leading-tight mb-2">
-            <span className="text-leaf-green">Selamat Datang,</span><br/>
-            <span className="text-soft-black">{user.nama || "Tamu"}! 👋</span>
-          </div>
-          <p className="text-sm text-gray-500 font-medium max-w-lg">
-            Gunakan portal ini untuk melakukan absensi kegiatan dan mengakses materi pelatihan yang ditujukan bagi undangan.
-          </p>
-        </div>
-        <button
-          onClick={() => navigate("/dashboard/pelatihan")}
-          className="px-8 py-4 bg-leaf-green text-white rounded-2xl font-bold text-xs uppercase tracking-widest shadow-xl shadow-leaf-green/30 hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shrink-0"
-        >
-          <GraduationCap className="w-5 h-5" /> Mulai Ke Absensi
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
