@@ -7238,8 +7238,8 @@ function AdminRekapAbsen() {
           <style>{`
             @media print {
               @page {
-                size: A4;
-                margin: 0.5cm;
+                size: A4 portrait;
+                margin: 5mm 5mm 5mm 5mm;
               }
               html, body {
                 margin: 0 !important;
@@ -7257,14 +7257,20 @@ function AdminRekapAbsen() {
                 visibility: visible;
               }
               #print-area {
-                position: absolute;
-                left: 0;
+                position: absolute !important;
+                left: 0 !important;
                 top: 0 !important;
                 width: 100% !important;
+                height: 100% !important;
                 background: white !important;
                 padding: 0 !important;
                 margin: 0 !important;
                 border: none !important;
+              }
+              /* Background colors for print */
+              .print-bg-emerald {
+                background-color: #ecfdf5 !important;
+                color: #047857 !important;
               }
             }
           `}</style>
@@ -7328,14 +7334,22 @@ function AdminRekapAbsen() {
                   return (
                     <tr key={idx} className="hover:bg-gray-50 print:hover:bg-transparent transition-colors">
                       <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
-                      <td className="border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-snug">{formatName(p.profile?.nama)}</td>
-                      <td className="border-2 border-black px-3 py-2.5 font-mono text-[10px]">{p.profile?.nip || "-"}</td>
-                      <td className="border-2 border-black px-3 py-2.5 leading-snug">{p.profile?.jabatan || "-"}</td>
-                      <td className="border-2 border-black px-3 py-2.5 leading-snug">{p.profile?.sekolah || "-"}</td>
-                      <td className="border-2 border-black px-2 py-2.5 text-center">
-                        <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold uppercase text-[8px] print:text-[8px]">Hadir</span>
+                      <td className={`border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight break-words ${p.profile?.nama?.length > 35 ? "text-[8px]" : p.profile?.nama?.length > 25 ? "text-[9px]" : "text-[10px]"}`}>
+                        {formatName(p.profile?.nama)}
                       </td>
-                      <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] print:text-[9px] leading-tight">
+                      <td className={`border-2 border-black px-3 py-2.5 font-mono leading-tight ${p.profile?.nip?.length > 18 ? "text-[8px]" : "text-[9px]"}`}>
+                        {p.profile?.nip || "-"}
+                      </td>
+                      <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.jabatan?.length > 20 ? "text-[8px]" : "text-[9px]"}`}>
+                        {p.profile?.jabatan || "-"}
+                      </td>
+                      <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.sekolah?.length > 25 ? "text-[8px]" : "text-[9px]"}`}>
+                        {p.profile?.sekolah || "-"}
+                      </td>
+                      <td className="border-2 border-black px-2 py-2.5 text-center">
+                        <span className="px-2 py-1 bg-emerald-50 text-emerald-700 print:bg-emerald-50 print:print-bg-emerald rounded-full font-bold uppercase text-[8px]">Hadir</span>
+                      </td>
+                      <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] leading-tight">
                         {status}
                       </td>
                     </tr>
