@@ -10364,7 +10364,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                   else if (now >= startDate && now <= endDate) autoStatus = "ongoing";
                   else autoStatus = "completed";
 
-                  const canRegister = now < startDate;
+                  const canRegister = autoStatus !== "completed";
                   const isOngoing = now >= startDate && now <= endDate;
                   const isFinished = now > endDate;
 
@@ -10515,7 +10515,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                                   : "bg-main-blue text-white shadow-main-blue/20 hover:scale-105 active:scale-95"
                               }`}
                             >
-                              <PlusCircle className="w-4 h-4 shrink-0" /> <span className="truncate">{!canRegister ? "Pendaftaran Tutup" : "Daftar Sekarang"}</span>
+                              <PlusCircle className="w-4 h-4 shrink-0" /> <span className="truncate">{!canRegister ? "Pendaftaran Tutup" : autoStatus === "ongoing" ? "Daftar (Sedang Berlangsung)" : "Daftar Sekarang"}</span>
                             </button>
                           ) : !hasAttended ? (
                             item.is_attendance_open ? (
