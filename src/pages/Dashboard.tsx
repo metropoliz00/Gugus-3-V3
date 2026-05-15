@@ -7333,7 +7333,7 @@ function AdminRekapAbsen() {
             @media print {
               @page {
                 size: A4 portrait;
-                margin: 5mm 5mm 5mm 5mm;
+                margin: 0;
               }
               html, body {
                 margin: 0 !important;
@@ -7355,11 +7355,18 @@ function AdminRekapAbsen() {
                 left: 0 !important;
                 top: 0 !important;
                 width: 100% !important;
-                height: 100% !important;
                 background: white !important;
                 padding: 0 !important;
                 margin: 0 !important;
                 border: none !important;
+              }
+              .page {
+                width: 210mm;
+                min-height: 297mm;
+                padding: 10mm;
+                box-sizing: border-box;
+                overflow: hidden;
+                page-break-after: avoid;
               }
               /* Background colors for print */
               .print-bg-emerald {
@@ -7367,99 +7374,182 @@ function AdminRekapAbsen() {
                 color: #047857 !important;
               }
             }
+            .page {
+              width: 210mm;
+              min-height: 297mm;
+              margin: auto;
+              background: white;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              padding: 12mm;
+              box-sizing: border-box;
+            }
           `}</style>
 
-          {/* KOP - Only visible in print */}
-          <div className="hidden print:flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0 print:m-0 print:p-0">
-            <img 
-              src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
-              className="w-24 h-24 object-contain" 
-              alt="Logo Kemendikdasmen" 
-            />
-            <div className="text-center flex-1 px-4">
-              <h1 className="text-xl font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
-              <h2 className="text-2xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
-              <p className="text-sm font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
-            </div>
-            <img 
-              src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png" 
-              className="w-24 h-24 object-contain" 
-              alt="Logo KKG" 
-            />
-          </div>
+          <div className="page flex flex-col justify-between hidden print:flex print:!flex">
+            <div>
+              {/* KOP - Only visible in print */}
+              <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
+                <img 
+                  src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
+                  className="w-24 h-24 object-contain" 
+                  alt="Logo Kemendikdasmen" 
+                />
+                <div className="text-center flex-1 px-4">
+                  <h1 className="text-xl font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
+                  <h2 className="text-2xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
+                  <p className="text-sm font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
+                </div>
+                <img 
+                  src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png" 
+                  className="w-24 h-24 object-contain" 
+                  alt="Logo KKG" 
+                />
+              </div>
 
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold uppercase underline mb-2 decoration-2 underline-offset-4">Rekap Daftar Hadir</h2>
-            <p className="text-xl font-bold text-soft-black mb-1">{selectedActivity.title}</p>
-            <p className="text-sm font-medium text-gray-500">
-              Hari, Tanggal: {new Date(selectedActivity.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-            </p>
-          </div>
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold uppercase underline mb-2 decoration-2 underline-offset-4">Rekap Daftar Hadir</h2>
+                <p className="text-xl font-bold text-soft-black mb-1">{selectedActivity.title}</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Hari, Tanggal: {new Date(selectedActivity.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+                </p>
+              </div>
 
-          <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs">
-            <thead>
-              <tr className="bg-gray-100 print:bg-gray-100 font-bold uppercase tracking-wider">
-                <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[30%] whitespace-normal">Nama</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[20%]">NIP</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[12%]">Jabatan</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[18%] whitespace-normal">Instansi</th>
-                <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
-                <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {participants.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
-                </tr>
-              ) : (
-                participants.map((p, idx) => {
-                  let status = p.is_guest ? (p.profile?.jabatan || "Tamu Undangan") : "Anggota";
-                  
-                  // If member is pengurus (role is not just 'guru' or has specific jabatan)
-                  if (!p.is_guest && p.profile) {
-                    const role = p.profile.role?.toLowerCase();
-                    if (role && role !== "guru") {
-                      status = p.profile.jabatan || p.profile.role;
-                    }
-                  }
-
-                  return (
-                    <tr key={idx} className="hover:bg-gray-50 print:hover:bg-transparent transition-colors">
-                      <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
-                      <td className={`border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight break-words ${p.profile?.nama?.length > 35 ? "text-[8px]" : p.profile?.nama?.length > 25 ? "text-[9px]" : "text-[10px]"}`}>
-                        {formatName(p.profile?.nama)}
-                      </td>
-                      <td className={`border-2 border-black px-3 py-2.5 font-mono leading-tight ${p.profile?.nip?.length > 18 ? "text-[8px]" : "text-[9px]"}`}>
-                        {p.profile?.nip || "-"}
-                      </td>
-                      <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.jabatan?.length > 20 ? "text-[8px]" : "text-[9px]"}`}>
-                        {p.profile?.jabatan || "-"}
-                      </td>
-                      <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.sekolah?.length > 25 ? "text-[8px]" : "text-[9px]"}`}>
-                        {p.profile?.sekolah || "-"}
-                      </td>
-                      <td className="border-2 border-black px-2 py-2.5 text-center">
-                        <span className="px-2 py-1 bg-emerald-50 text-emerald-700 print:bg-emerald-50 print:print-bg-emerald rounded-full font-bold uppercase text-[8px]">Hadir</span>
-                      </td>
-                      <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] leading-tight">
-                        {status}
-                      </td>
+              <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs">
+                <thead>
+                  <tr className="bg-gray-100 print:bg-gray-100 font-bold uppercase tracking-wider">
+                    <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
+                    <th className="border-2 border-black px-3 py-2 text-left w-[30%] whitespace-normal">Nama</th>
+                    <th className="border-2 border-black px-3 py-2 text-left w-[20%]">NIP</th>
+                    <th className="border-2 border-black px-3 py-2 text-left w-[12%]">Jabatan</th>
+                    <th className="border-2 border-black px-3 py-2 text-left w-[18%] whitespace-normal">Instansi</th>
+                    <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
+                    <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {participants.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                  ) : (
+                    participants.map((p, idx) => {
+                      let status = p.is_guest ? (p.profile?.jabatan || "Tamu Undangan") : "Anggota";
+                      
+                      // If member is pengurus (role is not just 'guru' or has specific jabatan)
+                      if (!p.is_guest && p.profile) {
+                        const role = p.profile.role?.toLowerCase();
+                        if (role && role !== "guru") {
+                          status = p.profile.jabatan || p.profile.role;
+                        }
+                      }
 
-          <div className="mt-12 flex justify-end">
-            <div className="text-center w-72">
-              <p className="text-sm italic mb-2">Jenu, {new Date().toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  year: "numeric", month: "long", day: "numeric" })}</p>
-              <p className="text-sm font-bold mb-20 uppercase tracking-wide">Ketua KKG,</p>
-              <p className="text-sm font-bold underline underline-offset-4 leading-none mb-1">{formatName(chairman?.name) || "......................................"}</p>
-              <p className="text-sm font-bold">NIP. {chairman?.nip || "....................................."}</p>
+                      return (
+                        <tr key={idx} className="hover:bg-gray-50 print:hover:bg-transparent transition-colors">
+                          <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
+                          <td className={`border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight break-words ${p.profile?.nama?.length > 35 ? "text-[8px]" : p.profile?.nama?.length > 25 ? "text-[9px]" : "text-[10px]"}`}>
+                            {formatName(p.profile?.nama)}
+                          </td>
+                          <td className={`border-2 border-black px-3 py-2.5 font-mono leading-tight ${p.profile?.nip?.length > 18 ? "text-[8px]" : "text-[9px]"}`}>
+                            {p.profile?.nip || "-"}
+                          </td>
+                          <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.jabatan?.length > 20 ? "text-[8px]" : "text-[9px]"}`}>
+                            {p.profile?.jabatan || "-"}
+                          </td>
+                          <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.sekolah?.length > 25 ? "text-[8px]" : "text-[9px]"}`}>
+                            {p.profile?.sekolah || "-"}
+                          </td>
+                          <td className="border-2 border-black px-2 py-2.5 text-center">
+                            <span className="px-2 py-1 bg-emerald-50 text-emerald-700 print:bg-emerald-50 print:print-bg-emerald rounded-full font-bold uppercase text-[8px]">Hadir</span>
+                          </td>
+                          <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] leading-tight">
+                            {status}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
+
+            <div className="mt-12 flex justify-end">
+              <div className="text-center w-72">
+                <p className="text-sm italic mb-2">Jenu, {new Date().toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  year: "numeric", month: "long", day: "numeric" })}</p>
+                <p className="text-sm font-bold mb-20 uppercase tracking-wide">Ketua KKG,</p>
+                <p className="text-sm font-bold underline underline-offset-4 leading-none mb-1">{formatName(chairman?.name) || "......................................"}</p>
+                <p className="text-sm font-bold">NIP. {chairman?.nip || "....................................."}</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Regular preview section for desktop / non-print */}
+          <div className="print:hidden">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold uppercase underline mb-2 decoration-2 underline-offset-4">Rekap Daftar Hadir</h2>
+              <p className="text-xl font-bold text-soft-black mb-1">{selectedActivity.title}</p>
+              <p className="text-sm font-medium text-gray-500">
+                Hari, Tanggal: {new Date(selectedActivity.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              </p>
+            </div>
+
+            <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs">
+              <thead>
+                <tr className="bg-gray-100 font-bold uppercase tracking-wider">
+                  <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
+                  <th className="border-2 border-black px-3 py-2 text-left w-[30%] whitespace-normal">Nama</th>
+                  <th className="border-2 border-black px-3 py-2 text-left w-[20%]">NIP</th>
+                  <th className="border-2 border-black px-3 py-2 text-left w-[12%]">Jabatan</th>
+                  <th className="border-2 border-black px-3 py-2 text-left w-[18%] whitespace-normal">Instansi</th>
+                  <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
+                  <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {participants.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
+                  </tr>
+                ) : (
+                  participants.map((p, idx) => {
+                    let status = p.is_guest ? (p.profile?.jabatan || "Tamu Undangan") : "Anggota";
+                    
+                    // If member is pengurus (role is not just 'guru' or has specific jabatan)
+                    if (!p.is_guest && p.profile) {
+                      const role = p.profile.role?.toLowerCase();
+                      if (role && role !== "guru") {
+                        status = p.profile.jabatan || p.profile.role;
+                      }
+                    }
+
+                    return (
+                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                        <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
+                        <td className={`border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight break-words ${p.profile?.nama?.length > 35 ? "text-[8px]" : p.profile?.nama?.length > 25 ? "text-[9px]" : "text-[10px]"}`}>
+                          {formatName(p.profile?.nama)}
+                        </td>
+                        <td className={`border-2 border-black px-3 py-2.5 font-mono leading-tight ${p.profile?.nip?.length > 18 ? "text-[8px]" : "text-[9px]"}`}>
+                          {p.profile?.nip || "-"}
+                        </td>
+                        <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.jabatan?.length > 20 ? "text-[8px]" : "text-[9px]"}`}>
+                          {p.profile?.jabatan || "-"}
+                        </td>
+                        <td className={`border-2 border-black px-3 py-2.5 leading-tight ${p.profile?.sekolah?.length > 25 ? "text-[8px]" : "text-[9px]"}`}>
+                          {p.profile?.sekolah || "-"}
+                        </td>
+                        <td className="border-2 border-black px-2 py-2.5 text-center">
+                          <span className="px-2 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold uppercase text-[8px]">Hadir</span>
+                        </td>
+                        <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] leading-tight">
+                          {status}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
