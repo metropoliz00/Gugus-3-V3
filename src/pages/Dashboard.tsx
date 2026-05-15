@@ -1257,6 +1257,7 @@ export default function Dashboard({
                         path="buku_tamu"
                         element={<GuestBookForm user={user} />}
                       />
+                      <Route path="jadwal" element={<TeacherJadwalCards user={user} />} />
                     </>
                   )}
                   <Route
@@ -2696,22 +2697,41 @@ function AdminOverview({ user }: { user: any }) {
 }
 
 function TamuOverview({ user }: { user: any }) {
+  const [events, setEvents] = useState<any[]>([]);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    async function loadData() {
+      if (!supabase) return;
+      try {
+        const { data: evData } = await supabase
+          .from("events")
+          .select("*")
+          .eq('is_open_for_guests', true)
+          .order("date_start", { ascending: true })
+          .limit(3);
+        if (evData) setEvents(evData);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    loadData();
+  }, []);
+
   const guestActivities = [
+    {
+      title: "Agenda Kegiatan",
+      icon: Calendar,
+      color: "from-purple-500 to-fuchsia-400",
+      value: `${events.length} Agenda Tersedia`,
+      link: "/dashboard/jadwal",
+    },
     {
       title: "Kegiatan & Pelatihan",
       icon: GraduationCap,
       color: "from-blue-500 to-cyan-400",
       value: "Lihat Daftar Kegiatan",
       link: "/dashboard/pelatihan",
-    },
-    {
-      title: "Profil Tamu",
-      icon: Users,
-      color: "from-green-500 to-emerald-400",
-      value: "Cek Data Diri",
-      link: "/dashboard/profil",
     },
     {
       title: "Buku Tamu KKG",
@@ -2756,6 +2776,36 @@ function TamuOverview({ user }: { user: any }) {
           </motion.div>
         ))}
       </div>
+
+      {events.length > 0 && (
+         <div className="bg-white/80 backdrop-blur-xl border border-white p-6 md:p-8 rounded-[2.5rem] shadow-sm mt-8">
+            <h3 className="text-lg font-bold font-heading mb-6 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-main-blue" /> Agenda Mendatang (Terbuka Untuk Tamu)
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+               {events.map((a, i) => (
+                 <div
+                   key={i}
+                   onClick={() => navigate("/dashboard/jadwal")}
+                   className="flex gap-4 items-center p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:bg-main-blue/5 transition-colors cursor-pointer"
+                 >
+                   <div className="w-2 h-8 bg-main-blue rounded-full shrink-0" />
+                   <div className="flex-1">
+                     <h4 className="font-bold text-soft-black text-sm line-clamp-1">
+                       {a.title}
+                     </h4>
+                     <p className="text-[10px] text-gray-500 font-bold uppercase">
+                       {new Date(a.date_start).toLocaleDateString("id-ID", {
+                         month: "long",
+                         day: "numeric",
+                       })} • {a.location}
+                     </p>
+                   </div>
+                 </div>
+               ))}
+            </div>
+         </div>
+      )}
     </div>
   );
 }
@@ -9557,16 +9607,22 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
   );
 }
 
-function TeacherJadwalCards() {
+function TeacherJadwalCards({ user }: { user?: any }) {
   const [agendas, setAgendas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAgendas = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("events")
-        .select("*")
+        .select("*");
+      
+      if (user?.is_guest) {
+        query = query.eq('is_open_for_guests', true);
+      }
+
+      const { data, error } = await query
         .order("date_start", { ascending: false }); // Show newest first
 
       if (error) throw error;
