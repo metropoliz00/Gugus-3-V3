@@ -38,7 +38,7 @@ export default function KegiatanPage() {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-soft-black leading-none mb-1">Agenda Terdekat</h4>
-                    <p className="text-xs text-main-blue font-semibold">{kegiatan[0] ? new Date(kegiatan[0].date_start).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</p>
+                    <p className="text-xs text-main-blue font-semibold">{kegiatan[0] ? new Date(kegiatan[0].date_start).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</p>
                   </div>
                </div>
             </div>
@@ -72,10 +72,10 @@ export default function KegiatanPage() {
                 <div className="lg:w-2/3 p-8 md:p-12 flex flex-col justify-center">
                     <div className="flex flex-wrap items-center gap-4 md:gap-8 mb-6 text-sm">
                         <div className="flex items-center gap-2 text-main-blue font-bold px-4 py-2 bg-main-blue/5 rounded-full">
-                            <Calendar className="w-4 h-4" /> {new Date(item.date_start).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            <Calendar className="w-4 h-4" /> {new Date(item.date_start).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'long', year: 'numeric' })}
                         </div>
                         <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-4 py-2 rounded-full">
-                            <Clock className="w-4 h-4" /> {new Date(item.date_start).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                            <Clock className="w-4 h-4" /> {new Date(item.date_start).toLocaleTimeString('id-ID', { timeZone: "Asia/Jakarta",  hour: '2-digit', minute: '2-digit' })} WIB
                         </div>
                         <div className="flex items-center gap-2 text-gray-500 bg-gray-50 px-4 py-2 rounded-full">
                             <MapPin className="w-4 h-4" /> {item.location}

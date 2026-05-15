@@ -59,7 +59,7 @@ export default function KeuanganPage() {
             </div>
             <div className="bg-white/50 backdrop-blur px-4 py-2 rounded-2xl border border-white flex items-center gap-2 text-sm text-gray-500">
                <Info className="w-4 h-4" />
-               Update terakhir: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+               Update terakhir: {new Date().toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'long', year: 'numeric' })}
             </div>
           </motion.div>
         </header>
@@ -169,7 +169,7 @@ export default function KeuanganPage() {
                       <tr key={record.id} className="hover:bg-gray-50/50 transition-colors group">
                         <td className="px-8 py-5">
                           <div className="flex flex-col">
-                            <span className="font-bold text-gray-700">{new Date(record.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                            <span className="font-bold text-gray-700">{new Date(record.date).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'short' })}</span>
                             <span className="text-[10px] text-gray-400">{new Date(record.date).getFullYear()}</span>
                           </div>
                         </td>

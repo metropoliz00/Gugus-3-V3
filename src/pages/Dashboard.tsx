@@ -319,7 +319,7 @@ export default function Dashboard({
             type: "post",
             title: p.category === "berita" ? "Berita Baru" : "Pengumuman Baru",
             message: p.title,
-            time: new Date(p.created_at).toLocaleDateString("id-ID", {
+            time: new Date(p.created_at).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
               day: "numeric",
               month: "short",
               hour: "2-digit",
@@ -334,7 +334,7 @@ export default function Dashboard({
             type: "event",
             title: "Agenda Baru",
             message: e.title,
-            time: new Date(e.created_at).toLocaleDateString("id-ID", {
+            time: new Date(e.created_at).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
               day: "numeric",
               month: "short",
               hour: "2-digit",
@@ -349,7 +349,7 @@ export default function Dashboard({
             type: "forum",
             title: "Topik Forum Baru",
             message: f.title,
-            time: new Date(f.created_at).toLocaleDateString("id-ID", {
+            time: new Date(f.created_at).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
               day: "numeric",
               month: "short",
               hour: "2-digit",
@@ -1156,7 +1156,7 @@ export default function Dashboard({
                           />
                         }
                       />
-                      <Route path="jadwal" element={<TeacherJadwalCards />} />
+                      <Route path="jadwal" element={<TeacherJadwalCards user={user} />} />
                       <Route
                         path="materi"
                         element={
@@ -2626,11 +2626,11 @@ function AdminOverview({ user }: { user: any }) {
             {activities.length > 0 ? (
               activities.slice(0, 6).map((act, i) => {
                 const date = new Date(act.created_at);
-                const timeStr = date.toLocaleTimeString("id-ID", {
+                const timeStr = date.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", 
                   hour: "2-digit",
                   minute: "2-digit",
                 });
-                const dateStr = date.toLocaleDateString("id-ID", {
+                const dateStr = date.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
                   day: "numeric",
                   month: "short",
                 });
@@ -2795,7 +2795,7 @@ function TamuOverview({ user }: { user: any }) {
                        {a.title}
                      </h4>
                      <p className="text-[10px] text-gray-500 font-bold uppercase">
-                       {new Date(a.date_start).toLocaleDateString("id-ID", {
+                       {new Date(a.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
                          month: "long",
                          day: "numeric",
                        })} • {a.location}
@@ -2974,7 +2974,7 @@ function GuruOverview({ user }: { user: any }) {
             {news.map((p, i) => {
               const dateObj = new Date(p.published_at || p.created_at);
               const day = dateObj.getDate();
-              const month = dateObj.toLocaleDateString("id-ID", {
+              const month = dateObj.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
                 month: "short",
               });
               return (
@@ -3025,7 +3025,7 @@ function GuruOverview({ user }: { user: any }) {
                     {a.title}
                   </h4>
                   <p className="text-xs text-gray-500">
-                    {new Date(a.date_start).toLocaleDateString("id-ID", {
+                    {new Date(a.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
                       weekday: "long",
                       year: "numeric",
                       month: "long",
@@ -4073,6 +4073,26 @@ function AdminAgendaForm({ user }: { user: any }) {
     loadEvents();
   }, []);
 
+  const formatToJakartaDatetimeLocal = (isoString?: string) => {
+    if (!isoString) return "";
+    const d = new Date(isoString);
+    const options: Intl.DateTimeFormatOptions = { 
+      timeZone: 'Asia/Jakarta', 
+      year: 'numeric', month: '2-digit', day: '2-digit', 
+      hour: '2-digit', minute: '2-digit', hour12: false 
+    };
+    const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(d);
+    const z: any = {};
+    parts.forEach(p => z[p.type] = p.value);
+    let hr = z.hour === '24' ? '00' : z.hour;
+    return `${z.year}-${z.month}-${z.day}T${hr}:${z.minute}`;
+  };
+
+  const parseJakartaDatetimeLocalToUTC = (localString: string) => {
+    if (!localString) return "";
+    return new Date(localString + "+07:00").toISOString();
+  };
+
   const handleCreate = async () => {
     if (!supabase) return;
     const newEvent = {
@@ -4215,14 +4235,10 @@ function AdminAgendaForm({ user }: { user: any }) {
                     <input
                       className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent"
                       type="datetime-local"
-                      value={
-                        item.date_start
-                          ? new Date(item.date_start).toISOString().slice(0, 16)
-                          : ""
-                      }
+                      value={formatToJakartaDatetimeLocal(item.date_start)}
                       onChange={(e) =>
                         handleUpdate(item.id, {
-                          date_start: new Date(e.target.value).toISOString(),
+                          date_start: parseJakartaDatetimeLocalToUTC(e.target.value),
                         })
                       }
                     />
@@ -6825,11 +6841,20 @@ function AdminFinanceManagement({ user }: { user: any }) {
   const [records, setRecords] = useState<FinanceTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const getJakartaDateString = () => {
+    const d = new Date();
+    const options: Intl.DateTimeFormatOptions = { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' };
+    const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(d);
+    const z: any = {};
+    parts.forEach(p => z[p.type] = p.value);
+    return `${z.year}-${z.month}-${z.day}`;
+  };
+
   const [formData, setFormData] = useState({
     activity_name: "",
     income: 0,
     expense: 0,
-    date: new Date().toISOString().split("T")[0],
+    date: getJakartaDateString(),
   });
 
   const fetchRecords = async () => {
@@ -6874,7 +6899,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
         activity_name: "",
         income: 0,
         expense: 0,
-        date: new Date().toISOString().split("T")[0],
+        date: getJakartaDateString(),
       });
       fetchRecords();
     } catch (err: any) {
@@ -7096,7 +7121,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
                       className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(record.date).toLocaleDateString("id-ID", {
+                        {new Date(record.date).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
                           day: "numeric",
                           month: "short",
                           year: "numeric",
@@ -7281,7 +7306,7 @@ function AdminRekapAbsen() {
             >
               <option value="">-- Pilih {activityType === 'training' ? 'Pelatihan' : 'Agenda'} --</option>
               {activities.map(a => (
-                <option key={a.id} value={a.id}>{a.title} ({new Date(a.date_start).toLocaleDateString("id-ID")})</option>
+                <option key={a.id} value={a.id}>{a.title} ({new Date(a.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })})</option>
               ))}
             </select>
           </div>
@@ -7367,7 +7392,7 @@ function AdminRekapAbsen() {
             <h2 className="text-2xl font-bold uppercase underline mb-2 decoration-2 underline-offset-4">Rekap Daftar Hadir</h2>
             <p className="text-xl font-bold text-soft-black mb-1">{selectedActivity.title}</p>
             <p className="text-sm font-medium text-gray-500">
-              Hari, Tanggal: {new Date(selectedActivity.date_start).toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              Hari, Tanggal: {new Date(selectedActivity.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </p>
           </div>
 
@@ -7430,7 +7455,7 @@ function AdminRekapAbsen() {
 
           <div className="mt-12 flex justify-end">
             <div className="text-center w-72">
-              <p className="text-sm italic mb-2">Jenu, {new Date().toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" })}</p>
+              <p className="text-sm italic mb-2">Jenu, {new Date().toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  year: "numeric", month: "long", day: "numeric" })}</p>
               <p className="text-sm font-bold mb-20 uppercase tracking-wide">Ketua KKG,</p>
               <p className="text-sm font-bold underline underline-offset-4 leading-none mb-1">{formatName(chairman?.name) || "......................................"}</p>
               <p className="text-sm font-bold">NIP. {chairman?.nip || "....................................."}</p>
@@ -8456,7 +8481,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                         className="px-6 py-4 text-sm font-medium text-gray-700 max-w-[200px] truncate"
                       >
                         {f.type === "date"
-                          ? new Date(item[f.name]).toLocaleDateString("id-ID")
+                          ? new Date(item[f.name]).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })
                           : f.type === "select"
                             ? (() => {
                                 let val = item[f.name];
@@ -8612,7 +8637,7 @@ function DataViewList({
                     )}
                     <div className="px-4 py-1.5 bg-gray-50 rounded-full border border-gray-100">
                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                        {new Date(item.created_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
+                        {new Date(item.created_at).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'short' })}
                       </span>
                     </div>
                   </div>
@@ -9108,7 +9133,7 @@ function ActivityCard({ item, type, onAbsen, onGuest }: any) {
             <MapPin className="w-3 h-3" /> {item.location}
           </span>
           <span className="px-2 py-1 bg-gray-50 rounded-lg text-[8px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
-            <Clock className="w-3 h-3" /> {new Date(item.date_start).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })}
+            <Clock className="w-3 h-3" /> {new Date(item.date_start).toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta",  hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
       </div>
@@ -9284,7 +9309,7 @@ function ForumSystem({ user }: { user: any }) {
                       </span>
                       <span>•</span>
                       <span>
-                        {new Date(post.created_at).toLocaleDateString("id-ID")}
+                        {new Date(post.created_at).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })}
                       </span>
                     </div>
                   </div>
@@ -9512,7 +9537,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
               Dibuat oleh: {post.author?.nama || "Guru"}
             </p>
             <p className="text-xs text-gray-400">
-              {new Date(post.created_at).toLocaleString("id-ID")}
+              {new Date(post.created_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}
             </p>
           </div>
         </div>
@@ -9567,7 +9592,7 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
                     {comment.author?.nama || "Guru"}
                   </p>
                   <p className="text-[10px] text-gray-400">
-                    {new Date(comment.created_at).toLocaleString("id-ID")}
+                    {new Date(comment.created_at).toLocaleString("id-ID", { timeZone: "Asia/Jakarta" })}
                   </p>
                 </div>
               </div>
@@ -9797,7 +9822,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                 <div className={`absolute -left-[14px] top-8 w-6 h-6 bg-white border-4 ${isPast ? 'border-gray-400 shadow-gray-400/40' : 'border-orange-500 shadow-orange-500/40'} rounded-full shadow-lg group-hover:scale-125 transition-transform z-10`} />
                 <div className={`absolute -left-12 top-6 text-right w-12 hidden md:block`}>
                    <p className="text-xl font-black text-gray-800 leading-none">{dateObj.getDate()}</p>
-                   <p className="text-xs font-bold text-gray-500 uppercase">{dateObj.toLocaleString("id-ID", { month: "short" })}</p>
+                   <p className="text-xs font-bold text-gray-500 uppercase">{dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta",  month: "short" })}</p>
                 </div>
 
                 {/* Content Card */}
@@ -9806,7 +9831,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                   <div className={`md:hidden bg-gradient-to-br ${isPast ? 'from-gray-100 to-gray-200' : 'from-orange-50 to-orange-100'} p-6 border-b border-gray-50 flex items-center gap-4`}>
                      <div className={`w-16 h-16 bg-white rounded-[1.25rem] flex flex-col items-center justify-center shadow-md border border-gray-100`}>
                         <span className="text-[10px] font-black text-gray-400 uppercase leading-none">
-                          {dateObj.toLocaleString("id-ID", { month: "short" })}
+                          {dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta",  month: "short" })}
                         </span>
                         <span className={`text-3xl font-black ${isPast ? 'text-gray-500' : 'text-orange-500'} leading-none mt-1`}>
                           {dateObj.getDate()}
@@ -9852,7 +9877,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                           </div>
                           <div>
                             <p className="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-0.5">Waktu</p>
-                            <p className="text-sm font-bold text-soft-black">Pukul {dateObj.toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" })} WIB</p>
+                            <p className="text-sm font-bold text-soft-black">Pukul {dateObj.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta",  hour: "2-digit", minute:"2-digit" })} WIB</p>
                           </div>
                        </div>
                     </div>
@@ -9862,20 +9887,20 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                         "{item.description || "Agenda rutin pengembangan keprofesian berkelanjutan."}"
                       </p>
                       
-                      {!isPast && user && (
+                      {user && (
                         <div className="shrink-0 w-full md:w-auto">
                           {attendances[item.id] ? (
                             <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-600 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-green-100 w-full md:w-auto justify-center">
                               <CheckCircle className="w-4 h-4" /> Hadir
                             </div>
-                          ) : (
+                          ) : item.is_attendance_open ? (
                             <button
                               onClick={() => handleAbsenClick(item.id)}
                               className="inline-flex items-center gap-2 px-6 py-2.5 bg-main-blue text-white rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-main-blue/30 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto justify-center"
                             >
                               <UserCheck className="w-4 h-4" /> Absen Sekarang
                             </button>
-                          )}
+                          ) : null}
                         </div>
                       )}
                     </div>
@@ -10326,7 +10351,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                                <div className="min-w-0">
                                   <p className="text-[8px] font-black text-gray-400 uppercase leading-none mb-0.5">Waktu</p>
                                   <p className="text-[10px] font-bold text-soft-black truncate">
-                                    {new Date(item.date_start).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" })} - {item.date_end ? new Date(item.date_end).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" }) : "Selesai"} WIB
+                                    {new Date(item.date_start).toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta",  hour: "2-digit", minute:"2-digit" })} - {item.date_end ? new Date(item.date_end).toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta",  hour: "2-digit", minute:"2-digit" }) : "Selesai"} WIB
                                   </p>
                                </div>
                             </div>
@@ -10464,7 +10489,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                           </td>
                           <td className="px-8 py-6">
                             <div className="flex flex-col">
-                               <span className="font-black text-gray-600">{new Date(reg.registered_at).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                               <span className="font-black text-gray-600">{new Date(reg.registered_at).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'long', year: 'numeric' })}</span>
                                <span className="text-[10px] text-gray-400 font-bold uppercase">Terdaftar Pada</span>
                             </div>
                           </td>
@@ -10482,7 +10507,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                             {reg.attended_at ? (
                               <div className="flex flex-col">
                                 <span className="text-xs font-black text-gray-400">
-                                  {new Date(reg.attended_at).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })} WIB
+                                  {new Date(reg.attended_at).toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta",  hour: '2-digit', minute: '2-digit' })} WIB
                                 </span>
                                 <span className="text-[10px] text-gray-300 font-bold uppercase">Waktu Absensi</span>
                               </div>
@@ -10768,8 +10793,8 @@ function AdminGuestBookView() {
                    <tr key={entry.id} className="hover:bg-gray-50/50 transition-colors">
                      <td className="px-6 py-4">
                         <div className="flex flex-col">
-                           <span className="text-sm font-bold text-soft-black">{new Date(entry.created_at).toLocaleDateString('id-ID')}</span>
-                           <span className="text-[10px] text-gray-400 font-medium font-mono">{new Date(entry.created_at).toLocaleTimeString('id-ID')}</span>
+                           <span className="text-sm font-bold text-soft-black">{new Date(entry.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</span>
+                           <span className="text-[10px] text-gray-400 font-medium font-mono">{new Date(entry.created_at).toLocaleTimeString('id-ID', { timeZone: "Asia/Jakarta" })}</span>
                         </div>
                      </td>
                      <td className="px-6 py-4">

@@ -80,7 +80,7 @@ export default function MediaInformasi() {
                 )}
                 <div className="p-8 flex flex-col flex-1">
                   <div className="flex items-center gap-4 text-xs font-medium text-gray-500 mb-4">
-                    <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(item.created_at).toLocaleDateString('id-ID')}</div>
+                    <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(item.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
                     <div className="flex items-center gap-1"><User className="w-4 h-4" /> {item.author?.nama || 'Admin'}</div>
                   </div>
                   <h4 className="font-heading font-bold text-xl text-soft-black mb-4 group-hover:text-main-blue transition-colors line-clamp-2">

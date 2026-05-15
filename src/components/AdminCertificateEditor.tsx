@@ -122,7 +122,7 @@ export function useCertificateGenerator() {
             result = result.replace(regex, certNumber || "-");
           } else if (p.dbField === "date_start") {
             const val = training.date_start
-              ? new Date(training.date_start).toLocaleDateString("id-ID", {
+              ? new Date(training.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
                   day: "numeric",
                   month: "long",
                   year: "numeric",
