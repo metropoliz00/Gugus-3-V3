@@ -7235,12 +7235,12 @@ function AdminRekapAbsen() {
             <thead>
               <tr className="bg-gray-100 print:bg-gray-50 font-bold uppercase tracking-wider">
                 <th className="border-2 border-black px-4 py-3 w-12 text-center">No</th>
-                <th className="border-2 border-black px-4 py-2 text-left">Nama</th>
-                <th className="border-2 border-black px-4 py-2 text-left">NIP</th>
-                <th className="border-2 border-black px-4 py-2 text-left">Jabatan</th>
-                <th className="border-2 border-black px-4 py-2 text-left">Sekolah / Instansi</th>
-                <th className="border-2 border-black px-4 py-2 text-center">Kehadiran</th>
-                <th className="border-2 border-black px-4 py-2 text-center">Tipe</th>
+                <th className="border-2 border-black px-4 py-2 text-left w-[25%]">Nama</th>
+                <th className="border-2 border-black px-4 py-2 text-left w-[15%]">NIP</th>
+                <th className="border-2 border-black px-4 py-2 text-left w-[15%]">Jabatan</th>
+                <th className="border-2 border-black px-4 py-2 text-left w-[25%]">Sekolah / Instansi</th>
+                <th className="border-2 border-black px-4 py-2 text-center w-[10%]">Kehadiran</th>
+                <th className="border-2 border-black px-4 py-2 text-center w-[10%]">Tipe</th>
               </tr>
             </thead>
             <tbody>
