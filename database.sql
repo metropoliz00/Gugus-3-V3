@@ -29,10 +29,12 @@ ALTER TABLE guest_book ADD COLUMN IF NOT EXISTS guest_peran TEXT;
 ALTER TABLE guest_book ENABLE ROW LEVEL SECURITY;
 
 -- Allow all authenticated users to insert (guests and admins)
+DROP POLICY IF EXISTS "Anyone can insert guest book entries" ON guest_book;
 CREATE POLICY "Anyone can insert guest book entries" ON guest_book
   FOR INSERT WITH CHECK (true);
 
 -- Allow admins to view entries (assuming roles are handled in user_profiles)
+DROP POLICY IF EXISTS "Admins can view guest book" ON guest_book;
 CREATE POLICY "Admins can view guest book" ON guest_book
   FOR SELECT USING (
     EXISTS (
