@@ -54,6 +54,7 @@ import {
   Mail,
   ShieldCheck,
   Newspaper,
+  NotebookPen,
   Camera,
   School,
   XCircle,
@@ -165,12 +166,17 @@ const guestMenu = [
   { id: "overview", label: "Portal Tamu", icon: LayoutDashboard },
   { id: "profil", label: "Data Tamu", icon: Users },
   { id: "pelatihan", label: "Daftar Kegiatan", icon: GraduationCap },
+  { id: "buku_tamu", label: "Buku Tamu", icon: NotebookPen },
 ];
 
 const adminMenuGroups = [
   {
     title: "Ikhtisar",
     items: ["overview", "user", "guru", "finance"],
+  },
+  {
+    title: "Hiburan & Tamu",
+    items: ["buku_tamu", "guest_accounts"],
   },
   {
     title: "Konten Publik",
@@ -854,6 +860,10 @@ export default function Dashboard({
                         element={<AdminAgendaForm user={user} />}
                       />
                       <Route
+                        path="buku_tamu"
+                        element={<AdminGuestBookView />}
+                      />
+                      <Route
                         path="gugus"
                         element={
                           <AdminGugusForm
@@ -993,6 +1003,11 @@ export default function Dashboard({
                               {
                                 name: "is_attendance_open",
                                 label: "Buka Tombol Absen",
+                                type: "checkbox",
+                              },
+                              {
+                                name: "is_open_for_guests",
+                                label: "Buka Akses Tamu",
                                 type: "checkbox",
                               },
                             ]}
@@ -1220,7 +1235,29 @@ export default function Dashboard({
                     </>
                   )}
 
-                  {/* Fallback for other tabs */}
+                  {user.role?.toLowerCase() === "tamu" && (
+                    <>
+                      <Route
+                        path="profil"
+                        element={
+                          <UserProfileEdit
+                            user={user}
+                            onUpdate={(updated: any) =>
+                              setUser((prev) => ({ ...prev, ...updated }))
+                            }
+                          />
+                        }
+                      />
+                      <Route
+                        path="pelatihan"
+                        element={<TeacherTrainingCards user={user} />}
+                      />
+                      <Route
+                        path="buku_tamu"
+                        element={<GuestBookForm user={user} />}
+                      />
+                    </>
+                  )}
                   <Route
                     path="*"
                     element={
@@ -2665,18 +2702,24 @@ function TamuOverview({ user }: { user: any }) {
     async function loadData() {
       if (!supabase) return;
       try {
-        const { data: evData } = await supabase
+        const query = supabase
           .from("events")
           .select("*")
           .order("date_start", { ascending: true })
           .limit(3);
+        
+        if (user.is_guest) {
+          query.eq('is_open_for_guests', true);
+        }
+
+        const { data: evData } = await query;
         if (evData) setEvents(evData);
       } catch (e) {
         console.error(e);
       }
     }
     loadData();
-  }, []);
+  }, [user.is_guest]);
 
   const guestActivities = [
     {
@@ -2695,10 +2738,10 @@ function TamuOverview({ user }: { user: any }) {
     },
     {
       title: "Buku Tamu KKG",
-      icon: Newspaper,
+      icon: NotebookPen,
       color: "from-indigo-600 to-blue-500",
-      value: "Portal Undangan Online",
-      link: "/dashboard/overview",
+      value: "Isi Presensi Tamu",
+      link: "/dashboard/buku_tamu",
     },
   ];
 
@@ -4029,6 +4072,7 @@ function AdminAgendaForm({ user }: { user: any }) {
       image_url: "",
       detail_url: "",
       materi_url: "",
+      is_open_for_guests: false,
     };
     const { data, error } = await supabase
       .from("events")
@@ -4230,27 +4274,40 @@ function AdminAgendaForm({ user }: { user: any }) {
                         handleUpdate(item.id, { materi_url: e.target.value })
                       }
                     />
-                  </div>
-                  <div>
+                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
                       Status Presensi Digital
                     </label>
                     <button
                       onClick={() => handleUpdate(item.id, { is_attendance_open: !item.is_attendance_open })}
-                      className={`mt-1 flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all ${item.is_attendance_open ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}
+                      className={`mt-1 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all ${item.is_attendance_open ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}
                     >
                       {item.is_attendance_open ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
                       {item.is_attendance_open ? "Buka (Online)" : "Tutup (Nonaktif)"}
                     </button>
-                    
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                      Akses Tamu Undangan
+                    </label>
+                    <button
+                      onClick={() => handleUpdate(item.id, { is_open_for_guests: !item.is_open_for_guests })}
+                      className={`mt-1 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all ${item.is_open_for_guests ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400'}`}
+                    >
+                      {item.is_open_for_guests ? <Users className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                      {item.is_open_for_guests ? "Buka (Tamu)" : "Tutup (Tamu)"}
+                    </button>
+                  </div>
+                  <div className="flex flex-col justify-end">
                     <button
                       onClick={() => navigate(`/dashboard/rekap_absen?type=event&id=${item.id}`)}
-                      className="mt-1 flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-widest bg-main-blue/10 text-main-blue hover:bg-main-blue/20 transition-all"
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest bg-main-blue/10 text-main-blue hover:bg-main-blue/20 transition-all"
                     >
                       <Printer className="w-3.5 h-3.5" />
                       Cetak Rekap
                     </button>
                   </div>
+                 </div>
                 </div>
                 <button
                   type="button"
@@ -7386,6 +7443,7 @@ function AdminGuestAccountsManager() {
     nip: "",
     position: "",
     institution: "",
+    pangkat_golongan: "",
   });
 
   useEffect(() => {
@@ -7415,6 +7473,7 @@ function AdminGuestAccountsManager() {
             nip: formData.nip,
             position: formData.position,
             institution: formData.institution,
+            pangkat_golongan: formData.pangkat_golongan,
           })
           .eq("id", formData.id);
         if (error) throw error;
@@ -7428,6 +7487,7 @@ function AdminGuestAccountsManager() {
             nip: formData.nip,
             position: formData.position,
             institution: formData.institution,
+            pangkat_golongan: formData.pangkat_golongan,
           },
         ]);
         if (error) throw error;
@@ -7471,6 +7531,7 @@ function AdminGuestAccountsManager() {
               nip: "",
               position: "",
               institution: "",
+              pangkat_golongan: "",
             });
             setIsModalOpen(true);
           }}
@@ -7487,7 +7548,7 @@ function AdminGuestAccountsManager() {
               <tr>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-12">No</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Username / Password</th>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama Lengkap</th>
+                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama / Pangkat</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instansi & Jabatan</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Aksi</th>
               </tr>
@@ -7514,6 +7575,7 @@ function AdminGuestAccountsManager() {
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-soft-black">{acc.name}</span>
+                        <span className="text-[10px] text-main-blue font-bold">{acc.pangkat_golongan || "-"}</span>
                         <span className="text-[10px] text-gray-400">NIP: {acc.nip || "-"}</span>
                       </div>
                     </td>
@@ -7571,14 +7633,24 @@ function AdminGuestAccountsManager() {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Nama Lengkap</label>
-                <input
-                  required
-                  className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Nama Lengkap</label>
+                  <input
+                    required
+                    className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Pangkat/Golongan</label>
+                  <input
+                    className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium focus:ring-2 focus:ring-main-blue/20"
+                    value={formData.pangkat_golongan || ""}
+                    onChange={(e) => setFormData({ ...formData, pangkat_golongan: e.target.value })}
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -7894,12 +7966,30 @@ function UserProfileEdit({
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch("/api/admin/update-user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...profile, id: user.id }),
-      });
-      if (!response.ok) throw new Error("Gagal memperbarui profil");
+      let endpoint = "/api/admin/update-user";
+      let payload = { ...profile, id: user.id };
+
+      if (user.role === 'tamu') {
+        const { error } = await supabase
+          .from('guest_accounts')
+          .update({
+            name: profile.nama,
+            nip: profile.nip,
+            position: profile.jabatan,
+            institution: profile.sekolah,
+            pangkat_golongan: profile.pangkat
+          })
+          .eq('id', user.id);
+        if (error) throw error;
+      } else {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) throw new Error("Gagal memperbarui profil");
+      }
+
       logActivity(user, "update_profil", `Memperbarui profil pribadi`);
       onUpdate(profile);
       await alert("Profil berhasil diperbarui.", "Sukses", "success");
@@ -9699,10 +9789,15 @@ function TeacherTrainingCards({ user }: { user: any }) {
     setLoading(true);
     try {
       // Fetch Trainings
-      const { data: tData, error: tError } = await supabase
+      let tQuery = supabase
         .from("trainings")
-        .select("*")
-        .order("date_start", { ascending: false });
+        .select("*");
+      
+      if ((user as any).is_guest) {
+        tQuery = tQuery.eq('is_open_for_guests', true);
+      }
+
+      const { data: tData, error: tError } = await tQuery.order("date_start", { ascending: false });
 
       if (tError) throw tError;
       setTrainings(tData || []);
@@ -10367,6 +10462,190 @@ function TeacherTrainingCards({ user }: { user: any }) {
           )}
         </AnimatePresence>
       )}
+    </div>
+  );
+}
+
+function GuestBookForm({ user }: { user: any }) {
+  const { alert } = useAlert();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    purpose: "",
+    notes: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("guest_book").insert([{
+        guest_name: user.nama,
+        guest_nip: user.nip,
+        guest_pangkat: user.pangkat,
+        guest_institution: user.sekolah,
+        guest_position: user.jabatan,
+        purpose: formData.purpose,
+        notes: formData.notes,
+        created_at: new Date().toISOString()
+      }]);
+      if (error) throw error;
+      await alert("Terima kasih telah mengisi buku tamu!", "Sukses", "success");
+      setFormData({ purpose: "", notes: "" });
+    } catch (err: any) {
+      alert(err.message, "Gagal", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-10 pb-20">
+      <div className="bg-white p-8 rounded-[2rem] border-l-8 border-indigo-600 shadow-sm flex flex-col md:flex-row md:items-center gap-10">
+        <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100 shrink-0">
+          <NotebookPen className="w-8 h-8" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black font-heading text-soft-black">Buku Tamu KKG</h2>
+          <p className="text-sm text-gray-500">Silakan isi data kunjungan Anda sebagai arsip kegiatan kami.</p>
+        </div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-[3rem] p-10 md:p-12 shadow-xl border border-gray-100"
+      >
+        <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Nama</span>
+                <p className="font-bold text-soft-black">{user.nama}</p>
+             </div>
+             <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Instansi</span>
+                <p className="font-bold text-soft-black">{user.sekolah}</p>
+             </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">Tujuan Kunjungan / Kegiatan</label>
+            <input
+              required
+              className="w-full bg-gray-50 border-2 border-transparent border-b-gray-200 p-4 text-sm font-bold focus:border-indigo-600 focus:bg-white outline-none transition-all"
+              placeholder="Contoh: Menghadiri Workshop KKG"
+              value={formData.purpose}
+              onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">Kesan & Pesan (Opsional)</label>
+            <textarea
+              className="w-full bg-gray-50 border-2 border-transparent border-b-gray-200 p-4 text-sm font-bold focus:border-indigo-600 focus:bg-white outline-none transition-all h-32"
+              placeholder="Berikan masukan atau kesan Anda..."
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            />
+          </div>
+
+          <button
+            disabled={loading}
+            className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-indigo-600/20 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+          >
+            {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            Simpan Data Kunjungan
+          </button>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+function AdminGuestBookView() {
+  const [entries, setEntries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEntries();
+  }, []);
+
+  const fetchEntries = async () => {
+    if (!supabase) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from("guest_book")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setEntries(data);
+    setLoading(false);
+  };
+
+  return (
+    <div className="space-y-10">
+       <div className="bg-white p-8 rounded-[2rem] border-l-8 border-indigo-600 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-10">
+        <div className="flex items-center gap-8">
+          <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 border border-indigo-100">
+            <NotebookPen className="w-8 h-8" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold font-heading text-soft-black">Arsip Buku Tamu</h2>
+            <p className="text-sm text-gray-500">Daftar rekapan kunjungan tamu undangan ke portal KKG.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+             <thead className="bg-gray-50 border-b border-gray-100">
+               <tr>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tgl Kunjungan</th>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama / NIP</th>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instansi / Jabatan</th>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tujuan</th>
+               </tr>
+             </thead>
+             <tbody className="divide-y divide-gray-100">
+               {loading ? (
+                 <tr><td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic">Memuat arsip...</td></tr>
+               ) : entries.length === 0 ? (
+                 <tr><td colSpan={4} className="px-6 py-10 text-center text-gray-400 italic">Belum ada kunjungan tamu.</td></tr>
+               ) : (
+                 entries.map((entry) => (
+                   <tr key={entry.id} className="hover:bg-gray-50/50 transition-colors">
+                     <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                           <span className="text-sm font-bold text-soft-black">{new Date(entry.created_at).toLocaleDateString('id-ID')}</span>
+                           <span className="text-[10px] text-gray-400 font-medium font-mono">{new Date(entry.created_at).toLocaleTimeString('id-ID')}</span>
+                        </div>
+                     </td>
+                     <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                           <span className="text-sm font-bold text-soft-black">{entry.guest_name}</span>
+                           <span className="text-[10px] text-gray-400">NIP: {entry.guest_nip || "-"}</span>
+                        </div>
+                     </td>
+                     <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                           <span className="text-sm font-medium text-gray-600">{entry.guest_institution}</span>
+                           <span className="text-[10px] text-main-blue font-bold uppercase tracking-widest">{entry.guest_position}</span>
+                           <span className="text-[10px] text-gray-400 italic">{entry.guest_pangkat}</span>
+                        </div>
+                     </td>
+                     <td className="px-6 py-4">
+                        <div className="flex flex-col max-w-xs">
+                           <span className="text-sm font-bold text-soft-black">{entry.purpose}</span>
+                           <span className="text-xs text-gray-500 line-clamp-1 italic">{entry.notes || "-"}</span>
+                        </div>
+                     </td>
+                   </tr>
+                 ))
+               )}
+             </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
