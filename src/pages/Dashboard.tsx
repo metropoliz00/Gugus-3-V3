@@ -9608,8 +9608,12 @@ function ForumDetail({ post, user }: { post: any; user: any }) {
 }
 
 function TeacherJadwalCards({ user }: { user?: any }) {
+  const { alert } = useAlert();
   const [agendas, setAgendas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [selectedAgendaId, setSelectedAgendaId] = useState<string | null>(null);
+  const [attendances, setAttendances] = useState<Record<string, boolean>>({});
 
   const fetchAgendas = async () => {
     setLoading(true);
@@ -9627,6 +9631,21 @@ function TeacherJadwalCards({ user }: { user?: any }) {
 
       if (error) throw error;
       setAgendas(data || []);
+
+      if (user) {
+        const fieldName = user.is_guest ? 'guest_account_id' : 'user_id';
+        const { data: attData } = await supabase
+          .from("training_participants")
+          .select("event_id")
+          .eq(fieldName, user.id)
+          .not('event_id', 'is', null);
+
+        const attMap: Record<string, boolean> = {};
+        if (attData) {
+          attData.forEach(a => attMap[a.event_id] = true);
+        }
+        setAttendances(attMap);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -9637,6 +9656,54 @@ function TeacherJadwalCards({ user }: { user?: any }) {
   useEffect(() => {
     fetchAgendas();
   }, []);
+
+  const handleAbsenClick = (id: string) => {
+    setSelectedAgendaId(id);
+    setIsScannerOpen(true);
+  };
+
+  const onScanSuccess = async () => {
+    setIsScannerOpen(false);
+    if (!selectedAgendaId) return;
+
+    try {
+      const payload: any = { 
+        status: 'attended',
+        attended_at: new Date().toISOString(),
+        event_id: selectedAgendaId
+      };
+      
+      if (user?.is_guest) {
+        payload.is_guest = true;
+        payload.guest_account_id = user.id;
+        payload.guest_name = user?.nama;
+        payload.guest_institution = user?.sekolah;
+        payload.guest_nip = user?.nip;
+        payload.guest_position = user?.jabatan;
+
+        const { error } = await supabase
+          .from("training_participants")
+          .upsert([payload], { 
+            onConflict: 'event_id,guest_account_id' 
+          });
+        if (error) throw error;
+      } else {
+        payload.user_id = user?.id;
+        const { error } = await supabase
+          .from("training_participants")
+          .upsert([payload], { 
+            onConflict: 'event_id,user_id' 
+          });
+        if (error) throw error;
+      }
+
+      setAttendances(prev => ({ ...prev, [selectedAgendaId]: true }));
+      await alert("Absensi Berhasil Dicatat!", "Sukses", "success");
+    } catch (err: any) {
+      await alert(err?.message || "Gagal mencatat absensi", "Error", "error");
+    }
+  };
+
 
   const handleSeedData = async () => {
     setLoading(true);
@@ -9790,10 +9857,27 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                        </div>
                     </div>
 
-                    <div className={`pt-6 mt-6 border-t ${isPast ? 'border-gray-200' : 'border-gray-50'}`}>
-                      <p className="text-xs text-gray-500 italic leading-relaxed line-clamp-3">
+                    <div className={`pt-6 mt-6 border-t flex flex-col md:flex-row md:justify-between md:items-end gap-4 ${isPast ? 'border-gray-200' : 'border-gray-50'}`}>
+                      <p className="text-xs text-gray-500 italic leading-relaxed line-clamp-3 md:flex-1">
                         "{item.description || "Agenda rutin pengembangan keprofesian berkelanjutan."}"
                       </p>
+                      
+                      {!isPast && user && (
+                        <div className="shrink-0 w-full md:w-auto">
+                          {attendances[item.id] ? (
+                            <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-600 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-green-100 w-full md:w-auto justify-center">
+                              <CheckCircle className="w-4 h-4" /> Hadir
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleAbsenClick(item.id)}
+                              className="inline-flex items-center gap-2 px-6 py-2.5 bg-main-blue text-white rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-main-blue/30 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto justify-center"
+                            >
+                              <UserCheck className="w-4 h-4" /> Absen Sekarang
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -9802,6 +9886,12 @@ function TeacherJadwalCards({ user }: { user?: any }) {
           })}
         </div>
       )}
+
+      <FaceScannerModal 
+        isOpen={isScannerOpen} 
+        onClose={() => setIsScannerOpen(false)} 
+        onSuccess={onScanSuccess}
+      />
     </div>
   );
 }
