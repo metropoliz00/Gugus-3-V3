@@ -2973,7 +2973,7 @@ function GuruOverview({ user }: { user: any }) {
           <div className="space-y-4">
             {news.map((p, i) => {
               const dateObj = new Date(p.published_at || p.created_at);
-              const day = dateObj.getDate();
+              const day = dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric" });
               const month = dateObj.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
                 month: "short",
               });
@@ -8564,13 +8564,14 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                                   f.name === "status" &&
                                   item.date_start
                                 ) {
-                                  const today = new Date();
-                                  today.setHours(0, 0, 0, 0);
-                                  const trainingDate = new Date(item.date_start);
-                                  trainingDate.setHours(0, 0, 0, 0);
-                                  if (trainingDate > today) val = "planned";
-                                  else if (trainingDate.getTime() === today.getTime())
-                                    val = "ongoing";
+                                  const now = new Date();
+                                  const startDate = new Date(item.date_start);
+                                  const endDate = item.date_end 
+                                    ? new Date(item.date_end) 
+                                    : new Date(startDate.getTime() + 4 * 60 * 60 * 1000); // 4 hours default if no end date
+
+                                  if (now < startDate) val = "planned";
+                                  else if (now >= startDate && now <= endDate) val = "ongoing";
                                   else val = "completed";
                                 }
                                 const opt = f.options.find(
@@ -9917,7 +9918,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                 {/* Node Marker */}
                 <div className={`absolute -left-[14px] top-8 w-6 h-6 bg-white border-4 ${isPast ? 'border-gray-400 shadow-gray-400/40' : 'border-orange-500 shadow-orange-500/40'} rounded-full shadow-lg group-hover:scale-125 transition-transform z-10`} />
                 <div className={`absolute -left-12 top-6 text-right w-12 hidden md:block`}>
-                   <p className="text-xl font-black text-gray-800 leading-none">{dateObj.getDate()}</p>
+                   <p className="text-xl font-black text-gray-800 leading-none">{dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric" })}</p>
                    <p className="text-xs font-bold text-gray-500 uppercase">{dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta",  month: "short" })}</p>
                 </div>
 
@@ -9930,7 +9931,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                           {dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta",  month: "short" })}
                         </span>
                         <span className={`text-3xl font-black ${isPast ? 'text-gray-500' : 'text-orange-500'} leading-none mt-1`}>
-                          {dateObj.getDate()}
+                          {dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric" })}
                         </span>
                      </div>
                      <div>
@@ -10413,7 +10414,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                               <span className="text-[10px] font-black text-gray-400 uppercase tracking-tighter">
                                 {new Date(item.date_start).toLocaleString(
                                   "id-ID",
-                                  { month: "short" },
+                                  { timeZone: "Asia/Jakarta", month: "short" },
                                 )}
                               </span>
                               <span className={`text-4xl font-black leading-none mt-1 ${
@@ -10421,7 +10422,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                                 autoStatus === 'planned' ? 'text-main-blue' :
                                 'text-gray-700'
                               }`}>
-                                {new Date(item.date_start).getDate()}
+                                {new Date(item.date_start).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric" })}
                               </span>
                             </div>
                             <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center border border-gray-50">
