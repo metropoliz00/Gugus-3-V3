@@ -4113,6 +4113,18 @@ function AdminAgendaForm({ user }: { user: any }) {
                       }
                     />
                   </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                      Status Presensi Digital
+                    </label>
+                    <button
+                      onClick={() => handleUpdate(item.id, { is_attendance_open: !item.is_attendance_open })}
+                      className={`mt-1 flex items-center gap-2 px-3 py-1.5 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all ${item.is_attendance_open ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}
+                    >
+                      {item.is_attendance_open ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                      {item.is_attendance_open ? "Buka (Online)" : "Tutup (Nonaktif)"}
+                    </button>
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -6934,16 +6946,17 @@ function AdminFinanceManagement({ user }: { user: any }) {
 }
 
 function AdminRekapAbsen() {
-  const [trainings, setTrainings] = useState<any[]>([]);
-  const [selectedTrainingId, setSelectedTrainingId] = useState("");
+  const [activities, setActivities] = useState<any[]>([]);
+  const [selectedActivityId, setSelectedActivityId] = useState("");
   const [participants, setParticipants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [chairman, setChairman] = useState<any>(null);
+  const [activityType, setActivityType] = useState<'training' | 'event'>('training');
 
   useEffect(() => {
-    loadTrainings();
+    loadActivities();
     loadChairman();
-  }, []);
+  }, [activityType]);
 
   async function loadChairman() {
     try {
@@ -6960,17 +6973,18 @@ function AdminRekapAbsen() {
   }
 
   useEffect(() => {
-    if (selectedTrainingId) {
-      loadParticipants(selectedTrainingId);
+    if (selectedActivityId) {
+      loadParticipants(selectedActivityId);
     } else {
       setParticipants([]);
     }
-  }, [selectedTrainingId]);
+  }, [selectedActivityId]);
 
-  async function loadTrainings() {
+  async function loadActivities() {
     setLoading(true);
-    const { data } = await supabase.from("trainings").select("id, title, date_start").order("date_start", { ascending: false });
-    setTrainings(data || []);
+    const table = activityType === 'training' ? 'trainings' : 'events';
+    const { data } = await supabase.from(table).select("id, title, date_start").order("date_start", { ascending: false });
+    setActivities(data || []);
     setLoading(false);
   }
 
@@ -6980,8 +6994,8 @@ function AdminRekapAbsen() {
     // Step 1: fetch participants
     const { data: partData, error: partError } = await supabase
       .from("training_participants")
-      .select("user_id, status, attended_at")
-      .eq("training_id", id);
+      .select("*")
+      .eq(activityType === 'training' ? "training_id" : "event_id", id);
       
     if (partError || !partData) {
       setParticipants([]);
@@ -6995,18 +7009,36 @@ function AdminRekapAbsen() {
       return;
     }
 
-    // Step 2: fetch user profiles
-    const userIds = partData.map(p => p.user_id).filter(Boolean);
-    const { data: profilesData } = await supabase
-      .from("user_profiles")
-      .select("id, nama, nip, sekolah")
-      .in("id", userIds);
+    // Step 2: fetch user profiles for non-guests
+    const userIds = partData.filter(p => !p.is_guest).map(p => p.user_id).filter(Boolean);
+    let profilesData: any[] = [];
+    
+    if (userIds.length > 0) {
+      const { data } = await supabase
+        .from("user_profiles")
+        .select("id, nama, nip, sekolah")
+        .in("id", userIds);
+      profilesData = data || [];
+    }
       
-    // Step 3: Join locally
-    const joined = partData.map(p => ({
-      ...p,
-      profile: profilesData?.find(prof => prof.id === p.user_id) || {}
-    }));
+    // Step 3: Join locally and handle guests
+    const joined = partData.map(p => {
+      if (p.is_guest) {
+        return {
+          ...p,
+          profile: {
+            nama: p.guest_name,
+            nip: "-",
+            sekolah: p.guest_institution
+          },
+          isGuestInfo: true
+        };
+      }
+      return {
+        ...p,
+        profile: profilesData?.find(prof => prof.id === p.user_id) || {}
+      };
+    });
     
     setParticipants(joined);
     setLoading(false);
@@ -7016,70 +7048,99 @@ function AdminRekapAbsen() {
     typeof window !== "undefined" && window.print();
   };
 
-  const selectedTraining = trainings.find(t => t.id === selectedTrainingId);
+  const formatName = (name: string) => {
+    if (!name) return "-";
+    return name.toLowerCase().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
+  const selectedActivity = activities.find(a => a.id === selectedActivityId);
 
   return (
     <div className="space-y-6">
       {/* Hidden in print */}
-      <div className="print:hidden bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row gap-4 items-end">
-        <div className="flex-1">
-          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Pilih Pelatihan</label>
-          <select 
-            className="w-full p-3 border border-gray-200 rounded-xl bg-white focus:border-main-blue outline-none"
-            value={selectedTrainingId}
-            onChange={(e) => setSelectedTrainingId(e.target.value)}
+      <div className="print:hidden bg-white p-8 rounded-[2.5rem] shadow-xl shadow-gray-200/40 border border-gray-100 space-y-6">
+        <div className="flex bg-gray-50 p-1.5 rounded-2xl w-fit">
+          <button 
+            onClick={() => { setActivityType('training'); setSelectedActivityId(""); }}
+            className={`px-6 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${activityType === 'training' ? 'bg-white text-main-blue shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
           >
-            <option value="">-- Pilih Pelatihan --</option>
-            {trainings.map(t => (
-              <option key={t.id} value={t.id}>{t.title} ({new Date(t.date_start).toLocaleDateString("id-ID")})</option>
-            ))}
-          </select>
+            Pelatihan (KKG)
+          </button>
+          <button 
+            onClick={() => { setActivityType('event'); setSelectedActivityId(""); }}
+            className={`px-6 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${activityType === 'event' ? 'bg-white text-orange-500 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            Agenda (Gugus)
+          </button>
         </div>
-        <button onClick={handlePrint} disabled={!selectedTrainingId || participants.length === 0} className="px-6 py-3 bg-main-blue text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 disabled:opacity-50">
-          <Printer className="w-5 h-5"/> Print Rekap
-        </button>
+
+        <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex-1">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Pilih Kegiatan</label>
+            <select 
+              className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-main-blue/20 transition-all"
+              value={selectedActivityId}
+              onChange={(e) => setSelectedActivityId(e.target.value)}
+            >
+              <option value="">-- Pilih {activityType === 'training' ? 'Pelatihan' : 'Agenda'} --</option>
+              {activities.map(a => (
+                <option key={a.id} value={a.id}>{a.title} ({new Date(a.date_start).toLocaleDateString("id-ID")})</option>
+              ))}
+            </select>
+          </div>
+          <button 
+            onClick={handlePrint} 
+            disabled={!selectedActivityId || participants.length === 0} 
+            className="px-8 py-4 bg-main-blue text-white rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-dark-blue shadow-lg shadow-main-blue/20 disabled:opacity-50 transition-all active:scale-95"
+          >
+            <Printer className="w-5 h-5"/> Print Rekap
+          </button>
+        </div>
       </div>
 
-      {loading && selectedTrainingId && (
-        <div className="text-center p-8 text-gray-500 print:hidden">Memuat data...</div>
+      {loading && selectedActivityId && (
+        <div className="text-center p-20">
+           <div className="animate-spin w-10 h-10 border-4 border-main-blue border-t-transparent rounded-full mx-auto mb-4"></div>
+           <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Menyusun Laporan...</p>
+        </div>
       )}
 
-      {!loading && selectedTraining && (
-        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 print:shadow-none print:border-none print:p-0 w-full" id="print-area">
-          <div className="text-center mb-8">
-            <h2 className="text-xl font-bold uppercase underline mb-1">Rekap Daftar Hadir</h2>
-            <p className="text-lg font-bold">{selectedTraining.title}</p>
-            <p className="text-sm mt-1">Hari, Tanggal: {new Date(selectedTraining.date_start).toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+      {!loading && selectedActivity && (
+        <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 print:shadow-none print:border-none print:p-0 w-full" id="print-area">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl font-bold uppercase underline mb-2">Rekap Daftar Hadir</h2>
+            <p className="text-xl font-bold text-soft-black mb-1">{selectedActivity.title}</p>
+            <p className="text-sm font-medium text-gray-500">Hari, Tanggal: {new Date(selectedActivity.date_start).toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
           </div>
 
-          <table className="w-full border-collapse border border-black text-xs sm:text-sm">
+          <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-sm">
             <thead>
-              <tr className="bg-gray-50 print:bg-white">
-                <th className="border border-black px-3 py-2 w-12 text-center">No</th>
-                <th className="border border-black px-3 py-2 text-left">Nama</th>
-                <th className="border border-black px-3 py-2 text-left">NIP</th>
-                <th className="border border-black px-3 py-2 text-left">Sekolah</th>
-                <th className="border border-black px-3 py-2 text-center">Kehadiran</th>
-                <th className="border border-black px-3 py-2 text-center">Ket</th>
+              <tr className="bg-gray-100 print:bg-gray-50 font-bold uppercase tracking-wider">
+                <th className="border-2 border-black px-4 py-3 w-12 text-center">No</th>
+                <th className="border-2 border-black px-4 py-3 text-left">Nama</th>
+                <th className="border-2 border-black px-4 py-3 text-left">NIP</th>
+                <th className="border-2 border-black px-4 py-3 text-left">Sekolah / Instansi</th>
+                <th className="border-2 border-black px-4 py-3 text-center">Kehadiran</th>
+                <th className="border-2 border-black px-4 py-3 text-center">Tipe</th>
               </tr>
             </thead>
             <tbody>
               {participants.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="border border-black px-4 py-8 text-center italic text-gray-500">Belum ada participant</td>
+                  <td colSpan={6} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
                 </tr>
               ) : (
                 participants.map((p, idx) => (
-                  <tr key={idx}>
-                    <td className="border border-black px-3 py-2 text-center">{idx + 1}</td>
-                    <td className="border border-black px-3 py-2">{p.profile?.nama || "-"}</td>
-                    <td className="border border-black px-3 py-2">{p.profile?.nip || "-"}</td>
-                    <td className="border border-black px-3 py-2">{p.profile?.sekolah || "-"}</td>
-                    <td className="border border-black px-3 py-2 text-center">
-                      {p.status === "attended" ? "Hadir" : "Belum Hadir"}
+                  <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                    <td className="border-2 border-black px-4 py-2.5 text-center font-bold">{idx + 1}</td>
+                    <td className="border-2 border-black px-4 py-2.5 font-bold text-soft-black">{formatName(p.profile?.nama)}</td>
+                    <td className="border-2 border-black px-4 py-2.5 font-mono">{p.profile?.nip || "-"}</td>
+                    <td className="border-2 border-black px-4 py-2.5">{p.profile?.sekolah || "-"}</td>
+                    <td className="border-2 border-black px-4 py-2.5 text-center">
+                      <span className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full font-bold uppercase text-[9px]">Hadir</span>
                     </td>
-                    <td className="border border-black px-3 py-2 text-center">
-                      {p.status === "attended" && p.attended_at ? new Date(p.attended_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute:"2-digit" }) : "-"}
+                    <td className="border-2 border-black px-4 py-2.5 text-center font-bold uppercase text-[9px]">
+                      {p.is_guest ? "Tamu" : "Anggota"}
                     </td>
                   </tr>
                 ))
@@ -7087,11 +7148,11 @@ function AdminRekapAbsen() {
             </tbody>
           </table>
 
-          <div className="mt-12 flex justify-end">
-            <div className="text-center w-64">
-              <p className="text-sm mb-20">Ketua KKG,</p>
-              <p className="text-sm font-bold underline">{chairman?.name || "......................................"}</p>
-              <p className="text-sm mt-1">NIP. {chairman?.nip || "....................................."}</p>
+          <div className="mt-16 flex justify-end">
+            <div className="text-center w-72">
+              <p className="text-sm mb-24">Ketua KKG,</p>
+              <p className="text-sm font-bold underline leading-none mb-1">{formatName(chairman?.name) || "......................................"}</p>
+              <p className="text-sm font-medium">NIP. {chairman?.nip || "....................................."}</p>
             </div>
           </div>
         </div>
@@ -8168,52 +8229,92 @@ function FaceScannerModal({
 function TeacherAttendance({ user }: { user: any }) {
   const { alert } = useAlert();
   const [trainings, setTrainings] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<{ id: string, type: 'training' | 'event' } | null>(null);
+  const [showGuestForm, setShowGuestForm] = useState(false);
+  const [guestData, setGuestData] = useState({ name: "", institution: "", phone: "" });
 
   useEffect(() => {
-    const fetchTrainings = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
-          .from("trainings")
-          .select("*")
-          .eq("status", "ongoing");
-        if (error) throw error;
-        setTrainings(data || []);
+        const [trainingsRes, eventsRes] = await Promise.all([
+          supabase.from("trainings").select("*").eq("status", "ongoing"),
+          supabase.from("events").select("*").eq("is_attendance_open", true)
+        ]);
+        
+        setTrainings(trainingsRes.data || []);
+        setEvents(eventsRes.data || []);
       } catch (e) {
         console.error(e);
       } finally {
         setLoading(false);
       }
     };
-    fetchTrainings();
+    fetchData();
   }, []);
 
-  const handleAbsenClick = (trainingId: string) => {
-    setSelectedTrainingId(trainingId);
+  const handleAbsenClick = (id: string, type: 'training' | 'event') => {
+    setSelectedActivity({ id, type });
     setIsScannerOpen(true);
   };
 
   const onScanSuccess = () => {
-    if (selectedTrainingId) {
-      handleAbsen(selectedTrainingId);
+    if (selectedActivity) {
+      handleAbsen(selectedActivity.id, selectedActivity.type);
     }
     setIsScannerOpen(false);
   };
 
-  const handleAbsen = async (trainingId: string) => {
+  const handleAbsen = async (id: string, type: 'training' | 'event') => {
     try {
+      const payload: any = { 
+        status: 'attended',
+        attended_at: new Date().toISOString()
+      };
+      
+      if (type === 'training') payload.training_id = id;
+      else payload.event_id = id;
+      
+      payload.user_id = user.id;
+
       const { error } = await supabase
         .from("training_participants")
-        .upsert([{ 
-          training_id: trainingId, 
-          user_id: user.id,
-          status: 'attended',
-          attended_at: new Date().toISOString()
-        }], { onConflict: 'training_id,user_id' });
+        .upsert([payload], { onConflict: type === 'training' ? 'training_id,user_id' : 'event_id,user_id' });
+        
       if (error) throw error;
       await alert("Absensi Berhasil Dicatat!", "Sukses", "success");
+    } catch (err: any) {
+      alert(err.message, "Error", "error");
+    }
+  };
+
+  const handleGuestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedActivity) return;
+    
+    try {
+      const payload: any = {
+        is_guest: true,
+        guest_name: guestData.name,
+        guest_institution: guestData.institution,
+        status: 'attended',
+        attended_at: new Date().toISOString()
+      };
+      
+      if (selectedActivity.type === 'training') payload.training_id = selectedActivity.id;
+      else payload.event_id = selectedActivity.id;
+
+      const { error } = await supabase
+        .from("training_participants")
+        .insert([payload]);
+        
+      if (error) throw error;
+      
+      setShowGuestForm(false);
+      setGuestData({ name: "", institution: "", phone: "" });
+      await alert("Absensi Tamu Berhasil!", "Sukses", "success");
     } catch (err: any) {
       alert(err.message, "Error", "error");
     }
@@ -8227,23 +8328,76 @@ function TeacherAttendance({ user }: { user: any }) {
         onSuccess={onScanSuccess}
       />
 
-      {/* Attendance Clean Header */}
-      <div className="bg-white p-8 rounded-[2rem] border-l-8 border-emerald-500 shadow-sm mb-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
-        <div className="flex items-center gap-8">
-          <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-100 shrink-0">
-            <CheckSquare className="w-8 h-8" />
-          </div>
-          <div>
-            <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-emerald-50 rounded-full border border-emerald-100 mb-2">
-              <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest font-heading">Waktu Presensi</span>
+      {/* Guest Form Modal */}
+      {showGuestForm && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowGuestForm(false)} />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl"
+          >
+            <h3 className="text-xl font-bold mb-4">Presensi Tamu Undangan</h3>
+            <form onSubmit={handleGuestSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Nama Lengkap</label>
+                <input 
+                  required
+                  className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm"
+                  value={guestData.name}
+                  onChange={e => setGuestData({...guestData, name: e.target.value})}
+                  placeholder="Nama Tamu"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Instansi / Asal</label>
+                <input 
+                  required
+                  className="w-full bg-gray-50 border-none rounded-xl p-3 text-sm"
+                  value={guestData.institution}
+                  onChange={e => setGuestData({...guestData, institution: e.target.value})}
+                  placeholder="Contoh: Dinas Pendidikan / Sekolah Lain"
+                />
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setShowGuestForm(false)}
+                  className="flex-1 py-3 bg-gray-100 text-gray-500 rounded-xl font-bold text-xs"
+                >
+                  Batal
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-bold text-xs"
+                >
+                  Simpan Presensi
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Attendance Header */}
+      <div className="bg-white p-8 rounded-[2rem] border-l-8 border-emerald-500 shadow-sm mb-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-100 shrink-0">
+              <CheckSquare className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold font-heading text-soft-black">
-              Presensi Pelatihan
-            </h2>
-            <p className="text-sm text-gray-500">
-              Catat kehadiran Anda melalui verifikasi wajah untuk setiap sesi pelatihan yang sedang berlangsung.
-            </p>
+            <div>
+              <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-emerald-50 rounded-full border border-emerald-100 mb-2">
+                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest font-heading">Sistem Presensi Digital</span>
+              </div>
+              <h2 className="text-2xl font-bold font-heading text-soft-black">
+                Daftar Hadir Kegiatan
+              </h2>
+              <p className="text-sm text-gray-500">
+                Silakan pilih kegiatan yang Anda ikuti dan lakukan verifikasi wajah.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -8251,57 +8405,96 @@ function TeacherAttendance({ user }: { user: any }) {
       {loading ? (
         <div className="py-20 text-center">
           <div className="animate-spin w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Memverifikasi Program...</p>
+          <p className="text-gray-400 font-black uppercase tracking-widest text-[10px]">Memuat Agenda...</p>
         </div>
-      ) : trainings.length === 0 ? (
+      ) : (trainings.length === 0 && events.length === 0) ? (
         <div className="bg-gray-50/50 p-16 rounded-[3rem] text-center border-2 border-dashed border-gray-200">
-          <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl text-gray-200 border border-gray-100">
-             <Activity className="w-10 h-10" />
-          </div>
-          <p className="text-gray-500 font-bold text-lg mb-2">
-            Tidak ada pelatihan aktif saat ini.
-          </p>
-          <p className="text-gray-400 text-sm max-w-sm mx-auto">
-            Silakan periksa jadwal pelatihan mendatang untuk melakukan pendaftaran terlebih dahulu.
-          </p>
+          <Activity className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+          <p className="text-gray-500 font-bold text-lg">Tidak ada kegiatan aktif saat ini.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {trainings.map((t) => (
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              key={t.id}
-              className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6 group"
-            >
-              <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-inner">
-                   <Clock className="w-8 h-8" />
-                </div>
-                <div>
-                  <h3 className="font-black text-soft-black text-xl mb-1 group-hover:text-emerald-600 transition-colors">{t.title}</h3>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                       <MapPin className="w-3 h-3" /> {t.location}
-                    </span>
-                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-                       <Calendar className="w-3 h-3" /> {new Date(t.date_start).toLocaleDateString("id-ID")}
-                    </span>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 gap-12">
+          {/* Ongoing Trainings */}
+          {trainings.length > 0 && (
+            <div className="space-y-6">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] pl-2 border-l-4 border-main-blue">Pusat Pelatihan (KKG)</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {trainings.map((t) => (
+                  <ActivityCard 
+                    key={t.id} 
+                    item={t} 
+                    type="training" 
+                    onAbsen={() => handleAbsenClick(t.id, 'training')} 
+                    onGuest={() => { setSelectedActivity({ id: t.id, type: 'training' }); setShowGuestForm(true); }}
+                  />
+                ))}
               </div>
-              <button
-                onClick={() => handleAbsenClick(t.id)}
-                className="w-full md:w-auto px-10 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <Camera className="w-4 h-4" /> Scan Wajah
-              </button>
-            </motion.div>
-          ))}
+            </div>
+          )}
+
+          {/* Ongoing Events */}
+          {events.length > 0 && (
+            <div className="space-y-6">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] pl-2 border-l-4 border-orange-500">Agenda & Pertemuan Gugus</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {events.map((e) => (
+                  <ActivityCard 
+                    key={e.id} 
+                    item={e} 
+                    type="event" 
+                    onAbsen={() => handleAbsenClick(e.id, 'event')} 
+                    onGuest={() => { setSelectedActivity({ id: e.id, type: 'event' }); setShowGuestForm(true); }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
+
+function ActivityCard({ item, type, onAbsen, onGuest }: any) {
+  return (
+    <motion.div
+      whileHover={{ y: -5 }}
+      className="bg-white p-6 rounded-[2rem] shadow-xl shadow-gray-200/40 border border-gray-50 flex flex-col justify-between"
+    >
+      <div className="mb-6">
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${type === 'training' ? 'bg-blue-50 text-main-blue' : 'bg-orange-50 text-orange-500'}`}>
+          {type === 'training' ? <GraduationCap className="w-6 h-6" /> : <Calendar className="w-6 h-6" />}
+        </div>
+        <h4 className="font-bold text-lg text-soft-black mb-2">{item.title}</h4>
+        <p className="text-xs text-gray-500 line-clamp-2 mb-4">{item.description}</p>
+        <div className="flex flex-wrap gap-2">
+          <span className="px-2 py-1 bg-gray-50 rounded-lg text-[8px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+            <MapPin className="w-3 h-3" /> {item.location}
+          </span>
+          <span className="px-2 py-1 bg-gray-50 rounded-lg text-[8px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+            <Clock className="w-3 h-3" /> {new Date(item.date_start).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+      </div>
+      
+      <div className="flex flex-col gap-2">
+        <button
+          onClick={onAbsen}
+          className={`w-full py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${type === 'training' ? 'bg-main-blue text-white hover:bg-dark-blue' : 'bg-orange-500 text-white hover:bg-orange-600'}`}
+        >
+          <Camera className="w-4 h-4" /> Scan Wajah (Anggota)
+        </button>
+        <button
+          onClick={onGuest}
+          className="w-full py-3 bg-gray-50 text-gray-500 border border-gray-100 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all"
+        >
+          Presensi Tamu Undangan
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 
 function ForumSystem({ user }: { user: any }) {
   const [activeView, setActiveView] = useState<"list" | "create" | "detail">(
