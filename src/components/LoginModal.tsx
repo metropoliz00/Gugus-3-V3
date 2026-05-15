@@ -156,7 +156,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: { isOpen
                 
                 <div className="space-y-5">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">Username atau NIP</label>
+                    <label className="text-sm font-medium text-gray-700">Username</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <AtSign className="w-5 h-5 text-gray-400" />
@@ -167,7 +167,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: { isOpen
                         maxLength={50}
                         onChange={(e) => setUsername(e.target.value)}
                         className="w-full pl-11 pr-4 py-3 bg-light-gray border border-gray-200 rounded-xl focus:ring-2 focus:ring-main-blue focus:border-main-blue transition-all outline-none"
-                        placeholder="Masukkan Username / NIP Anda"
+                        placeholder="Masukkan Username Anda"
                       />
                     </div>
                   </div>
