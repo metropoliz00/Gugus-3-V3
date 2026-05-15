@@ -9956,6 +9956,8 @@ function TeacherTrainingCards({ user }: { user: any }) {
   const [activeSubTab, setActiveSubTab] = useState<
     "daftar" | "absensi" | "sertifikat"
   >("daftar");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -10064,8 +10066,15 @@ function TeacherTrainingCards({ user }: { user: any }) {
     }
   };
 
-  const handleAttendance = async (trainingId: string) => {
-    if (!supabase || !user) return;
+  const handleAbsenClick = (trainingId: string) => {
+    setSelectedTrainingId(trainingId);
+    setIsScannerOpen(true);
+  };
+
+  const handleScanSuccess = async () => {
+    setIsScannerOpen(false);
+    if (!selectedTrainingId || !supabase || !user) return;
+    const trainingId = selectedTrainingId;
     try {
       const query = supabase
         .from("training_participants")
@@ -10436,7 +10445,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                           ) : !hasAttended ? (
                             item.is_attendance_open ? (
                               <button
-                                onClick={() => handleAttendance(item.id)}
+                                onClick={() => handleAbsenClick(item.id)}
                                 className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-[10px] font-black shadow-lg transition-all flex justify-center items-center gap-2 shrink-0 bg-leaf-green text-white shadow-leaf-green/20 hover:scale-105 active:scale-95`}
                               >
                                 <UserCheck className="w-4 h-4 shrink-0" /> <span className="truncate">Konfirmasi Hadir</span>
@@ -10535,7 +10544,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                               </div>
                             ) : (
                               <button
-                                onClick={() => handleAttendance(reg.training_id)}
+                                onClick={() => handleAbsenClick(reg.training_id)}
                                 className="px-6 py-2 bg-main-blue/10 text-main-blue rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-main-blue hover:text-white transition-all shadow-md shadow-main-blue/5"
                               >
                                 Isi Sekarang
@@ -10639,6 +10648,12 @@ function TeacherTrainingCards({ user }: { user: any }) {
           )}
         </AnimatePresence>
       )}
+
+      <FaceScannerModal 
+        isOpen={isScannerOpen} 
+        onClose={() => setIsScannerOpen(false)} 
+        onSuccess={handleScanSuccess}
+      />
     </div>
   );
 }
