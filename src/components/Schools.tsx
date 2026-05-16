@@ -3,6 +3,59 @@ import { MapPin, Users, BookOpen, ArrowRight, X, Target, Lightbulb, Star, Naviga
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
+const AccreditationSeal = ({ grade, size = "md" }: { grade: string; size?: "sm" | "md" | "lg" }) => {
+  if (!grade) return null;
+  const initial = grade.charAt(0).toUpperCase();
+  
+  const outerSize = size === "sm" ? "w-8 h-8" : size === "lg" ? "w-16 h-16" : "w-12 h-12";
+  const ribbonWidth = size === "sm" ? "w-3" : size === "lg" ? "w-6" : "w-4";
+  const ribbonHeight = size === "sm" ? "h-6" : size === "lg" ? "h-14" : "h-10";
+  const letterSize = size === "sm" ? "text-[8px]" : size === "lg" ? "text-2xl" : "text-sm";
+  const labelSize = size === "sm" ? "text-[4px]" : size === "lg" ? "text-[7px]" : "text-[5px]";
+
+  return (
+    <div className="relative flex flex-col items-center">
+      {/* Ribbons */}
+      <div className={`absolute ${size === "sm" ? "top-5" : size === "lg" ? "top-11" : "top-8"} flex items-center justify-center gap-0.5 z-0`}>
+        <div className={`${ribbonWidth} ${ribbonHeight} bg-gradient-to-b from-red-600 to-red-800 [clip-path:polygon(0%_0%,100%_0%,100%_100%,50%_80%,0%_100%)] rotate-[-12deg] origin-top translate-x-0.5 shadow-sm`}></div>
+        <div className={`${ribbonWidth} ${ribbonHeight} bg-gradient-to-b from-red-600 to-red-800 [clip-path:polygon(0%_0%,100%_0%,100%_100%,50%_80%,0%_100%)] rotate-[12deg] origin-top -translate-x-0.5 shadow-sm`}></div>
+      </div>
+
+      {/* Main Seal Body */}
+      <div className={`relative ${outerSize} flex items-center justify-center z-10 filter drop-shadow-md`}>
+        {/* Scalloped Gold Background */}
+        <svg className="absolute inset-0 w-full h-full text-[#D4AF37] fill-current" viewBox="0 0 24 24">
+          <path d="M12 2L13.8 3.5L15.9 2.7L17.2 4.6L19.4 4.8L19.8 6.9L21.7 8L21.2 10.1L22.6 11.8L21.4 13.7L22.1 15.8L20.4 17.2L20.1 19.3L18.1 20L17 21.8L14.9 21.6L13.3 22.9L11.4 22L9.5 22.9L7.9 21.6L5.8 21.8L4.7 20L2.7 19.3L2.4 17.2L0.7 15.8L1.4 13.7L0.2 11.8L1.6 10.1L1.1 8L3 6.9L3.4 4.8L5.6 4.6L6.9 2.7L9 3.5L10.8 2H12Z" />
+        </svg>
+        
+        {/* Inner Gold ring */}
+        <div className="absolute inset-1 rounded-full bg-gradient-to-tr from-[#B8860B] via-[#FFD700] to-[#B8860B] p-[1.5px]">
+          {/* Dark inner circle */}
+          <div className="w-full h-full rounded-full bg-gradient-to-b from-[#2a221a] to-[#120e0a] flex flex-col items-center justify-center border border-[#D4AF37]/40 relative overflow-hidden">
+            {/* Arched Label */}
+            <svg className="absolute top-0.5 w-[90%] h-[90%] z-20 pointer-events-none" viewBox="0 0 100 100">
+               <path id={`curve-${grade}-${size}`} d="M 20,40 A 30,30 0 0,1 80,40" fill="none" />
+               <text className={`font-black fill-[#FFD700] ${labelSize}`} textAnchor="middle">
+                 <textPath xlinkHref={`#curve-${grade}-${size}`} startOffset="50%">AKREDITASI</textPath>
+               </text>
+            </svg>
+            
+            {/* Wreath placeholder */}
+            <svg className="absolute inset-0 w-full h-full opacity-30 pointer-events-none" viewBox="0 0 100 100">
+               <path d="M30 75 Q 15 50 30 25 M70 75 Q 85 50 70 25" fill="none" stroke="#FFD700" strokeWidth="3" strokeDasharray="1 3" />
+            </svg>
+            
+            {/* Letter */}
+            <span className={`text-[#FFD700] font-black ${letterSize} italic tracking-tighter drop-shadow-[0_2px_1px_rgba(0,0,0,0.9)] z-10`}>
+              {initial}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Schools() {
   const [schools, setSchools] = useState<any[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<any | null>(null);
@@ -110,12 +163,9 @@ export default function Schools() {
                        {school.jenis_sekolah || 'Sekolah Imbas'}
                      </span>
                      {school.akreditasi && (
-                       <div className="relative group/akred flex items-center gap-1">
-                         <span className="text-[7px] font-black text-white/90 uppercase tracking-tighter drop-shadow-sm">Akreditasi</span>
-                         <div className="w-7 h-7 rounded-full bg-main-orange/60 flex items-center justify-center text-white border-2 border-white/50 shadow-lg backdrop-blur-md font-black italic text-[10px]">
-                           {school.akreditasi.substring(0, 1).toUpperCase()}
-                         </div>
-                         <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-black/80 text-[7px] text-white font-bold rounded opacity-0 group-hover/akred:opacity-100 transition-opacity whitespace-nowrap z-50">
+                       <div className="relative group/akred">
+                         <AccreditationSeal grade={school.akreditasi} />
+                         <div className="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1 bg-black/80 text-[10px] text-white font-bold rounded-lg opacity-0 group-hover/akred:opacity-100 transition-all scale-95 group-hover/akred:scale-100 whitespace-nowrap z-50 shadow-xl border border-white/10">
                            AKREDITASI {school.akreditasi.toUpperCase()}
                          </div>
                        </div>
@@ -229,11 +279,14 @@ export default function Schools() {
                     <span className="flex items-center gap-1 shrink-0"><BookOpen className="w-4 h-4" /> {selectedSchool.student_count || 0} Siswa</span>
                     <span className="flex items-center gap-1 shrink-0"><Star className="w-4 h-4" /> {selectedSchool.teacher_count || 0} Guru</span>
                     {selectedSchool.akreditasi && (
-                      <div className="flex items-center gap-2 px-2 py-0.5 bg-leaf-green/10 text-leaf-green rounded-full border border-leaf-green/20 backdrop-blur-sm">
-                        <div className="w-5 h-5 rounded-full bg-leaf-green/60 text-white flex items-center justify-center text-[10px] font-black italic border border-white/50 shadow-sm backdrop-blur-md">
-                          {selectedSchool.akreditasi.substring(0, 1).toUpperCase()}
+                      <div className="flex items-center gap-3 pr-4 py-1.5 bg-yellow-500/5 rounded-2xl border border-yellow-500/10 shadow-sm transition-all hover:bg-yellow-500/10 group/modal-akred">
+                        <div className="shrink-0 scale-90 translate-x-2">
+                           <AccreditationSeal grade={selectedSchool.akreditasi} size="md" />
                         </div>
-                        <span className="text-[10px] font-black tracking-widest uppercase pr-1">Akreditasi {selectedSchool.akreditasi}</span>
+                        <div className="ml-2 flex flex-col">
+                           <span className="text-[8px] font-black text-yellow-600 uppercase tracking-widest leading-none mb-1 opacity-70">Sertifikasi Nasional</span>
+                           <span className="text-[11px] font-black text-stone-800 tracking-wider uppercase">Akreditasi {selectedSchool.akreditasi}</span>
+                        </div>
                       </div>
                     )}
                     <span className="px-2 py-0.5 bg-main-blue/10 text-main-blue rounded uppercase text-[10px] tracking-widest shrink-0 border border-main-blue/20">{selectedSchool.jenis_sekolah || 'Sekolah Imbas'}</span>
