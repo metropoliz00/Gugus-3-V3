@@ -4492,6 +4492,8 @@ function AdminSekolahForm({ user }: { user: any }) {
       principal_name: "-",
       student_count: 0,
       teacher_count: 0,
+      akreditasi: "-",
+      prestasi_images: [],
       jenis_sekolah: newSchoolType,
       logo_url:
         "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=2000&auto=format&fit=crop",
@@ -4680,7 +4682,7 @@ function AdminSekolahForm({ user }: { user: any }) {
                       </div>
                     </div>
                     <input
-                      className="w-full border border-gray-200 sm:border-none p-2 sm:p-0 text-sm text-gray-500 focus:ring-2 focus:ring-main-blue/20 sm:focus:ring-0 mb-4 rounded-lg sm:rounded-none bg-white sm:bg-transparent"
+                      className="w-full border border-gray-200 sm:border-none p-2 sm:p-0 text-sm text-gray-500 focus:ring-2 focus:ring-main-blue/20 sm:focus:ring-0 mb-2 rounded-lg sm:rounded-none bg-white sm:bg-transparent"
                       placeholder="Nama Kepala Sekolah..."
                       value={school.principal_name || ""}
                       onChange={(e) =>
@@ -4689,6 +4691,17 @@ function AdminSekolahForm({ user }: { user: any }) {
                         })
                       }
                     />
+                    <div className="flex items-center gap-2 mb-4">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Akreditasi:</label>
+                      <input
+                        className="w-20 border border-gray-200 rounded px-2 py-0.5 text-xs font-bold text-main-blue"
+                        placeholder="A/B/C..."
+                        value={school.akreditasi || ""}
+                        onChange={(e) =>
+                          handleUpdate(school.id, { akreditasi: e.target.value })
+                        }
+                      />
+                    </div>
                     <ImageUpload
                       label="Foto Kepala Sekolah"
                       value={school.principal_image_url || ""}
@@ -4849,6 +4862,27 @@ function AdminSekolahForm({ user }: { user: any }) {
                           </div>
                         </div>
                       )}
+
+                    <div className="pt-6 border-t border-gray-100">
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Foto Prestasi (Max 4 - Rasio 4:6)</label>
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[0, 1, 2, 3].map((idx) => (
+                          <div key={idx}>
+                            <ImageUpload
+                              label={`Foto ${idx + 1}`}
+                              value={(school.prestasi_images || [])[idx] || ""}
+                              onChange={(base64) => {
+                                const curr = [...(school.prestasi_images || [])];
+                                curr[idx] = base64;
+                                handleUpdate(school.id, { prestasi_images: curr });
+                              }}
+                              maxWidth={600}
+                              maxHeight={900}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                     {(!school.map_embed_url ||
                       !school.map_embed_url.includes(
                         "google.com/maps/embed",
