@@ -261,7 +261,7 @@ export default function Schools() {
                       <p className="text-gray-600 leading-relaxed pl-13 whitespace-pre-wrap">{selectedSchool.keunggulan || 'Belum ada keunggulan yang dicantumkan.'}</p>
                     </div>
 
-                    {selectedSchool.prestasi_images && selectedSchool.prestasi_images.length > 0 && (
+                    {Array.isArray(selectedSchool.prestasi_images) && selectedSchool.prestasi_images.length > 0 && (
                       <div>
                         <div className="flex items-center gap-3 mb-6">
                           <div className="w-10 h-10 bg-main-orange/10 text-main-orange rounded-xl flex items-center justify-center">

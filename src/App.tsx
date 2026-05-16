@@ -91,7 +91,9 @@ export default function App() {
     // Always start the timer for splash screen effect
     const timer = setTimeout(() => {
       setIsAppReady(true);
-    }, 3000);
+      // Fallback: force end loading if stuck too long
+      setIsInitialAuthLoading(false);
+    }, 6000); // 6 seconds maximum splash screen
 
     let authSubscription: any = null;
 

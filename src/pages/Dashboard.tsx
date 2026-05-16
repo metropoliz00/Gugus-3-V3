@@ -4870,9 +4870,9 @@ function AdminSekolahForm({ user }: { user: any }) {
                           <div key={idx}>
                             <ImageUpload
                               label={`Foto ${idx + 1}`}
-                              value={(school.prestasi_images || [])[idx] || ""}
+                              value={(Array.isArray(school.prestasi_images) ? school.prestasi_images : [])[idx] || ""}
                               onChange={(base64) => {
-                                const curr = [...(school.prestasi_images || [])];
+                                const curr = Array.isArray(school.prestasi_images) ? [...school.prestasi_images] : [];
                                 curr[idx] = base64;
                                 handleUpdate(school.id, { prestasi_images: curr });
                               }}

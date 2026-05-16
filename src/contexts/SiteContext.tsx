@@ -302,14 +302,17 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loadContent = async () => {
     setIsLoading(true);
-    const local = localStorage.getItem('siteContent');
-    if (local) {
-      try {
-        setContent({ ...defaultContent, ...JSON.parse(local) });
-      } catch(e) {}
-    }
-
     try {
+      const local = localStorage.getItem('siteContent');
+      if (local) {
+        try {
+          const parsed = JSON.parse(local);
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            setContent({ ...defaultContent, ...parsed });
+          }
+        } catch(e) {}
+      }
+
       if (supabase) {
         const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
         if (data && data.content) {
@@ -320,9 +323,9 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (e) {
       console.error("Backend load error:", e);
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const updateContent = async (newContent: Partial<SiteContent>) => {
