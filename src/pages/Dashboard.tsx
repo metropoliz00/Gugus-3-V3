@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react"; // Updated
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 import {
   LogOut,
   LayoutDashboard,
@@ -3693,18 +3693,27 @@ function AdminBeritaForm({ user }: { user: any }) {
                        Berita
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Link URL
+                  <div className="md:col-span-2 pt-4">
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-2">
+                      Konten Berita (Rich Text)
                     </label>
-                    <input
-                      className="w-full border-b border-gray-200 text-xs outline-none bg-transparent"
-                      placeholder="https://..."
-                      value={item.url || ""}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { url: e.target.value })
-                      }
-                    />
+                    <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-inner min-h-[300px]">
+                      <ReactQuill
+                        theme="snow"
+                        value={item.content || ""}
+                        onChange={(content) => handleUpdate(item.id, { content })}
+                        className="h-full border-none"
+                        modules={{
+                          toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'image'],
+                            ['clean']
+                          ],
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
                 <button
