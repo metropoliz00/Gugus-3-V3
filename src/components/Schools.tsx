@@ -110,8 +110,9 @@ export default function Schools() {
                        {school.jenis_sekolah || 'Sekolah Imbas'}
                      </span>
                      {school.akreditasi && (
-                       <div className="relative group/akred">
-                         <div className="w-7 h-7 rounded-full bg-main-orange flex items-center justify-center text-white border-2 border-white shadow-lg backdrop-blur-md font-black italic text-xs">
+                       <div className="relative group/akred flex items-center gap-1">
+                         <span className="text-[7px] font-black text-white/90 uppercase tracking-tighter drop-shadow-sm">Akreditasi</span>
+                         <div className="w-7 h-7 rounded-full bg-main-orange/60 flex items-center justify-center text-white border-2 border-white/50 shadow-lg backdrop-blur-md font-black italic text-[10px]">
                            {school.akreditasi.substring(0, 1).toUpperCase()}
                          </div>
                          <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-0.5 bg-black/80 text-[7px] text-white font-bold rounded opacity-0 group-hover/akred:opacity-100 transition-opacity whitespace-nowrap z-50">
@@ -228,8 +229,8 @@ export default function Schools() {
                     <span className="flex items-center gap-1 shrink-0"><BookOpen className="w-4 h-4" /> {selectedSchool.student_count || 0} Siswa</span>
                     <span className="flex items-center gap-1 shrink-0"><Star className="w-4 h-4" /> {selectedSchool.teacher_count || 0} Guru</span>
                     {selectedSchool.akreditasi && (
-                      <div className="flex items-center gap-2 px-2 py-0.5 bg-leaf-green/10 text-leaf-green rounded-full border border-leaf-green/20">
-                        <div className="w-5 h-5 rounded-full bg-leaf-green text-white flex items-center justify-center text-[10px] font-black italic border border-white shadow-sm">
+                      <div className="flex items-center gap-2 px-2 py-0.5 bg-leaf-green/10 text-leaf-green rounded-full border border-leaf-green/20 backdrop-blur-sm">
+                        <div className="w-5 h-5 rounded-full bg-leaf-green/60 text-white flex items-center justify-center text-[10px] font-black italic border border-white/50 shadow-sm backdrop-blur-md">
                           {selectedSchool.akreditasi.substring(0, 1).toUpperCase()}
                         </div>
                         <span className="text-[10px] font-black tracking-widest uppercase pr-1">Akreditasi {selectedSchool.akreditasi}</span>
