@@ -101,7 +101,7 @@ export default function Schools() {
                    </div>
 
                    {/* School Type Badge */}
-                   <div className="absolute top-4 left-4">
+                   <div className="absolute top-4 left-4 flex flex-col gap-2">
                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md border ${
                        school.jenis_sekolah === 'Sekolah Inti' 
                        ? 'bg-main-blue/20 text-white border-white/30' 
@@ -109,6 +109,11 @@ export default function Schools() {
                      }`}>
                        {school.jenis_sekolah || 'Sekolah Imbas'}
                      </span>
+                     {school.akreditasi && (
+                       <span className="self-start px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter bg-white/30 text-white border border-white/20 backdrop-blur-md">
+                         AKREDITASI {school.akreditasi}
+                       </span>
+                     )}
                    </div>
 
                    <div className="absolute bottom-4 left-4 right-4">
@@ -179,7 +184,7 @@ export default function Schools() {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-3xl w-full max-w-4xl relative z-10 shadow-2xl overflow-hidden my-auto flex flex-col max-h-[90vh]"
+              className="bg-white rounded-3xl w-full max-w-6xl relative z-10 shadow-2xl overflow-hidden my-auto flex flex-col max-h-[95vh]"
             >
               {/* Header */}
               <div className="relative h-48 sm:h-64 shrink-0 bg-gray-100">
@@ -217,6 +222,9 @@ export default function Schools() {
                     </span>
                     <span className="flex items-center gap-1 shrink-0"><BookOpen className="w-4 h-4" /> {selectedSchool.student_count || 0} Siswa</span>
                     <span className="flex items-center gap-1 shrink-0"><Star className="w-4 h-4" /> {selectedSchool.teacher_count || 0} Guru</span>
+                    {selectedSchool.akreditasi && (
+                      <span className="px-2 py-0.5 bg-leaf-green text-white rounded font-black text-[10px] tracking-widest shrink-0 border border-leaf-green/20">Akreditasi {selectedSchool.akreditasi}</span>
+                    )}
                     <span className="px-2 py-0.5 bg-main-blue/10 text-main-blue rounded uppercase text-[10px] tracking-widest shrink-0 border border-main-blue/20">{selectedSchool.jenis_sekolah || 'Sekolah Imbas'}</span>
                   </div>
                 </div>
@@ -231,8 +239,8 @@ export default function Schools() {
                   </div>
                 )}
 
-                <div className="grid md:grid-cols-2 gap-8 mb-8">
-                  <div className="space-y-8">
+                <div className="grid lg:grid-cols-3 gap-8 mb-8">
+                  <div className="lg:col-span-2 space-y-8">
                     <div>
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-10 h-10 bg-main-blue/10 text-main-blue rounded-xl flex items-center justify-center">
@@ -252,18 +260,36 @@ export default function Schools() {
                       </div>
                       <p className="text-gray-600 leading-relaxed pl-13 whitespace-pre-wrap">{selectedSchool.keunggulan || 'Belum ada keunggulan yang dicantumkan.'}</p>
                     </div>
+
+                    {selectedSchool.prestasi_images && selectedSchool.prestasi_images.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="w-10 h-10 bg-main-orange/10 text-main-orange rounded-xl flex items-center justify-center">
+                            <Lightbulb className="w-5 h-5" />
+                          </div>
+                          <h4 className="text-xl font-bold font-heading">Prestasi Sekolah</h4>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-2">
+                          {selectedSchool.prestasi_images.slice(0, 4).map((img: string, idx: number) => (
+                            <div key={idx} className="aspect-[2/3] rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-gray-50">
+                              <img src={img} className="w-full h-full object-cover" alt={`Prestasi ${idx + 1}`} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div>
+                  <div className="lg:col-span-1">
                       
-                      <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                      <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 h-full">
                         <div className="flex items-center gap-3 mb-4">
                           <div className="w-10 h-10 bg-main-blue/10 text-main-blue rounded-xl flex items-center justify-center">
                             <Navigation className="w-5 h-5" />
                           </div>
                           <h4 className="text-lg font-bold font-heading">Lokasi Sekolah</h4>
                         </div>
-                        <div className="w-full h-48 rounded-xl overflow-hidden border border-gray-200 bg-white flex items-center justify-center">
+                        <div className="w-full h-64 rounded-xl overflow-hidden border border-gray-200 bg-white flex items-center justify-center">
                           {selectedSchool.map_embed_url ? (
                              <>
                                <iframe 
