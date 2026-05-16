@@ -136,54 +136,72 @@ export default function MediaInformasi() {
 
               <div className="overflow-y-auto">
                 {selectedItem.featured_image_url && (
-                  <div className="w-full h-80 relative">
+                  <div className="w-full h-[400px] relative">
                     <img src={selectedItem.featured_image_url} alt={selectedItem.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                    <div className="absolute bottom-8 left-8 right-8 text-white">
-                      <div className="flex items-center gap-4 text-xs font-medium opacity-80 mb-4">
-                        <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full capitalize">{selectedItem.category}</div>
-                        <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(selectedItem.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
-                        <div className="flex items-center gap-1"><User className="w-4 h-4" /> {selectedItem.author?.nama || 'Admin'}</div>
-                      </div>
-                      <h3 className="text-3xl md:text-4xl font-heading font-bold leading-tight">
-                        {selectedItem.title}
-                      </h3>
-                    </div>
                   </div>
                 )}
 
-                {!selectedItem.featured_image_url && (
-                  <div className="p-8 border-b border-gray-100 bg-gray-50">
-                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500 mb-4">
-                      <div className="px-3 py-1 bg-main-blue/10 text-main-blue rounded-full capitalize">{selectedItem.category}</div>
-                      <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(selectedItem.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
-                      <div className="flex items-center gap-1"><User className="w-4 h-4" /> {selectedItem.author?.nama || 'Admin'}</div>
-                    </div>
-                    <h3 className="text-3xl md:text-4xl font-heading font-bold text-main-blue">
-                      {selectedItem.title}
-                    </h3>
+                <div className="p-8 md:p-12 pb-4">
+                  <div className="flex items-center gap-4 text-xs font-semibold text-main-blue/60 mb-6 uppercase tracking-widest">
+                    <div className="px-3 py-1 bg-main-blue/10 text-main-blue rounded-full capitalize">{selectedItem.category}</div>
+                    <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(selectedItem.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
+                    <div className="flex items-center gap-1"><User className="w-4 h-4" /> {selectedItem.author?.nama || 'Admin'}</div>
                   </div>
-                )}
+                  <h3 className="text-3xl md:text-5xl font-heading font-extrabold text-main-blue leading-tight mb-8">
+                    {selectedItem.title}
+                  </h3>
+                  <div className="h-1 w-20 bg-main-orange/30 rounded-full mb-10" />
+                </div>
 
-                <div className="p-8 md:p-12 overflow-x-hidden">
+                <div className="px-8 md:px-12 pb-12 overflow-x-hidden">
                   <style dangerouslySetInnerHTML={{ __html: `
+                    .news-content {
+                      font-family: "Inter", sans-serif;
+                      color: #334155;
+                      font-size: 1.1rem;
+                    }
                     .news-content p {
-                      text-indent: 2.5rem;
+                      text-indent: 3rem;
                       text-align: justify;
-                      margin-bottom: 1.25rem;
-                      line-height: 1.8;
-                      word-break: break-word;
+                      margin-bottom: 1.8rem;
+                      line-height: 2.2;
+                      word-break: normal;
+                      overflow-wrap: break-word;
+                      hyphens: auto;
                     }
                     .news-content h1, .news-content h2, .news-content h3 {
-                      color: #1e40af; /* main-blue equivalent */
-                      margin-top: 2rem;
-                      margin-bottom: 1rem;
+                      color: #1e40af;
+                      font-weight: 800;
+                      margin-top: 3rem;
+                      margin-bottom: 1.5rem;
+                      line-height: 1.2;
+                      text-indent: 0;
+                      text-align: left;
                     }
                     .news-content img {
                       max-width: 100%;
                       height: auto;
-                      border-radius: 1rem;
-                      margin: 2rem auto;
+                      border-radius: 2rem;
+                      margin: 3rem auto;
+                      display: block;
+                      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                    }
+                    .news-content ul, .news-content ol {
+                      margin-bottom: 1.8rem;
+                      padding-left: 2rem;
+                      text-indent: 0;
+                    }
+                    .news-content li {
+                      margin-bottom: 0.8rem;
+                      line-height: 2;
+                    }
+                    .news-content blockquote {
+                      border-left: 4px solid #3b82f6;
+                      padding-left: 1.5rem;
+                      font-style: italic;
+                      color: #475569;
+                      margin: 2rem 0;
+                      text-indent: 0;
                     }
                   `}} />
                   <div 
@@ -191,15 +209,15 @@ export default function MediaInformasi() {
                     dangerouslySetInnerHTML={{ __html: selectedItem.content }}
                   />
                   {selectedItem.url && (
-                    <div className="mt-12 pt-8 border-t border-gray-100">
-                      <p className="text-sm text-gray-500 mb-4">Link Referensi:</p>
+                    <div className="mt-16 pt-8 border-t border-gray-100 flex flex-col items-center">
+                      <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Informasi Tambahan</p>
                       <a 
                         href={selectedItem.url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 bg-main-blue text-white px-6 py-3 rounded-full font-bold hover:bg-main-blue/90 transition-colors"
+                        className="group flex items-center gap-3 bg-main-blue text-white px-8 py-4 rounded-full font-bold hover:bg-main-blue/90 hover:scale-105 transition-all shadow-lg hover:shadow-blue-500/20"
                       >
-                        Kunjungi Tautan <ArrowRight className="w-4 h-4" />
+                        Kunjungi Tautan Terkait <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                       </a>
                     </div>
                   )}
