@@ -270,11 +270,22 @@ export default function Schools() {
                           <h4 className="text-xl font-bold font-heading">Prestasi Sekolah</h4>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-2">
-                          {selectedSchool.prestasi_images.slice(0, 4).map((img: string, idx: number) => (
-                            <div key={idx} className="aspect-[2/3] rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-gray-50">
-                              <img src={img} className="w-full h-full object-cover" alt={`Prestasi ${idx + 1}`} />
-                            </div>
-                          ))}
+                          {selectedSchool.prestasi_images.slice(0, 4).map((item: any, idx: number) => {
+                            const img = typeof item === 'string' ? item : item.image;
+                            const desc = typeof item === 'object' ? item.description : "";
+                            return (
+                              <div key={idx} className="group/item relative aspect-[2/3] rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-gray-50">
+                                <img src={img} className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110" alt={`Prestasi ${idx + 1}`} />
+                                {desc && (
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                                    <p className="text-white text-[10px] font-bold leading-tight line-clamp-3 italic">
+                                      "{desc}"
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     )}

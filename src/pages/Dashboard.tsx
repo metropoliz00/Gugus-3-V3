@@ -4866,21 +4866,39 @@ function AdminSekolahForm({ user }: { user: any }) {
                     <div className="pt-6 border-t border-gray-100">
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Foto Prestasi (Max 4 - Rasio 4:6)</label>
                       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {[0, 1, 2, 3].map((idx) => (
-                          <div key={idx}>
-                            <ImageUpload
-                              label={`Foto ${idx + 1}`}
-                              value={(school.prestasi_images || [])[idx] || ""}
-                              onChange={(base64) => {
-                                const curr = [...(school.prestasi_images || [])];
-                                curr[idx] = base64;
-                                handleUpdate(school.id, { prestasi_images: curr });
-                              }}
-                              maxWidth={600}
-                              maxHeight={900}
-                            />
-                          </div>
-                        ))}
+                        {[0, 1, 2, 3].map((idx) => {
+                          const prestasi = (school.prestasi_images || [])[idx] || { image: "", description: "" };
+                          return (
+                            <div key={idx} className="space-y-2">
+                              <ImageUpload
+                                label={`Foto ${idx + 1}`}
+                                value={typeof prestasi === 'string' ? prestasi : prestasi.image || ""}
+                                onChange={(base64) => {
+                                  const curr = [...(school.prestasi_images || [])];
+                                  const item = typeof curr[idx] === 'object' ? { ...curr[idx] } : { description: "" };
+                                  item.image = base64;
+                                  curr[idx] = item;
+                                  handleUpdate(school.id, { prestasi_images: curr });
+                                }}
+                                maxWidth={600}
+                                maxHeight={900}
+                              />
+                              <textarea
+                                className="w-full text-[10px] p-2 border border-gray-100 rounded-lg bg-gray-50 focus:ring-1 focus:ring-main-orange/30 outline-none resize-none"
+                                placeholder="Deskripsi prestasi..."
+                                rows={2}
+                                value={prestasi.description || ""}
+                                onChange={(e) => {
+                                  const curr = [...(school.prestasi_images || [])];
+                                  const item = typeof curr[idx] === 'object' ? { ...curr[idx] } : { image: "" };
+                                  item.description = e.target.value;
+                                  curr[idx] = item;
+                                  handleUpdate(school.id, { prestasi_images: curr });
+                                }}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                     {(!school.map_embed_url ||

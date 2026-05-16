@@ -43,6 +43,12 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='schools' AND column_name='map_embed_url') THEN
         ALTER TABLE public.schools ADD COLUMN map_embed_url TEXT;
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='schools' AND column_name='akreditasi') THEN
+        ALTER TABLE public.schools ADD COLUMN akreditasi TEXT;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='schools' AND column_name='prestasi_images') THEN
+        ALTER TABLE public.schools ADD COLUMN prestasi_images JSONB DEFAULT '[]'::jsonb;
+    END IF;
 END $$;
 
 CREATE TABLE IF NOT EXISTS public.schools (
@@ -60,6 +66,8 @@ CREATE TABLE IF NOT EXISTS public.schools (
     vision TEXT,
     motto TEXT,
     map_embed_url TEXT,
+    akreditasi TEXT,
+    prestasi_images JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
