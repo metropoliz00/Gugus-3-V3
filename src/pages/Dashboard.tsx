@@ -884,7 +884,7 @@ export default function Dashboard({
                       />
                       <Route
                         path="pengumuman"
-                        element={<AdminPengumumanForm />}
+                        element={<AdminPengumumanForm user={user} />}
                       />
                       <Route
                         path="guru"
@@ -2301,6 +2301,7 @@ function AdminOverview({ user }: { user: any }) {
     sekolahInti: 0,
     sekolahImbas: 0,
     berita: 0,
+    pengumuman: 0,
     dokumen: 0,
     kegiatan: 0,
     user: 0,
@@ -2315,11 +2316,17 @@ function AdminOverview({ user }: { user: any }) {
     const fetchStatsAndLogs = async () => {
       setIsStatsLoading(true);
       try {
-        const [postRes, docRes, eventRes, userRes, schoolRes, logsRes, sharingRes] =
+        const [newsRes, notifRes, docRes, eventRes, userRes, schoolRes, logsRes, sharingRes] =
           await Promise.all([
             supabase
               .from("posts")
               .select("*", { count: "exact", head: true })
+              .eq("category", "berita")
+              .throwOnError(),
+            supabase
+              .from("posts")
+              .select("*", { count: "exact", head: true })
+              .eq("category", "pengumuman")
               .throwOnError(),
             supabase
               .from("documents")
@@ -2347,7 +2354,8 @@ function AdminOverview({ user }: { user: any }) {
               .select("*", { count: "exact", head: true }),
           ]);
 
-        const postCount = postRes.count || 0;
+        const beritaCount = newsRes.count || 0;
+        const pengumumanCount = notifRes.count || 0;
         const docCount = docRes.count || 0;
         const eventCount = eventRes.count || 0;
         const userCount = userRes.count || 0;
@@ -2376,7 +2384,8 @@ function AdminOverview({ user }: { user: any }) {
           sekolah: schoolCount,
           sekolahInti: schoolIntiCount,
           sekolahImbas: schoolImbasCount,
-          berita: postCount || 0,
+          berita: beritaCount,
+          pengumuman: pengumumanCount,
           dokumen: docCount || 0,
           kegiatan: eventCount || 0,
           user: userCount || 0,
@@ -2460,6 +2469,12 @@ function AdminOverview({ user }: { user: any }) {
       value: isStatsLoading ? "..." : dbStats.berita.toString(),
       icon: FileText,
       color: "from-purple-500 to-fuchsia-400",
+    },
+    {
+      label: "Total Pengumuman",
+      value: isStatsLoading ? "..." : dbStats.pengumuman.toString(),
+      icon: Bell,
+      color: "from-red-500 to-rose-400",
     },
     {
       label: "Total User",
@@ -3534,6 +3549,7 @@ function AdminBeritaForm({ user }: { user: any }) {
         const { data } = await supabase
           .from("posts")
           .select("*")
+          .eq("category", "berita")
           .order("created_at", { ascending: false });
         setNews(data || []);
       } catch (err) {
@@ -3613,7 +3629,7 @@ function AdminBeritaForm({ user }: { user: any }) {
               <span className="text-[10px] font-bold text-main-blue uppercase tracking-widest font-heading">Media Informasi</span>
             </div>
             <h2 className="text-2xl font-bold font-heading text-soft-black">
-              Kelola Berita & Pengumuman
+              Kelola Berita
             </h2>
             <p className="text-sm text-gray-500">
               Publikasikan artikel dan informasi terbaru ke portal GUGUS 3.
@@ -3673,16 +3689,9 @@ function AdminBeritaForm({ user }: { user: any }) {
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
                       Kategori
                     </label>
-                    <select
-                      className="w-full border-b border-gray-200 text-xs outline-none bg-transparent"
-                      value={item.category}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { category: e.target.value })
-                      }
-                    >
-                      <option value="berita">Berita</option>
-                      <option value="pengumuman">Pengumuman</option>
-                    </select>
+                    <div className="w-full border-b border-gray-200 text-xs py-1 text-main-blue font-bold">
+                       Berita
+                    </div>
                   </div>
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
@@ -6643,9 +6652,11 @@ function AdminPenghargaanForm() {
   );
 }
 
-function AdminPengumumanForm() {
+function AdminPengumumanForm({ user }: { user: any }) {
+  const { confirm } = useAlert();
   const [news, setNews] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const debouncedSave = useRef<NodeJS.Timeout | null>(null);
 
   React.useEffect(() => {
     async function loadNews() {
@@ -6680,23 +6691,36 @@ function AdminPengumumanForm() {
       .insert([newPost])
       .select();
     if (!error && data) {
+      logActivity(user, "create_pengumuman", `Menambah pengumuman baru: ${newPost.title}`);
       setNews([data[0], ...news]);
     }
   };
 
-  const handleUpdate = async (id: string, updates: any) => {
-    if (!supabase) return;
-    const { error } = await supabase.from("posts").update(updates).eq("id", id);
-    if (!error) {
-      setNews(news.map((n: any) => (n.id === id ? { ...n, ...updates } : n)));
-    }
+  const handleUpdate = (id: string, updates: any) => {
+    setNews(news.map((n: any) => (n.id === id ? { ...n, ...updates } : n)));
+
+    if (debouncedSave.current) clearTimeout(debouncedSave.current);
+
+    debouncedSave.current = setTimeout(async () => {
+      if (!supabase) return;
+      const { error } = await supabase
+        .from("posts")
+        .update(updates)
+        .eq("id", id);
+      if (error) {
+        console.error("Error updating announcement:", error);
+      } else {
+        logActivity(user, "update_pengumuman", `Memperbarui pengumuman ID: ${id}`);
+      }
+    }, 800);
   };
 
   const handleDelete = async (id: string) => {
     if (!supabase) return;
-    if (window.confirm("Hapus pengumuman ini?")) {
+    if (await confirm("Hapus pengumuman ini?", "Konfirmasi")) {
       const { error } = await supabase.from("posts").delete().eq("id", id);
       if (!error) {
+        logActivity(user, "delete_pengumuman", `Menghapus pengumuman ID: ${id}`);
         setNews(news.filter((n: any) => n.id !== id));
       }
     }
