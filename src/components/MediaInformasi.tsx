@@ -20,7 +20,7 @@ export default function MediaInformasi() {
       if (!supabase) return;
       setIsLoading(true);
       try {
-        const { data, error } = await supabase.from('posts').select(`*, author:author_id(nama)`).order('created_at', { ascending: false }).limit(6);
+        const { data, error } = await supabase.from('posts').select(`*, author:author_id(nama)`).order('published_at', { ascending: false }).limit(6);
         if (error) throw error;
         setNews(data || []);
       } catch (err) {
@@ -89,7 +89,7 @@ export default function MediaInformasi() {
                 )}
                 <div className="p-8 flex flex-col flex-1">
                   <div className="flex items-center gap-4 text-xs font-medium text-gray-500 mb-4">
-                    <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(item.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
+                    <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(item.published_at || item.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
                     <div className="flex items-center gap-1"><User className="w-4 h-4" /> {item.author?.nama || 'Admin'}</div>
                   </div>
                   <h4 className="font-heading font-bold text-xl text-soft-black mb-4 group-hover:text-main-blue transition-colors line-clamp-2">
@@ -143,7 +143,7 @@ export default function MediaInformasi() {
                       <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
                         <div className="flex items-center gap-4 text-xs font-bold mb-4">
                           <div className="bg-main-blue text-white px-3 py-1 rounded-full capitalize shadow-lg">{selectedItem.category}</div>
-                          <div className="flex items-center gap-1 text-white/90"><Calendar className="w-4 h-4" /> {new Date(selectedItem.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
+                          <div className="flex items-center gap-1 text-white/90"><Calendar className="w-4 h-4" /> {new Date(selectedItem.published_at || selectedItem.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
                           <div className="flex items-center gap-1 text-white/90"><User className="w-4 h-4" /> {selectedItem.author?.nama || 'Admin'}</div>
                         </div>
                         <h3 className="text-3xl md:text-5xl font-heading font-black leading-tight text-white drop-shadow-2xl max-w-4xl">
@@ -155,7 +155,7 @@ export default function MediaInformasi() {
                     <div className="p-8 md:p-12 bg-gray-50 border-b border-gray-100">
                       <div className="flex items-center gap-4 text-xs font-bold text-main-blue/60 mb-4 uppercase tracking-widest">
                         <div className="px-3 py-1 bg-main-blue/10 text-main-blue rounded-full capitalize">{selectedItem.category}</div>
-                        <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(selectedItem.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
+                        <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(selectedItem.published_at || selectedItem.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
                         <div className="flex items-center gap-1"><User className="w-4 h-4" /> {selectedItem.author?.nama || 'Admin'}</div>
                       </div>
                       <h3 className="text-3xl md:text-5xl font-heading font-black text-main-blue leading-tight">

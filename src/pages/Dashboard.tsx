@@ -299,7 +299,7 @@ export default function Dashboard({
           supabase
             .from("posts")
             .select("*")
-            .order("created_at", { ascending: false })
+            .order("published_at", { ascending: false })
             .limit(5),
           supabase
             .from("events")
@@ -319,7 +319,7 @@ export default function Dashboard({
             type: "post",
             title: p.category === "berita" ? "Berita Baru" : "Pengumuman Baru",
             message: p.title,
-            time: new Date(p.created_at).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
+            time: new Date(p.published_at || p.created_at).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
               day: "numeric",
               month: "short",
               hour: "2-digit",
@@ -327,7 +327,7 @@ export default function Dashboard({
             }),
             iconName: p.category === "berita" ? "Megaphone" : "Bell",
             link: `/dashboard/${p.category === "berita" ? "berita" : "pengumuman"}`,
-            raw_date: p.created_at,
+            raw_date: p.published_at || p.created_at,
           })),
           ...(eventsRes.data || []).map((e) => ({
             id: e.id,
@@ -3550,7 +3550,7 @@ function AdminBeritaForm({ user }: { user: any }) {
           .from("posts")
           .select("*")
           .eq("category", "berita")
-          .order("created_at", { ascending: false });
+          .order("published_at", { ascending: false });
         setNews(data || []);
       } catch (err) {
         console.error("Error fetching news:", err);
@@ -3570,6 +3570,7 @@ function AdminBeritaForm({ user }: { user: any }) {
       featured_image_url:
         "https://images.unsplash.com/photo-1546410531-bea4cada4ff8?q=80&w=2000&auto=format&fit=crop",
       category: "berita",
+      published_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
       .from("posts")
@@ -3683,6 +3684,19 @@ function AdminBeritaForm({ user }: { user: any }) {
                       }
                       maxWidth={600}
                       maxHeight={400}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                      Tanggal Berita
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                      value={item.published_at ? item.published_at.split('T')[0] : ''}
+                      onChange={(e) =>
+                        handleUpdate(item.id, { published_at: new Date(e.target.value).toISOString() })
+                      }
                     />
                   </div>
                   <div>
@@ -6675,7 +6689,7 @@ function AdminPengumumanForm({ user }: { user: any }) {
           .from("posts")
           .select("*")
           .eq("category", "pengumuman")
-          .order("created_at", { ascending: false });
+          .order("published_at", { ascending: false });
         setNews(data || []);
       } catch (err) {
         console.error("Error fetching pengumuman:", err);
@@ -6694,6 +6708,7 @@ function AdminPengumumanForm({ user }: { user: any }) {
       content: "Konten pengumuman...",
       featured_image_url: "",
       category: "pengumuman",
+      published_at: new Date().toISOString(),
     };
     const { data, error } = await supabase
       .from("posts")
@@ -6791,6 +6806,19 @@ function AdminPengumumanForm({ user }: { user: any }) {
                       value={item.title}
                       onChange={(e) =>
                         handleUpdate(item.id, { title: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                      Tanggal Pengumuman
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                      value={item.published_at ? item.published_at.split('T')[0] : ''}
+                      onChange={(e) =>
+                        handleUpdate(item.id, { published_at: new Date(e.target.value).toISOString() })
                       }
                     />
                   </div>
