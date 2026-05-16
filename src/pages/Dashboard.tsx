@@ -2779,30 +2779,48 @@ function TamuOverview({ user }: { user: any }) {
 
       {events.length > 0 && (
          <div className="bg-white/80 backdrop-blur-xl border border-white p-6 md:p-8 rounded-[2.5rem] shadow-sm mt-8">
-            <h3 className="text-lg font-bold font-heading mb-6 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-main-blue" /> Agenda Mendatang (Terbuka Untuk Tamu)
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-               {events.map((a, i) => (
-                 <div
-                   key={i}
-                   onClick={() => navigate("/dashboard/jadwal")}
-                   className="flex gap-4 items-center p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:bg-main-blue/5 transition-colors cursor-pointer"
-                 >
-                   <div className="w-2 h-8 bg-main-blue rounded-full shrink-0" />
-                   <div className="flex-1">
-                     <h4 className="font-bold text-soft-black text-sm line-clamp-1">
-                       {a.title}
-                     </h4>
-                     <p className="text-[10px] text-gray-500 font-bold uppercase">
-                       {new Date(a.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
-                         month: "long",
-                         day: "numeric",
-                       })} • {a.location}
-                     </p>
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-lg font-bold font-heading flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-main-blue" /> Timeline Agenda KKG
+              </h3>
+              <button 
+                onClick={() => navigate("/dashboard/jadwal")}
+                className="text-xs font-bold text-main-blue hover:underline flex items-center gap-1"
+              >
+                Lihat Semua <ChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+
+            <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-main-blue before:to-main-blue/10">
+               {events.map((a, i) => {
+                 const d = new Date(a.date_start);
+                 const isPast = d < new Date();
+                 return (
+                   <div key={i} className="relative group">
+                     {/* Dot */}
+                     <div className={`absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${
+                       isPast ? 'bg-gray-400' : 'bg-main-blue shadow-main-blue/30'
+                     }`} />
+                     
+                     <div className="flex flex-col gap-1">
+                       <div className="flex items-center justify-between">
+                         <span className={`text-[10px] font-black uppercase tracking-widest ${isPast ? 'text-gray-400' : 'text-main-blue'}`}>
+                           {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
+                         </span>
+                         {isPast && (
+                           <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Selesai</span>
+                         )}
+                       </div>
+                       <h4 className={`font-bold text-sm ${isPast ? 'text-gray-500' : 'text-soft-black'}`}>
+                         {a.title}
+                       </h4>
+                       <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                         <Clock className="w-3 h-3" /> {d.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB • {a.location}
+                       </p>
+                     </div>
                    </div>
-                 </div>
-               ))}
+                 );
+               })}
             </div>
          </div>
       )}
@@ -3010,37 +3028,57 @@ function GuruOverview({ user }: { user: any }) {
         </div>
 
         <div className="bg-white/80 backdrop-blur-xl border border-white p-6 md:p-8 rounded-3xl shadow-sm">
-          <h3 className="text-lg font-bold font-heading mb-6 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-leaf-green" /> Agenda Mendatang
-          </h3>
-          <div className="space-y-4">
-            {events.map((a, i) => (
-              <div
-                key={i}
-                className="flex gap-4 items-center p-4 rounded-2xl bg-gray-50 border border-gray-100"
-              >
-                <div className="w-2 h-2 rounded-full bg-leaf-green shrink-0" />
-                <div className="flex-1">
-                  <h4 className="font-bold text-soft-black text-sm">
-                    {a.title}
-                  </h4>
-                  <p className="text-xs text-gray-500">
-                    {new Date(a.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}{" "}
-                    • {a.location}
-                  </p>
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-lg font-bold font-heading flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-leaf-green" /> Timeline Kegiatan KKG
+            </h3>
+            <button 
+              onClick={() => navigate("/dashboard/jadwal")}
+              className="text-xs font-bold text-leaf-green hover:underline flex items-center gap-1"
+            >
+              Lihat Semua <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-leaf-green before:to-leaf-green/10">
+            {events.map((a, i) => {
+              const d = new Date(a.date_start);
+              const now = new Date();
+              const isPast = d < now;
+              return (
+                <div key={i} className="relative group">
+                  {/* Dot */}
+                  <div className={`absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${
+                    isPast ? 'bg-gray-400' : 'bg-leaf-green shadow-leaf-green/30'
+                  }`} />
+                  
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] font-black uppercase tracking-widest ${isPast ? 'text-gray-400' : 'text-leaf-green'}`}>
+                        {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
+                      </span>
+                      {isPast && (
+                        <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Selesai</span>
+                      )}
+                    </div>
+                    <h4 className={`font-bold text-sm ${isPast ? 'text-gray-500' : 'text-soft-black'}`}>
+                      {a.title}
+                    </h4>
+                    <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                      <Clock className="w-3 h-3" /> {d.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB • {a.location}
+                    </p>
+                  </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </div>
-            ))}
+              );
+            })}
             {events.length === 0 && (
-              <p className="text-gray-400 text-sm italic text-center py-4">
-                Belum ada agenda kegiatan.
-              </p>
+              <div className="text-center py-10 opacity-60">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-gray-200">
+                  <Calendar className="w-8 h-8 text-gray-200" />
+                </div>
+                <p className="text-gray-400 text-sm font-medium">Timeline agenda masih kosong.</p>
+                <p className="text-[10px] text-gray-300 uppercase tracking-widest mt-1">Agenda kegiatan akan ditampilkan di sini</p>
+              </div>
             )}
           </div>
         </div>
