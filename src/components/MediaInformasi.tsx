@@ -159,15 +159,35 @@ export default function MediaInformasi() {
                       <div className="flex items-center gap-1"><Calendar className="w-4 h-4" /> {new Date(selectedItem.created_at).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta" })}</div>
                       <div className="flex items-center gap-1"><User className="w-4 h-4" /> {selectedItem.author?.nama || 'Admin'}</div>
                     </div>
-                    <h3 className="text-3xl md:text-4xl font-heading font-bold text-soft-black">
+                    <h3 className="text-3xl md:text-4xl font-heading font-bold text-main-blue">
                       {selectedItem.title}
                     </h3>
                   </div>
                 )}
 
-                <div className="p-8 md:p-12">
+                <div className="p-8 md:p-12 overflow-x-hidden">
+                  <style dangerouslySetInnerHTML={{ __html: `
+                    .news-content p {
+                      text-indent: 2.5rem;
+                      text-align: justify;
+                      margin-bottom: 1.25rem;
+                      line-height: 1.8;
+                      word-break: break-word;
+                    }
+                    .news-content h1, .news-content h2, .news-content h3 {
+                      color: #1e40af; /* main-blue equivalent */
+                      margin-top: 2rem;
+                      margin-bottom: 1rem;
+                    }
+                    .news-content img {
+                      max-width: 100%;
+                      height: auto;
+                      border-radius: 1rem;
+                      margin: 2rem auto;
+                    }
+                  `}} />
                   <div 
-                    className="prose prose-blue max-w-none prose-img:rounded-2xl"
+                    className="prose prose-blue max-w-none news-content"
                     dangerouslySetInnerHTML={{ __html: selectedItem.content }}
                   />
                   {selectedItem.url && (
