@@ -6,6 +6,7 @@ import Hero from './components/Hero';
 import Stats from './components/Stats';
 import Schools from './components/Schools';
 import Prestasi from './components/Prestasi';
+import HomeAgenda from './components/HomeAgenda';
 import MediaInformasi from './components/MediaInformasi';
 import DigitalServices from './components/DigitalServices';
 import Gallery from './components/Gallery';
@@ -72,6 +73,7 @@ function HomePage({ onLoginClick, user }: { onLoginClick: () => void; user?: any
 
       <Schools />
       <Prestasi />
+      <HomeAgenda />
       <DigitalServices onLoginClick={onLoginClick} user={user} />
       <MediaInformasi />
       <Gallery />

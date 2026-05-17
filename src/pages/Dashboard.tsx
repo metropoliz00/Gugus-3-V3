@@ -3250,7 +3250,7 @@ function GuruOverview({ user }: { user: any }) {
                           <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : isStarted ? 'text-orange-500' : 'text-leaf-green'}`}>
                             {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
                           </span>
-                          {!isStarted && <CountdownTimer targetDate={a.date_start} />}
+                          {!isStarted && <CountdownTimer targetDate={a.date_start} simple />}
                         </div>
                         {isEnded && (
                           <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Selesai</span>
@@ -10307,7 +10307,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                          <span className={`text-[10px] font-black ${isEnded ? 'text-gray-500 bg-gray-100' : isStarted ? 'text-orange-600 bg-orange-100' : 'text-orange-600 bg-orange-100'} px-3 py-1 bg-white rounded-full uppercase tracking-widest`}>
                            {isEnded ? 'Selesai' : isStarted ? 'Berlangsung' : item.category || "Kegiatan"}
                          </span>
-                         {!isStarted && <CountdownTimer targetDate={item.date_start} />}
+                         {!isStarted && <CountdownTimer targetDate={item.date_start} simple />}
                        </div>
                      </div>
                   </div>
