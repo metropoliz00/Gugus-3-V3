@@ -44,10 +44,16 @@ export default function MainCalendar({ events }: MainCalendarProps) {
     const fetchHolidays = async () => {
       try {
         const year = currentMonth.getFullYear();
-        const response = await fetch(`https://dayoffapi.vercel.app/api/v1/holidays?year=${year}`);
+        const response = await fetch(`https://libur.deno.dev/api?year=${year}`);
         if (response.ok) {
           const data = await response.json();
-          setHolidays(data);
+          // Map to internal format
+          const formatted = data.map((h: any) => ({
+            holiday_date: h.date,
+            holiday_name: h.name,
+            is_national_holiday: h.is_national_holiday
+          }));
+          setHolidays(formatted);
         }
       } catch (error) {
         console.error('Error fetching holidays:', error);
