@@ -1133,7 +1133,12 @@ export default function Dashboard({
                                 label: "Konten",
                                 type: "textarea",
                               },
-                              { name: "user_id", label: "User ID" },
+                              { 
+                                name: "guru", 
+                                label: "Penulis", 
+                                readOnly: true, 
+                                render: (item: any) => item.guru || "-" 
+                              },
                             ]}
                           />
                         }
@@ -1155,7 +1160,7 @@ export default function Dashboard({
                                 name: "guru", 
                                 label: "Guru", 
                                 readOnly: true,
-                                render: (item: any) => item.profiles?.nama || (item.user_id === user.id ? user.nama : "-") 
+                                render: (item: any) => item.guru || "-" 
                               },
                               { name: "title", label: "Judul Karya" },
                               { name: "description", label: "Deskripsi" },
@@ -7060,8 +7065,11 @@ function AdminPengumumanForm({ user }: { user: any }) {
 }
 
 function AdminGuruForm({ user }: { user: any }) {
+  const { alert } = useAlert();
   const [gurus, setGurus] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<any>({});
 
   React.useEffect(() => {
     async function loadGurus() {
@@ -7148,9 +7156,19 @@ function AdminGuruForm({ user }: { user: any }) {
       setGurus((prev) =>
         prev.map((g) => (g.id === id ? { ...g, ...updates } : g)),
       );
-    } catch (err) {
+      if (editingId === id) {
+        setEditingId(null);
+      }
+      await alert("Data guru berhasil diperbarui!");
+    } catch (err: any) {
       console.error("Error updating guru:", err);
+      await alert("Gagal memperbarui guru: " + err.message, "Error", "error");
     }
+  };
+
+  const startEdit = (g: any) => {
+    setEditingId(g.id);
+    setEditForm({ ...g });
   };
 
   return (
@@ -7169,27 +7187,27 @@ function AdminGuruForm({ user }: { user: any }) {
             Kelola Guru
           </h2>
           <p className="text-sm text-gray-500">
-            Daftar profil guru yang terdaftar dalam sistem GUGUS 3.
+            Daftar profil guru yang terdaftar dalam sistem GUGUS 3. Klik baris untuk mengedit data.
           </p>
         </div>
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <table className="w-full text-left text-sm">
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden overflow-x-auto shadow-xl">
+        <table className="w-full text-left text-sm border-collapse min-w-[1000px]">
           <thead className="bg-gray-50 text-gray-500 border-b border-gray-100">
             <tr>
               <th className="p-4 font-bold text-[10px] uppercase tracking-wider w-16">
                 Foto
               </th>
               <th className="p-4 font-bold text-[10px] uppercase tracking-wider">
-                Nama
+                Nama Lengkap
               </th>
-              <th className="p-4 font-bold text-[10px] uppercase tracking-wider">
+              <th className="p-4 font-bold text-[10px] uppercase tracking-wider w-32">
                 NIP
               </th>
-              <th className="p-4 font-bold text-[10px] uppercase tracking-wider">
+              <th className="p-4 font-bold text-[10px] uppercase tracking-wider w-32">
                 Pangkat/Gol
               </th>
-              <th className="p-4 font-bold text-[10px] uppercase tracking-wider">
+              <th className="p-4 font-bold text-[10px] uppercase tracking-wider w-32">
                 Kepegawaian
               </th>
               <th className="p-4 font-bold text-[10px] uppercase tracking-wider">
@@ -7198,62 +7216,156 @@ function AdminGuruForm({ user }: { user: any }) {
               <th className="p-4 font-bold text-[10px] uppercase tracking-wider">
                 Sekolah
               </th>
+              <th className="p-4 font-bold text-[10px] uppercase tracking-wider w-20">
+                Aksi
+              </th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="p-4 text-center text-gray-400">
+                <td colSpan={8} className="p-4 text-center text-gray-400">
                   Loading...
                 </td>
               </tr>
             ) : gurus.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-4 text-center text-gray-400">
+                <td colSpan={8} className="p-4 text-center text-gray-400">
                   Belum ada data guru
                 </td>
               </tr>
             ) : (
-              gurus.map((g, i) => (
-                <tr
-                  key={i}
-                  className="border-b border-gray-50 hover:bg-gray-50/50"
-                >
-                  <td className="p-4 font-medium align-middle">
-                    <ImageUpload
-                      label=""
-                      compact={true}
-                      value={
-                        g.foto ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(g.nama || g.username || "G")}&background=random`
-                      }
-                      onChange={(base64) =>
-                        handleUpdateGuru(g.id, { foto: base64 })
-                      }
-                      maxWidth={200}
-                      maxHeight={200}
-                    />
-                  </td>
-                  <td className="p-4 font-medium align-middle">
-                    {g.nama || g.username || "-"}
-                  </td>
-                  <td className="p-4 text-gray-500 align-middle">
-                    {g.nip || "-"}
-                  </td>
-                  <td className="p-4 text-gray-500 align-middle">
-                    {g.pangkat || "-"}
-                  </td>
-                  <td className="p-4 text-gray-500 align-middle">
-                    {g.kepegawaian || "-"}
-                  </td>
-                  <td className="p-4 text-gray-500 align-middle">
-                    {g.jabatan || "-"}
-                  </td>
-                  <td className="p-4 text-gray-500 align-middle">
-                    {g.sekolah || "-"}
-                  </td>
-                </tr>
-              ))
+              gurus.map((g, i) => {
+                const isEditing = editingId === g.id;
+                return (
+                  <tr
+                    key={g.id}
+                    className={`border-b border-gray-50 transition-colors ${isEditing ? 'bg-blue-50/50' : 'hover:bg-gray-50/50'}`}
+                  >
+                    <td className="p-4 font-medium align-middle">
+                      <ImageUpload
+                        label=""
+                        compact={true}
+                        value={
+                          (isEditing ? editForm.foto : g.foto) ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(g.nama || g.username || "G")}&background=random`
+                        }
+                        onChange={(base64) => {
+                          if (isEditing) {
+                            setEditForm({ ...editForm, foto: base64 });
+                          } else {
+                            handleUpdateGuru(g.id, { foto: base64 });
+                          }
+                        }}
+                        maxWidth={200}
+                        maxHeight={200}
+                      />
+                    </td>
+                    <td className="p-4 font-medium align-middle">
+                      {isEditing ? (
+                        <input
+                          className="w-full border border-gray-200 rounded p-1 text-sm outline-none focus:border-main-blue"
+                          value={editForm.nama}
+                          onChange={(e) => setEditForm({ ...editForm, nama: e.target.value })}
+                        />
+                      ) : (
+                        g.nama || g.username || "-"
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-500 align-middle">
+                      {isEditing ? (
+                        <input
+                          className="w-full border border-gray-200 rounded p-1 text-sm outline-none focus:border-main-blue"
+                          value={editForm.nip}
+                          onChange={(e) => setEditForm({ ...editForm, nip: e.target.value })}
+                        />
+                      ) : (
+                        g.nip || "-"
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-500 align-middle">
+                      {isEditing ? (
+                        <input
+                          className="w-full border border-gray-200 rounded p-1 text-sm outline-none focus:border-main-blue"
+                          value={editForm.pangkat}
+                          onChange={(e) => setEditForm({ ...editForm, pangkat: e.target.value })}
+                        />
+                      ) : (
+                        g.pangkat || "-"
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-500 align-middle">
+                      {isEditing ? (
+                        <select
+                          className="w-full border border-gray-200 rounded p-1 text-sm outline-none focus:border-main-blue bg-white"
+                          value={editForm.kepegawaian}
+                          onChange={(e) => setEditForm({ ...editForm, kepegawaian: e.target.value })}
+                        >
+                          <option value="">Pilih</option>
+                          <option value="PNS">PNS</option>
+                          <option value="PPPK">PPPK</option>
+                          <option value="GTT">GTT</option>
+                          <option value="Honorer">Honorer</option>
+                        </select>
+                      ) : (
+                        g.kepegawaian || "-"
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-500 align-middle">
+                      {isEditing ? (
+                        <input
+                          className="w-full border border-gray-200 rounded p-1 text-sm outline-none focus:border-main-blue"
+                          value={editForm.jabatan}
+                          onChange={(e) => setEditForm({ ...editForm, jabatan: e.target.value })}
+                        />
+                      ) : (
+                        g.jabatan || "-"
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-500 align-middle">
+                      {isEditing ? (
+                        <input
+                          className="w-full border border-gray-200 rounded p-1 text-sm outline-none focus:border-main-blue"
+                          value={editForm.sekolah}
+                          onChange={(e) => setEditForm({ ...editForm, sekolah: e.target.value })}
+                        />
+                      ) : (
+                        g.sekolah || "-"
+                      )}
+                    </td>
+                    <td className="p-4 text-center align-middle">
+                      <div className="flex items-center justify-center gap-2">
+                        {isEditing ? (
+                          <>
+                            <button
+                              onClick={() => handleUpdateGuru(g.id, editForm)}
+                              className="p-1.5 text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                              title="Simpan"
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              title="Batal"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => startEdit(g)}
+                            className="p-1.5 text-main-blue hover:bg-main-blue/5 rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <PenTool className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -8416,8 +8528,21 @@ function AdminKKGFormWrapper() {
 }
 
 function AdminGugusFormWrapper() {
-  const { content, updateContent, gugusForm, setGugusForm, handleSaveContent } =
-    useSiteContent() as any;
+  const { content, updateContent } = useSiteContent() as any;
+  const gugusForm = content.gugus || { struktur: [], programs: [] };
+
+  const setGugusForm = (updater: any) => {
+    const currentState = gugusForm;
+    const newState =
+      typeof updater === "function" ? updater(currentState) : updater;
+    updateContent({ gugus: newState });
+  };
+
+  const handleSaveContent = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateContent({ gugus: gugusForm });
+  };
+
   return (
     <AdminGugusForm
       gugusForm={gugusForm}
@@ -8662,10 +8787,16 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: res, error } = await supabase
+      let query = supabase
         .from(table)
         .select(selectQuery)
         .order("created_at", { ascending: false });
+        
+      if (user.role === "guru" && (table === "teacher_works" || table === "forum_posts" || table === "forum_comments")) {
+        query = query.eq("user_id", user.id);
+      }
+
+      const { data: res, error } = await query;
       if (error) throw error;
       
       let fetchedData = res || [];
@@ -8673,12 +8804,16 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
       // Attempt manual profile resolution for user_id fields
       const userIds = [...new Set(fetchedData.map((d: any) => d.user_id).filter(Boolean))];
       if (userIds.length > 0) {
-        const { data: pData } = await supabase.from("user_profiles").select("id, nama").in("id", userIds);
+        const { data: pData } = await supabase.from("user_profiles").select("id, nama, username").in("id", userIds);
         if (pData) {
-          fetchedData = fetchedData.map((d: any) => ({
-            ...d,
-            profiles: pData.find(p => p.id === d.user_id) || null
-          }));
+          fetchedData = fetchedData.map((d: any) => {
+            const profile = pData.find(p => p.id === d.user_id);
+            return {
+              ...d,
+              profiles: profile || null,
+              guru: profile?.nama || profile?.username || "-" // Add easy access guru name
+            };
+          });
         }
       }
       
