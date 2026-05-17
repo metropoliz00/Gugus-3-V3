@@ -8697,16 +8697,21 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Clean formData to remove virtual/relation fields that don't exist in DB
+      const payload = { ...formData };
+      delete payload.profiles;
+      delete payload.guru;
+
       if (editId) {
         const { error } = await supabase
           .from(table)
-          .update(formData)
+          .update(payload)
           .eq("id", editId);
         if (error) throw error;
         logActivity(user, `update_${table}`, `Memperbarui data di ${title}`);
         await alert("Data Berhasil Diperbarui");
       } else {
-        const insertData = { ...formData };
+        const insertData = { ...payload };
         console.log("Saving insertData:", insertData);
         if (user?.id && !insertData.user_id) {
           insertData.user_id = user.id;
