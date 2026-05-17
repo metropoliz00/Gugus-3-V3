@@ -90,13 +90,14 @@ import AdminCertificateEditor, {
   useCertificateGenerator,
 } from "../components/AdminCertificateEditor";
 import { SharingPractices } from "../components/SharingPractices";
+import MainCalendar from "../components/MainCalendar";
 
 import * as XLSX from "xlsx";
 import Webcam from "react-webcam";
 const WebcamComponent = Webcam as any;
 
 // Countdown Timer Component
-const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
+const CountdownTimer = ({ targetDate, simple = false }: { targetDate: string, simple?: boolean }) => {
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
     hours: number;
@@ -131,34 +132,34 @@ const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
 
   if (timeLeft.isPast) return null;
 
+  if (simple) {
+    return (
+      <span className="text-[10px] font-black text-orange-600 bg-orange-50 px-2 py-0.5 rounded-lg border border-orange-100 ml-2 animate-pulse">
+        {timeLeft.days}h {timeLeft.hours}j {timeLeft.minutes}m {timeLeft.seconds}d
+      </span>
+    );
+  }
+
   return (
-    <div className="flex items-center gap-1.5 mt-2">
+    <div className="flex items-center gap-1 mt-1">
       <div className="flex flex-col items-center">
-        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
-          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{timeLeft.days}</span>
-        </div>
-        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Hari</span>
+        <span className="text-[10px] font-black text-orange-600">{timeLeft.days}</span>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter">Hari</span>
       </div>
-      <div className="text-main-blue/30 font-black text-xs mb-3">:</div>
+      <span className="text-orange-300 font-bold text-[8px] mb-2">:</span>
       <div className="flex flex-col items-center">
-        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
-          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
-        </div>
-        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Jam</span>
+        <span className="text-[10px] font-black text-orange-600">{String(timeLeft.hours).padStart(2, '0')}</span>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter">Jam</span>
       </div>
-      <div className="text-main-blue/30 font-black text-xs mb-3">:</div>
+      <span className="text-orange-300 font-bold text-[8px] mb-2">:</span>
       <div className="flex flex-col items-center">
-        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
-          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
-        </div>
-        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Menit</span>
+        <span className="text-[10px] font-black text-orange-600">{String(timeLeft.minutes).padStart(2, '0')}</span>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter">Menit</span>
       </div>
-      <div className="text-main-blue/30 font-black text-xs mb-3">:</div>
+      <span className="text-orange-300 font-bold text-[8px] mb-2">:</span>
       <div className="flex flex-col items-center">
-        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
-          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
-        </div>
-        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Detik</span>
+        <span className="text-[10px] font-black text-orange-600">{String(timeLeft.seconds).padStart(2, '0')}</span>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter">Detik</span>
       </div>
     </div>
   );
@@ -2381,6 +2382,9 @@ function AdminOverview({ user }: { user: any }) {
   const [chartData, setChartData] = useState<any[]>(dataChart);
   const [isStatsLoading, setIsStatsLoading] = useState(true);
 
+  const [events, setEvents] = useState<any[]>([]);
+  const [viewType, setViewType] = useState<'timeline' | 'calendar'>('timeline');
+
   useEffect(() => {
     const fetchStatsAndLogs = async () => {
       setIsStatsLoading(true);
@@ -2403,8 +2407,8 @@ function AdminOverview({ user }: { user: any }) {
               .throwOnError(),
             supabase
               .from("events")
-              .select("*", { count: "exact", head: true })
-              .throwOnError(),
+              .select("*")
+              .order("date_start", { ascending: true }),
             supabase
               .from("user_profiles")
               .select("*", { count: "exact", head: true })
@@ -2426,11 +2430,13 @@ function AdminOverview({ user }: { user: any }) {
         const beritaCount = newsRes.count || 0;
         const pengumumanCount = notifRes.count || 0;
         const docCount = docRes.count || 0;
-        const eventCount = eventRes.count || 0;
+        const eventCount = eventRes.data?.length || 0;
         const userCount = userRes.count || 0;
         const schoolsData = schoolRes.data || [];
         const logsData = logsRes.data || [];
         const sharingCount = sharingRes.count || 0;
+
+        setEvents(eventRes.data || []);
 
         const totalStudents = schoolsData.reduce(
           (acc: number, curr: any) => acc + (Number(curr.student_count) || 0),
@@ -2776,12 +2782,83 @@ function AdminOverview({ user }: { user: any }) {
           </div>
         </div>
       </div>
+
+      {/* Agenda & Kalender Card */}
+      <div className="bg-white/80 backdrop-blur-xl border border-white p-6 md:p-8 rounded-[2.5rem] shadow-sm">
+           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+             <div className="flex items-center gap-3">
+               <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500 shadow-sm border border-orange-200">
+                 <Calendar className="w-5 h-5" />
+               </div>
+               <div>
+                 <h3 className="text-lg font-bold font-heading text-soft-black leading-none">Jadwal & Kalender KKG</h3>
+                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Monitoring Kegiatan Gugus 3</p>
+               </div>
+             </div>
+             
+             <div className="flex items-center bg-gray-100 p-1 rounded-xl">
+               <button 
+                 onClick={() => setViewType('timeline')}
+                 className={`px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${viewType === 'timeline' ? 'bg-white text-orange-500 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+               >
+                 Timeline
+               </button>
+               <button 
+                 onClick={() => setViewType('calendar')}
+                 className={`px-4 py-1.5 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${viewType === 'calendar' ? 'bg-white text-orange-500 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+               >
+                 Kalender
+               </button>
+             </div>
+           </div>
+
+           {viewType === 'timeline' ? (
+             <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-orange-500 before:to-orange-500/10">
+                {events.slice(0, 5).map((a, i) => {
+                  const d = new Date(a.date_start);
+                  const isStarted = d < new Date();
+                  const isEnded = new Date(a.date_end || a.date_start) < new Date();
+                  return (
+                    <div key={i} className="relative group">
+                      <div className={`absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${
+                        isEnded ? 'bg-gray-400' : isStarted ? 'bg-orange-500 animate-pulse' : 'bg-orange-500 shadow-orange-500/30'
+                      }`} />
+                      
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : isStarted ? 'text-orange-500' : 'text-orange-600'}`}>
+                              {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
+                              {!isStarted && <CountdownTimer targetDate={a.date_start} simple />}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-black text-gray-400 bg-gray-50 px-3 py-1 rounded-full uppercase tracking-tighter">{a.category || "Agenda"}</span>
+                        </div>
+                        <h4 className={`font-bold text-sm ${isEnded ? 'text-gray-500' : 'text-soft-black'}`}>
+                          {a.title}
+                        </h4>
+                        <p className="text-xs text-gray-400 font-medium flex items-center gap-2">
+                          <MapPin className="w-3 h-3" /> {a.location}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+                {events.length === 0 && (
+                  <p className="text-center text-gray-400 text-sm py-10 italic">Belum ada agenda terdaftar.</p>
+                )}
+             </div>
+           ) : (
+             <MainCalendar events={events} />
+           )}
+      </div>
     </div>
   );
 }
 
 function TamuOverview({ user }: { user: any }) {
   const [events, setEvents] = useState<any[]>([]);
+  const [viewType, setViewType] = useState<'timeline' | 'calendar'>('timeline');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -2791,9 +2868,7 @@ function TamuOverview({ user }: { user: any }) {
         const { data: evData } = await supabase
           .from("events")
           .select("*")
-          .eq('is_open_for_guests', true)
-          .order("date_start", { ascending: true })
-          .limit(3);
+          .order("date_start", { ascending: true });
         if (evData) setEvents(evData);
       } catch (e) {
         console.error(e);
@@ -2862,58 +2937,71 @@ function TamuOverview({ user }: { user: any }) {
       </div>
 
       {events.length > 0 && (
-         <div className="bg-white/80 backdrop-blur-xl border border-white p-6 md:p-8 rounded-[2.5rem] shadow-sm mt-8">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-lg font-bold font-heading flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-main-blue" /> Timeline Agenda KKG
-              </h3>
-              <button 
-                onClick={() => navigate("/dashboard/jadwal")}
-                className="text-xs font-bold text-main-blue hover:underline flex items-center gap-1"
-              >
-                Lihat Semua <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
+          <div className="bg-white/80 backdrop-blur-xl border border-white p-6 md:p-8 rounded-[2.5rem] shadow-sm mt-8">
+             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+               <h3 className="text-lg font-bold font-heading flex items-center gap-2 leading-none">
+                 <Calendar className="w-5 h-5 text-main-blue" /> Agenda KKG Gugus 3
+               </h3>
+               
+               <div className="flex items-center bg-gray-100 p-1 rounded-xl">
+                 <button 
+                   onClick={() => setViewType('timeline')}
+                   className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewType === 'timeline' ? 'bg-white text-main-blue shadow-sm' : 'text-gray-400'}`}
+                 >
+                   Timeline
+                 </button>
+                 <button 
+                   onClick={() => setViewType('calendar')}
+                   className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewType === 'calendar' ? 'bg-white text-main-blue shadow-sm' : 'text-gray-400'}`}
+                 >
+                   Kalender
+                 </button>
+               </div>
+             </div>
 
-            <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-main-blue before:to-main-blue/10">
-               {events.map((a, i) => {
-                 const d = new Date(a.date_start);
-                 const isStarted = d < new Date();
-                 const isEnded = new Date(a.date_end || a.date_start) < new Date();
-                 return (
-                   <div key={i} className="relative group">
-                     {/* Dot */}
-                     <div className={`absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${
-                       isEnded ? 'bg-gray-400' : isStarted ? 'bg-orange-500' : 'bg-main-blue shadow-main-blue/30'
-                     }`} />
-                     
-                     <div className="flex flex-col gap-1">
-                       <div className="flex items-center justify-between">
-                         <div className="flex flex-col">
-                           <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : isStarted ? 'text-orange-500' : 'text-main-blue'}`}>
-                             {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
-                           </span>
-                           {!isStarted && <CountdownTimer targetDate={a.date_start} />}
-                         </div>
-                         {isEnded && (
-                           <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Selesai</span>
-                         )}
-                         {isStarted && !isEnded && (
-                           <span className="text-[9px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full animate-pulse">Berlangsung</span>
-                         )}
-                       </div>
-                       <h4 className={`font-bold text-sm ${isEnded ? 'text-gray-500' : 'text-soft-black'}`}>
-                         {a.title}
-                       </h4>
-                       <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
-                         <Clock className="w-3 h-3" /> {d.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB • {a.location}
-                       </p>
-                     </div>
-                   </div>
-                 );
-               })}
-            </div>
-         </div>
+             {viewType === 'timeline' ? (
+               <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-main-blue before:to-main-blue/10">
+                  {events.map((a, i) => {
+                    const d = new Date(a.date_start);
+                    const isStarted = d < new Date();
+                    const isEnded = new Date(a.date_end || a.date_start) < new Date();
+                    return (
+                      <div key={i} className="relative group">
+                        {/* Dot */}
+                        <div className={`absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${
+                          isEnded ? 'bg-gray-400' : isStarted ? 'bg-orange-500' : 'bg-main-blue shadow-main-blue/30'
+                        }`} />
+                        
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : isStarted ? 'text-orange-500' : 'text-main-blue'}`}>
+                                {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
+                                {!isStarted && <CountdownTimer targetDate={a.date_start} simple />}
+                              </span>
+                            </div>
+                            {isEnded && (
+                              <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Selesai</span>
+                            )}
+                            {isStarted && !isEnded && (
+                              <span className="text-[9px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full animate-pulse">Berlangsung</span>
+                            )}
+                          </div>
+                          <h4 className={`font-bold text-sm ${isEnded ? 'text-gray-500' : 'text-soft-black'}`}>
+                            {a.title}
+                          </h4>
+                          <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> {d.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB • {a.location}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+               </div>
+             ) : (
+               <MainCalendar events={events} />
+             )}
+          </div>
       )}
     </div>
   );
@@ -2926,6 +3014,7 @@ function GuruOverview({ user }: { user: any }) {
     pelatihan: 0,
     karya: 0,
   });
+  const [viewType, setViewType] = useState<'timeline' | 'calendar'>('timeline');
 
   useEffect(() => {
     async function loadData() {
@@ -3119,66 +3208,79 @@ function GuruOverview({ user }: { user: any }) {
         </div>
 
         <div className="bg-white/80 backdrop-blur-xl border border-white p-6 md:p-8 rounded-3xl shadow-sm">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-bold font-heading flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
+            <h3 className="text-lg font-bold font-heading flex items-center gap-2 leading-none">
               <Calendar className="w-5 h-5 text-leaf-green" /> Timeline Kegiatan KKG
             </h3>
-            <button 
-              onClick={() => navigate("/dashboard/jadwal")}
-              className="text-xs font-bold text-leaf-green hover:underline flex items-center gap-1"
-            >
-              Lihat Semua <ChevronRight className="w-3 h-3" />
-            </button>
+            
+            <div className="flex items-center bg-gray-100 p-1 rounded-xl">
+              <button 
+                onClick={() => setViewType('timeline')}
+                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewType === 'timeline' ? 'bg-white text-leaf-green shadow-sm' : 'text-gray-400'}`}
+              >
+                Timeline
+              </button>
+              <button 
+                onClick={() => setViewType('calendar')}
+                className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${viewType === 'calendar' ? 'bg-white text-leaf-green shadow-sm' : 'text-gray-400'}`}
+              >
+                Kalender
+              </button>
+            </div>
           </div>
 
-          <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-leaf-green before:to-leaf-green/10">
-            {events.map((a, i) => {
-              const d = new Date(a.date_start);
-              const now = new Date();
-              const isStarted = d < now;
-              const isEnded = new Date(a.date_end || a.date_start) < now;
-              return (
-                <div key={i} className="relative group">
-                  {/* Dot */}
-                  <div className={`absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${
-                    isEnded ? 'bg-gray-400' : isStarted ? 'bg-orange-500' : 'bg-leaf-green shadow-leaf-green/30'
-                  }`} />
-                  
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : isStarted ? 'text-orange-500' : 'text-leaf-green'}`}>
-                          {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
-                        </span>
-                        {!isStarted && <CountdownTimer targetDate={a.date_start} />}
+          {viewType === 'timeline' ? (
+            <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-leaf-green before:to-leaf-green/10">
+              {events.map((a, i) => {
+                const d = new Date(a.date_start);
+                const now = new Date();
+                const isStarted = d < now;
+                const isEnded = new Date(a.date_end || a.date_start) < now;
+                return (
+                  <div key={i} className="relative group">
+                    {/* Dot */}
+                    <div className={`absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${
+                      isEnded ? 'bg-gray-400' : isStarted ? 'bg-orange-500' : 'bg-leaf-green shadow-leaf-green/30'
+                    }`} />
+                    
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : isStarted ? 'text-orange-500' : 'text-leaf-green'}`}>
+                            {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
+                          </span>
+                          {!isStarted && <CountdownTimer targetDate={a.date_start} />}
+                        </div>
+                        {isEnded && (
+                          <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Selesai</span>
+                        )}
+                        {isStarted && !isEnded && (
+                          <span className="text-[9px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full animate-pulse">Berlangsung</span>
+                        )}
                       </div>
-                      {isEnded && (
-                        <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Selesai</span>
-                      )}
-                      {isStarted && !isEnded && (
-                        <span className="text-[9px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full animate-pulse">Berlangsung</span>
-                      )}
+                      <h4 className={`font-bold text-sm ${isEnded ? 'text-gray-500' : 'text-soft-black'}`}>
+                        {a.title}
+                      </h4>
+                      <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {d.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB • {a.location}
+                      </p>
                     </div>
-                    <h4 className={`font-bold text-sm ${isEnded ? 'text-gray-500' : 'text-soft-black'}`}>
-                      {a.title}
-                    </h4>
-                    <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {d.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB • {a.location}
-                    </p>
                   </div>
+                );
+              })}
+              {events.length === 0 && (
+                <div className="text-center py-10 opacity-60">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-gray-200">
+                    <Calendar className="w-8 h-8 text-gray-200" />
+                  </div>
+                  <p className="text-gray-400 text-sm font-medium">Timeline agenda masih kosong.</p>
+                  <p className="text-[10px] text-gray-300 uppercase tracking-widest mt-1">Agenda kegiatan akan ditampilkan di sini</p>
                 </div>
-              );
-            })}
-            {events.length === 0 && (
-              <div className="text-center py-10 opacity-60">
-                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-dashed border-gray-200">
-                  <Calendar className="w-8 h-8 text-gray-200" />
-                </div>
-                <p className="text-gray-400 text-sm font-medium">Timeline agenda masih kosong.</p>
-                <p className="text-[10px] text-gray-300 uppercase tracking-widest mt-1">Agenda kegiatan akan ditampilkan di sini</p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : (
+            <MainCalendar events={events} />
+          )}
         </div>
       </div>
     </div>
@@ -3770,9 +3872,17 @@ function AdminBeritaForm({ user }: { user: any }) {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Tanggal Berita
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[10px] uppercase font-bold text-gray-400">
+                        Tanggal Berita
+                      </label>
+                      <button 
+                        onClick={() => handleUpdate(item.id, { published_at: new Date().toISOString() })}
+                        className="text-[9px] font-black text-main-blue hover:underline uppercase tracking-tighter"
+                      >
+                        Set Hari Ini
+                      </button>
+                    </div>
                     <input
                       type="date"
                       className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
@@ -10189,14 +10299,14 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                        <h3 className="font-black text-soft-black text-2xl group-hover:text-orange-600 transition-colors line-clamp-2 leading-tight pr-4">
                          {item.title}
                        </h3>
-                       <span className={`text-[10px] whitespace-nowrap font-black ${isPast ? 'text-gray-500 bg-gray-100' : 'text-orange-600 bg-orange-100'} px-4 py-2 rounded-full uppercase tracking-widest`}>
+                       <span className={`text-[10px] whitespace-nowrap font-black ${isEnded ? 'text-gray-500 bg-gray-100' : 'text-orange-600 bg-orange-100'} px-4 py-2 rounded-full uppercase tracking-widest`}>
                           {item.category || "Kegiatan"}
                        </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                        <div className="flex items-center gap-4 group/item">
-                          <div className={`w-10 h-10 rounded-xl ${isPast ? 'bg-gray-100 text-gray-500' : 'bg-orange-50 text-orange-500'} flex items-center justify-center transition-colors shrink-0`}>
+                          <div className={`w-10 h-10 rounded-xl ${isEnded ? 'bg-gray-100 text-gray-500' : 'bg-orange-50 text-orange-500'} flex items-center justify-center transition-colors shrink-0`}>
                             <MapPin className="w-5 h-5" />
                           </div>
                           <div>
@@ -10206,7 +10316,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                        </div>
 
                        <div className="flex items-center gap-4 group/item">
-                          <div className={`w-10 h-10 rounded-xl ${isPast ? 'bg-gray-100 text-gray-500' : 'bg-orange-50 text-orange-500'} flex items-center justify-center transition-colors shrink-0`}>
+                          <div className={`w-10 h-10 rounded-xl ${isEnded ? 'bg-gray-100 text-gray-500' : 'bg-orange-50 text-orange-500'} flex items-center justify-center transition-colors shrink-0`}>
                             <Clock className="w-5 h-5" />
                           </div>
                           <div>
