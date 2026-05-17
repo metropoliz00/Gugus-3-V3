@@ -8930,15 +8930,18 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                               })()
                             : f.type === "checkbox"
                               ? (item[f.name] ? "Ya" : "Tidak")
-                            : f.type === "file"
-                              ? (item[f.name] ? "Terisi" : "-")
-                            : f.type === "url" 
-                              ? (item[f.name] ? <a href={item[f.name]} target="_blank" rel="noopener noreferrer" className="text-main-blue hover:underline whitespace-nowrap overflow-hidden text-ellipsis block w-full">{item[f.name]}</a> : "-")
+                            : f.type === "file" || f.type === "url"
+                              ? (item[f.name] ? <span className="text-[10px] bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold uppercase tracking-widest whitespace-nowrap">Terupload</span> : "-")
                               : item[f.name] || "-"}
                       </td>
                     ))}
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
+                        {fields.map((f: any) => (f.type === "file" || f.type === 'url') && item[f.name] ? (
+                           <a key={"dl-"+f.name} href={item[f.name]} target="_blank" rel="noopener noreferrer" className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Unduh">
+                             <Download className="w-4 h-4" />
+                           </a>
+                        ) : null)}
                         <button
                           onClick={() => {
                             setFormData(item);
