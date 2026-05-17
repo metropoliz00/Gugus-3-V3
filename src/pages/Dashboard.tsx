@@ -1150,7 +1150,14 @@ export default function Dashboard({
                             table="teacher_works"
                             title="Hasil Karya Guru"
                             icon={UploadCloud}
+                            selectQuery="*, profiles:user_profiles(nama)"
                             fields={[
+                              { 
+                                name: "guru", 
+                                label: "Guru", 
+                                readOnly: true,
+                                render: (item: any) => item.profiles?.nama || (item.user_id === user.id ? user.nama : "-") 
+                              },
                               { name: "title", label: "Judul Karya" },
                               { name: "description", label: "Deskripsi" },
                               { name: "work_type", label: "Jenis Karya" },
@@ -1281,7 +1288,14 @@ export default function Dashboard({
                             table="teacher_works"
                             title="Upload Hasil Karya"
                             icon={UploadCloud}
+                            selectQuery="*, profiles:user_profiles(nama)"
                             fields={[
+                              { 
+                                name: "guru", 
+                                label: "Guru", 
+                                readOnly: true,
+                                render: (item: any) => item.profiles?.nama || (item.user_id === user.id ? user.nama : "-") 
+                              },
                               { name: "title", label: "Judul Karya" },
                               { name: "description", label: "Deskripsi" },
                               { name: "work_type", label: "Jenis Karya" },
@@ -8639,7 +8653,7 @@ function UserProfileEdit({
   );
 }
 
-function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
+function DataManagementTable({ user, table, title, icon: Icon, fields, selectQuery = "*" }: any) {
   const [data, setData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -8652,7 +8666,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
     try {
       const { data: res, error } = await supabase
         .from(table)
-        .select("*")
+        .select(selectQuery)
         .order("created_at", { ascending: false });
       if (error) throw error;
       setData(res || []);
@@ -8761,7 +8775,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
               onSubmit={handleSubmit}
               className="grid grid-cols-1 md:grid-cols-2 gap-6"
             >
-              {fields.map((f: any) => (
+              {fields.filter((f: any) => !f.readOnly).map((f: any) => (
                 <div
                   key={f.name}
                   className={
@@ -8898,7 +8912,9 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                         key={f.name}
                         className="px-6 py-4 text-sm font-medium text-gray-700 max-w-[200px] truncate"
                       >
-                        {f.type === "date"
+                        {f.render
+                          ? f.render(item)
+                          : f.type === "date"
                           ? new Date(item[f.name]).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })
                           : f.type === "datetime-local"
                             ? new Date(item[f.name]).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) + " WIB"
