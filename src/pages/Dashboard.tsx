@@ -8942,10 +8942,10 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                             let downloadUrl = item[f.name];
                             const match = downloadUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
                             if (match && match[1]) {
-                              downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
+                              downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}&confirm=t`;
                             }
                             return (
-                              <a key={"dl-"+f.name} href={downloadUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Unduh">
+                              <a key={"dl-"+f.name} href={downloadUrl} target="_self" download rel="noopener noreferrer" className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Unduh">
                                 <Download className="w-4 h-4" />
                               </a>
                             );

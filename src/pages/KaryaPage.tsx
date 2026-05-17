@@ -72,10 +72,10 @@ export default function KaryaPage() {
                           let downloadUrl = work.file_url;
                           const match = downloadUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
                           if (match && match[1]) {
-                            downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
+                            downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}&confirm=t`;
                           }
                           return (
-                            <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="inline-flex flex-shrink-0 items-center justify-center w-8 h-8 bg-green-50 text-green-600 hover:bg-green-100 rounded-xl transition-colors" title="Unduh">
+                            <a href={downloadUrl} target="_self" download rel="noopener noreferrer" className="inline-flex flex-shrink-0 items-center justify-center w-8 h-8 bg-green-50 text-green-600 hover:bg-green-100 rounded-xl transition-colors" title="Unduh">
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                             </a>
                           );
