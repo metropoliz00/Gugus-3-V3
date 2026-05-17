@@ -4,6 +4,75 @@ import { Calendar, MapPin, Clock, ChevronRight, Activity } from 'lucide-react';
 import { useSiteContent } from '../contexts/SiteContext';
 import { supabase } from '../lib/supabase';
 
+// Countdown Timer Component
+const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    isPast: boolean;
+  }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = +new Date(targetDate) - +new Date();
+      if (difference <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
+      }
+
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+        isPast: false,
+      };
+    };
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    setTimeLeft(calculateTimeLeft());
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  if (timeLeft.isPast) return null;
+
+  return (
+    <div className="flex items-center gap-1.5 mt-2">
+      <div className="flex flex-col items-center">
+        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
+          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{timeLeft.days}</span>
+        </div>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Hari</span>
+      </div>
+      <div className="text-main-blue/30 font-black text-xs mb-3">:</div>
+      <div className="flex flex-col items-center">
+        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
+          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+        </div>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Jam</span>
+      </div>
+      <div className="text-main-blue/30 font-black text-xs mb-3">:</div>
+      <div className="flex flex-col items-center">
+        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
+          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+        </div>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Menit</span>
+      </div>
+      <div className="text-main-blue/30 font-black text-xs mb-3">:</div>
+      <div className="flex flex-col items-center">
+        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
+          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
+        </div>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Detik</span>
+      </div>
+    </div>
+  );
+};
+
 export default function KkgAgendaPage() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,7 +126,8 @@ export default function KkgAgendaPage() {
             {events.map((a, i) => {
               const d = new Date(a.date_start);
               const now = new Date();
-              const isPast = d < now;
+              const isStarted = d < now;
+              const isEnded = new Date(a.date_end || a.date_start) < now;
               const isToday = d.toDateString() === now.toDateString();
 
               return (
@@ -70,31 +140,35 @@ export default function KkgAgendaPage() {
                 >
                   {/* Dot Marker */}
                   <div className={`absolute -left-[31px] md:-left-[35px] top-2 w-7 h-7 rounded-full border-4 border-white shadow-xl z-20 transition-all duration-300 group-hover:scale-125 ${
-                    isPast ? 'bg-gray-400 shadow-gray-200' : 'bg-main-blue shadow-main-blue/30 scale-110'
+                    isEnded ? 'bg-gray-400 shadow-gray-200' : isStarted ? 'bg-orange-500 shadow-orange-500/30' : 'bg-main-blue shadow-main-blue/30 scale-110'
                   }`} >
-                    {!isPast && (
+                    {!isStarted && (
                       <div className="absolute inset-0 rounded-full animate-ping bg-main-blue/40" />
+                    )}
+                    {isStarted && !isEnded && (
+                      <div className="absolute inset-0 rounded-full animate-pulse bg-orange-500/40" />
                     )}
                   </div>
 
                   <div className={`bg-white p-6 md:p-8 rounded-[2rem] border transition-all duration-300 ${
-                    isPast ? 'border-gray-100 opacity-80' : 'border-main-blue/20 shadow-xl shadow-main-blue/5 group-hover:border-main-blue/40'
+                    isEnded ? 'border-gray-100 opacity-80' : isStarted ? 'border-orange-500/20 shadow-xl shadow-orange-500/5' : 'border-main-blue/20 shadow-xl shadow-main-blue/5 group-hover:border-main-blue/40'
                   }`}>
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                            <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                             isPast ? 'bg-gray-100 text-gray-500' : isToday ? 'bg-orange-500 text-white' : 'bg-main-blue text-white'
+                             isEnded ? 'bg-gray-100 text-gray-500' : isStarted ? 'bg-orange-500 text-white' : isToday ? 'bg-orange-500 text-white' : 'bg-main-blue text-white'
                            }`}>
-                             {isPast ? 'Selesai' : isToday ? 'Hari Ini' : 'Mendatang'}
+                             {isEnded ? 'Selesai' : isStarted ? 'Sedang Berlangsung' : isToday ? 'Hari Ini' : 'Mendatang'}
                            </span>
                            <span className="text-xs font-bold text-gray-400 flex items-center gap-1">
                              <Clock className="w-3 h-3" /> {d.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB
                            </span>
                         </div>
-                        <h2 className={`text-xl md:text-2xl font-bold font-heading ${isPast ? 'text-gray-500' : 'text-soft-black'}`}>
+                        <h2 className={`text-xl md:text-2xl font-bold font-heading ${isEnded ? 'text-gray-500' : 'text-soft-black'}`}>
                           {a.title}
                         </h2>
+                        {!isStarted && <CountdownTimer targetDate={a.date_start} />}
                       </div>
                       
                       <div className="flex flex-col items-start md:items-end">

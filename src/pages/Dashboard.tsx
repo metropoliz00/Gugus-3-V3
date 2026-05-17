@@ -95,6 +95,75 @@ import * as XLSX from "xlsx";
 import Webcam from "react-webcam";
 const WebcamComponent = Webcam as any;
 
+// Countdown Timer Component
+const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    isPast: boolean;
+  }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = +new Date(targetDate) - +new Date();
+      if (difference <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
+      }
+
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60),
+        isPast: false,
+      };
+    };
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    setTimeLeft(calculateTimeLeft());
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  if (timeLeft.isPast) return null;
+
+  return (
+    <div className="flex items-center gap-1.5 mt-2">
+      <div className="flex flex-col items-center">
+        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
+          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{timeLeft.days}</span>
+        </div>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Hari</span>
+      </div>
+      <div className="text-main-blue/30 font-black text-xs mb-3">:</div>
+      <div className="flex flex-col items-center">
+        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
+          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+        </div>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Jam</span>
+      </div>
+      <div className="text-main-blue/30 font-black text-xs mb-3">:</div>
+      <div className="flex flex-col items-center">
+        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
+          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+        </div>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Menit</span>
+      </div>
+      <div className="text-main-blue/30 font-black text-xs mb-3">:</div>
+      <div className="flex flex-col items-center">
+        <div className="bg-main-blue/5 border border-main-blue/10 px-2 py-1 rounded-lg">
+          <span className="text-[11px] font-black text-main-blue tabular-nums leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
+        </div>
+        <span className="text-[7px] font-bold text-gray-400 uppercase tracking-tighter mt-1">Detik</span>
+      </div>
+    </div>
+  );
+};
+
 // Types
 interface User {
   role: "admin" | "guru";
@@ -2809,24 +2878,31 @@ function TamuOverview({ user }: { user: any }) {
             <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-main-blue before:to-main-blue/10">
                {events.map((a, i) => {
                  const d = new Date(a.date_start);
-                 const isPast = d < new Date();
+                 const isStarted = d < new Date();
+                 const isEnded = new Date(a.date_end || a.date_start) < new Date();
                  return (
                    <div key={i} className="relative group">
                      {/* Dot */}
                      <div className={`absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${
-                       isPast ? 'bg-gray-400' : 'bg-main-blue shadow-main-blue/30'
+                       isEnded ? 'bg-gray-400' : isStarted ? 'bg-orange-500' : 'bg-main-blue shadow-main-blue/30'
                      }`} />
                      
                      <div className="flex flex-col gap-1">
                        <div className="flex items-center justify-between">
-                         <span className={`text-[10px] font-black uppercase tracking-widest ${isPast ? 'text-gray-400' : 'text-main-blue'}`}>
-                           {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
-                         </span>
-                         {isPast && (
+                         <div className="flex flex-col">
+                           <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : isStarted ? 'text-orange-500' : 'text-main-blue'}`}>
+                             {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
+                           </span>
+                           {!isStarted && <CountdownTimer targetDate={a.date_start} />}
+                         </div>
+                         {isEnded && (
                            <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Selesai</span>
                          )}
+                         {isStarted && !isEnded && (
+                           <span className="text-[9px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full animate-pulse">Berlangsung</span>
+                         )}
                        </div>
-                       <h4 className={`font-bold text-sm ${isPast ? 'text-gray-500' : 'text-soft-black'}`}>
+                       <h4 className={`font-bold text-sm ${isEnded ? 'text-gray-500' : 'text-soft-black'}`}>
                          {a.title}
                        </h4>
                        <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
@@ -3059,24 +3135,31 @@ function GuruOverview({ user }: { user: any }) {
             {events.map((a, i) => {
               const d = new Date(a.date_start);
               const now = new Date();
-              const isPast = d < now;
+              const isStarted = d < now;
+              const isEnded = new Date(a.date_end || a.date_start) < now;
               return (
                 <div key={i} className="relative group">
                   {/* Dot */}
                   <div className={`absolute -left-[27px] top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm z-10 transition-transform group-hover:scale-125 ${
-                    isPast ? 'bg-gray-400' : 'bg-leaf-green shadow-leaf-green/30'
+                    isEnded ? 'bg-gray-400' : isStarted ? 'bg-orange-500' : 'bg-leaf-green shadow-leaf-green/30'
                   }`} />
                   
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center justify-between">
-                      <span className={`text-[10px] font-black uppercase tracking-widest ${isPast ? 'text-gray-400' : 'text-leaf-green'}`}>
-                        {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
-                      </span>
-                      {isPast && (
+                      <div className="flex flex-col">
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : isStarted ? 'text-orange-500' : 'text-leaf-green'}`}>
+                          {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
+                        </span>
+                        {!isStarted && <CountdownTimer targetDate={a.date_start} />}
+                      </div>
+                      {isEnded && (
                         <span className="text-[9px] font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Selesai</span>
                       )}
+                      {isStarted && !isEnded && (
+                        <span className="text-[9px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full animate-pulse">Berlangsung</span>
+                      )}
                     </div>
-                    <h4 className={`font-bold text-sm ${isPast ? 'text-gray-500' : 'text-soft-black'}`}>
+                    <h4 className={`font-bold text-sm ${isEnded ? 'text-gray-500' : 'text-soft-black'}`}>
                       {a.title}
                     </h4>
                     <p className="text-xs text-gray-400 font-medium flex items-center gap-1">
@@ -10057,7 +10140,9 @@ function TeacherJadwalCards({ user }: { user?: any }) {
         <div className="relative border-l-4 border-orange-500/20 ml-4 md:ml-8 space-y-12 pb-10 mt-8">
           {agendas.map((item, index) => {
             const dateObj = new Date(item.date_start);
-            const isPast = dateObj < new Date();
+            const now = new Date();
+            const isStarted = dateObj < now;
+            const isEnded = new Date(item.date_end || item.date_start) < now;
             return (
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -10067,21 +10152,21 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                 className="relative pl-8 md:pl-12 group"
               >
                 {/* Node Marker */}
-                <div className={`absolute -left-[14px] top-8 w-6 h-6 bg-white border-4 ${isPast ? 'border-gray-400 shadow-gray-400/40' : 'border-orange-500 shadow-orange-500/40'} rounded-full shadow-lg group-hover:scale-125 transition-transform z-10`} />
+                <div className={`absolute -left-[14px] top-8 w-6 h-6 bg-white border-4 ${isEnded ? 'border-gray-400 shadow-gray-400/40' : isStarted ? 'border-orange-500 shadow-orange-500/40 animate-pulse' : 'border-orange-500 shadow-orange-500/40'} rounded-full shadow-lg group-hover:scale-125 transition-transform z-10`} />
                 <div className={`absolute -left-12 top-6 text-right w-12 hidden md:block`}>
                    <p className="text-xl font-black text-gray-800 leading-none">{dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric" })}</p>
                    <p className="text-xs font-bold text-gray-500 uppercase">{dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta",  month: "short" })}</p>
                 </div>
 
                 {/* Content Card */}
-                <div className={`bg-white rounded-[2rem] shadow-xl shadow-gray-200 border border-gray-100 overflow-hidden flex flex-col md:flex-row relative transition-all hover:shadow-2xl hover:-translate-y-1 ${isPast ? 'opacity-80 grayscale-[20%]' : ''}`}>
+                <div className={`bg-white rounded-[2rem] shadow-xl shadow-gray-200 border border-gray-100 overflow-hidden flex flex-col md:flex-row relative transition-all hover:shadow-2xl hover:-translate-y-1 ${isEnded ? 'opacity-80 grayscale-[20%]' : isStarted ? 'ring-2 ring-orange-500/20' : ''}`}>
                   {/* Left Side: Date Banner (Mobile only) */}
-                  <div className={`md:hidden bg-gradient-to-br ${isPast ? 'from-gray-100 to-gray-200' : 'from-orange-50 to-orange-100'} p-6 border-b border-gray-50 flex items-center gap-4`}>
+                  <div className={`md:hidden bg-gradient-to-br ${isEnded ? 'from-gray-100 to-gray-200' : isStarted ? 'from-orange-100 to-orange-200 shadow-inner' : 'from-orange-50 to-orange-100'} p-6 border-b border-gray-50 flex items-center gap-4`}>
                      <div className={`w-16 h-16 bg-white rounded-[1.25rem] flex flex-col items-center justify-center shadow-md border border-gray-100`}>
                         <span className="text-[10px] font-black text-gray-400 uppercase leading-none">
                           {dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta",  month: "short" })}
                         </span>
-                        <span className={`text-3xl font-black ${isPast ? 'text-gray-500' : 'text-orange-500'} leading-none mt-1`}>
+                        <span className={`text-3xl font-black ${isEnded ? 'text-gray-500' : 'text-orange-500'} leading-none mt-1`}>
                           {dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric" })}
                         </span>
                      </div>
@@ -10090,9 +10175,10 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                          {item.title}
                        </h3>
                        <div className="flex items-center gap-2 mt-2">
-                         <span className={`text-[10px] font-black ${isPast ? 'text-gray-500 bg-gray-100' : 'text-orange-600 bg-orange-100'} px-3 py-1 bg-white rounded-full uppercase tracking-widest`}>
-                           {item.category || "Kegiatan"}
+                         <span className={`text-[10px] font-black ${isEnded ? 'text-gray-500 bg-gray-100' : isStarted ? 'text-orange-600 bg-orange-100' : 'text-orange-600 bg-orange-100'} px-3 py-1 bg-white rounded-full uppercase tracking-widest`}>
+                           {isEnded ? 'Selesai' : isStarted ? 'Berlangsung' : item.category || "Kegiatan"}
                          </span>
+                         {!isStarted && <CountdownTimer targetDate={item.date_start} />}
                        </div>
                      </div>
                   </div>
@@ -10130,7 +10216,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                        </div>
                     </div>
 
-                    <div className={`pt-6 mt-6 border-t flex flex-col md:flex-row md:justify-between md:items-end gap-4 ${isPast ? 'border-gray-200' : 'border-gray-50'}`}>
+                    <div className={`pt-6 mt-6 border-t flex flex-col md:flex-row md:justify-between md:items-end gap-4 ${isEnded ? 'border-gray-200' : isStarted ? 'border-orange-500/20' : 'border-gray-50'}`}>
                       <p className="text-xs text-gray-500 italic leading-relaxed line-clamp-3 md:flex-1">
                         "{item.description || "Agenda rutin pengembangan keprofesian berkelanjutan."}"
                       </p>
