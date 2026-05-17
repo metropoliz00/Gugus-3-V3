@@ -58,6 +58,7 @@ import {
   Camera,
   School,
   XCircle,
+  LayoutList,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -10068,6 +10069,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [selectedAgendaId, setSelectedAgendaId] = useState<string | null>(null);
   const [attendances, setAttendances] = useState<Record<string, boolean>>({});
+  const [viewType, setViewType] = useState<'timeline' | 'calendar'>('timeline');
 
   const fetchAgendas = async () => {
     setLoading(true);
@@ -10228,6 +10230,23 @@ function TeacherJadwalCards({ user }: { user?: any }) {
             </p>
           </div>
         </div>
+
+        <div className="flex items-center bg-gray-100 p-1 rounded-2xl shrink-0 self-center">
+            <button 
+              onClick={() => setViewType('timeline')}
+              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-bold transition-all text-xs uppercase tracking-widest ${viewType === 'timeline' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              <LayoutList className="w-4 h-4" />
+              Timeline
+            </button>
+            <button 
+              onClick={() => setViewType('calendar')}
+              className={`flex items-center gap-2 px-6 py-2 rounded-xl font-bold transition-all text-xs uppercase tracking-widest ${viewType === 'calendar' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+            >
+              <Calendar className="w-4 h-4" />
+              Kalender
+            </button>
+        </div>
       </div>
 
       {loading ? (
@@ -10246,7 +10265,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
             Isi Data Contoh Sekarang
           </button>
         </div>
-      ) : (
+      ) : viewType === 'timeline' ? (
         <div className="relative border-l-4 border-orange-500/20 ml-4 md:ml-8 space-y-12 pb-10 mt-8">
           {agendas.map((item, index) => {
             const dateObj = new Date(item.date_start);
@@ -10353,6 +10372,10 @@ function TeacherJadwalCards({ user }: { user?: any }) {
               </motion.div>
             );
           })}
+        </div>
+      ) : (
+        <div className="mt-8 bg-white p-8 md:p-12 rounded-[3rem] shadow-xl shadow-orange-500/5 border border-white">
+          <MainCalendar events={agendas} />
         </div>
       )}
 
