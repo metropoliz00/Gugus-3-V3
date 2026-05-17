@@ -8937,11 +8937,21 @@ function DataManagementTable({ user, table, title, icon: Icon, fields }: any) {
                     ))}
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {fields.map((f: any) => (f.type === "file" || f.type === 'url') && item[f.name] ? (
-                           <a key={"dl-"+f.name} href={item[f.name]} target="_blank" rel="noopener noreferrer" className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Unduh">
-                             <Download className="w-4 h-4" />
-                           </a>
-                        ) : null)}
+                        {fields.map((f: any) => {
+                          if ((f.type === "file" || f.type === 'url') && item[f.name]) {
+                            let downloadUrl = item[f.name];
+                            const match = downloadUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                            if (match && match[1]) {
+                              downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}`;
+                            }
+                            return (
+                              <a key={"dl-"+f.name} href={downloadUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Unduh">
+                                <Download className="w-4 h-4" />
+                              </a>
+                            );
+                          }
+                          return null;
+                        })}
                         <button
                           onClick={() => {
                             setFormData(item);
