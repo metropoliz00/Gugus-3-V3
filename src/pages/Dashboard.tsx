@@ -1150,7 +1150,6 @@ export default function Dashboard({
                             table="teacher_works"
                             title="Hasil Karya Guru"
                             icon={UploadCloud}
-                            selectQuery="*, profiles:user_profiles(nama)"
                             fields={[
                               { 
                                 name: "guru", 
@@ -1288,7 +1287,6 @@ export default function Dashboard({
                             table="teacher_works"
                             title="Upload Hasil Karya"
                             icon={UploadCloud}
-                            selectQuery="*, profiles:user_profiles(nama)"
                             fields={[
                               { 
                                 name: "guru", 
@@ -8669,7 +8667,22 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
         .select(selectQuery)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      setData(res || []);
+      
+      let fetchedData = res || [];
+      
+      // Attempt manual profile resolution for user_id fields
+      const userIds = [...new Set(fetchedData.map((d: any) => d.user_id).filter(Boolean))];
+      if (userIds.length > 0) {
+        const { data: pData } = await supabase.from("user_profiles").select("id, nama").in("id", userIds);
+        if (pData) {
+          fetchedData = fetchedData.map((d: any) => ({
+            ...d,
+            profiles: pData.find(p => p.id === d.user_id) || null
+          }));
+        }
+      }
+      
+      setData(fetchedData);
     } catch (err: any) {
       console.error(err);
     } finally {
