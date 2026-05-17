@@ -19,7 +19,7 @@ export default function KaryaPage() {
         if (userIds.length > 0) {
           const { data: pData } = await supabase
              .from("user_profiles")
-             .select("id, full_name")
+             .select("id, nama")
              .in("id", userIds);
           if (pData) profilesData = pData;
         }
@@ -56,7 +56,7 @@ export default function KaryaPage() {
               <tbody className="divide-y divide-gray-50">
                 {works.map((work) => (
                   <tr key={work.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-4 px-6 font-medium text-soft-black text-sm">{work.profiles?.full_name || "Guru"}</td>
+                    <td className="py-4 px-6 font-medium text-soft-black text-sm">{work.profiles?.nama || "Guru"}</td>
                     <td className="py-4 px-6 text-gray-600 text-sm font-medium">{work.title}</td>
                     <td className="py-4 px-6 uppercase text-[10px] tracking-widest font-bold text-main-blue">{work.work_type}</td>
                     <td className="py-4 px-6">

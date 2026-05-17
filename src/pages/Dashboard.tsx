@@ -1277,6 +1277,7 @@ export default function Dashboard({
                         path="upload_karya"
                         element={
                           <DataManagementTable
+                            user={user}
                             table="teacher_works"
                             title="Upload Hasil Karya"
                             icon={UploadCloud}
