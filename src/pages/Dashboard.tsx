@@ -3934,6 +3934,7 @@ function AdminBeritaForm({ user }: { user: any }) {
                             [{ 'header': [1, 2, 3, false] }],
                             ['bold', 'italic', 'underline', 'strike'],
                             [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'align': [] }],
                             ['link', 'image'],
                             ['clean']
                           ],
@@ -6061,6 +6062,16 @@ function AdminKKGForm({
                       }
                       className="w-full border border-gray-200 rounded-xl text-sm focus:border-yellow-500 outline-none bg-gray-50/50 min-h-[120px] transition-all"
                       placeholder="Tuliskan detail pengumuman yang ingin disampaikan kepada guru-guru..."
+                      modules={{
+                        toolbar: [
+                          [{ 'header': [1, 2, 3, false] }],
+                          ['bold', 'italic', 'underline', 'strike'],
+                          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                          [{ 'align': [] }],
+                          ['link', 'image'],
+                          ['clean']
+                        ],
+                      }}
                     />
                   </div>
                 </div>
