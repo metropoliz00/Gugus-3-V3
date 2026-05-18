@@ -186,9 +186,14 @@ export default function KkgAgendaPage() {
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                  isEnded ? 'bg-gray-100 text-gray-500' : isStarted ? 'bg-orange-500 text-white' : isToday ? 'bg-orange-500 text-white' : 'bg-main-blue text-white'
+                                  a.status === 'selesai' || isEnded ? 'bg-gray-100 text-gray-500' : 
+                                  a.status === 'berjalan' || (isStarted && !isEnded) ? 'bg-orange-500 text-white animate-pulse' : 
+                                  'bg-main-blue text-white'
                                 }`}>
-                                  {isEnded ? 'Selesai' : isStarted ? 'Sedang Berlangsung' : isToday ? 'Hari Ini' : 'Mendatang'}
+                                  {a.status === 'selesai' ? 'Selesai' : 
+                                   a.status === 'berjalan' ? 'Sedang Berlangsung' : 
+                                   a.status === 'rencana' ? 'Mendatang' :
+                                   (isEnded ? 'Selesai' : isStarted ? 'Sedang Berlangsung' : isToday ? 'Hari Ini' : 'Mendatang')}
                                 </span>
                                 <span className="text-xs font-bold text-gray-400 flex items-center gap-1">
                                   <Clock className="w-3 h-3" /> {d.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB

@@ -238,9 +238,20 @@ export default function GugusPage() {
                            <div className="p-3 bg-blue-50 text-main-blue rounded-xl group-hover:bg-main-blue group-hover:text-white transition-colors">
                               <BookOpen className="w-6 h-6" />
                            </div>
-                           <span className="text-[10px] font-bold px-3 py-1 bg-leaf-green/10 text-leaf-green rounded-full uppercase tracking-tighter">
-                             {program.date}
-                           </span>
+                           <div className="flex flex-col items-end gap-1">
+                             <span className="text-[10px] font-bold px-3 py-1 bg-leaf-green/10 text-leaf-green rounded-full uppercase tracking-tighter">
+                               {program.date}
+                             </span>
+                             {program.status && (
+                               <span className={`text-[9px] font-bold px-3 py-0.5 rounded-full uppercase tracking-tighter border
+                                 ${program.status === 'selesai' ? 'bg-green-50 text-green-700 border-green-100' : 
+                                   program.status === 'berjalan' ? 'bg-blue-50 text-blue-700 border-blue-100 animate-pulse' : 
+                                   'bg-orange-50 text-orange-700 border-orange-100'}
+                               `}>
+                                 {program.status}
+                               </span>
+                             )}
+                           </div>
                         </div>
                         <h3 className="text-xl font-heading font-bold text-soft-black mb-3 group-hover:text-main-blue transition-colors">{program.title}</h3>
                         <p className="text-sm text-gray-500 leading-relaxed mb-6">{program.desc}</p>

@@ -52,8 +52,24 @@ export default function KkgProgramPage() {
                         onClick={() => setOpenProgramIdx(openProgramIdx === idx ? null : idx)}
                         className="w-full px-6 py-5 flex items-center justify-between text-left"
                     >
-                        <h4 className="font-semibold text-soft-black">{prog.title}</h4>
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                        <div className="flex flex-col">
+                            <h4 className="font-semibold text-soft-black">{prog.title}</h4>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" /> {prog.date}
+                                </span>
+                                {prog.status && (
+                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border
+                                        ${prog.status === 'selesai' ? 'bg-green-50 text-green-700 border-green-100' : 
+                                          prog.status === 'berjalan' ? 'bg-blue-50 text-blue-700 border-blue-100 animate-pulse' : 
+                                          'bg-orange-50 text-orange-700 border-orange-100'}
+                                    `}>
+                                        {prog.status}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <ChevronDown className={`w-5 h-5 transition-transform ${openProgramIdx === idx ? 'rotate-180 text-main-blue' : 'text-gray-400'}`} />
                     </button>
                     {openProgramIdx === idx && (
                         <div className="px-6 pb-5 pt-2 text-gray-600 border-t border-gray-50">

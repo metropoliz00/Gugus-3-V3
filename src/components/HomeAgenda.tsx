@@ -162,11 +162,20 @@ export default function HomeAgenda() {
                                             
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                 <div className="space-y-1">
-                                                    <div className="flex items-center gap-3">
+                                                  <div className="flex items-center gap-3">
                                                         <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : 'text-orange-600'}`}>
                                                             {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
                                                         </span>
-                                                        {!isStarted && <CountdownTimer targetDate={a.date_start} simple />}
+                                                        {a.status && (
+                                                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest
+                                                            ${a.status === 'selesai' ? 'bg-green-100 text-green-600' : 
+                                                              a.status === 'berjalan' ? 'bg-blue-100 text-blue-600 animate-pulse' : 
+                                                              'bg-orange-100 text-orange-600'}
+                                                          `}>
+                                                            {a.status}
+                                                          </span>
+                                                        )}
+                                                        {!isStarted && !isEnded && a.status !== 'selesai' && <CountdownTimer targetDate={a.date_start} simple />}
                                                     </div>
                                                     <h4 className={`text-xl font-bold font-heading ${isEnded ? 'text-gray-400' : 'text-soft-black hover:text-orange-600 transition-colors'}`}>
                                                         {a.title}

@@ -4618,6 +4618,22 @@ function AdminAgendaForm({ user }: { user: any }) {
                       }
                     />
                   </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
+                      Status Kegiatan
+                    </label>
+                    <select
+                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                      value={item.status || "rencana"}
+                      onChange={(e) =>
+                        handleUpdate(item.id, { status: e.target.value })
+                      }
+                    >
+                      <option value="rencana">Rencana</option>
+                      <option value="berjalan">Berjalan</option>
+                      <option value="selesai">Selesai</option>
+                    </select>
+                  </div>
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
                       URL Cover Foto
@@ -5914,6 +5930,19 @@ function AdminKKGForm({
                                 setKkgForm({ ...form, programs: newPrograms });
                               }}
                             />
+                            <select
+                              className="border-b border-gray-200 p-1 text-sm font-bold text-blue-600 focus:border-main-blue outline-none bg-transparent"
+                              value={prog.status || "rencana"}
+                              onChange={(e) => {
+                                const newPrograms = { ...form.programs };
+                                newPrograms[key][i].status = e.target.value;
+                                setKkgForm({ ...form, programs: newPrograms });
+                              }}
+                            >
+                              <option value="rencana">Rencana</option>
+                              <option value="berjalan">Berjalan</option>
+                              <option value="selesai">Selesai</option>
+                            </select>
                             <textarea
                               className="border border-gray-200 rounded-lg p-2 text-sm text-gray-600 focus:border-main-blue outline-none bg-transparent col-span-1 md:col-span-2"
                               placeholder="Deskripsi Singkat"
@@ -6605,6 +6634,19 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                         setGugusForm({ ...form, programs: next });
                       }}
                     />
+                    <select
+                      className="w-full border-b border-gray-200 p-1 text-sm font-bold text-orange-600 outline-none bg-transparent"
+                      value={p.status || "rencana"}
+                      onChange={(e) => {
+                        const next = [...programs];
+                        next[i].status = e.target.value;
+                        setGugusForm({ ...form, programs: next });
+                      }}
+                    >
+                      <option value="rencana">Rencana</option>
+                      <option value="berjalan">Berjalan</option>
+                      <option value="selesai">Selesai</option>
+                    </select>
                     <textarea
                       className="w-full border border-gray-200 rounded-lg p-2 text-sm text-gray-600 outline-none bg-white/50 col-span-2"
                       rows={2}

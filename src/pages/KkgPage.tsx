@@ -338,13 +338,12 @@ export default function KkgPage() {
                               <div className="flex items-center gap-2 text-sm font-semibold text-soft-black">
                                 <Calendar className="w-4 h-4 text-main-blue" /> {prog.date}
                               </div>
-                              <div className={`inline-flex px-2 py-1 rounded text-xs font-semibold self-start
-                                ${prog.status === 'Selesai' ? 'bg-green-100 text-green-700' : ''}
-                                ${prog.status === 'Berjalan' ? 'bg-blue-100 text-blue-700' : ''}
-                                ${prog.status === 'Terjadwal' ? 'bg-orange-100 text-orange-700' : ''}
-                                ${prog.status === 'Menunggu' ? 'bg-gray-100 text-gray-600' : ''}
+                              <div className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest self-start border
+                                ${prog.status === 'selesai' ? 'bg-green-50 text-green-700 border-green-100' : 
+                                  prog.status === 'berjalan' ? 'bg-blue-50 text-blue-700 border-blue-100 animate-pulse' : 
+                                  'bg-orange-50 text-orange-700 border-orange-100'}
                               `}>
-                                {prog.status}
+                                {prog.status || 'rencana'}
                               </div>
                             </div>
                           </div>
