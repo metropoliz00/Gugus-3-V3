@@ -84,6 +84,7 @@ import FloatingWA from "../components/FloatingWA";
 import { supabase } from "../lib/supabase";
 import OrgChart from "../components/OrgChart";
 import ImageUpload from "../components/ImageUpload";
+import FileUpload from "../components/FileUpload";
 import { useAlert } from "../contexts/AlertContext";
 import { FinanceTransaction } from "../types";
 import { logActivity, ActivityLog } from "../lib/activity";
@@ -979,8 +980,8 @@ export default function Dashboard({
                               { name: "category", label: "Kategori" },
                               {
                                 name: "file_url",
-                                label: "URL Link Materi",
-                                type: "text",
+                                label: "File Materi (PDF/Doc/PPT)",
+                                type: "file",
                               },
                             ]}
                           />
@@ -1008,8 +1009,8 @@ export default function Dashboard({
                               },
                               {
                                 name: "file_url",
-                                label: "URL Lampiran (Opsional)",
-                                type: "text",
+                                label: "File Lampiran (Opsional)",
+                                type: "file",
                               },
                             ]}
                           />
@@ -1046,12 +1047,12 @@ export default function Dashboard({
                               },
                               {
                                 name: "materi_url",
-                                label: "URL Materi / Slide (Opsional)",
-                                type: "url",
+                                label: "Materi / Slide (File PDF/PPT)",
+                                type: "file",
                               },
                               {
                                 name: "video_url",
-                                label: "URL Video / Rekaman (Opsional)",
+                                label: "URL Video / Rekaman (Youtube/Vimeo Opsional)",
                                 type: "url",
                               },
                               {
@@ -1070,7 +1071,7 @@ export default function Dashboard({
                               {
                                 name: "banner_url",
                                 label: "Banner Pelatihan (Format 16:9)",
-                                type: "file",
+                                type: "image",
                               },
                               {
                                 name: "is_attendance_open",
@@ -1187,7 +1188,7 @@ export default function Dashboard({
                               { name: "title", label: "Perihal" },
                               { name: "sender", label: "Pengirim" },
                               { name: "date_received", label: "Tanggal Diterima", type: "date" },
-                              { name: "file_url", label: "URL Link Surat", type: "url" },
+                              { name: "file_url", label: "File Surat", type: "file" },
                             ]}
                           />
                         }
@@ -1205,7 +1206,7 @@ export default function Dashboard({
                               { name: "title", label: "Perihal" },
                               { name: "recipient", label: "Penerima" },
                               { name: "date_sent", label: "Tanggal Dikirim", type: "date" },
-                              { name: "file_url", label: "URL Link Surat", type: "url" },
+                              { name: "file_url", label: "File Surat", type: "file" },
                             ]}
                           />
                         }
@@ -1304,8 +1305,8 @@ export default function Dashboard({
                               { name: "work_type", label: "Jenis Karya" },
                               {
                                 name: "file_url",
-                                label: "URL File",
-                                type: "url",
+                                label: "File Laporan (PDF/Doc)",
+                                type: "file",
                               },
                             ]}
                           />
@@ -4636,13 +4637,14 @@ function AdminAgendaForm({ user }: { user: any }) {
                   </div>
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      URL Cover Foto
+                      File Cover Foto
                     </label>
-                    <input
-                      className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent"
+                    <ImageUpload
+                      label=""
+                      compact={true}
                       value={item.image_url || ""}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { image_url: e.target.value })
+                      onChange={(base64) =>
+                        handleUpdate(item.id, { image_url: base64 })
                       }
                     />
                   </div>
@@ -4660,13 +4662,15 @@ function AdminAgendaForm({ user }: { user: any }) {
                   </div>
                   <div>
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      URL Materi (Unduh)
+                      File Materi (Unduh)
                     </label>
-                    <input
-                      className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent"
+                    <FileUpload
+                      label=""
+                      compact={true}
                       value={item.materi_url || ""}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { materi_url: e.target.value })
+                      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                      onChange={(base64) =>
+                        handleUpdate(item.id, { materi_url: base64 })
                       }
                     />
                    <div>
@@ -5367,7 +5371,7 @@ function AdminKKGForm({
             onClick={() => setActiveKkgTab("dokumen")}
             className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${activeKkgTab === "dokumen" ? "bg-white text-main-blue shadow-sm" : "text-gray-500 hover:text-main-blue"}`}
           >
-            Dokumen Link
+            Upload Dokumen
           </button>
           <button
             onClick={() => setActiveKkgTab("struktur")}
@@ -5683,16 +5687,20 @@ function AdminKKGForm({
                         }}
                         placeholder="Judul Dokumen"
                       />
-                      <input
-                        className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-main-blue outline-none bg-white"
-                        value={doc.url}
-                        onChange={(e) => {
-                          const newDokumen = [...(form.dokumen || [])];
-                          newDokumen[i].url = e.target.value;
-                          setKkgForm({ ...form, dokumen: newDokumen });
-                        }}
-                        placeholder="URL Dokumen (https://...)"
-                      />
+                        <FileUpload
+                          label=""
+                          compact={true}
+                          value={doc.url}
+                          accept=".pdf,.doc,.docx,.xls,.xlsx"
+                          onChange={(base64, filename) => {
+                            const newDokumen = [...(form.dokumen || [])];
+                            newDokumen[i].url = base64;
+                            if (filename && !newDokumen[i].title) {
+                              newDokumen[i].title = filename;
+                            }
+                            setKkgForm({ ...form, dokumen: newDokumen });
+                          }}
+                        />
                     </div>
                     <button
                       type="button"
@@ -6816,9 +6824,17 @@ function AdminPenghargaanForm() {
                 <option value="Kepala Sekolah">Kepala Sekolah</option>
                 <option value="Sekolah">Sekolah</option>
             </select>
-            <input placeholder="URL Foto Penghargaan" className="p-2 border rounded" value={newAward.image_url} onChange={e => setNewAward({...newAward, image_url: e.target.value})}/>
+            <div className="w-full mt-2">
+              <ImageUpload
+                label="Foto Penghargaan"
+                value={newAward.image_url}
+                onChange={(base64) => setNewAward({...newAward, image_url: base64})}
+                maxWidth={600}
+                maxHeight={400}
+              />
+            </div>
           </div>
-          <p className="text-xs text-gray-500">Catatan: Masukkan URL foto penghargaan. Fitur unggah foto langsung sedang dalam pengembangan.</p>
+          <p className="text-xs text-gray-500 mt-2">Catatan: Upload foto penghargaan (otomatis diperkecil).</p>
           <textarea placeholder="Deskripsi" className="w-full p-2 border rounded" value={newAward.description} onChange={e => setNewAward({...newAward, description: e.target.value})} />
           <div className="flex gap-2">
             <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">Simpan</button>
@@ -9021,8 +9037,16 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                         );
                       })}
                     </select>
-                  ) : f.type === "file" ? (
+                  ) : f.type === "image" ? (
                     <ImageUpload
+                      label={f.label}
+                      value={formData[f.name] || ""}
+                      onChange={(base64) =>
+                        setFormData({ ...formData, [f.name]: base64 })
+                      }
+                    />
+                  ) : f.type === "file" ? (
+                    <FileUpload
                       label={f.label}
                       value={formData[f.name] || ""}
                       onChange={(base64) =>

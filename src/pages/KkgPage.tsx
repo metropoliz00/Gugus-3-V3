@@ -410,11 +410,11 @@ export default function KkgPage() {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {(kkg.dokumen || []).map((doc: any, i: number) => (
-            <a key={i} href={doc.url} target="_blank" rel="noopener noreferrer" className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex items-center gap-4 group">
+            <a key={i} href={doc.url} download={doc.title} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex items-center gap-4 group">
               <div className="p-3 bg-blue-50 text-main-blue rounded-xl">
                  <FileText className="w-6 h-6" />
               </div>
-              <span className="font-semibold text-soft-black group-hover:text-main-blue">{doc.title}</span>
+              <span className="font-semibold text-soft-black group-hover:text-main-blue">{doc.title || "Dokumen"}</span>
             </a>
           ))}
           {(kkg.dokumen || []).length === 0 && <p className="text-gray-500 italic col-span-full">Belum ada dokumen yang diunggah.</p>}
