@@ -178,14 +178,11 @@ export default function MediaInformasi() {
                       word-break: normal;
                       overflow-wrap: break-word;
                       hyphens: none;
+                      text-align: left;
                     }
-                    .news-content p:not([class*="ql-align"]) {
-                      text-indent: 2.5rem;
-                      text-align: justify;
-                    }
-                    .ql-align-center { text-align: center; }
-                    .ql-align-right { text-align: right; }
-                    .ql-align-justify { text-align: justify; }
+                    .ql-align-center { text-align: center !important; }
+                    .ql-align-right { text-align: right !important; }
+                    .ql-align-justify { text-align: justify !important; }
                     .news-content h1, .news-content h2, .news-content h3 {
                       color: #1e40af;
                       font-weight: 800;
