@@ -919,14 +919,7 @@ export default function Dashboard({
                       />
                       <Route
                         path="kkg"
-                        element={
-                          <AdminKKGForm
-                            kkgForm={kkgForm}
-                            setKkgForm={setKkgForm}
-                            handleSaveContent={handleSaveContent}
-                            updateContent={updateContent}
-                          />
-                        }
+                        element={<AdminKKGFormWrapper />}
                       />
                       <Route
                         path="agenda"
@@ -938,13 +931,7 @@ export default function Dashboard({
                       />
                       <Route
                         path="gugus"
-                        element={
-                          <AdminGugusForm
-                            gugusForm={gugusForm}
-                            setGugusForm={setGugusForm}
-                            handleSaveContent={handleSaveContent}
-                          />
-                        }
+                        element={<AdminGugusFormWrapper />}
                       />
                       <Route
                         path="struktur_org"
@@ -8572,52 +8559,114 @@ function AdminStrukturManager() {
 
 function AdminKKGFormWrapper() {
   const { content, updateContent } = useSiteContent() as any;
-  const kkgForm = content.kkg || { struktur: [] };
+  const { alert } = useAlert();
+  const [localKkg, setLocalKkg] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Sync state with content when context loads
+  useEffect(() => {
+    if (content && content.kkg && !localKkg) {
+      setLocalKkg(content.kkg);
+    }
+  }, [content]);
+
+  const kkgForm = localKkg || content.kkg || { struktur: [], programs: {} };
 
   const setKkgForm = (updater: any) => {
-    const currentState = kkgForm;
-    const newState =
-      typeof updater === "function" ? updater(currentState) : updater;
-    updateContent({ kkg: newState });
+    setLocalKkg((prev: any) => {
+      const currentState = prev || content.kkg || { struktur: [], programs: {} };
+      const newState = typeof updater === "function" ? updater(currentState) : updater;
+      return newState;
+    });
   };
 
-  const handleSaveContent = (e: React.FormEvent) => {
+  const handleSaveContent = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateContent({ kkg: kkgForm });
+    setIsSaving(true);
+    try {
+      await updateContent({ kkg: kkgForm });
+      await alert("Data KKG berhasil disimpan ke database!", "Sukses", "success");
+    } catch (err: any) {
+      console.error(err);
+      await alert("Gagal menyimpan data KKG: " + (err.message || "kesalahan jaringan"), "Error", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <AdminKKGForm
-      kkgForm={kkgForm}
-      setKkgForm={setKkgForm}
-      handleSaveContent={handleSaveContent}
-      updateContent={updateContent}
-    />
+    <div className="relative">
+      {isSaving && (
+        <div className="fixed inset-0 bg-black/10 backdrop-blur-xs z-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-xl shadow-lg flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-main-blue border-t-transparent animate-spin rounded-full"></div>
+            <span className="text-sm font-semibold">Menyimpan data KKG...</span>
+          </div>
+        </div>
+      )}
+      <AdminKKGForm
+        kkgForm={kkgForm}
+        setKkgForm={setKkgForm}
+        handleSaveContent={handleSaveContent}
+        updateContent={updateContent}
+      />
+    </div>
   );
 }
 
 function AdminGugusFormWrapper() {
   const { content, updateContent } = useSiteContent() as any;
-  const gugusForm = content.gugus || { struktur: [], programs: [] };
+  const { alert } = useAlert();
+  const [localGugus, setLocalGugus] = useState<any>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Sync state with content when context loads
+  useEffect(() => {
+    if (content && content.gugus && !localGugus) {
+      setLocalGugus(content.gugus);
+    }
+  }, [content]);
+
+  const gugusForm = localGugus || content.gugus || { struktur: [], programs: [] };
 
   const setGugusForm = (updater: any) => {
-    const currentState = gugusForm;
-    const newState =
-      typeof updater === "function" ? updater(currentState) : updater;
-    updateContent({ gugus: newState });
+    setLocalGugus((prev: any) => {
+      const currentState = prev || content.gugus || { struktur: [], programs: [] };
+      const newState = typeof updater === "function" ? updater(currentState) : updater;
+      return newState;
+    });
   };
 
-  const handleSaveContent = (e: React.FormEvent) => {
+  const handleSaveContent = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateContent({ gugus: gugusForm });
+    setIsSaving(true);
+    try {
+      await updateContent({ gugus: gugusForm });
+      await alert("Data Gugus berhasil disimpan ke database!", "Sukses", "success");
+    } catch (err: any) {
+      console.error(err);
+      await alert("Gagal menyimpan data Gugus: " + (err.message || "kesalahan jaringan"), "Error", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <AdminGugusForm
-      gugusForm={gugusForm}
-      setGugusForm={setGugusForm}
-      handleSaveContent={handleSaveContent}
-    />
+    <div className="relative">
+      {isSaving && (
+        <div className="fixed inset-0 bg-black/10 backdrop-blur-xs z-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-xl shadow-lg flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-main-blue border-t-transparent animate-spin rounded-full"></div>
+            <span className="text-sm font-semibold">Menyimpan data Gugus...</span>
+          </div>
+        </div>
+      )}
+      <AdminGugusForm
+        gugusForm={gugusForm}
+        setGugusForm={setGugusForm}
+        handleSaveContent={handleSaveContent}
+      />
+    </div>
   );
 }
 
