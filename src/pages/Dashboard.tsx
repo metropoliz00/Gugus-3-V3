@@ -271,7 +271,7 @@ const adminMenuGroups = [
   },
   {
     title: "Sistem",
-    items: ["sekolah", "struktur_org", "pengaturan"],
+    items: ["sekolah", "struktur_org", "pengaturan", "landmarks"],
   },
 ];
 
