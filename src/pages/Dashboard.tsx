@@ -7779,16 +7779,31 @@ function AdminLandmarkForm() {
     const val = e.target.value;
     setFormData((prev) => ({ ...prev, embedCode: val }));
 
-    // Extract lat and lng from Google Maps embed iframe
-    // pattern: !3d-6.786 !4d111.966
-    const latMatch = val.match(/!3d(-?\d+\.\d+)/);
-    const lngMatch = val.match(/!4d(-?\d+\.\d+)/);
+    let lat = "";
+    let lng = "";
 
-    if (latMatch && lngMatch) {
+    // 1. Try `pb` parameter in embed iframe (!3d and !2d/!4d)
+    const pbLatMatch = val.match(/!3d(-?\d+\.\d+)/);
+    const pbLngMatch = val.match(/!2d(-?\d+\.\d+)/) || val.match(/!4d(-?\d+\.\d+)/);
+    
+    if (pbLatMatch && pbLngMatch) {
+      lat = pbLatMatch[1];
+      lng = pbLngMatch[1];
+    } 
+    // 2. Try @lat,lng pattern from normal URLs
+    else {
+      const atMatch = val.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (atMatch) {
+        lat = atMatch[1];
+        lng = atMatch[2];
+      }
+    }
+
+    if (lat && lng) {
       setFormData((prev) => ({
         ...prev,
-        latitude: latMatch[1],
-        longitude: lngMatch[1],
+        latitude: lat,
+        longitude: lng,
       }));
     }
   };
