@@ -7842,19 +7842,20 @@ function AdminLandmarkForm() {
       if (error) {
         await alert("Gagal memperbarui landmark", "Error", "error");
       } else {
-        await alert("Landmark berhasil diperbarui", "Sukses", "success");
         setIsModalOpen(false);
         setEditingLandmark(null);
         loadLandmarks();
+        await alert("Landmark berhasil diperbarui", "Sukses", "success");
       }
     } else {
       const { error } = await supabase.from("landmarks").insert([payload]);
       if (error) {
         await alert("Gagal menambahkan landmark", "Error", "error");
       } else {
-        await alert("Landmark berhasil ditambahkan", "Sukses", "success");
         setIsModalOpen(false);
+        setEditingLandmark(null);
         loadLandmarks();
+        await alert("Landmark berhasil ditambahkan", "Sukses", "success");
       }
     }
   };
