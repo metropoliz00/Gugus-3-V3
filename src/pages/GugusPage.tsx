@@ -145,15 +145,6 @@ export default function GugusPage() {
                     </div>
                   ))}
                 </div>
-
-                {/* Peta Digital Wilayah Gugus */}
-                <div className="mt-16 pt-12 border-t border-gray-100">
-                  <div className="mb-6">
-                    <h3 className="text-xl font-heading font-black text-soft-black">Peta Digital Wilayah Gugus</h3>
-                    <p className="text-xs text-main-blue font-bold uppercase tracking-wider mt-1">Pemetaan Sekolah Anggota Gugus 3 Melati</p>
-                  </div>
-                  <MapGugus />
-                </div>
               </div>
             )}
 
@@ -276,6 +267,17 @@ export default function GugusPage() {
             )}
           </motion.div>
         </AnimatePresence>
+      </div>
+
+      {/* Peta Digital Wilayah Gugus - Global Map Section */}
+      <div className="container mx-auto px-4 md:px-6 mt-16 max-w-7xl">
+        <div className="bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-12 border border-main-orange/20 shadow-2xl shadow-blue-500/5">
+          <div className="mb-10 text-center">
+            <h3 className="text-3xl font-heading font-black text-soft-black">Peta Digital Wilayah Gugus</h3>
+            <p className="text-sm text-main-blue font-bold uppercase tracking-wider mt-2">Pemetaan Lokasi dan Radius Sekolah Anggota</p>
+          </div>
+          <MapGugus />
+        </div>
       </div>
     </div>
   );
