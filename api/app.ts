@@ -315,9 +315,11 @@ app.post("/api/admin/update-user", async (req, res) => {
     
     // Update Auth
     const authUpdates: any = {
-      email,
       user_metadata: { role, nama, school: sekolah }
     };
+    if (email && email.trim() !== "" && email.includes("@")) {
+      authUpdates.email = email;
+    }
     if (password) {
       authUpdates.password = password;
       authUpdates.user_metadata.password_text = password;
@@ -327,23 +329,27 @@ app.post("/api/admin/update-user", async (req, res) => {
     if (authError) throw authError;
     
     // Update Profile
+    const profileUpdates: any = {
+      username,
+      role,
+      nama,
+      nip,
+      kepegawaian,
+      pangkat,
+      jabatan,
+      sekolah,
+      foto: foto,
+      ...(password ? { password_text: password } : {})
+    };
+    if (email && email.trim() !== "" && email.includes("@")) {
+      profileUpdates.email = email;
+    }
+
     const { error: profileError } = await supabaseAdmin
       .from('user_profiles')
-      .update({
-        username,
-        email,
-        role,
-        nama,
-        nip,
-        kepegawaian,
-        pangkat,
-        jabatan,
-        sekolah,
-        foto: foto,
-        ...(password ? { password_text: password } : {})
-      })
+      .update(profileUpdates)
       .eq('id', id);
-      
+       
     if (profileError) throw profileError;
     
     res.json({ success: true });

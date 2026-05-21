@@ -8137,6 +8137,11 @@ function AdminGuruForm({ user }: { user: any }) {
       if ('avatar_url' in dbUpdates) {
         delete dbUpdates.avatar_url;
       }
+      
+      // Hapus primary key dan system-managed columns agar tidak error saat update
+      delete dbUpdates.id;
+      delete dbUpdates.created_at;
+      delete dbUpdates.updated_at;
 
       const { error } = await supabase
         .from("user_profiles")
@@ -9901,10 +9906,13 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Clean formData to remove virtual/relation fields that don't exist in DB
+      // Clean formData to remove virtual/relation fields and other system columns that don't exist in DB or are immutable
       const payload = { ...formData };
       delete payload.profiles;
       delete payload.guru;
+      delete payload.id;
+      delete payload.created_at;
+      delete payload.updated_at;
 
       if (editId) {
         const { error } = await supabase
