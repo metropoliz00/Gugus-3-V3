@@ -4411,9 +4411,26 @@ export const parseJakartaDatetimeLocalToUTC = (localString: string) => {
 
 function AdminAgendaForm({ user }: { user: any }) {
   const navigate = useNavigate();
+  const { alert, confirm } = useAlert();
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const debouncedSave = useRef<NodeJS.Timeout | null>(null);
+
+  // Modal State Variables
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<any | null>(null);
+  const [formData, setFormData] = useState({
+    title: "",
+    category: "guru",
+    date_start: "",
+    location: "",
+    description: "",
+    status: "rencana",
+    image_url: "",
+    detail_url: "",
+    materi_url: "",
+    is_attendance_open: false,
+    is_open_for_guests: false
+  });
 
   React.useEffect(() => {
     async function loadEvents() {
@@ -4433,82 +4450,150 @@ function AdminAgendaForm({ user }: { user: any }) {
     loadEvents();
   }, []);
 
-  const handleCreate = async () => {
+  const openCreateModal = () => {
+    setEditingEvent(null);
+    setFormData({
+      title: "",
+      category: "guru",
+      date_start: formatToJakartaDatetimeLocal(new Date().toISOString()),
+      location: "",
+      description: "",
+      status: "rencana",
+      image_url: "",
+      detail_url: "",
+      materi_url: "",
+      is_attendance_open: false,
+      is_open_for_guests: false
+    });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (item: any) => {
+    setEditingEvent(item);
+    setFormData({
+      title: item.title || "",
+      category: item.category || "guru",
+      date_start: item.date_start ? formatToJakartaDatetimeLocal(item.date_start) : "",
+      location: item.location || "",
+      description: item.description || "",
+      status: item.status || "rencana",
+      image_url: item.image_url || "",
+      detail_url: item.detail_url || "",
+      materi_url: item.materi_url || "",
+      is_attendance_open: !!item.is_attendance_open,
+      is_open_for_guests: !!item.is_open_for_guests
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!supabase) return;
-    const newEvent = {
-        title: "Kegiatan Baru",
-        description: "Deskripsi Kegiatan",
-        category: "guru",
-        date_start: new Date().toISOString(),
-        location: "Kantor Gugus",
-        status: "rencana",
-        image_url: "",
-        detail_url: "",
-        materi_url: "",
-        is_open_for_guests: false,
+
+    const payload = {
+      title: formData.title,
+      category: formData.category,
+      date_start: parseJakartaDatetimeLocalToUTC(formData.date_start),
+      location: formData.location,
+      description: formData.description,
+      status: formData.status,
+      image_url: formData.image_url,
+      detail_url: formData.detail_url,
+      materi_url: formData.materi_url,
+      is_attendance_open: formData.is_attendance_open,
+      is_open_for_guests: formData.is_open_for_guests
     };
-    
-    // We do NOT use .select() here, as RLS might return an empty array and crash data[0]
-    const { error } = await supabase
-      .from("events")
-      .insert([newEvent]);
-      
-    if (error) {
-      console.error("DEBUG_CREATE_ERROR:", error);
-      alert("Gagal menambah agenda: " + error.message);
-      return;
-    }
-    
-    logActivity(
-      user,
-      "create_agenda",
-      `Menambah agenda baru: ${newEvent.title}`,
-    );
-    
-    // Reload events manually
-    const { data: updatedData } = await supabase
-      .from("events")
-      .select("*")
-      .order("date_start", { ascending: true });
-      
-    if (updatedData) {
-      setEvents(updatedData);
+
+    if (editingEvent) {
+      // Edit mode
+      const { error } = await supabase
+        .from("events")
+        .update(payload)
+        .eq("id", editingEvent.id);
+
+      if (error) {
+        await alert("Gagal memperbarui agenda: " + error.message, "Gagal", "error");
+        return;
+      }
+
+      logActivity(user, "update_agenda", `Memperbarui agenda: ${payload.title}`);
+      setEvents(events.map((ev) => ev.id === editingEvent.id ? { ...ev, ...payload } : ev));
+      setIsModalOpen(false);
+      await alert("Agenda berhasil diperbarui!", "Sukses", "success");
+    } else {
+      // Create mode
+      const { error } = await supabase
+        .from("events")
+        .insert([payload]);
+
+      if (error) {
+        await alert("Gagal menambah agenda: " + error.message, "Gagal", "error");
+        return;
+      }
+
+      logActivity(user, "create_agenda", `Menambah agenda baru: ${payload.title}`);
+
+      // Reload list
+      const { data: updatedData } = await supabase
+        .from("events")
+        .select("*")
+        .order("date_start", { ascending: true });
+
+      if (updatedData) {
+        setEvents(updatedData);
+      }
+      setIsModalOpen(false);
+      await alert("Agenda baru berhasil ditambahkan!", "Sukses", "success");
     }
   };
 
-  const handleUpdate = (id: string, updates: any) => {
-    setEvents(events.map((g: any) => (g.id === id ? { ...g, ...updates } : g)));
+  const handleQuickUpdate = async (id: string, updates: any) => {
+    if (!supabase) return;
 
-    if (debouncedSave.current) clearTimeout(debouncedSave.current);
+    // Optimistically update the UI locally
+    setEvents((prev) => prev.map((ev) => ev.id === id ? { ...ev, ...updates } : ev));
 
-    debouncedSave.current = setTimeout(async () => {
-      if (!supabase) return;
-      const { error } = await supabase
+    const { error } = await supabase
+      .from("events")
+      .update(updates)
+      .eq("id", id);
+
+    if (error) {
+      console.error("Error updates event:", error);
+      // Revert if error
+      const { data: updatedData } = await supabase
         .from("events")
-        .update(updates)
-        .eq("id", id);
-      if (error) {
-        console.error("Error updating event:", error);
-      } else {
-        logActivity(user, "update_agenda", `Memperbarui agenda ID: ${id}`);
+        .select("*")
+        .order("date_start", { ascending: true });
+      if (updatedData) {
+        setEvents(updatedData);
       }
-    }, 800);
+    } else {
+      logActivity(user, "update_agenda", `Memperbarui cepat agenda ID: ${id}`);
+    }
   };
 
   const handleDelete = async (id: string) => {
     if (!supabase) return;
-    if (window.confirm("Hapus agenda ini?")) {
+    const item = events.find((ev) => ev.id === id);
+    const title = item ? item.title : "agenda";
+
+    const confirmed = await confirm(`Apakah Anda yakin ingin menghapus agenda "${title}"?`, "Konfirmasi Hapus");
+    if (confirmed) {
       const { error } = await supabase.from("events").delete().eq("id", id);
       if (!error) {
         logActivity(user, "delete_agenda", `Menghapus agenda ID: ${id}`);
         setEvents(events.filter((g: any) => g.id !== id));
+        await alert("Agenda berhasil dihapus!", "Sukses", "success");
+      } else {
+        await alert("Gagal menghapus agenda: " + error.message, "Gagal", "error");
       }
     }
   };
 
   return (
     <div className="space-y-10">
-      {/* Agenda Clean Header */}
+      {/* Agenda Section Header */}
       <div className="bg-white p-8 rounded-[2rem] border-l-8 border-orange-500 shadow-sm mb-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
         <div className="flex items-center gap-8">
           <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 border border-orange-100">
@@ -4529,7 +4614,7 @@ function AdminAgendaForm({ user }: { user: any }) {
         </div>
         
         <button
-          onClick={handleCreate}
+          onClick={openCreateModal}
           className="bg-orange-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-md hover:bg-orange-600 active:scale-95 transition-all flex items-center gap-3"
         >
           <PlusCircle className="w-4 h-4" /> Tambah Agenda
@@ -4537,193 +4622,453 @@ function AdminAgendaForm({ user }: { user: any }) {
       </div>
 
       <div className="space-y-6">
-        <div className="space-y-4">
-          {isLoading ? (
-            <div className="text-center text-gray-400 py-10">
-              Memuat agenda...
+        {isLoading ? (
+          <div className="text-center text-gray-400 py-10">
+            Memuat agenda...
+          </div>
+        ) : events.length === 0 ? (
+          <div className="text-center text-gray-400 py-10 bg-white border border-gray-100 rounded-2xl p-8 shadow-sm">
+            Belum ada agenda kegiatan. Klik <strong className="text-orange-500 cursor-pointer" onClick={openCreateModal}>Tambah Agenda</strong> untuk membuat pertama kalinya.
+          </div>
+        ) : (
+          <div className="overflow-x-auto bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <table className="w-full text-left border-collapse min-w-[800px]">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100 text-[10px] uppercase font-black tracking-wider text-gray-400 select-none">
+                  <th className="py-4 px-6">Nama Kegiatan</th>
+                  <th className="py-4 px-4">Waktu & Lokasi</th>
+                  <th className="py-4 px-4 text-center">Status Akses / Presensi</th>
+                  <th className="py-4 px-4">File / Lampiran</th>
+                  <th className="py-4 px-6 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50/70">
+                {events.map((item: any) => {
+                  const hasCover = !!item.image_url;
+                  const hasMateri = !!item.materi_url;
+                  
+                  return (
+                    <tr key={item.id} className="hover:bg-gray-50/40 transition-colors group">
+                      {/* Name & Category Info */}
+                      <td className="py-4 px-6 max-w-xs">
+                        <div className="flex items-start gap-3">
+                          <div className="w-1.5 h-10 rounded-full bg-orange-500 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-extrabold text-xs text-soft-black leading-snug">
+                              {item.title}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              <span className="inline-flex items-center px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded text-[9px] uppercase font-black tracking-widest border border-orange-100/50">
+                                {item.category}
+                              </span>
+                              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] uppercase font-extrabold border ${
+                                item.status === 'selesai' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                item.status === 'berjalan' ? 'bg-indigo-50 text-indigo-650 border-indigo-100' :
+                                'bg-amber-50 text-amber-600 border-amber-100'
+                              }`}>
+                                {item.status || "rencana"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Time & Location */}
+                      <td className="py-4 px-4 text-xs">
+                        <div className="space-y-1 text-gray-600">
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <span>
+                              {new Date(item.date_start).toLocaleDateString("id-ID", {
+                                weekday: 'long',
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric'
+                              })} pukul {new Date(item.date_start).toLocaleTimeString("id-ID", {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              })} WIB
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                            <MapPin className="w-3.5 h-3.5 shrink-0 text-orange-400 animate-pulse" />
+                            <span className="truncate max-w-[180px]" title={item.location}>{item.location || "Kantor Gugus"}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Status Access & Presensi Switch */}
+                      <td className="py-4 px-4 text-center">
+                        <div className="flex flex-col items-center gap-1.5 justify-center">
+                          {/* Attendance button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleQuickUpdate(item.id, { is_attendance_open: !item.is_attendance_open });
+                            }}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                              item.is_attendance_open 
+                                ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/20' 
+                                : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                            }`}
+                          >
+                            {item.is_attendance_open ? <CheckCircle className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                            <span>Presensi: {item.is_attendance_open ? "Buka" : "Tutup"}</span>
+                          </button>
+
+                          {/* Guest button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleQuickUpdate(item.id, { is_open_for_guests: !item.is_open_for_guests });
+                            }}
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all duration-200 ${
+                              item.is_open_for_guests 
+                                ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/20' 
+                                : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                            }`}
+                          >
+                            {item.is_open_for_guests ? <Users className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                            <span>Akses Tamu: {item.is_open_for_guests ? "Buka" : "Tutup"}</span>
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Compact File & Document Storage Columns with clear actions */}
+                      <td className="py-4 px-4 text-xs">
+                        <div className="flex flex-col gap-1.5 max-w-[190px]">
+                          {hasCover ? (
+                            <div className="flex items-center justify-between gap-1 p-1 bg-orange-50 border border-orange-100/50 rounded-lg pr-1.5 pl-1.5">
+                              <div className="flex items-center gap-1.5 text-[10px] text-orange-700 font-extrabold truncate">
+                                <ImageIcon className="w-3.5 h-3.5 text-orange-400 shrink-0" />
+                                <span className="truncate">Cover Tersimpan</span>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <a 
+                                  href={item.image_url} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="px-1.5 py-0.5 bg-orange-100/50 hover:bg-orange-100 text-[9px] font-bold text-orange-600 rounded transition-colors"
+                                  title="Lihat Cover"
+                                >
+                                  Lihat
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (await confirm("Hapus Cover Foto untuk agenda ini?")) {
+                                      handleQuickUpdate(item.id, { image_url: "" });
+                                      await alert("Cover Foto berhasil dihapus!", "Sukses", "success");
+                                    }
+                                  }}
+                                  className="p-1 hover:bg-red-50 text-red-500 rounded transition-colors"
+                                  title="Hapus Cover"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-gray-400 font-medium italic">Cover: Kosong</span>
+                          )}
+
+                          {hasMateri ? (
+                            <div className="flex items-center justify-between gap-1 p-1 bg-indigo-50 border border-indigo-100/50 rounded-lg pr-1.5 pl-1.5">
+                              <div className="flex items-center gap-1.5 text-[10px] text-indigo-700 font-extrabold truncate">
+                                <FileText className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                                <span className="truncate">Materi Tersimpan</span>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <a 
+                                  href={item.materi_url} 
+                                  download={`Materi_${item.title}`}
+                                  className="p-1.5 bg-indigo-100/50 hover:bg-indigo-100 text-indigo-650 rounded transition-colors flex items-center gap-0.5"
+                                  title="Download Materi"
+                                >
+                                  <Download className="w-3 h-3" />
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (await confirm("Hapus file Materi untuk agenda ini?")) {
+                                      handleQuickUpdate(item.id, { materi_url: "" });
+                                      await alert("File Materi berhasil dihapus!", "Sukses", "success");
+                                    }
+                                  }}
+                                  className="p-1 hover:bg-red-50 text-red-500 rounded transition-colors"
+                                  title="Hapus Materi"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-gray-400 font-medium italic">Materi: Kosong</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* General row actions */}
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center gap-2 justify-end">
+                          {/* Cetak Rekap */}
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/dashboard/rekap_absen?type=event&id=${item.id}`)}
+                            className="px-2.5 py-1.5 bg-gray-50 text-gray-650 hover:bg-main-blue/10 hover:text-main-blue rounded-xl transition-all font-black text-[10px] uppercase tracking-wider flex items-center gap-1"
+                            title="Format cetak absensi kegiatan"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                            <span>Rekap</span>
+                          </button>
+
+                          {/* Edit Form Popup Trigger */}
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(item)}
+                            className="px-2.5 py-1.5 bg-gray-50 text-gray-650 hover:bg-orange-50 hover:text-orange-600 rounded-xl transition-all font-black text-[10px] uppercase tracking-wider"
+                          >
+                            Edit
+                          </button>
+
+                          {/* Delete Item button */}
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(item.id)}
+                            className="p-1.5 bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-xl transition-all"
+                            title="Hapus Agenda"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Pop-up Overlay Form Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4">
+          {/* Backdrop blur effect */}
+          <div 
+            onClick={() => setIsModalOpen(false)}
+            className="fixed inset-0 bg-dark-gray/60 backdrop-blur-sm transition-opacity"
+          />
+
+          {/* Modal Container */}
+          <div className="bg-white rounded-[2rem] shadow-2xl relative border border-gray-100 max-w-2xl w-full max-h-[85vh] overflow-y-auto p-8 animate-scale-up z-10 scrollbar-thin scrollbar-thumb-gray-200">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-400 hover:text-soft-black transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-4 mb-6 select-none">
+              <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 border border-orange-100">
+                <Calendar className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold font-heading text-soft-black leading-tight">
+                  {editingEvent ? "Edit Agenda Kegiatan" : "Tambah Agenda Baru"}
+                </h3>
+                <p className="text-xs text-gray-450 mt-1">
+                  Isi formulir berikut untuk {editingEvent ? "memperbarui" : "membuat"} agenda kegiatan gugus.
+                </p>
+              </div>
             </div>
-          ) : events.length === 0 ? (
-            <div className="text-center text-gray-400 py-10">
-              Belum ada agenda kegiatan.
-            </div>
-          ) : (
-            events.map((item: any) => (
-              <div
-                key={item.id}
-                className="p-4 border border-gray-100 rounded-2xl bg-white shadow-sm flex items-start gap-4 hover:shadow-md transition-all group relative"
-              >
-                <div className="w-2 h-20 rounded-full bg-leaf-green shrink-0 mt-1" />
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Nama Kegiatan
-                    </label>
-                    <input
-                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
-                      value={item.title}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { title: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Kategori
-                    </label>
-                    <select
-                      className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent"
-                      value={item.category}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { category: e.target.value })
-                      }
-                    >
-                      <option value="guru">Guru</option>
-                      <option value="siswa">Siswa</option>
-                      <option value="workshop">Workshop</option>
-                      <option value="seminar">Seminar</option>
-                      <option value="kokurikuler">Kokurikuler</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Waktu (Date Start)
-                    </label>
-                    <input
-                      className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent"
-                      type="datetime-local"
-                      value={formatToJakartaDatetimeLocal(item.date_start)}
-                      onChange={(e) =>
-                        handleUpdate(item.id, {
-                          date_start: parseJakartaDatetimeLocalToUTC(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Lokasi
-                    </label>
-                    <input
-                      className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent"
-                      value={item.location || ""}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { location: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Deskripsi Kegiatan
-                    </label>
-                    <textarea
-                      className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent"
-                      value={item.description || ""}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { description: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Status Kegiatan
-                    </label>
-                    <select
-                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
-                      value={item.status || "rencana"}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { status: e.target.value })
-                      }
-                    >
-                      <option value="rencana">Rencana</option>
-                      <option value="berjalan">Berjalan</option>
-                      <option value="selesai">Selesai</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      File Cover Foto
-                    </label>
-                    <ImageUpload
-                      label=""
-                      compact={true}
-                      value={item.image_url || ""}
-                      onChange={(base64) =>
-                        handleUpdate(item.id, { image_url: base64 })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      URL Detail Link
-                    </label>
-                    <input
-                      className="w-full border-b border-gray-200 text-sm text-gray-600 outline-none bg-transparent"
-                      value={item.detail_url || ""}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { detail_url: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      File Materi (Unduh)
-                    </label>
-                    <FileUpload
-                      label=""
-                      compact={true}
-                      value={item.materi_url || ""}
-                      accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
-                      onChange={(base64) =>
-                        handleUpdate(item.id, { materi_url: base64 })
-                      }
-                    />
-                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Status Presensi Digital
-                    </label>
-                    <button
-                      onClick={() => handleUpdate(item.id, { is_attendance_open: !item.is_attendance_open })}
-                      className={`mt-1 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all ${item.is_attendance_open ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-400'}`}
-                    >
-                      {item.is_attendance_open ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                      {item.is_attendance_open ? "Buka (Online)" : "Tutup (Nonaktif)"}
-                    </button>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                      Akses Tamu Undangan
-                    </label>
-                    <button
-                      onClick={() => handleUpdate(item.id, { is_open_for_guests: !item.is_open_for_guests })}
-                      className={`mt-1 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest transition-all ${item.is_open_for_guests ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400'}`}
-                    >
-                      {item.is_open_for_guests ? <Users className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
-                      {item.is_open_for_guests ? "Buka (Tamu)" : "Tutup (Tamu)"}
-                    </button>
-                  </div>
-                  <div className="flex flex-col justify-end">
-                    <button
-                      onClick={() => navigate(`/dashboard/rekap_absen?type=event&id=${item.id}`)}
-                      className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest bg-main-blue/10 text-main-blue hover:bg-main-blue/20 transition-all"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      Cetak Rekap
-                    </button>
-                  </div>
-                 </div>
+
+            <form onSubmit={handleModalSubmit} className="space-y-5">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
+                  Nama Kegiatan
+                </label>
+                <input
+                  required
+                  type="text"
+                  placeholder="Contoh: Rapat Koordinasi KKG Bulanan"
+                  className="w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100/50 border border-gray-200/70 rounded-xl text-sm font-bold text-soft-black outline-none focus:border-orange-500 focus:bg-white transition-all font-sans"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
+                    Kategori
+                  </label>
+                  <select
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-700 font-bold outline-none focus:border-orange-500 focus:bg-white transition-all"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  >
+                    <option value="guru">Guru</option>
+                    <option value="siswa">Siswa</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="seminar">Seminar</option>
+                    <option value="kokurikuler">Kokurikuler</option>
+                  </select>
                 </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
+                    Status Kegiatan
+                  </label>
+                  <select
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-700 font-bold outline-none focus:border-orange-500 focus:bg-white transition-all"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  >
+                    <option value="rencana">Rencana</option>
+                    <option value="berjalan">Berjalan</option>
+                    <option value="selesai">Selesai</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
+                    Waktu Kegiatan (Mulai)
+                  </label>
+                  <input
+                    required
+                    type="datetime-local"
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-750 outline-none focus:border-orange-500 focus:bg-white transition-all"
+                    value={formData.date_start}
+                    onChange={(e) => setFormData({ ...formData, date_start: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
+                    Lokasi Kegiatan
+                  </label>
+                  <input
+                    required
+                    type="text"
+                    placeholder="Contoh: SDN 01 Rajabasa / Ruang Guru"
+                    className="w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100/50 border border-gray-200/70 rounded-xl text-sm text-gray-700 outline-none focus:border-orange-500 focus:bg-white transition-all"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
+                  Deskripsi Kegiatan
+                </label>
+                <textarea
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-750 outline-none focus:border-orange-500 focus:bg-white transition-all min-h-[70px] resize-y"
+                  placeholder="Detail agenda kegiatan, prasyarat, agenda rapat, dsb..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
+                  Link Tautan Detail/Website luar (Opsional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Contoh: https://linktr.ee/..."
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-700 outline-none focus:border-orange-500 focus:bg-white transition-all font-mono"
+                  value={formData.detail_url}
+                  onChange={(e) => setFormData({ ...formData, detail_url: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100/60">
+                <div>
+                  <label className="block text-[10px] uppercase font-black tracking-wider text-orange-600 mb-1.5">
+                    Cover Foto Agenda
+                  </label>
+                  <ImageUpload
+                    label=""
+                    compact={true}
+                    value={formData.image_url}
+                    onChange={(base64) => setFormData({ ...formData, image_url: base64 })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase font-black tracking-wider text-orange-600 mb-1.5">
+                    File Lampiran Materi
+                  </label>
+                  <FileUpload
+                    label=""
+                    compact={true}
+                    value={formData.materi_url}
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                    onChange={(base64OrPath) => setFormData({ ...formData, materi_url: base64OrPath })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100 select-none">
+                  <div>
+                    <p className="text-xs font-extrabold text-soft-black leading-tight">Presensi Digital</p>
+                    <p className="text-[10px] text-gray-400 leading-normal">Buka lembar absen peserta</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, is_attendance_open: !formData.is_attendance_open })}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all duration-200 ${
+                      formData.is_attendance_open ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/25' : 'bg-gray-200 text-gray-400'
+                    }`}
+                  >
+                    {formData.is_attendance_open ? <CheckCircle className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                    <span>{formData.is_attendance_open ? "Buka" : "Tutup"}</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100 select-none">
+                  <div>
+                    <p className="text-xs font-extrabold text-soft-black leading-tight">Akses Tamu</p>
+                    <p className="text-[10px] text-gray-400 leading-normal">Izinkan absen dari luar instansi</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, is_open_for_guests: !formData.is_open_for_guests })}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-[10px] uppercase tracking-wider transition-all duration-200 ${
+                      formData.is_open_for_guests ? 'bg-amber-500 text-white shadow-sm shadow-amber-500/25' : 'bg-gray-200 text-gray-400'
+                    }`}
+                  >
+                    {formData.is_open_for_guests ? <Users className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                    <span>{formData.is_open_for_guests ? "Buka" : "Tutup"}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
                 <button
                   type="button"
-                  onClick={() => handleDelete(item.id)}
-                  className="opacity-0 group-hover:opacity-100 p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all font-sans"
                 >
-                  <X className="w-4 h-4" />
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 font-bold text-xs uppercase tracking-wider text-white shadow-md active:scale-95 transition-all flex items-center gap-2"
+                >
+                  {editingEvent ? "Simpan Perubahan" : "Simpan Agenda"}
                 </button>
               </div>
-            ))
-          )}
+            </form>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
