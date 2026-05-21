@@ -545,9 +545,9 @@ export default function MapGugus() {
       </div>
 
       {/* Main Container Core */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Sidebar School List Selection Panel */}
-        <div className="lg:col-span-1 max-h-[500px] overflow-y-auto pr-1 space-y-2.5 scrollbar-thin scrollbar-thumb-gray-200">
+        <div className="lg:col-span-4 max-h-[600px] overflow-y-auto pr-1 space-y-2.5 scrollbar-thin scrollbar-thumb-gray-200">
           <p className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-2 pl-1 block">Daftar Sekolah Anggota</p>
           {schools.length === 0 ? (
             <div className="text-center text-xs text-gray-400 py-6">Memuat daftar sekolah...</div>
@@ -589,7 +589,7 @@ export default function MapGugus() {
                       <School className="w-4.5 h-4.5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-extrabold text-xs text-soft-black truncate leading-tight group-hover:text-main-blue transition-colors">
+                      <p className="font-extrabold text-xs text-soft-black whitespace-normal break-words leading-tight group-hover:text-main-blue transition-colors">
                         {school.name}
                       </p>
                       <div className="flex flex-col mt-0.5">
@@ -611,7 +611,7 @@ export default function MapGugus() {
         </div>
 
         {/* Map Stage Viewer */}
-        <div className="lg:col-span-3 relative bg-gray-50 rounded-3xl border border-gray-100 overflow-hidden shadow-inner h-[400px] sm:h-[500px]">
+        <div className="lg:col-span-8 relative bg-gray-50 rounded-3xl border border-gray-100 overflow-hidden shadow-inner h-[450px] sm:h-[600px]">
           {(!leafletReady || isLoading) && (
             <div className="absolute inset-0 bg-white/75 backdrop-blur-sm z-[1000] flex flex-col items-center justify-center p-6 text-center">
               <div className="w-12 h-12 border-4 border-main-blue border-t-transparent rounded-full animate-spin mb-4" />
