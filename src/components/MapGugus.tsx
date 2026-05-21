@@ -680,12 +680,15 @@ export default function MapGugus() {
                 </span>
                 <a
                   href="#sekolah"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Scroll to sekolah section
                     const el = document.getElementById("sekolah");
                     if (el) el.scrollIntoView({ behavior: "smooth" });
-                    // Give a slight delay then activate selected school modal in the listing page
-                    const btn = document.querySelector(`button[onClick*="setSelectedSchool"]`);
-                    if (btn) (btn as HTMLButtonElement).click();
+                    
+                    // Dispatch custom event to open school detail modal
+                    const event = new CustomEvent('open-school-detail', { detail: selectedSchool });
+                    window.dispatchEvent(event);
                   }}
                   className="px-3.5 py-1.5 bg-soft-black hover:bg-main-blue text-white rounded-xl text-[10px] font-extrabold uppercase tracking-widest transition-all hover:scale-103 shadow active:scale-95 flex items-center gap-1.5 cursor-pointer leading-tight"
                 >

@@ -78,6 +78,18 @@ export default function Schools() {
     fetchSchools();
   }, []);
 
+  useEffect(() => {
+    const handleOpenSchoolDetail = (e: CustomEvent) => {
+      if (e.detail) {
+        setSelectedSchool(e.detail);
+      }
+    };
+    window.addEventListener('open-school-detail' as any, handleOpenSchoolDetail);
+    return () => {
+      window.removeEventListener('open-school-detail' as any, handleOpenSchoolDetail);
+    };
+  }, []);
+
   const filteredSchools = schools.filter(s => {
     if (filter === 'Semua') return true;
     return s.jenis_sekolah === filter;
