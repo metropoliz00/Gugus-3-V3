@@ -35,35 +35,125 @@ const PREDEFINED_COORDS: Record<string, { lat: number; lng: number }> = {
   "sdn jenu 3": { lat: -6.88920, lng: 112.0205 }
 };
 
+// Extremely robust coordinate parser matching direct coordinates inputs as well as Google Maps embed URLs
 function extractCoordsFromEmbedUrl(url: string) {
   if (!url) return null;
-  // !2d112.0163353!3d-6.8875567
+  const clean = url.trim();
+
+  // If input is just directly raw point coordinates, e.g., "-6.832742, 112.022335"
+  const rawPairMatch = clean.match(/^([+-]?\d+\.\d+)\s*,\s*([+-]?\d+\.\d+)$/);
+  if (rawPairMatch) {
+    return {
+      lat: parseFloat(rawPairMatch[1]),
+      lng: parseFloat(rawPairMatch[2])
+    };
+  }
+
+  // Same as raw pair but space separated, e.g., "-6.832742 112.022335"
+  const rawPairSpaceMatch = clean.match(/^([+-]?\d+\.\d+)\s+([+-]?\d+\.\d+)$/);
+  if (rawPairSpaceMatch) {
+    return {
+      lat: parseFloat(rawPairSpaceMatch[1]),
+      lng: parseFloat(rawPairSpaceMatch[2])
+    };
+  }
+
+  // 1. Google maps embed url style containing pb=!1m18!1m12!1m3!2dLONGITUDE!3dLATITUDE
   const dMatch = url.match(/!2d(-?\d+\.\d+)/);
   const tMatch = url.match(/!3d(-?\d+\.\d+)/);
   if (dMatch && tMatch) {
+    const lat = parseFloat(tMatch[1]);
+    const lng = parseFloat(dMatch[1]);
+    return { lat, lng };
+  }
+
+  // 2. Check for @lat,lng style
+  const atMatch = url.match(/@(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
+  if (atMatch) {
     return {
-      lat: parseFloat(tMatch[1]),
-      lng: parseFloat(dMatch[1])
+      lat: parseFloat(atMatch[1]),
+      lng: parseFloat(atMatch[2])
     };
   }
-  const qMatch = url.match(/[?&](q|cbll|query)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+
+  // 3. Check for q=lat,lng or query=lat,lng or ll=lat,lng
+  const qMatch = url.match(/[?&](q|cbll|query|ll)=(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
   if (qMatch) {
     return {
       lat: parseFloat(qMatch[2]),
       lng: parseFloat(qMatch[3])
     };
   }
+
+  // 4. Fallback search for any "latitude,longitude" pair match anywhere in URL query/path
+  const genericCoordsMatch = url.match(/(-?[5678]\.\d+)\s*,\s*(11[12]\.\d+)/); // Jenu latitude is around -6.8, longitude around 112.0
+  if (genericCoordsMatch) {
+    return {
+      lat: parseFloat(genericCoordsMatch[1]),
+      lng: parseFloat(genericCoordsMatch[2])
+    };
+  }
+
   return null;
+}
+
+// Haversine distance calculator between two points on the globe in Kilometers
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Radius of the Earth in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; 
+}
+
+// Reliable coordinate getter with predefined mappings and scatter algorithms
+function getSchoolCoords(school: SchoolData, idx: number, schoolsCount: number) {
+  // 1. Try embed url / user input first
+  if (school.map_embed_url) {
+    const coords = extractCoordsFromEmbedUrl(school.map_embed_url);
+    if (coords) return coords;
+  }
+
+  // 2. Try predefined mapping by exact lowercase trim
+  const key = school.name.toLowerCase().trim();
+  if (PREDEFINED_COORDS[key]) {
+    return PREDEFINED_COORDS[key];
+  }
+
+  // 3. Fallback: search key partial matching
+  for (const [nameKey, value] of Object.entries(PREDEFINED_COORDS)) {
+    if (key.includes(nameKey) || nameKey.includes(key)) {
+      return value;
+    }
+  }
+
+  // 4. Otherwise scatter neatly around the Jenu geographic center coordinates
+  const centerLat = -6.832;
+  const centerLng = 112.010;
+  const angle = (idx * 2 * Math.PI) / (schoolsCount || 1);
+  const radius = 0.012 + idx * 0.002; 
+  return {
+    lat: centerLat + Math.sin(angle) * radius,
+    lng: centerLng + Math.cos(angle) * radius
+  };
 }
 
 export default function MapGugus() {
   const [schools, setSchools] = useState<SchoolData[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<SchoolData | null>(null);
+  const [hoveredSchoolId, setHoveredSchoolId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [leafletReady, setLeafletReady] = useState(false);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
+  const activePolylineRef = useRef<any>(null);
 
   // 1. Load Leaflet CDN Assets
   useEffect(() => {
@@ -129,7 +219,7 @@ export default function MapGugus() {
       mapRef.current = null;
     }
 
-    // Custom school centers around Jenu, Tuban
+    // Default center around Jenu, Tuban
     const centerLat = -6.832;
     const centerLng = 112.010;
 
@@ -143,7 +233,7 @@ export default function MapGugus() {
 
     mapRef.current = map;
 
-    // Load beautiful minimalist light theme tile layer
+    // Load beautiful minimalist tiles
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: "abcd",
@@ -154,45 +244,15 @@ export default function MapGugus() {
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    // Helper to get coordinates
-    const getSchoolCoords = (school: SchoolData, idx: number) => {
-      // Try embed url first
-      if (school.map_embed_url) {
-        const coords = extractCoordsFromEmbedUrl(school.map_embed_url);
-        if (coords) return coords;
-      }
-
-      // Try predefined mapping
-      const key = school.name.toLowerCase().trim();
-      if (PREDEFINED_COORDS[key]) {
-        return PREDEFINED_COORDS[key];
-      }
-
-      // Fallback: search key partials
-      for (const [nameKey, value] of Object.entries(PREDEFINED_COORDS)) {
-        if (key.includes(nameKey) || nameKey.includes(key)) {
-          return value;
-        }
-      }
-
-      // Otherwise scatter around centro
-      // Introduce calculated pattern so they don't overlap completely
-      const angle = (idx * 2 * Math.PI) / (schools.length || 1);
-      const radius = 0.015 + (idx * 0.003); // scatter radius
-      return {
-        lat: centerLat + Math.sin(angle) * radius,
-        lng: centerLng + Math.cos(angle) * radius
-      };
-    };
-
     // Plot each school
     schools.forEach((school, index) => {
-      const coords = getSchoolCoords(school, index);
+      const coords = getSchoolCoords(school, index, schools.length);
       const isInti = school.jenis_sekolah === "Sekolah Inti";
 
-      // Design unique HTML for the custom marker featuring School Building Building Icon & Name Label
+      // Design unique HTML for the custom marker featuring School Building Icon & Name Label
+      // Using accurate CSS alignment so that bottom-center is pinned at exactly [0,0] to prevent drifts
       const markerHtml = `
-        <div class="flex flex-col items-center select-none" style="transform: translate(-50%, -100%);">
+        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center select-none" style="width: 140px; margin-bottom: 2px;">
           <!-- Tooltip Label -->
           <div class="px-2.5 py-1 rounded-lg shadow-md border text-[10px] font-extrabold whitespace-nowrap bg-white text-soft-black leading-tight border-gray-100 ${isInti ? "ring-2 ring-main-blue/30 scale-105" : "scale-95"} mb-1 transition-all duration-300">
             ${school.name}
@@ -219,17 +279,17 @@ export default function MapGugus() {
             </div>
             
             <!-- Pin stalk -->
-            <div class="w-1 h-2 -mt-[2px] ${isInti ? "bg-main-blue" : "bg-leaf-green"} mx-auto rounded-b shadow"></div>
+            <div class="w-1.5 h-1.5 -mt-[1px] ${isInti ? "bg-main-blue" : "bg-leaf-green"} mx-auto rounded-b shadow-sm"></div>
           </div>
         </div>
       `;
 
-      // Create Leaflet DivIcon
+      // Create Leaflet DivIcon anchored precisely at 0px, 0px with parent container style normalized
       const customIcon = L.divIcon({
         html: markerHtml,
         className: "custom-school-marker",
-        iconSize: [120, 70],
-        iconAnchor: [60, 65]
+        iconSize: [0, 0],
+        iconAnchor: [0, 0]
       });
 
       // Add to map
@@ -238,6 +298,12 @@ export default function MapGugus() {
         .on("click", () => {
           setSelectedSchool(school);
           map.setView([coords.lat, coords.lng], 15, { animate: true, duration: 1 });
+        })
+        .on("mouseover", () => {
+          setHoveredSchoolId(school.id);
+        })
+        .on("mouseout", () => {
+          setHoveredSchoolId(null);
         });
 
       markersRef.current.push(marker);
@@ -258,25 +324,99 @@ export default function MapGugus() {
     };
   }, [leafletReady, isLoading, schools]);
 
+  // 4. Update Connecting Distance Visual Polylines dynamically
+  useEffect(() => {
+    if (!leafletReady || isLoading || !mapRef.current) return;
+    const L = (window as any).L;
+    if (!L) return;
+
+    // Erase old polyline group if drawing exists
+    if (activePolylineRef.current) {
+      activePolylineRef.current.remove();
+      activePolylineRef.current = null;
+    }
+
+    // Capture target school (prioritize hover state above click/selected state)
+    const targetSchoolId = hoveredSchoolId || selectedSchool?.id;
+    if (!targetSchoolId) return;
+
+    const targetSchool = schools.find((s) => s.id === targetSchoolId);
+    if (!targetSchool || targetSchool.jenis_sekolah === "Sekolah Inti") return;
+
+    // Locate the "Sekolah Inti" to connect with
+    const sekolahInti = schools.find((s) => s.jenis_sekolah === "Sekolah Inti") || schools[0];
+    if (!sekolahInti || sekolahInti.id === targetSchool.id) return;
+
+    const idxInti = schools.findIndex((s) => s.id === sekolahInti.id);
+    const coordsInti = getSchoolCoords(sekolahInti, idxInti, schools.length);
+
+    const idxTarget = schools.findIndex((s) => s.id === targetSchool.id);
+    const coordsTarget = getSchoolCoords(targetSchool, idxTarget, schools.length);
+
+    if (!coordsInti || !coordsTarget) return;
+
+    // Calculate actual geodesic distance
+    const dist = calculateDistance(coordsInti.lat, coordsInti.lng, coordsTarget.lat, coordsTarget.lng);
+
+    // Build decorative connection styling
+    const pathGroup = L.featureGroup();
+
+    // Fat semi-translucent hover background line for smooth presentation
+    const bgLine = L.polyline([[coordsInti.lat, coordsInti.lng], [coordsTarget.lat, coordsTarget.lng]], {
+      color: "#f59e0b", // Amber
+      weight: 12,
+      opacity: 0.12,
+      lineCap: "round"
+    });
+
+    // Bright main dotted dashboard line
+    const dashLine = L.polyline([[coordsInti.lat, coordsInti.lng], [coordsTarget.lat, coordsTarget.lng]], {
+      color: "#f97316", // Orange-500
+      weight: 3.5,
+      dashArray: "10, 8",
+      opacity: 0.95,
+      lineCap: "round"
+    });
+
+    bgLine.addTo(pathGroup);
+    dashLine.addTo(pathGroup);
+
+    // Dynamic centered distance tooltip marker plotting
+    const midLat = (coordsInti.lat + coordsTarget.lat) / 2;
+    const midLng = (coordsInti.lng + coordsTarget.lng) / 2;
+    const distanceStr = `Sinergi Jarak: ${dist.toFixed(2)} km`;
+
+    const tooltipMarker = L.marker([midLat, midLng], {
+      icon: L.divIcon({
+        className: 'premium-distance-marker-container',
+        html: `<div class="flex items-center justify-center pointer-events-none" style="transform: translate(-50%, -50%);"><span class="premium-distance-tooltip">${distanceStr}</span></div>`,
+        iconAnchor: [0, 0]
+      })
+    });
+
+    tooltipMarker.addTo(pathGroup);
+
+    // Render group on the live map layer
+    pathGroup.addTo(mapRef.current);
+    activePolylineRef.current = pathGroup;
+
+    return () => {
+      if (activePolylineRef.current) {
+        activePolylineRef.current.remove();
+        activePolylineRef.current = null;
+      }
+    };
+  }, [selectedSchool, hoveredSchoolId, schools, leafletReady, isLoading]);
+
+
   // Focus Map to specified school
   const zoomToSchool = (school: SchoolData) => {
     if (!mapRef.current) return;
     setSelectedSchool(school);
 
-    // Get coordinates using identical logic
+    // Get coordinates using identical logic values
     const idx = schools.findIndex(s => s.id === school.id);
-    const isInti = school.jenis_sekolah === "Sekolah Inti";
-    
-    // Calculate custom coordinates
-    let coords = null;
-    if (school.map_embed_url) {
-      coords = extractCoordsFromEmbedUrl(school.map_embed_url);
-    }
-    
-    if (!coords) {
-      const nameKey = school.name.toLowerCase().trim();
-      coords = PREDEFINED_COORDS[nameKey] || Object.values(PREDEFINED_COORDS)[idx % 5];
-    }
+    const coords = getSchoolCoords(school, idx, schools.length);
 
     if (coords) {
       mapRef.current.setView([coords.lat, coords.lng], 15.5, {
@@ -287,7 +427,44 @@ export default function MapGugus() {
   };
 
   return (
-    <div className="bg-white rounded-3xl overflow-hidden border border-main-orange/20 shadow-xl p-4 sm:p-6">
+    <div className="bg-white rounded-3xl overflow-hidden border border-main-orange/20 shadow-xl p-4 sm:p-6 relative">
+      <style>{`
+        /* Self-contained CSS injection ensuring 100% stable layout assets style */
+        .custom-school-marker {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          width: 0px !important;
+          height: 0px !important;
+        }
+        .premium-distance-tooltip {
+          background: #0f172a !important; /* Slate-900 */
+          color: #ffffff !important;
+          border: 1.5px solid #f97316 !important; /* Orange */
+          font-weight: 800 !important;
+          font-family: inherit !important;
+          font-size: 10px !important;
+          border-radius: 9999px !important;
+          padding: 4px 10px !important;
+          box-shadow: 0 4px 14px rgba(249,115,22,0.3) !important;
+          white-space: nowrap !important;
+          display: inline-block !important;
+          letter-spacing: 0.025em;
+          animation: tooltipPulse 1.5s infinite ease-in-out;
+        }
+        @keyframes tooltipPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.03); }
+        }
+        .premium-distance-marker-container {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+          width: 0px !important;
+          height: 0px !important;
+        }
+      `}</style>
+
       {/* Map Control Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
@@ -325,35 +502,61 @@ export default function MapGugus() {
           {schools.length === 0 ? (
             <div className="text-center text-xs text-gray-400 py-6">Memuat daftar sekolah...</div>
           ) : (
-            schools.map((school) => {
-              const isInti = school.jenis_sekolah === "Sekolah Inti";
-              const isCurrent = selectedSchool?.id === school.id;
-              return (
-                <button
-                  key={school.id}
-                  onClick={() => zoomToSchool(school)}
-                  className={`w-full text-left p-3 rounded-2xl border transition-all flex items-center gap-3 cursor-pointer ${
-                    isCurrent
-                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-main-blue ring-1 ring-main-blue/20"
-                      : "bg-white hover:bg-gray-50 border-gray-100 hover:border-gray-200"
-                  }`}
-                >
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
-                    isInti 
-                      ? "bg-blue-100/50 border-blue-200 text-main-blue" 
-                      : "bg-green-100/50 border-green-200 text-leaf-green"
-                  }`}>
-                    <School className="w-4.5 h-4.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-extrabold text-xs text-soft-black truncate leading-tight">{school.name}</p>
-                    <span className={`text-[9px] font-black uppercase tracking-wider ${isInti ? "text-main-blue" : "text-leaf-green"}`}>
-                      {school.jenis_sekolah}
-                    </span>
-                  </div>
-                </button>
-              );
-            })
+            (() => {
+              const sekolahInti = schools.find(s => s.jenis_sekolah === "Sekolah Inti") || schools[0];
+              const idxInti = schools.findIndex(s => s.id === sekolahInti?.id);
+              const coordsInti = sekolahInti ? getSchoolCoords(sekolahInti, idxInti, schools.length) : null;
+
+              return schools.map((school, idx) => {
+                const isInti = school.jenis_sekolah === "Sekolah Inti";
+                const isCurrent = selectedSchool?.id === school.id;
+                
+                // Calculate distance info directly for display in the sidebar
+                let distanceStr = "";
+                if (coordsInti && school.id !== sekolahInti.id) {
+                  const coordsTarget = getSchoolCoords(school, idx, schools.length);
+                  const d = calculateDistance(coordsInti.lat, coordsInti.lng, coordsTarget.lat, coordsTarget.lng);
+                  distanceStr = `${d.toFixed(2)} km dari Sekolah Inti`;
+                }
+
+                return (
+                  <button
+                    key={school.id}
+                    onClick={() => zoomToSchool(school)}
+                    onMouseEnter={() => setHoveredSchoolId(school.id)}
+                    onMouseLeave={() => setHoveredSchoolId(null)}
+                    className={`w-full text-left p-3 rounded-2xl border transition-all flex items-center gap-3 cursor-pointer group ${
+                      isCurrent
+                        ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-main-blue ring-1 ring-main-blue/20"
+                        : "bg-white hover:bg-gray-50 border-gray-100 hover:border-gray-200"
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${
+                      isInti 
+                        ? "bg-blue-100/50 border-blue-200 text-main-blue" 
+                        : "bg-green-100/50 border-green-200 text-leaf-green"
+                    }`}>
+                      <School className="w-4.5 h-4.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-extrabold text-xs text-soft-black truncate leading-tight group-hover:text-main-blue transition-colors">
+                        {school.name}
+                      </p>
+                      <div className="flex flex-col mt-0.5">
+                        <span className={`text-[9px] font-black uppercase tracking-wider ${isInti ? "text-main-blue" : "text-leaf-green"}`}>
+                          {school.jenis_sekolah}
+                        </span>
+                        {distanceStr && (
+                          <span className="text-[9px] text-gray-500 font-extrabold mt-0.5 inline-flex items-center gap-1 bg-gray-100 rounded-md px-1.5 py-0.5 w-max">
+                            <MapPin className="w-2.5 h-2.5 text-main-orange" /> {distanceStr}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              });
+            })()
           )}
         </div>
 
