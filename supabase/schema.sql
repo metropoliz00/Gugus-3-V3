@@ -208,17 +208,11 @@ CREATE TABLE IF NOT EXISTS public.posts (
 );
 
 -- Table for Events (Kegiatan)
-DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'event_category') THEN
-    CREATE TYPE event_category AS ENUM ('guru', 'siswa', 'workshop', 'seminar', 'kokurikuler');
-  END IF;
-END $$;
-
 CREATE TABLE IF NOT EXISTS public.events (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
-    category event_category NOT NULL,
+    category TEXT NOT NULL,
     date_start TIMESTAMP WITH TIME ZONE NOT NULL,
     date_end TIMESTAMP WITH TIME ZONE,
     location VARCHAR(255),

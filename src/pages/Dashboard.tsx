@@ -4418,9 +4418,13 @@ function AdminAgendaForm({ user }: { user: any }) {
   // Modal State Variables
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any | null>(null);
+  
+  const predefinedCategories = ["Pelatihan", "Workshop", "IHT", "Seminar", "Monev", "Rapat Pengurus", "Rapat Pleno"];
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+
   const [formData, setFormData] = useState({
     title: "",
-    category: "guru",
+    category: "Pelatihan",
     date_start: "",
     location: "",
     description: "",
@@ -4452,9 +4456,10 @@ function AdminAgendaForm({ user }: { user: any }) {
 
   const openCreateModal = () => {
     setEditingEvent(null);
+    setIsCustomCategory(false);
     setFormData({
       title: "",
-      category: "guru",
+      category: "Pelatihan",
       date_start: formatToJakartaDatetimeLocal(new Date().toISOString()),
       location: "",
       description: "",
@@ -4470,9 +4475,14 @@ function AdminAgendaForm({ user }: { user: any }) {
 
   const openEditModal = (item: any) => {
     setEditingEvent(item);
+    
+    // Check if category is predefined
+    const isCustom = item.category && !predefinedCategories.includes(item.category);
+    setIsCustomCategory(!!isCustom);
+
     setFormData({
       title: item.title || "",
-      category: item.category || "guru",
+      category: item.category || "Pelatihan",
       date_start: item.date_start ? formatToJakartaDatetimeLocal(item.date_start) : "",
       location: item.location || "",
       description: item.description || "",
@@ -4892,7 +4902,7 @@ function AdminAgendaForm({ user }: { user: any }) {
                 <input
                   required
                   type="text"
-                  placeholder="Contoh: Rapat Koordinasi KKG Bulanan"
+                  placeholder="title"
                   className="w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100/50 border border-gray-200/70 rounded-xl text-sm font-bold text-soft-black outline-none focus:border-orange-500 focus:bg-white transition-all font-sans"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -4904,18 +4914,49 @@ function AdminAgendaForm({ user }: { user: any }) {
                   <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1.5">
                     Kategori
                   </label>
-                  <select
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-700 font-bold outline-none focus:border-orange-500 focus:bg-white transition-all"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  >
-                    <option value="guru">Guru</option>
-                    <option value="siswa">Siswa</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="seminar">Seminar</option>
-                    <option value="kokurikuler">Kokurikuler</option>
-                    <option value="rapat pengurus">Rapat Pengurus</option>
-                  </select>
+                  {!isCustomCategory ? (
+                    <select
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-700 font-bold outline-none focus:border-orange-500 focus:bg-white transition-all"
+                      value={formData.category}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "Lainya") {
+                          setIsCustomCategory(true);
+                          setFormData({ ...formData, category: "" });
+                        } else {
+                          setFormData({ ...formData, category: val });
+                        }
+                      }}
+                    >
+                      {predefinedCategories.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      <option value="Lainya">Lainya (Input Manual)</option>
+                    </select>
+                  ) : (
+                    <div className="flex gap-2 relative">
+                      <input
+                        required
+                        type="text"
+                        placeholder="Ketik kategori manual..."
+                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-700 font-bold outline-none focus:border-orange-500 focus:bg-white transition-all"
+                        value={formData.category}
+                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCustomCategory(false);
+                          setFormData({ ...formData, category: predefinedCategories[0] });
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all font-sans text-xs flex items-center justify-center font-bold"
+                        title="Kembali ke pilihan default"
+                      >
+                         Batal
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -4955,7 +4996,7 @@ function AdminAgendaForm({ user }: { user: any }) {
                   <input
                     required
                     type="text"
-                    placeholder="Contoh: SDN 01 Rajabasa / Ruang Guru"
+                    placeholder="location"
                     className="w-full px-4 py-2.5 bg-gray-50 hover:bg-gray-100/50 border border-gray-200/70 rounded-xl text-sm text-gray-700 outline-none focus:border-orange-500 focus:bg-white transition-all"
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
@@ -4969,7 +5010,7 @@ function AdminAgendaForm({ user }: { user: any }) {
                 </label>
                 <textarea
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-750 outline-none focus:border-orange-500 focus:bg-white transition-all min-h-[70px] resize-y"
-                  placeholder="Detail agenda kegiatan, prasyarat, agenda rapat, dsb..."
+                  placeholder="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
@@ -4981,7 +5022,7 @@ function AdminAgendaForm({ user }: { user: any }) {
                 </label>
                 <input
                   type="text"
-                  placeholder="Contoh: https://linktr.ee/..."
+                  placeholder="detail_url"
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200/70 rounded-xl text-sm text-gray-700 outline-none focus:border-orange-500 focus:bg-white transition-all font-mono"
                   value={formData.detail_url}
                   onChange={(e) => setFormData({ ...formData, detail_url: e.target.value })}
