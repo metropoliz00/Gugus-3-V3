@@ -15,6 +15,9 @@ interface SchoolData {
   teacher_count?: number;
   map_embed_url?: string;
   akreditasi?: string;
+  latitude?: string;
+  longitude?: string;
+  map_icon?: string;
 }
 
 const PREDEFINED_COORDS: Record<string, { lat: number; lng: number }> = {
@@ -114,7 +117,16 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 // Reliable coordinate getter with predefined mappings and scatter algorithms
 function getSchoolCoords(school: SchoolData, idx: number, schoolsCount: number) {
-  // 1. Try embed url / user input first
+  // 1. Try direct exact lat/long coordinates first
+  if (school.latitude && school.longitude) {
+    const lLat = parseFloat(school.latitude);
+    const lLng = parseFloat(school.longitude);
+    if (!isNaN(lLat) && !isNaN(lLng)) {
+      return { lat: lLat, lng: lLng };
+    }
+  }
+
+  // 2. Try embed url / user input second
   if (school.map_embed_url) {
     const coords = extractCoordsFromEmbedUrl(school.map_embed_url);
     if (coords) return coords;
@@ -250,46 +262,85 @@ export default function MapGugus() {
       const isInti = school.jenis_sekolah === "Sekolah Inti";
 
       // Design unique HTML for the custom marker featuring School Building Icon & Name Label
-      // Using accurate CSS alignment so that bottom-center is pinned at exactly [0,0] to prevent drifts
+      // Using accurate CSS alignment inside a fixed 140x100 box so the anchor point rests precisely on [70, 100]
+      let markerColor = isInti 
+        ? "bg-gradient-to-br from-main-blue to-blue-700" 
+        : "bg-gradient-to-br from-leaf-green to-emerald-700";
+        
+      let stalkColor = isInti ? "bg-main-blue" : "bg-leaf-green";
+      let iconContent = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      `;
+
+      if (school.map_icon) {
+        const parts = school.map_icon.split("|");
+        const colorName = parts[0] || "";
+        const iconEmoji = parts[1] || "";
+        
+        if (colorName) {
+          if (colorName === "blue") {
+            markerColor = "bg-gradient-to-br from-main-blue to-blue-700";
+            stalkColor = "bg-main-blue";
+          } else if (colorName === "green") {
+            markerColor = "bg-gradient-to-br from-leaf-green to-emerald-700";
+            stalkColor = "bg-leaf-green";
+          } else if (colorName === "orange") {
+            markerColor = "bg-gradient-to-br from-main-orange to-orange-700";
+            stalkColor = "bg-main-orange";
+          } else if (colorName === "indigo") {
+            markerColor = "bg-gradient-to-br from-indigo-500 to-indigo-800";
+            stalkColor = "bg-indigo-600";
+          } else if (colorName === "purple") {
+            markerColor = "bg-gradient-to-br from-purple-500 to-purple-800";
+            stalkColor = "bg-purple-600";
+          } else if (colorName === "rose") {
+            markerColor = "bg-gradient-to-br from-rose-500 to-rose-800";
+            stalkColor = "bg-rose-600";
+          } else if (colorName === "amber") {
+            markerColor = "bg-gradient-to-br from-amber-500 to-amber-700";
+            stalkColor = "bg-amber-600";
+          }
+        }
+        
+        if (iconEmoji) {
+          iconContent = `<span class="text-sm font-extrabold select-none leading-none">${iconEmoji}</span>`;
+        }
+      }
+
       const markerHtml = `
-        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center select-none" style="width: 140px; margin-bottom: 2px;">
+        <div class="flex flex-col items-center justify-end h-full select-none" style="width: 140px; height: 100px;">
           <!-- Tooltip Label -->
-          <div class="px-2.5 py-1 rounded-lg shadow-md border text-[10px] font-extrabold whitespace-nowrap bg-white text-soft-black leading-tight border-gray-100 ${isInti ? "ring-2 ring-main-blue/30 scale-105" : "scale-95"} mb-1 transition-all duration-300">
+          <div class="px-2.5 py-1 rounded-lg shadow-md border text-[10px] font-extrabold text-center bg-white text-soft-black border-gray-100 max-w-[140px] truncate leading-tight ${isInti ? "ring-2 ring-main-blue/30 scale-102" : "scale-95"} mb-1 transition-all duration-300">
             ${school.name}
           </div>
           <!-- Pin body -->
-          <div class="relative flex items-center justify-center">
+          <div class="relative flex flex-col items-center justify-center">
             <!-- Ripple Effect for Sekolah Inti -->
             ${isInti ? `
-              <div class="absolute w-10 h-10 bg-main-blue/20 rounded-full animate-ping"></div>
-              <div class="absolute w-8 h-8 bg-main-blue/30 rounded-full animate-pulse"></div>
+              <div class="absolute w-8 h-8 bg-main-blue/20 rounded-full animate-ping"></div>
+              <div class="absolute w-6 h-6 bg-main-blue/30 rounded-full animate-pulse"></div>
             ` : ""}
             
             <!-- Icon frame -->
-            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white transition-all transform hover:scale-115 active:scale-95 cursor-pointer ${
-              isInti 
-                ? "bg-gradient-to-br from-main-blue to-dark-blue" 
-                : "bg-gradient-to-br from-leaf-green to-emerald-600"
-            }">
-              <!-- School Building Graphic (Simple SVG) -->
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
-              </svg>
+            <div class="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white transition-all transform hover:scale-110 active:scale-95 cursor-pointer ${markerColor}">
+              ${iconContent}
             </div>
             
             <!-- Pin stalk -->
-            <div class="w-1.5 h-1.5 -mt-[1px] ${isInti ? "bg-main-blue" : "bg-leaf-green"} mx-auto rounded-b shadow-sm"></div>
+            <div class="w-1.5 h-2 -mt-[2px] ${stalkColor} mx-auto rounded-b shadow-sm"></div>
           </div>
         </div>
       `;
 
-      // Create Leaflet DivIcon anchored precisely at 0px, 0px with parent container style normalized
+      // Create Leaflet DivIcon with proper dimensions ensuring zero drifts on zoom in/out
       const customIcon = L.divIcon({
         html: markerHtml,
         className: "custom-school-marker",
-        iconSize: [0, 0],
-        iconAnchor: [0, 0]
+        iconSize: [140, 100],
+        iconAnchor: [70, 100]
       });
 
       // Add to map

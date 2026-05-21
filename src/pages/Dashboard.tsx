@@ -5066,7 +5066,7 @@ function AdminSekolahForm({ user }: { user: any }) {
                       Google Maps Embed URL
                     </label>
                     <input
-                      className="w-full border-gray-200 border p-2.5 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors"
+                      className="w-full border-gray-200 border p-2.5 rounded-lg text-sm bg-gray-50 focus:bg-white transition-colors animate-fade-in-down"
                       placeholder="Contoh: https://www.google.com/maps/embed?..."
                       value={school.map_embed_url || ""}
                       onChange={(e) => {
@@ -5081,6 +5081,122 @@ function AdminSekolahForm({ user }: { user: any }) {
                         handleUpdate(school.id, { map_embed_url: val });
                       }}
                     />
+
+                    {/* DYNAMIC LEAFLET MAP COORDINATES & CUSTOM ICON SETTINGS */}
+                    <div className="mt-4 p-4.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-3.5 bg-main-orange rounded-full" />
+                        <span className="text-[11px] font-black text-gray-700 uppercase tracking-wider">
+                          Konfigurasi Koordinat & Icon Peta Digital (Leaflet)
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-500 mb-1">
+                            Garis Lintang (Latitude)
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-200 p-2.5 rounded-lg text-sm bg-white focus:ring-2 focus:ring-main-blue/10 outline-none"
+                            placeholder="Contoh: -6.832742"
+                            value={school.latitude || ""}
+                            onChange={(e) =>
+                              handleUpdate(school.id, { latitude: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-500 mb-1">
+                            Garis Bujur (Longitude)
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full border border-gray-200 p-2.5 rounded-lg text-sm bg-white focus:ring-2 focus:ring-main-blue/10 outline-none"
+                            placeholder="Contoh: 112.022335"
+                            value={school.longitude || ""}
+                            onChange={(e) =>
+                              handleUpdate(school.id, { longitude: e.target.value })
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-100/50">
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-500 mb-1.5">
+                            Warna Pin Map
+                          </label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              { name: "blue", label: "Biru", class: "bg-main-blue" },
+                              { name: "green", label: "Hijau", class: "bg-leaf-green" },
+                              { name: "orange", label: "Oranye", class: "bg-main-orange" },
+                              { name: "indigo", label: "Indigo", class: "bg-indigo-600" },
+                              { name: "purple", label: "Ungu", class: "bg-purple-600" },
+                              { name: "rose", label: "Rose", class: "bg-rose-600" },
+                              { name: "amber", label: "Amber", class: "bg-amber-500" },
+                            ].map((col) => {
+                              const [currCol] = (school.map_icon || "blue|🏫").split("|");
+                              const isSelected = currCol === col.name;
+                              return (
+                                <button
+                                  key={col.name}
+                                  type="button"
+                                  onClick={() => {
+                                    const emojiVal = (school.map_icon || "blue|🏫").split("|")[1] || "🏫";
+                                    handleUpdate(school.id, {
+                                      map_icon: `${col.name}|${emojiVal}`,
+                                    });
+                                  }}
+                                  className={`px-2 py-1 rounded-lg text-[10px] font-extrabold text-white flex items-center gap-1 transition-all ${col.class} ${
+                                    isSelected
+                                      ? "ring-2 ring-offset-2 ring-gray-900 scale-102 opacity-100"
+                                      : "opacity-75 hover:opacity-100 hover:scale-102"
+                                  } cursor-pointer`}
+                                >
+                                  {col.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-[11px] font-bold text-gray-500 mb-1.5">
+                            Simbol / Emoji Pin
+                          </label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {["🏫", "📚", "🎓", "⭐", "🏆", "💻", "🔬", "🎨", "⚽"].map(
+                              (emo) => {
+                                const parts = (school.map_icon || "blue|🏫").split("|");
+                                const currCol = parts[0] || "blue";
+                                const currEmoji = parts[1] || "🏫";
+                                const isSelected = currEmoji === emo;
+                                return (
+                                  <button
+                                    key={emo}
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdate(school.id, {
+                                        map_icon: `${currCol}|${emo}`,
+                                      });
+                                    }}
+                                    className={`w-7.5 h-7.5 flex items-center justify-center text-sm rounded-lg bg-white border transition-all ${
+                                      isSelected
+                                        ? "border-gray-900 bg-gray-50 ring-2 ring-gray-950/10 scale-110"
+                                        : "border-gray-200 hover:border-gray-400"
+                                    } cursor-pointer`}
+                                  >
+                                    {emo}
+                                  </button>
+                                );
+                              }
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                     {school.map_embed_url &&
                       school.map_embed_url.includes(
