@@ -201,7 +201,7 @@ export default function AnggotaGugusPage() {
                 <h2 className="text-lg sm:text-xl font-extrabold text-main-blue tracking-wider uppercase">
                   IDENTITAS ANGGOTA GUGUS 3 "MELATI"
                 </h2>
-                <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Kecamatan Pondok Kelapa</p>
+                <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Kecamatan Jenu</p>
               </div>
 
               {/* Horizontal Layout (Photo Left, Column Right) */}
