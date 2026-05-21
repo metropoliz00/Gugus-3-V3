@@ -557,16 +557,37 @@ export default function MapGugus() {
               const idxInti = schools.findIndex(s => s.id === sekolahInti?.id);
               const coordsInti = sekolahInti ? getSchoolCoords(sekolahInti, idxInti, schools.length) : null;
 
-              return schools.map((school, idx) => {
+              // Pre-calculate distance for each school to allow sorting while preserving coordinate calculation indexes
+              const schoolsWithDistance = schools.map((school, idx) => {
+                const coordsTarget = getSchoolCoords(school, idx, schools.length);
+                let dist = 0;
+                if (coordsInti && school.id !== sekolahInti?.id) {
+                  dist = calculateDistance(coordsInti.lat, coordsInti.lng, coordsTarget.lat, coordsTarget.lng);
+                }
+                return {
+                  school,
+                  idx,
+                  dist,
+                };
+              });
+
+              // Sort by distance (Sekolah Inti always strictly first, others sorted ascending from closest to furthest)
+              const sortedSchools = [...schoolsWithDistance].sort((a, b) => {
+                const aIsInti = a.school.jenis_sekolah === "Sekolah Inti";
+                const bIsInti = b.school.jenis_sekolah === "Sekolah Inti";
+                if (aIsInti && !bIsInti) return -1;
+                if (!aIsInti && bIsInti) return 1;
+                return a.dist - b.dist;
+              });
+
+              return sortedSchools.map(({ school, idx, dist }) => {
                 const isInti = school.jenis_sekolah === "Sekolah Inti";
                 const isCurrent = selectedSchool?.id === school.id;
                 
                 // Calculate distance info directly for display in the sidebar
                 let distanceStr = "";
-                if (coordsInti && school.id !== sekolahInti.id) {
-                  const coordsTarget = getSchoolCoords(school, idx, schools.length);
-                  const d = calculateDistance(coordsInti.lat, coordsInti.lng, coordsTarget.lat, coordsTarget.lng);
-                  distanceStr = `${d.toFixed(2)} km dari Sekolah Inti`;
+                if (coordsInti && school.id !== sekolahInti?.id) {
+                  distanceStr = `${dist.toFixed(2)} km dari Sekolah Inti`;
                 }
 
                 return (
