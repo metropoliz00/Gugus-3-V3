@@ -198,17 +198,19 @@ export default function MapGugus() {
         const mapped = data.map((item: any) => {
           const latVal = parseFloat(item.latitude);
           const lngVal = parseFloat(item.longitude);
+          const baseColor = item.color || "bg-blue-500 text-white";
           return {
             name: item.name || "",
             lat: isNaN(latVal) ? 0 : latVal,
             lng: isNaN(lngVal) ? 0 : lngVal,
             icon: item.icon || "📍",
-            color: item.color || "bg-blue-500 text-white",
+            color: baseColor.replace("_hidden", ""),
+            is_visible: !baseColor.includes("_hidden"),
             description: item.description || "",
             image_url: item.image_url || "",
             embed_code: item.embed_code || "",
           };
-        }).filter((item: any) => item.lat !== 0 && item.lng !== 0);
+        }).filter((item: any) => item.lat !== 0 && item.lng !== 0 && item.is_visible);
         
         if (mapped.length > 0) {
           setDbLandmarks(mapped);

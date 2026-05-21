@@ -7758,6 +7758,7 @@ function AdminLandmarkForm() {
     embedCode: "",
     description: "",
     imageUrl: "",
+    isVisible: true,
   });
 
   useEffect(() => {
@@ -7823,12 +7824,16 @@ function AdminLandmarkForm() {
       return;
     }
 
+    // append flag if hidden to color
+    const cleanColor = formData.color.replace("_hidden", "");
+    const finalColor = formData.isVisible ? cleanColor : cleanColor + "_hidden";
+
     const payload = {
       name: formData.name,
       latitude: lat,
       longitude: lng,
       icon: formData.icon,
-      color: formData.color,
+      color: finalColor,
       embed_code: formData.embedCode,
       description: formData.description,
       image_url: formData.imageUrl,
@@ -7869,6 +7874,29 @@ function AdminLandmarkForm() {
     }
   };
 
+  const toggleVisibility = async (item: any) => {
+    if (!supabase) return;
+    try {
+      const isCurrentlyHidden = item.color?.includes("_hidden");
+      const baseColor = item.color || "bg-blue-500 text-white";
+      const newColor = isCurrentlyHidden ? baseColor.replace("_hidden", "") : (baseColor.includes("_hidden") ? baseColor : baseColor + "_hidden");
+
+      const { error } = await supabase
+        .from("landmarks")
+        .update({ color: newColor })
+        .eq("id", item.id);
+
+      if (error) {
+        await alert("Gagal memperbarui status tampil: " + error.message, "Gagal", "error");
+      } else {
+        loadLandmarks();
+        await alert(isCurrentlyHidden ? "Landmark sekarang ditampilkan!" : "Landmark berhasil disembunyikan!", "Sukses", "success");
+      }
+    } catch (err: any) {
+      await alert(err.message || "Gagal memperbarui status", "Error", "error");
+    }
+  };
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-6 border-b border-gray-100 gap-4">
@@ -7888,6 +7916,7 @@ function AdminLandmarkForm() {
               embedCode: "",
               description: "",
               imageUrl: "",
+              isVisible: true,
             });
             setIsModalOpen(true);
           }}
@@ -7916,62 +7945,85 @@ function AdminLandmarkForm() {
                   <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 w-16">No</th>
                   <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Info Landmark</th>
                   <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 hidden md:table-cell">Koordinat</th>
-                  <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right w-32">Aksi</th>
+                  <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center w-36">Status Tampil</th>
+                  <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right w-24">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {landmarks.map((item, idx) => (
-                  <tr key={item.id} className="hover:bg-blue-50/30 transition-colors group">
-                    <td className="py-4 px-6 text-sm font-bold text-gray-300">{idx + 1}</td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${item.color}`}>
-                          {item.icon}
+                {landmarks.map((item, idx) => {
+                  const isVisible = !item.color?.includes("_hidden");
+                  const displayColor = (item.color || "bg-blue-500 text-white").replace("_hidden", "");
+                  return (
+                    <tr key={item.id} className="hover:bg-blue-50/30 transition-colors group">
+                      <td className="py-4 px-6 text-sm font-bold text-gray-300">{idx + 1}</td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${displayColor}`}>
+                            {item.icon}
+                          </div>
+                          <div>
+                            <p className="font-bold text-soft-black">{item.name}</p>
+                            {item.description && <p className="text-xs text-gray-400 truncate max-w-[200px]">{item.description}</p>}
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-soft-black">{item.name}</p>
-                          {item.description && <p className="text-xs text-gray-400 truncate max-w-[200px]">{item.description}</p>}
+                      </td>
+                      <td className="py-4 px-6 hidden md:table-cell">
+                        <p className="text-xs font-mono text-gray-500 bg-gray-50 inline-block px-2 py-1 rounded">
+                          {item.latitude}, {item.longitude}
+                        </p>
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        <button
+                          type="button"
+                          onClick={() => toggleVisibility(item)}
+                          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-main-blue/20 ${
+                            isVisible ? "bg-emerald-500" : "bg-gray-200"
+                          }`}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                              isVisible ? "translate-x-5" : "translate-x-0"
+                            }`}
+                          />
+                        </button>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              const isHidden = item.color?.includes("_hidden");
+                              const cleanColor = (item.color || "bg-blue-500 text-white").replace("_hidden", "");
+                              setEditingLandmark(item);
+                              setFormData({
+                                name: item.name,
+                                latitude: item.latitude.toString(),
+                                longitude: item.longitude.toString(),
+                                icon: item.icon,
+                                color: cleanColor,
+                                embedCode: item.embed_code || "",
+                                description: item.description || "",
+                                imageUrl: item.image_url || "",
+                                isVisible: !isHidden,
+                              });
+                              setIsModalOpen(true);
+                            }}
+                            className="p-2 text-main-blue hover:bg-main-blue/10 rounded-xl transition-colors shrink-0"
+                            title="Edit"
+                          >
+                            <PenTool className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-4 h-4 text-gray-350 hover:text-red-600" />
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 hidden md:table-cell">
-                      <p className="text-xs font-mono text-gray-500 bg-gray-50 inline-block px-2 py-1 rounded">
-                        {item.latitude}, {item.longitude}
-                      </p>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => {
-                            setEditingLandmark(item);
-                            setFormData({
-                              name: item.name,
-                              latitude: item.latitude.toString(),
-                              longitude: item.longitude.toString(),
-                              icon: item.icon,
-                              color: item.color,
-                              embedCode: item.embed_code || "",
-                              description: item.description || "",
-                              imageUrl: item.image_url || "",
-                            });
-                            setIsModalOpen(true);
-                          }}
-                          className="p-2 text-main-blue hover:bg-main-blue/10 rounded-xl transition-colors shrink-0"
-                          title="Edit"
-                        >
-                          <PenTool className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"
-                          title="Hapus"
-                        >
-                          <Trash2 className="w-4 h-4 text-gray-350 hover:text-red-600" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -8040,6 +8092,26 @@ function AdminLandmarkForm() {
               <div>
                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">URL Gambar / Foto Landmark</label>
                 <input type="text" className="w-full p-4 bg-gray-50 rounded-xl text-sm font-bold focus:ring-2 focus:ring-main-blue/20 outline-none" value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} placeholder="Tautan gambar (unsplash, google drive, dll)" />
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div>
+                  <p className="font-bold text-sm text-soft-black">Tampilkan Landmark</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Aktifkan untuk menampilkan landmark ini di peta digital.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, isVisible: !prev.isVisible }))}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-main-blue/20 ${
+                    formData.isVisible ? "bg-emerald-500" : "bg-gray-250"
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      formData.isVisible ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
               </div>
 
               <div className="pt-4 flex justify-end gap-3">
