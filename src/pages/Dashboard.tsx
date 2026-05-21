@@ -4914,6 +4914,7 @@ function AdminAgendaForm({ user }: { user: any }) {
                     <option value="workshop">Workshop</option>
                     <option value="seminar">Seminar</option>
                     <option value="kokurikuler">Kokurikuler</option>
+                    <option value="rapat pengurus">Rapat Pengurus</option>
                   </select>
                 </div>
 

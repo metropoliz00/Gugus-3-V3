@@ -14,6 +14,7 @@ import {
 import { useSiteContent } from '../contexts/SiteContext';
 import OrgChart from '../components/OrgChart';
 import { supabase } from '../lib/supabase';
+import MapGugus from '../components/MapGugus';
 
 export default function GugusPage() {
   const { content } = useSiteContent();
@@ -143,6 +144,15 @@ export default function GugusPage() {
                       <p className="text-lg font-bold text-soft-black">{item.value}</p>
                     </div>
                   ))}
+                </div>
+
+                {/* Peta Digital Wilayah Gugus */}
+                <div className="mt-16 pt-12 border-t border-gray-100">
+                  <div className="mb-6">
+                    <h3 className="text-xl font-heading font-black text-soft-black">Peta Digital Wilayah Gugus</h3>
+                    <p className="text-xs text-main-blue font-bold uppercase tracking-wider mt-1">Pemetaan Sekolah Anggota Gugus 3 Melati</p>
+                  </div>
+                  <MapGugus />
                 </div>
               </div>
             )}
