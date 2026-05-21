@@ -156,6 +156,23 @@ function getSchoolCoords(school: SchoolData, idx: number, schoolsCount: number) 
   };
 }
 
+interface Landmark {
+  name: string;
+  lat: number;
+  lng: number;
+  icon: string;
+  color: string;
+}
+
+const LANDMARKS: Landmark[] = [
+  { name: "Pabrik TPPI", lat: -6.786, lng: 111.966, icon: "🏭", color: "bg-orange-500 text-white" },
+  { name: "Pertamina TBBM", lat: -6.790, lng: 111.987, icon: "🛢️", color: "bg-red-600 text-white" },
+  { name: "PLTU T. Awar-Awar", lat: -6.790, lng: 111.996, icon: "⚡", color: "bg-yellow-500 text-white" },
+  { name: "Pantai Panduri", lat: -6.804, lng: 112.030, icon: "🏖️", color: "bg-blue-400 text-white" },
+  { name: "Pantai Pasir Putih", lat: -6.790, lng: 111.979, icon: "🌴", color: "bg-emerald-400 text-white" },
+  { name: "Pantai Sumur Pawon", lat: -6.801, lng: 112.001, icon: "🌊", color: "bg-cyan-400 text-white" },
+];
+
 export default function MapGugus() {
   const [schools, setSchools] = useState<SchoolData[]>([]);
   const [selectedSchool, setSelectedSchool] = useState<SchoolData | null>(null);
@@ -357,6 +374,42 @@ export default function MapGugus() {
           setHoveredSchoolId(null);
         });
 
+      markersRef.current.push(marker);
+    });
+
+    // Plot landmarks
+    LANDMARKS.forEach((landmark) => {
+      const markerHtml = `
+        <div class="flex flex-col items-center justify-end h-full select-none" style="width: 140px; height: 100px; overflow: visible;">
+           <!-- Tooltip Label -->
+           <div class="px-2.5 py-1 rounded-lg shadow-md border text-[10px] font-extrabold text-center bg-white/90 backdrop-blur-sm text-soft-black border-gray-100 whitespace-nowrap leading-tight mb-1">
+             ${landmark.name}
+           </div>
+           <!-- Pin body -->
+           <div class="relative flex flex-col items-center justify-center">
+             <!-- Icon frame -->
+             <div class="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white transition-all transform hover:scale-110 cursor-help ${landmark.color}">
+               <span class="text-xs font-extrabold select-none leading-none">${landmark.icon}</span>
+             </div>
+             <!-- Pin stalk -->
+             <div class="w-1.5 h-2 -mt-[2px] opacity-80 ${landmark.color.split(' ')[0]} mx-auto rounded-b shadow-sm"></div>
+           </div>
+        </div>
+      `;
+
+      const customIcon = L.divIcon({
+        html: markerHtml,
+        className: "custom-landmark-marker",
+        iconSize: [140, 100],
+        iconAnchor: [70, 100]
+      });
+
+      const marker = L.marker([landmark.lat, landmark.lng], { icon: customIcon })
+        .addTo(map)
+        .bindTooltip(landmark.name, { direction: 'top', offset: [0, -40] });
+
+      // We ONLY add landmarks to the feature group bounds if requested, but let's 
+      // add them so the map zooms out enough to show everything!
       markersRef.current.push(marker);
     });
 
