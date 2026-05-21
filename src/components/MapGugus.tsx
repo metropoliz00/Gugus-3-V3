@@ -175,6 +175,7 @@ const LANDMARKS: Landmark[] = [
 
 export default function MapGugus() {
   const [schools, setSchools] = useState<SchoolData[]>([]);
+  const [dbLandmarks, setDbLandmarks] = useState<Landmark[]>(LANDMARKS);
   const [selectedSchool, setSelectedSchool] = useState<SchoolData | null>(null);
   const [hoveredSchoolId, setHoveredSchoolId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -183,6 +184,18 @@ export default function MapGugus() {
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const activePolylineRef = useRef<any>(null);
+
+  // Load Landmarks
+  useEffect(() => {
+    async function fetchLandmarks() {
+      if (!supabase) return;
+      const { data, error } = await supabase.from('landmarks').select('*');
+      if (!error && data && data.length > 0) {
+        setDbLandmarks(data);
+      }
+    }
+    fetchLandmarks();
+  }, []);
 
   // 1. Load Leaflet CDN Assets
   useEffect(() => {
@@ -378,7 +391,7 @@ export default function MapGugus() {
     });
 
     // Plot landmarks
-    LANDMARKS.forEach((landmark) => {
+    dbLandmarks.forEach((landmark) => {
       const markerHtml = `
         <div class="flex flex-col items-center justify-end h-full select-none" style="width: 140px; height: 100px; overflow: visible;">
            <!-- Tooltip Label -->
@@ -426,7 +439,7 @@ export default function MapGugus() {
         mapRef.current = null;
       }
     };
-  }, [leafletReady, isLoading, schools]);
+  }, [leafletReady, isLoading, schools, dbLandmarks]);
 
   // 4. Update Connecting Distance Visual Polylines dynamically
   useEffect(() => {

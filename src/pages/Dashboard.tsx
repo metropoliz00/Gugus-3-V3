@@ -207,6 +207,7 @@ const adminMenu = [
   { id: "user", label: "Kelola User", icon: Shield },
   { id: "agenda", label: "Kelola Agenda KKG", icon: Calendar },
   { id: "materi", label: "Kelola Materi KKG", icon: BookOpen },
+  { id: "landmarks", label: "Peta Digital", icon: MapPin },
   { id: "notulen", label: "Kelola Notulen Rapat", icon: FileText },
   { id: "pelatihan", label: "Kelola Pelatihan", icon: GraduationCap },
   { id: "rekap_absen", label: "Rekap Absensi", icon: UserCheck },
@@ -906,6 +907,7 @@ export default function Dashboard({
                         element={<AdminSettingsForm />}
                       />
                       <Route path="user" element={<AdminUserManagement />} />
+                      <Route path="landmarks" element={<AdminLandmarkForm />} />
                       <Route
                         path="sekolah"
                         element={<AdminSekolahForm user={user} />}
@@ -7736,6 +7738,277 @@ function AdminPengumumanForm({ user }: { user: any }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function AdminLandmarkForm() {
+  const { alert } = useAlert();
+  const [landmarks, setLandmarks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingLandmark, setEditingLandmark] = useState<any | null>(null);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    latitude: "",
+    longitude: "",
+    icon: "📍",
+    color: "bg-blue-500 text-white",
+    embedCode: "",
+  });
+
+  useEffect(() => {
+    loadLandmarks();
+  }, []);
+
+  const loadLandmarks = async () => {
+    setIsLoading(true);
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from("landmarks")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && data) {
+      setLandmarks(data);
+    }
+    setIsLoading(false);
+  };
+
+  const handleEmbedParse = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setFormData((prev) => ({ ...prev, embedCode: val }));
+
+    // Extract lat and lng from Google Maps embed iframe
+    // pattern: !3d-6.786 !4d111.966
+    const latMatch = val.match(/!3d(-?\d+\.\d+)/);
+    const lngMatch = val.match(/!4d(-?\d+\.\d+)/);
+
+    if (latMatch && lngMatch) {
+      setFormData((prev) => ({
+        ...prev,
+        latitude: latMatch[1],
+        longitude: lngMatch[1],
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabase) return;
+    
+    // Ensure lat/lng are properly set
+    let lat = parseFloat(formData.latitude);
+    let lng = parseFloat(formData.longitude);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+      await alert("Latitude dan Longitude harus berupa angka yang valid", "Warning", "error");
+      return;
+    }
+
+    const payload = {
+      name: formData.name,
+      latitude: lat,
+      longitude: lng,
+      icon: formData.icon,
+      color: formData.color,
+    };
+
+    if (editingLandmark) {
+      const { error } = await supabase
+        .from("landmarks")
+        .update(payload)
+        .eq("id", editingLandmark.id);
+      if (error) {
+        await alert("Gagal memperbarui landmark", "Error", "error");
+      } else {
+        await alert("Landmark berhasil diperbarui", "Sukses", "success");
+        setIsModalOpen(false);
+        setEditingLandmark(null);
+        loadLandmarks();
+      }
+    } else {
+      const { error } = await supabase.from("landmarks").insert([payload]);
+      if (error) {
+        await alert("Gagal menambahkan landmark", "Error", "error");
+      } else {
+        await alert("Landmark berhasil ditambahkan", "Sukses", "success");
+        setIsModalOpen(false);
+        loadLandmarks();
+      }
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!supabase) return;
+    if (window.confirm("Yakin ingin menghapus landmark ini?")) {
+      await supabase.from("landmarks").delete().eq("id", id);
+      await alert("Landmark berhasil dihapus");
+      loadLandmarks();
+    }
+  };
+
+  return (
+    <div className="p-6 max-w-5xl mx-auto">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 pb-6 border-b border-gray-100 gap-4">
+        <div>
+          <h2 className="text-2xl font-black font-heading text-soft-black">Kelola Peta Digital</h2>
+          <p className="text-sm text-gray-450 mt-1">Atur lokasi landmark yang tampil di peta Gugus.</p>
+        </div>
+        <button
+          onClick={() => {
+            setEditingLandmark(null);
+            setFormData({ name: "", latitude: "", longitude: "", icon: "📍", color: "bg-blue-500 text-white", embedCode: "" });
+            setIsModalOpen(true);
+          }}
+          className="px-6 py-3 bg-main-blue hover:bg-hover-blue text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition-all hover:-translate-y-0.5 flex items-center gap-2 text-sm whitespace-nowrap"
+        >
+          <MapPin className="w-4 h-4" />
+          <span>Tambah Landmark</span>
+        </button>
+      </div>
+
+      <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
+        {isLoading ? (
+          <div className="p-12 text-center text-gray-400 font-medium">Memuat data...</div>
+        ) : landmarks.length === 0 ? (
+          <div className="p-12 text-center flex flex-col items-center justify-center">
+            <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-300 mb-4">
+              <MapPin className="w-8 h-8" />
+            </div>
+            <p className="text-gray-500 font-medium">Belum ada lokasi landmark/titik peta.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-gray-50/50">
+                  <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 w-16">No</th>
+                  <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Info Landmark</th>
+                  <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 hidden md:table-cell">Koordinat</th>
+                  <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right w-32">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {landmarks.map((item, idx) => (
+                  <tr key={item.id} className="hover:bg-blue-50/30 transition-colors group">
+                    <td className="py-4 px-6 text-sm font-bold text-gray-300">{idx + 1}</td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${item.color}`}>
+                          {item.icon}
+                        </div>
+                        <div>
+                          <p className="font-bold text-soft-black">{item.name}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 hidden md:table-cell">
+                      <p className="text-xs font-mono text-gray-500 bg-gray-50 inline-block px-2 py-1 rounded">
+                        {item.latitude}, {item.longitude}
+                      </p>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => {
+                            setEditingLandmark(item);
+                            setFormData({
+                              name: item.name,
+                              latitude: item.latitude.toString(),
+                              longitude: item.longitude.toString(),
+                              icon: item.icon,
+                              color: item.color,
+                              embedCode: ""
+                            });
+                            setIsModalOpen(true);
+                          }}
+                          className="p-2 text-main-blue hover:bg-main-blue/10 rounded-xl transition-colors shrink-0"
+                          title="Edit"
+                        >
+                          <PenTool className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"
+                          title="Hapus"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[5000] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-dark-gray/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
+          <div className="bg-white rounded-[2rem] shadow-2xl relative border border-gray-100 max-w-2xl w-full max-h-[85vh] overflow-y-auto p-8 z-10 scrollbar-thin">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-400"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-2xl font-bold font-heading mb-6">{editingLandmark ? "Edit Landmark" : "Tambah Landmark Baru"}</h3>
+            
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Landmark</label>
+                <input required type="text" className="w-full p-4 bg-gray-50 rounded-xl text-sm font-bold focus:ring-2 focus:ring-main-blue/20 outline-none" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} placeholder="Contoh: Pabrik TPPI" />
+              </div>
+              
+              <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100/50">
+                <label className="block text-xs font-bold text-main-blue uppercase tracking-widest mb-2">Auto-Fill Koordinat (Khusus Google Maps)</label>
+                <p className="text-xs text-gray-500 mb-3 leading-relaxed">Pilih Bagikan &gt; Sematkan Peta pada Google Maps, lalu salin kode HTML-nya kesini. Sistem otomatis akan mengekstrak koordinat.</p>
+                <textarea className="w-full p-3 bg-white border border-gray-200 rounded-xl text-xs font-mono text-gray-500 focus:ring-2 focus:ring-main-blue/20 outline-none resize-none h-20" placeholder="<iframe src=..." value={formData.embedCode} onChange={handleEmbedParse} />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Latitude</label>
+                  <input required type="text" className="w-full p-4 bg-gray-50 rounded-xl text-sm font-mono focus:ring-2 focus:ring-main-blue/20 outline-none" value={formData.latitude} onChange={(e) => setFormData({...formData, latitude: e.target.value})} placeholder="-6.786" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Longitude</label>
+                  <input required type="text" className="w-full p-4 bg-gray-50 rounded-xl text-sm font-mono focus:ring-2 focus:ring-main-blue/20 outline-none" value={formData.longitude} onChange={(e) => setFormData({...formData, longitude: e.target.value})} placeholder="111.966" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Emoji/Ikon</label>
+                  <input type="text" className="w-full p-4 bg-gray-50 rounded-xl text-xl font-bold focus:ring-2 focus:ring-main-blue/20 outline-none text-center" value={formData.icon} onChange={(e) => setFormData({...formData, icon: e.target.value})} placeholder="📍" maxLength={2} />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Warna (Tailwind Class)</label>
+                  <select className="w-full p-4 bg-gray-50 rounded-xl text-sm font-bold focus:ring-2 focus:ring-main-blue/20 outline-none" value={formData.color} onChange={(e) => setFormData({...formData, color: e.target.value})}>
+                    <option value="bg-blue-500 text-white">Biru</option>
+                    <option value="bg-red-600 text-white">Merah</option>
+                    <option value="bg-yellow-500 text-white">Kuning</option>
+                    <option value="bg-emerald-400 text-white">Hijau</option>
+                    <option value="bg-orange-500 text-white">Oranye</option>
+                    <option value="bg-cyan-400 text-white">Cyan</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 font-bold text-sm text-gray-500 hover:text-soft-black hover:bg-gray-100 rounded-xl transition-all">Batal</button>
+                <button type="submit" className="px-6 py-3 font-bold text-sm bg-main-blue text-white hover:bg-hover-blue rounded-xl shadow-lg shadow-blue-500/20 transition-all">
+                  {editingLandmark ? "Simpan Perubahan" : "Tambahkan"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
