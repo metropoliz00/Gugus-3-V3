@@ -191,7 +191,21 @@ export default function MapGugus() {
       if (!supabase) return;
       const { data, error } = await supabase.from('landmarks').select('*');
       if (!error && data && data.length > 0) {
-        setDbLandmarks(data);
+        const mapped = data.map((item: any) => {
+          const latVal = parseFloat(item.latitude);
+          const lngVal = parseFloat(item.longitude);
+          return {
+            name: item.name || "",
+            lat: isNaN(latVal) ? 0 : latVal,
+            lng: isNaN(lngVal) ? 0 : lngVal,
+            icon: item.icon || "📍",
+            color: item.color || "bg-blue-500 text-white"
+          };
+        }).filter((item: any) => item.lat !== 0 && item.lng !== 0);
+        
+        if (mapped.length > 0) {
+          setDbLandmarks(mapped);
+        }
       }
     }
     fetchLandmarks();
