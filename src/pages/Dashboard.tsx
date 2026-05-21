@@ -8997,7 +8997,7 @@ function AdminRekapAbsen() {
 }
 
 function AdminGuestAccountsManager() {
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -9070,16 +9070,32 @@ function AdminGuestAccountsManager() {
   };
 
   const handleEdit = (account: any) => {
-    setFormData(account);
+    setFormData({
+      id: account.id || "",
+      username: account.username || "",
+      password: account.password || "",
+      name: account.name || "",
+      nip: account.nip || "",
+      position: account.position || "",
+      institution: account.institution || "",
+      pangkat_golongan: account.pangkat_golongan || "",
+      peran: account.peran || "Tamu Undangan",
+    });
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Hapus akun tamu ini?")) return;
-    const { error } = await supabase.from("guest_accounts").delete().eq("id", id);
-    if (!error) {
-      alert("Akun tamu dihapus", "Sukses", "success");
+    const isConfirmed = await confirm("Apakah Anda yakin ingin menghapus akun tamu ini? Tindakan ini tidak dapat dibatalkan.");
+    if (!isConfirmed) return;
+    
+    try {
+      const { error } = await supabase.from("guest_accounts").delete().eq("id", id);
+      if (error) throw error;
+      
+      await alert("Akun tamu berhasil dihapus.", "Sukses", "success");
       fetchAccounts();
+    } catch (err: any) {
+      await alert(err.message || "Gagal menghapus akun tamu.", "Error", "error");
     }
   };
 
