@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
-import { MapPin, School, Info, ArrowRight, Compass, Layers, ShieldCheck, HelpCircle } from "lucide-react";
+import { MapPin, School, Info, ArrowRight, Compass, Layers, ShieldCheck, HelpCircle, X } from "lucide-react";
 import { motion } from "motion/react";
 
 interface SchoolData {
@@ -162,21 +162,25 @@ interface Landmark {
   lng: number;
   icon: string;
   color: string;
+  description?: string;
+  image_url?: string;
+  embed_code?: string;
 }
 
 const LANDMARKS: Landmark[] = [
-  { name: "Pabrik TPPI", lat: -6.786, lng: 111.966, icon: "🏭", color: "bg-orange-500 text-white" },
-  { name: "Pertamina TBBM", lat: -6.790, lng: 111.987, icon: "🛢️", color: "bg-red-600 text-white" },
-  { name: "PLTU T. Awar-Awar", lat: -6.790, lng: 111.996, icon: "⚡", color: "bg-yellow-500 text-white" },
-  { name: "Pantai Panduri", lat: -6.804, lng: 112.030, icon: "🏖️", color: "bg-blue-400 text-white" },
-  { name: "Pantai Pasir Putih", lat: -6.790, lng: 111.979, icon: "🌴", color: "bg-emerald-400 text-white" },
-  { name: "Pantai Sumur Pawon", lat: -6.801, lng: 112.001, icon: "🌊", color: "bg-cyan-400 text-white" },
+  { name: "Pabrik TPPI", lat: -6.786, lng: 111.966, icon: "🏭", color: "bg-orange-500 text-white", description: "PT Trans-Pacific Petrochemical Indotama (TPPI) merupakan salah satu pabrik petrokimia terbesar di Tuban, Jawa Timur.", image_url: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=800&q=80" },
+  { name: "Pertamina TBBM", lat: -6.790, lng: 111.987, icon: "🛢️", color: "bg-red-600 text-white", description: "Terminal Bahan Bakar Minyak (TBBM) Tuban sebagai salah satu tulang punggung suplai energi utama di Jawa Timur.", image_url: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80" },
+  { name: "PLTU T. Awar-Awar", lat: -6.790, lng: 111.996, icon: "⚡", color: "bg-yellow-500 text-white", description: "Pembangkit Listrik Tenaga Uap (PLTU) Tanjung Awar-Awar penyuplai pasokan listrik masif sistem kelistrikan Jawa-Bali.", image_url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=800&q=80" },
+  { name: "Pantai Panduri", lat: -6.804, lng: 112.030, icon: "🏖️", color: "bg-blue-400 text-white", description: "Destinasi wisata keindahan alam pantai dengan cemara udang hijau rimbun yang membentang asri di pesisir Jenu.", image_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" },
+  { name: "Pantai Pasir Putih", lat: -6.790, lng: 111.979, icon: "🌴", color: "bg-emerald-400 text-white", description: "Pantai berpasir putih elok dengan deburan ombak bersahabat, tempat bersantai terbaik bersama sanak keluarga.", image_url: "https://images.unsplash.com/photo-1520520731457-9283dd14aa66?auto=format&fit=crop&w=800&q=80" },
+  { name: "Pantai Sumur Pawon", lat: -6.801, lng: 112.001, icon: "🌊", color: "bg-cyan-400 text-white", description: "Mutiara pesisir pantai tersembunyi berpenduduk nelayan yang menyajikan ketenangan pesona alam bahari murni.", image_url: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?auto=format&fit=crop&w=800&q=80" },
 ];
 
 export default function MapGugus() {
   const [schools, setSchools] = useState<SchoolData[]>([]);
   const [dbLandmarks, setDbLandmarks] = useState<Landmark[]>(LANDMARKS);
   const [selectedSchool, setSelectedSchool] = useState<SchoolData | null>(null);
+  const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
   const [hoveredSchoolId, setHoveredSchoolId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [leafletReady, setLeafletReady] = useState(false);
@@ -199,7 +203,10 @@ export default function MapGugus() {
             lat: isNaN(latVal) ? 0 : latVal,
             lng: isNaN(lngVal) ? 0 : lngVal,
             icon: item.icon || "📍",
-            color: item.color || "bg-blue-500 text-white"
+            color: item.color || "bg-blue-500 text-white",
+            description: item.description || "",
+            image_url: item.image_url || "",
+            embed_code: item.embed_code || "",
           };
         }).filter((item: any) => item.lat !== 0 && item.lng !== 0);
         
@@ -391,6 +398,7 @@ export default function MapGugus() {
       const marker = L.marker([coords.lat, coords.lng], { icon: customIcon })
         .addTo(map)
         .on("click", () => {
+          setSelectedLandmark(null);
           setSelectedSchool(school);
           map.setView([coords.lat, coords.lng], 15, { animate: true, duration: 1 });
         })
@@ -433,7 +441,12 @@ export default function MapGugus() {
 
       const marker = L.marker([landmark.lat, landmark.lng], { icon: customIcon })
         .addTo(map)
-        .bindTooltip(landmark.name, { direction: 'top', offset: [0, -40] });
+        .bindTooltip(landmark.name, { direction: 'top', offset: [0, -40] })
+        .on("click", () => {
+          setSelectedSchool(null);
+          setSelectedLandmark(landmark);
+          map.setView([landmark.lat, landmark.lng], 16, { animate: true, duration: 1 });
+        });
 
       // We ONLY add landmarks to the feature group bounds if requested, but let's 
       // add them so the map zooms out enough to show everything!
@@ -543,6 +556,7 @@ export default function MapGugus() {
   // Focus Map to specified school
   const zoomToSchool = (school: SchoolData) => {
     if (!mapRef.current) return;
+    setSelectedLandmark(null);
     setSelectedSchool(school);
 
     // Get coordinates using identical logic values
@@ -774,6 +788,103 @@ export default function MapGugus() {
                 >
                   Lihat Detail <ArrowRight className="w-3.5 h-3.5" />
                 </a>
+              </div>
+            </div>
+          )}
+
+          {/* Floating Landmark Detail Popup Indicator Overlay */}
+          {selectedLandmark && (
+            <div className="absolute bottom-4 left-4 right-4 sm:left-auto sm:right-4 bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-gray-100 shadow-2xl z-[1000] max-w-sm w-auto animate-fade-in-up max-h-[85%] overflow-y-auto scrollbar-thin">
+              {/* Header Close button */}
+              <div className="flex items-center justify-between mb-3 gap-2">
+                <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-50 rounded-lg text-[9px] font-black uppercase text-amber-600 tracking-widest leading-none shrink-0">
+                  📍 Titik Landmark
+                </span>
+                <button
+                  onClick={() => setSelectedLandmark(null)}
+                  className="p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Cover Image */}
+              {selectedLandmark.image_url && (
+                <div className="w-full h-36 rounded-2xl overflow-hidden mb-3.5 border border-gray-150 relative bg-gray-50 shrink-0">
+                  <img
+                    referrerPolicy="no-referrer"
+                    src={selectedLandmark.image_url}
+                    alt={selectedLandmark.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Hide image if it fails to load
+                      (e.target as HTMLElement).style.display = "none";
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Title & Info */}
+              <div className="text-left">
+                <div className="flex items-start gap-2">
+                  <span className="text-xl shrink-0 leading-none mt-0.5">{selectedLandmark.icon}</span>
+                  <h5 className="font-extrabold text-sm sm:text-base text-soft-black leading-snug">{selectedLandmark.name}</h5>
+                </div>
+                
+                {selectedLandmark.description && (
+                  <p className="text-xs text-gray-500 mt-2 leading-relaxed font-semibold">
+                    {selectedLandmark.description}
+                  </p>
+                )}
+
+                {/* Embedded Widget */}
+                {selectedLandmark.embed_code && (
+                  <div className="mt-3.5">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1.5 pl-0.5">PETA NAVIGASI (LIVE)</p>
+                    {(() => {
+                      const embed = selectedLandmark.embed_code;
+                      if (!embed) return null;
+                      if (embed.includes("<iframe")) {
+                        let cleaned = embed
+                          .replace(/width="[0-9%]+"/g, 'width="100%"')
+                          .replace(/height="[0-9%]+"/g, 'height="100%"');
+                        return (
+                          <div 
+                            className="w-full h-40 rounded-2xl overflow-hidden border border-gray-100 shadow-inner"
+                            dangerouslySetInnerHTML={{ __html: cleaned }}
+                          />
+                        );
+                      }
+                      if (embed.startsWith("http")) {
+                        return (
+                          <iframe
+                            src={embed}
+                            className="w-full h-40 rounded-2xl overflow-hidden border border-gray-100 shadow-inner"
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                          />
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                )}
+                
+                {/* Coordinates */}
+                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between gap-4">
+                  <span className="text-[9px] font-mono font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded inline-block truncate">
+                    {selectedLandmark.lat.toFixed(5)}, {selectedLandmark.lng.toFixed(5)}
+                  </span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${selectedLandmark.lat},${selectedLandmark.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-main-blue hover:bg-hover-blue text-white rounded-xl text-[9px] font-extrabold uppercase tracking-widest transition-all shadow active:scale-95 flex items-center gap-1 cursor-pointer leading-tight shrink-0"
+                  >
+                    Google Maps <ArrowRight className="w-3 h-3" />
+                  </a>
+                </div>
               </div>
             </div>
           )}

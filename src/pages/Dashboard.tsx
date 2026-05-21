@@ -7756,6 +7756,8 @@ function AdminLandmarkForm() {
     icon: "📍",
     color: "bg-blue-500 text-white",
     embedCode: "",
+    description: "",
+    imageUrl: "",
   });
 
   useEffect(() => {
@@ -7827,6 +7829,9 @@ function AdminLandmarkForm() {
       longitude: lng,
       icon: formData.icon,
       color: formData.color,
+      embed_code: formData.embedCode,
+      description: formData.description,
+      image_url: formData.imageUrl,
     };
 
     if (editingLandmark) {
@@ -7873,7 +7878,16 @@ function AdminLandmarkForm() {
         <button
           onClick={() => {
             setEditingLandmark(null);
-            setFormData({ name: "", latitude: "", longitude: "", icon: "📍", color: "bg-blue-500 text-white", embedCode: "" });
+            setFormData({ 
+              name: "", 
+              latitude: "", 
+              longitude: "", 
+              icon: "📍", 
+              color: "bg-blue-500 text-white", 
+              embedCode: "",
+              description: "",
+              imageUrl: "",
+            });
             setIsModalOpen(true);
           }}
           className="px-6 py-3 bg-main-blue hover:bg-hover-blue text-white rounded-xl shadow-lg shadow-blue-500/20 font-bold transition-all hover:-translate-y-0.5 flex items-center gap-2 text-sm whitespace-nowrap"
@@ -7915,6 +7929,7 @@ function AdminLandmarkForm() {
                         </div>
                         <div>
                           <p className="font-bold text-soft-black">{item.name}</p>
+                          {item.description && <p className="text-xs text-gray-400 truncate max-w-[200px]">{item.description}</p>}
                         </div>
                       </div>
                     </td>
@@ -7934,7 +7949,9 @@ function AdminLandmarkForm() {
                               longitude: item.longitude.toString(),
                               icon: item.icon,
                               color: item.color,
-                              embedCode: ""
+                              embedCode: item.embed_code || "",
+                              description: item.description || "",
+                              imageUrl: item.image_url || "",
                             });
                             setIsModalOpen(true);
                           }}
@@ -7948,7 +7965,7 @@ function AdminLandmarkForm() {
                           className="p-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"
                           title="Hapus"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4 text-gray-350 hover:text-red-600" />
                         </button>
                       </div>
                     </td>
@@ -8012,6 +8029,16 @@ function AdminLandmarkForm() {
                     <option value="bg-cyan-400 text-white">Cyan</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Deskripsi / Informasi Landmark</label>
+                <textarea className="w-full p-4 bg-gray-50 rounded-xl text-sm font-bold focus:ring-2 focus:ring-main-blue/20 outline-none resize-none h-24" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} placeholder="Ketik informasi detail landmark ini, misal sejarah, daya tarik, dll..." />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">URL Gambar / Foto Landmark</label>
+                <input type="text" className="w-full p-4 bg-gray-50 rounded-xl text-sm font-bold focus:ring-2 focus:ring-main-blue/20 outline-none" value={formData.imageUrl} onChange={(e) => setFormData({...formData, imageUrl: e.target.value})} placeholder="Tautan gambar (unsplash, google drive, dll)" />
               </div>
 
               <div className="pt-4 flex justify-end gap-3">

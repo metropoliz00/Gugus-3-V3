@@ -593,6 +593,9 @@ CREATE TABLE IF NOT EXISTS public.landmarks (
     longitude DECIMAL(10, 7) NOT NULL,
     icon VARCHAR(50) DEFAULT '📍',
     color VARCHAR(50) DEFAULT 'bg-blue-500 text-white',
+    embed_code TEXT,
+    description TEXT,
+    image_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
