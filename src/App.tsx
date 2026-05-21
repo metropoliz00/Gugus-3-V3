@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Stats from './components/Stats';
 import Schools from './components/Schools';
+import MapGugus from './components/MapGugus';
 import Prestasi from './components/Prestasi';
 import HomeAgenda from './components/HomeAgenda';
 import MediaInformasi from './components/MediaInformasi';
@@ -68,6 +69,13 @@ function HomePage({ onLoginClick, user }: { onLoginClick: () => void; user?: any
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Map Section */}
+      <section className="py-12 bg-light-gray" id="peta">
+        <div className="container mx-auto px-6 max-w-7xl">
+          <MapGugus />
         </div>
       </section>
 
