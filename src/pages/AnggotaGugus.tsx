@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Users, X } from 'lucide-react';
+import { Users, X, Printer } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function AnggotaGugusPage() {
@@ -138,32 +138,125 @@ export default function AnggotaGugusPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6"
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 sm:p-6"
             onClick={() => setSelectedGuru(null)}
           >
+            <style>{`
+              @media print {
+                /* Hide everything in the page outer shell */
+                body * {
+                  visibility: hidden !important;
+                }
+                /* Show print target card */
+                #print-card-gugus, #print-card-gugus * {
+                  visibility: visible !important;
+                }
+                #print-card-gugus {
+                  position: absolute !important;
+                  left: 0 !important;
+                  top: 0 !important;
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  box-shadow: none !important;
+                  border: none !important;
+                  padding: 2rem !important;
+                  background: white !important;
+                  color: black !important;
+                }
+                .no-print {
+                  display: none !important;
+                }
+              }
+            `}</style>
+            
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              id="print-card-gugus"
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-[2rem] p-6 sm:p-8 max-w-lg w-full relative shadow-2xl border border-gray-100"
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-[2.5rem] p-6 sm:p-10 max-w-2xl w-full relative shadow-2xl border border-gray-100 text-soft-black"
               onClick={e => e.stopPropagation()}
+              style={{ contentVisibility: 'auto' }}
             >
-              <button onClick={() => setSelectedGuru(null)} className="absolute top-6 right-6 text-gray-400 hover:text-soft-black bg-gray-50 hover:bg-gray-100 p-2 rounded-full transition-all">
-                <X size={20} />
-              </button>
-              <div className="flex flex-col items-center text-center">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl bg-gradient-to-tr from-main-blue to-leaf-green p-1 mb-4 sm:mb-6 shadow-xl">
-                      <img src={selectedGuru.foto || selectedGuru.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedGuru.nama || 'G')}&background=random`} alt={selectedGuru.nama} className="w-full h-full object-cover object-top rounded-xl border-4 border-white" />
+              {/* Header Action Row */}
+              <div className="absolute top-6 right-6 flex items-center gap-2.5 no-print">
+                <button 
+                  onClick={() => window.print()} 
+                  title="Cetak Identitas"
+                  className="text-gray-400 hover:text-main-blue hover:scale-105 active:scale-95 bg-gray-50 hover:bg-blue-50 hover:border-blue-200 border border-gray-100 p-2.5 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                >
+                  <Printer size={18} />
+                </button>
+                <button 
+                  onClick={() => setSelectedGuru(null)} 
+                  title="Tutup"
+                  className="text-gray-400 hover:text-soft-black hover:scale-105 active:scale-95 bg-gray-50 hover:bg-gray-100 border border-gray-100 p-2.5 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Title Header */}
+              <div className="text-center pb-5 mb-8 border-b-2 border-main-blue/10">
+                <h2 className="text-lg sm:text-xl font-extrabold text-main-blue tracking-wider uppercase">
+                  IDENTITAS ANGGOTA GUGUS 3 "MELATI"
+                </h2>
+                <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Kecamatan Pondok Kelapa</p>
+              </div>
+
+              {/* Horizontal Layout (Photo Left, Column Right) */}
+              <div className="flex flex-col sm:flex-row print:flex-row gap-6 sm:gap-10 items-center sm:items-start print:items-start pt-2">
+                
+                {/* Photo Left Side */}
+                <div className="flex flex-col items-center shrink-0">
+                  <div className="w-32 h-44 sm:w-36 sm:h-48 rounded-2xl bg-gray-50 p-1 border-2 border-gray-200/80 shadow-md overflow-hidden bg-white">
+                    <img 
+                      src={selectedGuru.foto || selectedGuru.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedGuru.nama || 'G')}&background=0284c7&color=fff&size=200`} 
+                      alt={selectedGuru.nama} 
+                      className="w-full h-full object-cover object-top rounded-xl print:object-cover" 
+                    />
                   </div>
-                  <h2 className="text-lg sm:text-2xl font-bold text-soft-black mb-1 leading-tight">{selectedGuru.nama}</h2>
-                  <p className="text-sm sm:text-base text-main-blue font-medium mb-4 sm:mb-6 leading-tight">{selectedGuru.jabatan}</p>
+                </div>
+
+                {/* Data Column Right Side */}
+                <div className="flex-1 w-full space-y-4 text-left font-sans text-xs sm:text-sm">
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
+                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Nama Lengkap</span>
+                    <span className="text-gray-400 font-bold">:</span>
+                    <span className="font-extrabold text-soft-black text-sm break-words pl-1">{selectedGuru.nama || '-'}</span>
+                  </div>
                   
-                  <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600 text-left">
-                      <div><p className="text-gray-400 text-[10px] sm:text-xs">NIP</p><p className="font-mono break-all">{selectedGuru.nip || '-'}</p></div>
-                      <div><p className="text-gray-400 text-[10px] sm:text-xs">Pangkat/Gol</p><p>{selectedGuru.pangkat || '-'}</p></div>
-                      <div><p className="text-gray-400 text-[10px] sm:text-xs">Kepegawaian</p><p>{selectedGuru.kepegawaian || '-'}</p></div>
-                      <div><p className="text-gray-400 text-[10px] sm:text-xs">Sekolah</p><p className="line-clamp-2">{selectedGuru.sekolah || '-'}</p></div>
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
+                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">NIP</span>
+                    <span className="text-gray-400 font-bold">:</span>
+                    <span className="font-mono text-gray-800 font-semibold break-all pl-1">{selectedGuru.nip || '-'}</span>
                   </div>
+
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
+                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Pangkat/Gol</span>
+                    <span className="text-gray-400 font-bold">:</span>
+                    <span className="text-gray-800 font-bold pl-1">{selectedGuru.pangkat || '-'}</span>
+                  </div>
+
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
+                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Jabatan</span>
+                    <span className="text-gray-400 font-bold">:</span>
+                    <span className="text-main-blue font-bold pl-1">{selectedGuru.jabatan || '-'}</span>
+                  </div>
+
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
+                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Kepegawaian</span>
+                    <span className="text-gray-400 font-bold">:</span>
+                    <span className="text-gray-700 font-medium pl-1">{selectedGuru.kepegawaian || '-'}</span>
+                  </div>
+
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline">
+                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Sekolah</span>
+                    <span className="text-gray-400 font-bold">:</span>
+                    <span className="text-soft-black font-extrabold pl-1">{selectedGuru.sekolah || '-'}</span>
+                  </div>
+                </div>
+
               </div>
             </motion.div>
           </motion.div>

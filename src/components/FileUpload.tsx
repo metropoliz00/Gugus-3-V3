@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, File as FileIcon } from 'lucide-react';
+import { useAlert } from '../contexts/AlertContext';
 
 interface FileUploadProps {
   label?: string;
@@ -21,8 +22,28 @@ export default function FileUpload({
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  let customAlert: any = null;
+  try {
+    const context = useAlert();
+    customAlert = context.alert;
+  } catch (e) {
+    customAlert = async (msg: string) => { alert(msg); };
+  }
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
+    // Limit file size to 1.5 MB to prevent database bloat
+    const MAX_SIZE_MB = 1.5;
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      if (customAlert) {
+         await customAlert(
+           `Ukuran file '${file.name}' terlalu besar (${(file.size / (1024 * 1024)).toFixed(2)} MB).\n\nUntuk menjaga performa sistem tetap ringan dan cepat, batas maksimal upload dokumen langsung adalah ${MAX_SIZE_MB} MB. Silakan kompres file Anda terlebih dahulu, atau upload ke Google Drive/OneDrive lalu bagikan link/tautannya di deskripsi/konten.`,
+           "Ukuran File Melebihi Batas",
+           "error"
+         );
+      }
+      return;
+    }
+
     setIsLoading(true);
 
     const reader = new FileReader();
@@ -33,7 +54,9 @@ export default function FileUpload({
     };
     
     reader.onerror = () => {
-      alert("Gagal membaca file.");
+      if (customAlert) {
+        customAlert("Gagal membaca file yang dipilih.", "Error", "error");
+      }
       setIsLoading(false);
     };
     

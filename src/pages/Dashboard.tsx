@@ -59,6 +59,7 @@ import {
   School,
   XCircle,
   LayoutList,
+  Check,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {

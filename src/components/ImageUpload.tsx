@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { UploadCloud, Image as ImageIcon } from 'lucide-react';
+import { useAlert } from '../contexts/AlertContext';
 
 interface ImageUploadProps {
   label?: string;
@@ -16,20 +17,40 @@ export default function ImageUpload({
   label = "Upload Foto", 
   value, 
   onChange, 
-  maxWidth = 600, 
-  maxHeight = 600,
-  quality = 0.6,
+  maxWidth = 500, 
+  maxHeight = 500,
+  quality = 0.5,
   className = "",
   compact = false
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  let customAlert: any = null;
+  try {
+    const context = useAlert();
+    customAlert = context.alert;
+  } catch (e) {
+    customAlert = async (msg: string) => { alert(msg); };
+  }
 
-  const processFile = (file: File) => {
+  const processFile = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      alert("Hanya file gambar yang diperbolehkan.");
+      if (customAlert) {
+        await customAlert("Hanya file gambar (JPG, PNG, GIF, WEBP) yang diperbolehkan.", "Format Salah", "error");
+      }
       return;
+    }
+
+    // Warn if user attempts to upload massive image (over 5MB) before processing
+    if (file.size > 5 * 1024 * 1024) {
+      if (customAlert) {
+         await customAlert(
+           "Gambar yang Anda pilih berukuran sangat besar. Sistem kami akan berusaha mengecilkan dan mengompresnya secara otomatis agar database tetap ringan. Proses ini mungkin memakan waktu beberapa detik.",
+           "Mendeteksi Gambar Besar",
+           "info"
+         );
+      }
     }
 
     setIsLoading(true);
@@ -72,7 +93,9 @@ export default function ImageUpload({
       
       // Some error handling for image loading
       img.onerror = () => {
-        alert("Gagal memproses gambar.");
+        if (customAlert) {
+          customAlert("Gagal memproses gambar yang dipilih.", "Error", "error");
+        }
         setIsLoading(false);
       }
       
@@ -80,7 +103,9 @@ export default function ImageUpload({
     };
     
     reader.onerror = () => {
-        alert("Gagal membaca file.");
+        if (customAlert) {
+          customAlert("Gagal membaca file gambar.", "Error", "error");
+        }
         setIsLoading(false);
     }
     
