@@ -311,9 +311,9 @@ export default function MapGugus() {
       }
 
       const markerHtml = `
-        <div class="flex flex-col items-center justify-end h-full select-none" style="width: 140px; height: 100px;">
+        <div class="flex flex-col items-center justify-end h-full select-none" style="width: 140px; height: 100px; overflow: visible;">
           <!-- Tooltip Label -->
-          <div class="px-2.5 py-1 rounded-lg shadow-md border text-[10px] font-extrabold text-center bg-white text-soft-black border-gray-100 max-w-[140px] truncate leading-tight ${isInti ? "ring-2 ring-main-blue/30 scale-102" : "scale-95"} mb-1 transition-all duration-300">
+          <div class="px-2.5 py-1 rounded-lg shadow-md border text-[10px] font-extrabold text-center bg-white text-soft-black border-gray-100 whitespace-nowrap leading-tight ${isInti ? "ring-2 ring-main-blue/30 scale-102" : "scale-95"} mb-1 transition-all duration-300">
             ${school.name}
           </div>
           <!-- Pin body -->
@@ -485,8 +485,7 @@ export default function MapGugus() {
           background: transparent !important;
           border: none !important;
           box-shadow: none !important;
-          width: 0px !important;
-          height: 0px !important;
+          overflow: visible !important;
         }
         .premium-distance-tooltip {
           background: #0f172a !important; /* Slate-900 */

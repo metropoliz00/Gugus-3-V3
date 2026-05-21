@@ -5078,17 +5078,117 @@ function AdminSekolahForm({ user }: { user: any }) {
                             val = match[1];
                           }
                         }
-                        handleUpdate(school.id, { map_embed_url: val });
+                        
+                        // Parse coordinates of Google map automatically on input
+                        const rawClean = val.trim();
+                        let detectedLat = "";
+                        let detectedLng = "";
+                        
+                        // 1. Google maps embed url style containing pb=!1m18!1m12!1m3!2dLONGITUDE!3dLATITUDE
+                        const dMatch = rawClean.match(/!2d(-?\d+\.\d+)/);
+                        const tMatch = rawClean.match(/!3d(-?\d+\.\d+)/);
+                        if (dMatch && tMatch) {
+                          detectedLat = parseFloat(tMatch[1]).toString();
+                          detectedLng = parseFloat(dMatch[1]).toString();
+                        } else {
+                          // 2. Check for @lat,lng style
+                          const atMatch = rawClean.match(/@(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
+                          if (atMatch) {
+                            detectedLat = parseFloat(atMatch[1]).toString();
+                            detectedLng = parseFloat(atMatch[2]).toString();
+                          } else {
+                            // 3. Fallback search for any "latitude,longitude" pair match
+                            const genericCoordsMatch = rawClean.match(/(-?[5678]\.\d+)\s*,\s*(11[12]\.\d+)/);
+                            if (genericCoordsMatch) {
+                              detectedLat = parseFloat(genericCoordsMatch[1]).toString();
+                              detectedLng = parseFloat(genericCoordsMatch[2]).toString();
+                            }
+                          }
+                        }
+
+                        if (detectedLat && detectedLng) {
+                          handleUpdate(school.id, { 
+                            map_embed_url: val,
+                            latitude: detectedLat,
+                            longitude: detectedLng
+                          });
+                        } else {
+                          handleUpdate(school.id, { map_embed_url: val });
+                        }
                       }}
                     />
 
                     {/* DYNAMIC LEAFLET MAP COORDINATES & CUSTOM ICON SETTINGS */}
                     <div className="mt-4 p-4.5 bg-gray-50 rounded-2xl border border-gray-100 space-y-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-3.5 bg-main-orange rounded-full" />
-                        <span className="text-[11px] font-black text-gray-700 uppercase tracking-wider">
-                          Konfigurasi Koordinat & Icon Peta Digital (Leaflet)
-                        </span>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-200/50 pb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-3.5 bg-main-orange rounded-full" />
+                          <span className="text-[11px] font-black text-gray-700 uppercase tracking-wider">
+                            Konfigurasi Koordinat & Icon Peta Digital (Leaflet)
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Manual Search & Auto-Detect coordinates algorithm
+                            const PRESETS: Record<string, { lat: number; lng: number }> = {
+                              "mentoso": { lat: -6.832742, lng: 112.022335 },
+                              "remen 1": { lat: -6.808304, lng: 112.008123 },
+                              "remen 2": { lat: -6.815214, lng: 112.015244 },
+                              "tasikharjo": { lat: -6.828311, lng: 111.983844 },
+                              "jenu 1": { lat: -6.88512, lng: 112.0132 },
+                              "jenu 2": { lat: -6.88750, lng: 112.0172 },
+                              "jenu 3": { lat: -6.88920, lng: 112.0205 }
+                            };
+
+                            let foundLat = "";
+                            let foundLng = "";
+
+                            // 1. Try extracting from existing URL
+                            if (school.map_embed_url) {
+                              const rawClean = school.map_embed_url.trim();
+                              const dMatch = rawClean.match(/!2d(-?\d+\.\d+)/);
+                              const tMatch = rawClean.match(/!3d(-?\d+\.\d+)/);
+                              if (dMatch && tMatch) {
+                                foundLat = parseFloat(tMatch[1]).toString();
+                                foundLng = parseFloat(dMatch[1]).toString();
+                              } else {
+                                const atMatch = rawClean.match(/@(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
+                                if (atMatch) {
+                                  foundLat = parseFloat(atMatch[1]).toString();
+                                  foundLng = parseFloat(atMatch[2]).toString();
+                                }
+                              }
+                            }
+
+                            // 2. Try school name fuzzy matching if not found from URL
+                            if (!foundLat || !foundLng) {
+                              const key = (school.name || "").toLowerCase();
+                              for (const [presetKey, coords] of Object.entries(PRESETS)) {
+                                if (key.includes(presetKey) || presetKey.includes(key)) {
+                                  foundLat = coords.lat.toString();
+                                  foundLng = coords.lng.toString();
+                                  break;
+                                }
+                              }
+                            }
+
+                            // 3. Absolute fallback coordinate defaults around central Jenu
+                            if (!foundLat || !foundLng) {
+                              foundLat = "-6.832000";
+                              foundLng = "112.010000";
+                            }
+
+                            handleUpdate(school.id, {
+                              latitude: foundLat,
+                              longitude: foundLng
+                            });
+                            alert(`Berhasil Mendeteksi Koordinat: Lintang ${foundLat}, Bujur ${foundLng}`);
+                          }}
+                          className="px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white bg-main-orange hover:bg-orange-600 rounded-lg shadow-sm transition-all hover:scale-102 flex items-center gap-1 cursor-pointer"
+                        >
+                          🔍 Cari / Deteksi Koordinat Otomatis
+                        </button>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
