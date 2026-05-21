@@ -4436,27 +4436,43 @@ function AdminAgendaForm({ user }: { user: any }) {
   const handleCreate = async () => {
     if (!supabase) return;
     const newEvent = {
-      title: "Kegiatan Baru",
-      description: "Deskripsi Kegiatan",
-      category: "guru",
-      date_start: new Date().toISOString(),
-      location: "Kantor Gugus",
-      image_url: "",
-      detail_url: "",
-      materi_url: "",
-      is_open_for_guests: false,
+        title: "Kegiatan Baru",
+        description: "Deskripsi Kegiatan",
+        category: "guru",
+        date_start: new Date().toISOString(),
+        location: "Kantor Gugus",
+        status: "rencana",
+        image_url: "",
+        detail_url: "",
+        materi_url: "",
+        is_open_for_guests: false,
     };
-    const { data, error } = await supabase
+    
+    // We do NOT use .select() here, as RLS might return an empty array and crash data[0]
+    const { error } = await supabase
       .from("events")
-      .insert([newEvent])
-      .select();
-    if (!error && data) {
-      logActivity(
-        user,
-        "create_agenda",
-        `Menambah agenda baru: ${newEvent.title}`,
-      );
-      setEvents([data[0], ...events]);
+      .insert([newEvent]);
+      
+    if (error) {
+      console.error("DEBUG_CREATE_ERROR:", error);
+      alert("Gagal menambah agenda: " + error.message);
+      return;
+    }
+    
+    logActivity(
+      user,
+      "create_agenda",
+      `Menambah agenda baru: ${newEvent.title}`,
+    );
+    
+    // Reload events manually
+    const { data: updatedData } = await supabase
+      .from("events")
+      .select("*")
+      .order("date_start", { ascending: true });
+      
+    if (updatedData) {
+      setEvents(updatedData);
     }
   };
 
