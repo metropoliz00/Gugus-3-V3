@@ -14,14 +14,19 @@ export default function KkgProgramPage() {
 
   const { content } = useSiteContent();
   const kkg = content.kkg || {programs: {}};
-  const programsData = kkg.programs || { tahunan: [], workshop: [], supervisi: [], media: [] };
   
-  const programCategories = [
+  const programCategories = kkg.programCategories || [
     { id: 'tahunan', label: 'Program Tahunan' },
     { id: 'workshop', label: 'Workshop & Pelatihan' },
     { id: 'supervisi', label: 'Supervisi Akademik' },
     { id: 'media', label: 'Pengembangan Media' },
   ];
+
+  const activeGroup = programCategories.some(c => c.id === activeProgramGroup)
+    ? activeProgramGroup
+    : (programCategories[0]?.id || 'tahunan');
+
+  const programsData = kkg.programs || { tahunan: [], workshop: [], supervisi: [], media: [] };
 
   return (
     <div className="pt-24 pb-20 bg-light-gray min-h-screen">
@@ -36,7 +41,7 @@ export default function KkgProgramPage() {
                     setOpenProgramIdx(0);
                 }}
                 className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    activeProgramGroup === cat.id 
+                    activeGroup === cat.id 
                     ? 'bg-main-blue text-white shadow-lg shadow-main-blue/20' 
                     : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200'
                 }`}
@@ -46,7 +51,7 @@ export default function KkgProgramPage() {
             ))}
         </div>
         <div className="space-y-4">
-            {programsData[activeProgramGroup]?.map((prog: any, idx: number) => (
+            {(programsData[activeGroup] || [])?.map((prog: any, idx: number) => (
                 <div key={idx} className={`bg-white border rounded-2xl overflow-hidden`}>
                     <button 
                         onClick={() => setOpenProgramIdx(openProgramIdx === idx ? null : idx)}

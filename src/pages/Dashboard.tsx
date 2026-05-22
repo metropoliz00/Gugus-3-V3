@@ -5815,7 +5815,7 @@ function AdminKKGForm({
   handleSaveContent,
   updateContent,
 }: any) {
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
   const { content } = useSiteContent();
   const [activeKkgTab, setActiveKkgTab] = useState("profil");
   const [dbStruktur, setDbStruktur] = useState<any[]>([]);
@@ -6486,118 +6486,200 @@ function AdminKKGForm({
           </div>
         )}
 
-        {activeKkgTab === "program" && (
-          <div className="space-y-6">
-            <p className="text-sm text-gray-500">
-              Program Tahunan dan kegiatan lainnya dapat diatur di sini.
-            </p>
-            {Object.keys(form.programs || { tahunan: [] }).map(
-              (key: string) => (
-                <div
-                  key={key}
-                  className="p-4 border border-gray-100 rounded-2xl bg-gray-50/50"
-                >
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-bold text-soft-black capitalize">
-                      Program {key}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newPrograms = { ...(form.programs || {}) };
-                        if (!newPrograms[key]) newPrograms[key] = [];
-                        newPrograms[key].push({
-                          title: "Program Baru",
-                          desc: "",
-                          date: "",
-                          status: "Menunggu",
-                        });
-                        setKkgForm({ ...form, programs: newPrograms });
-                      }}
-                      className="text-xs text-main-blue hover:underline font-bold"
-                    >
-                      + Tambah
-                    </button>
-                  </div>
-                  <div className="space-y-3">
-                    {((form.programs && form.programs[key]) || []).map(
-                      (prog: any, i: number) => (
-                        <div
-                          key={i}
-                          className="flex gap-4 items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100 relative group"
-                        >
-                          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <input
-                              className="border-b border-gray-200 p-1 text-sm font-bold text-soft-black focus:border-main-blue outline-none bg-transparent"
-                              placeholder="Judul Program"
-                              value={prog.title}
-                              onChange={(e) => {
-                                const newPrograms = { ...form.programs };
-                                newPrograms[key][i].title = e.target.value;
-                                setKkgForm({ ...form, programs: newPrograms });
-                              }}
-                            />
-                            <input
-                              className="border-b border-gray-200 p-1 text-sm text-gray-600 focus:border-main-blue outline-none bg-transparent"
-                              placeholder="Waktu / Pelaksanaan"
-                              value={prog.date}
-                              onChange={(e) => {
-                                const newPrograms = { ...form.programs };
-                                newPrograms[key][i].date = e.target.value;
-                                setKkgForm({ ...form, programs: newPrograms });
-                              }}
-                            />
-                            <select
-                              className="border-b border-gray-200 p-1 text-sm font-bold text-blue-600 focus:border-main-blue outline-none bg-transparent"
-                              value={prog.status || "rencana"}
-                              onChange={(e) => {
-                                const newPrograms = { ...form.programs };
-                                newPrograms[key][i].status = e.target.value;
-                                setKkgForm({ ...form, programs: newPrograms });
-                              }}
-                            >
-                              <option value="rencana">Rencana</option>
-                              <option value="berjalan">Berjalan</option>
-                              <option value="selesai">Selesai</option>
-                            </select>
-                            <textarea
-                              className="border border-gray-200 rounded-lg p-2 text-sm text-gray-600 focus:border-main-blue outline-none bg-transparent col-span-1 md:col-span-2"
-                              placeholder="Deskripsi Singkat"
-                              value={prog.desc}
-                              onChange={(e) => {
-                                const newPrograms = { ...form.programs };
-                                newPrograms[key][i].desc = e.target.value;
-                                setKkgForm({ ...form, programs: newPrograms });
-                              }}
-                              rows={2}
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newPrograms = { ...form.programs };
-                              newPrograms[key].splice(i, 1);
-                              setKkgForm({ ...form, programs: newPrograms });
-                            }}
-                            className="opacity-0 group-hover:opacity-100 text-red-400 hover:bg-red-50 p-2 rounded-lg transition-all absolute top-2 right-2"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ),
-                    )}
-                    {((form.programs && form.programs[key]) || []).length ===
-                      0 && (
-                      <p className="text-xs text-gray-400 italic">
-                        Belum ada program {key}.
-                      </p>
-                    )}
-                  </div>
+        {activeKkgTab === "program" && (() => {
+          const programCategories = form.programCategories || [
+            { id: "tahunan", label: "Program Kerja Tahunan" },
+            { id: "workshop", label: "Workshop & Pelatihan" },
+            { id: "supervisi", label: "Supervisi Akademik" },
+            { id: "media", label: "Pengembangan Media" },
+          ];
+          return (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center bg-white p-5 border border-gray-100 rounded-2xl shadow-sm mb-4">
+                <div>
+                  <h4 className="font-bold text-soft-black text-sm">Kategori Program KKG</h4>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Edit nama kategori, hapus kategori, atau tambah kategori baru sesuai keadaan sebenarnya.</p>
                 </div>
-              ),
-            )}
-          </div>
-        )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newId = "cat_" + Date.now();
+                    const newCategories = [
+                      ...programCategories,
+                      { id: newId, label: "Kategori Baru" }
+                    ];
+                    const newPrograms = { ...(form.programs || {}) };
+                    newPrograms[newId] = [];
+                    setKkgForm({
+                      ...form,
+                      programCategories: newCategories,
+                      programs: newPrograms
+                    });
+                  }}
+                  className="px-4 py-2 bg-main-blue hover:bg-hover-blue text-white rounded-xl font-bold flex items-center gap-2 text-xs transition-all shadow-md shadow-blue-500/10"
+                >
+                  <PlusCircle className="w-4 h-4" /> Kategori Baru
+                </button>
+              </div>
+
+              {programCategories.map((cat: { id: string; label: string }) => {
+                const key = cat.id;
+                return (
+                  <div
+                    key={key}
+                    className="p-5 border border-gray-100 rounded-2xl bg-gray-50/50 space-y-4 shadow-sm relative"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-gray-100">
+                      <div className="flex items-center gap-2 flex-grow">
+                        <input
+                          className="font-bold text-soft-black text-sm bg-white border border-gray-200 rounded-xl px-3 py-1.5 focus:border-main-blue focus:ring-1 focus:ring-main-blue outline-none flex-grow max-w-[325px]"
+                          value={cat.label}
+                          onChange={(e) => {
+                            const newCategories = programCategories.map((c: any) => 
+                              c.id === cat.id ? { ...c, label: e.target.value } : c
+                            );
+                            setKkgForm({ ...form, programCategories: newCategories });
+                          }}
+                          placeholder="Nama Kategori"
+                        />
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const count = ((form.programs && form.programs[key]) || []).length;
+                            let confirmMsg = `Apakah Anda yakin ingin menghapus kategori "${cat.label}"?`;
+                            if (count > 0) {
+                              confirmMsg += ` Semua ${count} program di dalamnya juga akan ikut terhapus secara permanen.`;
+                            }
+                            if (await confirm(confirmMsg, "Konfirmasi Hapus Kategori")) {
+                              const newCategories = programCategories.filter((c: any) => c.id !== cat.id);
+                              const newPrograms = { ...(form.programs || {}) };
+                              delete newPrograms[key];
+                              setKkgForm({
+                                ...form,
+                                programCategories: newCategories,
+                                programs: newPrograms
+                              });
+                            }
+                          }}
+                          className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-colors shrink-0"
+                          title="Hapus Kategori"
+                        >
+                          <Trash2 className="w-4.5 h-4.5" />
+                        </button>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newPrograms = { ...(form.programs || {}) };
+                          if (!newPrograms[key]) newPrograms[key] = [];
+                          newPrograms[key].push({
+                            title: "Program Baru",
+                            desc: "",
+                            date: "",
+                            status: "rencana",
+                          });
+                          setKkgForm({ ...form, programs: newPrograms });
+                        }}
+                        className="text-xs bg-main-blue/10 text-main-blue hover:bg-main-blue/20 font-bold px-3 py-2 rounded-xl transition-colors flex items-center gap-1.5 shrink-0 self-start md:self-auto"
+                      >
+                        <PlusCircle className="w-4 h-4" /> Tambah Program Kerja
+                      </button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {((form.programs && form.programs[key]) || []).map(
+                        (prog: any, i: number) => (
+                          <div
+                            key={i}
+                            className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative"
+                          >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-8">
+                              <div className="flex flex-col">
+                                <label className="text-[10px] uppercase font-bold text-gray-400 mb-1">Judul Program Kerja</label>
+                                <input
+                                  className="border-b border-gray-100 pb-1 text-sm font-bold text-soft-black focus:border-main-blue outline-none bg-transparent"
+                                  placeholder="Judul Program Kerja"
+                                  value={prog.title}
+                                  onChange={(e) => {
+                                    const newPrograms = { ...form.programs };
+                                    newPrograms[key][i].title = e.target.value;
+                                    setKkgForm({ ...form, programs: newPrograms });
+                                  }}
+                                />
+                              </div>
+                              <div className="flex flex-col">
+                                <label className="text-[10px] uppercase font-bold text-gray-400 mb-1">Waktu / Pelaksanaan</label>
+                                <input
+                                  className="border-b border-gray-100 pb-1 text-sm text-gray-600 focus:border-main-blue outline-none bg-transparent"
+                                  placeholder="Waktu / Pelaksanaan"
+                                  value={prog.date}
+                                  onChange={(e) => {
+                                    const newPrograms = { ...form.programs };
+                                    newPrograms[key][i].date = e.target.value;
+                                    setKkgForm({ ...form, programs: newPrograms });
+                                  }}
+                                />
+                              </div>
+                              <div className="flex flex-col col-span-1 md:col-span-2">
+                                <label className="text-[10px] uppercase font-bold text-gray-400 mb-1">Status Kegiatan</label>
+                                <select
+                                  className="border-b border-gray-100 pb-1 text-sm font-bold text-blue-600 focus:border-main-blue outline-none bg-transparent"
+                                  value={prog.status || "rencana"}
+                                  onChange={(e) => {
+                                    const newPrograms = { ...form.programs };
+                                    newPrograms[key][i].status = e.target.value;
+                                    setKkgForm({ ...form, programs: newPrograms });
+                                  }}
+                                >
+                                  <option value="rencana">Rencana</option>
+                                  <option value="berjalan">Berjalan</option>
+                                  <option value="selesai">Selesai</option>
+                                </select>
+                              </div>
+                              <div className="flex flex-col col-span-1 md:col-span-2">
+                                <label className="text-[10px] uppercase font-bold text-gray-400 mb-1">Deskripsi Singkat</label>
+                                <textarea
+                                  className="border border-gray-100 rounded-lg p-2 text-sm text-gray-600 focus:border-main-blue outline-none bg-transparent w-full"
+                                  placeholder="Deskripsi Singkat"
+                                  value={prog.desc}
+                                  onChange={(e) => {
+                                    const newPrograms = { ...form.programs };
+                                    newPrograms[key][i].desc = e.target.value;
+                                    setKkgForm({ ...form, programs: newPrograms });
+                                  }}
+                                  rows={2}
+                                />
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (await confirm("Apakah Anda yakin ingin menghapus program kerja ini?", "Hapus Program")) {
+                                  const newPrograms = { ...form.programs };
+                                  newPrograms[key].splice(i, 1);
+                                  setKkgForm({ ...form, programs: newPrograms });
+                                }
+                              }}
+                              className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all absolute top-2 right-2 shrink-0 border border-transparent hover:border-red-100"
+                              title="Hapus Program Kerja"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ),
+                      )}
+                      {((form.programs && form.programs[key]) || []).length === 0 && (
+                        <p className="text-xs text-gray-400 italic py-2">
+                          Belum ada program kerja di kategori ini.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {activeKkgTab === "pengumuman" && (
           <div className="space-y-6">
@@ -6741,7 +6823,7 @@ function AdminKKGForm({
 }
 
 function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
   const { content } = useSiteContent();
   const [activeTab, setActiveTab] = useState("profil");
   const [dbStruktur, setDbStruktur] = useState<any[]>([]);
@@ -7278,12 +7360,15 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
-                      const next = [...programs];
-                      next.splice(i, 1);
-                      setGugusForm({ ...form, programs: next });
+                    onClick={async () => {
+                      if (await confirm(`Apakah Anda yakin ingin menghapus program "${p.title || 'ini'}"?`, "Hapus Program Kerja")) {
+                        const next = [...programs];
+                        next.splice(i, 1);
+                        setGugusForm({ ...form, programs: next });
+                      }
                     }}
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-red-400"
+                    className="absolute top-2 right-2 text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all"
+                    title="Hapus Program Kerja"
                   >
                     <X className="w-4 h-4" />
                   </button>

@@ -29,18 +29,23 @@ export default function KkgPage() {
     setStruktur(data || []);
   };
 
-  const programCategories = [
+  const { content } = useSiteContent();
+  const kkg = {
+    ...defaultContent.kkg,
+    ...content.kkg
+  };
+
+  const programCategories = kkg.programCategories || [
     { id: 'tahunan', label: 'Program Tahunan' },
     { id: 'workshop', label: 'Workshop & Pelatihan' },
     { id: 'supervisi', label: 'Supervisi Akademik' },
     { id: 'media', label: 'Pengembangan Media' },
   ];
 
-  const { content } = useSiteContent();
-  const kkg = {
-    ...defaultContent.kkg,
-    ...content.kkg
-  };
+  const activeGroup = programCategories.some(c => c.id === activeProgramGroup)
+    ? activeProgramGroup
+    : (programCategories[0]?.id || 'tahunan');
+
   const programsData = kkg.programs || { tahunan: [], workshop: [], supervisi: [], media: [] };
   const visi = kkg.visi || 'Visi belum diatur.';
   const misi = kkg.misi || [];
@@ -290,7 +295,7 @@ export default function KkgPage() {
                     setOpenProgramIdx(0);
                   }}
                   className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    activeProgramGroup === cat.id 
+                    activeGroup === cat.id 
                       ? 'bg-main-blue text-white shadow-lg shadow-main-blue/20' 
                       : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-200'
                   }`}
@@ -303,9 +308,9 @@ export default function KkgPage() {
             {/* Accordion */}
             <div className="space-y-4">
               <AnimatePresence mode="wait">
-                {programsData[activeProgramGroup].map((prog: any, idx: number) => (
+                {(programsData[activeGroup] || []).map((prog: any, idx: number) => (
                   <motion.div 
-                    key={`${activeProgramGroup}-${idx}`}
+                    key={`${activeGroup}-${idx}`}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
