@@ -419,15 +419,15 @@ export default function MapGugus() {
     // Plot landmarks
     dbLandmarks.forEach((landmark) => {
       const markerHtml = `
-        <div class="flex flex-col items-center justify-end h-full select-none" style="width: 140px; height: 100px; overflow: visible;">
+        <div class="flex flex-col items-center justify-end h-full select-none group" style="width: 140px; height: 100px; overflow: visible;">
            <!-- Tooltip Label -->
-           <div class="px-2.5 py-1 rounded-lg shadow-md border text-[10px] font-extrabold text-center bg-white/90 backdrop-blur-sm text-soft-black border-gray-100 whitespace-nowrap leading-tight mb-1">
+           <div class="opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out pointer-events-none transform translate-y-1 group-hover:translate-y-0 scale-95 group-hover:scale-100 px-2.5 py-1 rounded-lg shadow-md border text-[10px] font-extrabold text-center bg-white backdrop-blur-sm text-soft-black border-gray-100 whitespace-nowrap leading-tight mb-1">
              ${landmark.name}
            </div>
            <!-- Pin body -->
            <div class="relative flex flex-col items-center justify-center">
              <!-- Icon frame -->
-             <div class="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white transition-all transform hover:scale-110 cursor-help ${landmark.color}">
+             <div class="w-7 h-7 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white transition-all transform hover:scale-115 cursor-help ${landmark.color}">
                <span class="text-xs font-extrabold select-none leading-none">${landmark.icon}</span>
              </div>
              <!-- Pin stalk -->
@@ -445,7 +445,6 @@ export default function MapGugus() {
 
       const marker = L.marker([landmark.lat, landmark.lng], { icon: customIcon })
         .addTo(map)
-        .bindTooltip(landmark.name, { direction: 'top', offset: [0, -40] })
         .on("click", () => {
           setSelectedSchool(null);
           setSelectedLandmark(landmark);
