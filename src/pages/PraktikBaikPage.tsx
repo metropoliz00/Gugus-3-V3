@@ -214,7 +214,7 @@ export default function PraktikBaikPage() {
                           </div>
                           <div className="flex flex-col">
                             <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">DIBAGIKAN OLEH</span>
-                            <span className="text-xs font-black text-soft-black truncate max-w-[120px]">{authorName}</span>
+                            <span className="text-xs font-black text-soft-black break-words leading-tight">{authorName}</span>
                           </div>
                         </div>
 

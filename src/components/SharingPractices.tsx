@@ -393,7 +393,7 @@ export function SharingPractices({ user }: { user: any }) {
                   <div className="text-right">
                     <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest leading-none mb-2">Penulis</p>
                     <div className="flex items-center justify-end gap-3 text-white">
-                      <span className="text-base font-black truncate max-w-[140px] drop-shadow-lg">
+                      <span className="text-base font-black drop-shadow-lg leading-tight break-words text-right">
                         {authorName}
                       </span>
                       <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-main-blue to-leaf-green flex items-center justify-center shadow-xl border border-white/10 overflow-hidden">
