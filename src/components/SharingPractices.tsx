@@ -41,7 +41,7 @@ export function SharingPractices({ user }: { user: any }) {
         const userIds = [...new Set(practicesData.map(p => p.user_id).filter(Boolean))];
         const { data: profilesData, error: profilesError } = await supabase
           .from("user_profiles")
-          .select("id, nama, full_name, username, foto")
+          .select("id, nama, username, foto")
           .in("id", userIds);
 
         if (profilesError) {
@@ -95,7 +95,7 @@ export function SharingPractices({ user }: { user: any }) {
         // Fetch the user profile for the newly inserted record
         const { data: profileData } = await supabase
           .from("user_profiles")
-          .select("id, nama, full_name, username, foto")
+          .select("id, nama, username, foto")
           .eq("id", user.id)
           .single();
 

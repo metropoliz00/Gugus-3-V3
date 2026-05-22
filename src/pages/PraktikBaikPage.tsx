@@ -36,7 +36,7 @@ export default function PraktikBaikPage() {
         const userIds = [...new Set(practicesData.map(p => p.user_id).filter(Boolean))];
         const { data: profilesData, error: profilesError } = await supabase
           .from("user_profiles")
-          .select("id, nama, full_name, username, foto")
+          .select("id, nama, username, foto")
           .in("id", userIds);
 
         if (profilesError) {
