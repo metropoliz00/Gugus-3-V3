@@ -11,7 +11,7 @@ export function SharingPractices({ user }: { user: any }) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
 
   const getYouTubeId = (url: string) => {
     if (!url) return null;
@@ -149,7 +149,7 @@ export function SharingPractices({ user }: { user: any }) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Hapus praktik baik ini?")) return;
+    if (!await confirm("Apakah Anda yakin ingin menghapus praktik baik ini?", "Konfirmasi Hapus")) return;
     try {
       const { error } = await supabase
         .from("best_practices")
