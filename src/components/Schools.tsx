@@ -361,7 +361,7 @@ export default function Schools() {
                                 <img src={img} className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110" alt={`Prestasi ${idx + 1}`} />
                                 {desc && (
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                                    <p className="text-white text-[10px] font-bold leading-tight line-clamp-3 italic">
+                                    <p className="text-white text-[10px] font-bold leading-tight italic">
                                       "{desc}"
                                     </p>
                                   </div>
