@@ -161,9 +161,10 @@ export default function Prestasi() {
                     </h4>
                     <div className="mt-auto pt-4 relative">
                       <div className="absolute top-0 left-0 w-12 h-1 rounded-full bg-gray-100 group-hover:w-20 group-hover:bg-main-blue transition-all duration-500" />
-                      <p className="text-gray-500 font-medium whitespace-pre-line text-sm leading-relaxed mt-4">
-                        {item.name}
-                      </p>
+                      <div 
+                        className="text-gray-500 font-medium text-sm leading-relaxed mt-4 prose prose-emerald max-w-none ql-editor-display"
+                        dangerouslySetInnerHTML={{ __html: item.name || "" }}
+                      />
                     </div>
                   </div>
                 </div>

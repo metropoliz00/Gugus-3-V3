@@ -84,9 +84,16 @@ export default function Schools() {
         setSelectedSchool(e.detail);
       }
     };
+    const handleSetFilter = (e: CustomEvent) => {
+      if (e.detail && (e.detail === 'Semua' || e.detail === 'Sekolah Inti' || e.detail === 'Sekolah Imbas')) {
+        setFilter(e.detail);
+      }
+    };
     window.addEventListener('open-school-detail' as any, handleOpenSchoolDetail);
+    window.addEventListener('set-school-filter' as any, handleSetFilter);
     return () => {
       window.removeEventListener('open-school-detail' as any, handleOpenSchoolDetail);
+      window.removeEventListener('set-school-filter' as any, handleSetFilter);
     };
   }, []);
 

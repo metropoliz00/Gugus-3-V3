@@ -7415,7 +7415,7 @@ function AdminPenghargaanForm() {
     loadAwards();
   }, []);
 
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
   const [newAward, setNewAward] = useState({
     title: "",
     category: "Guru",
@@ -7467,7 +7467,7 @@ function AdminPenghargaanForm() {
 
   const handleDelete = async (id: string) => {
     if (!supabase) return;
-    if (window.confirm("Hapus penghargaan ini?")) {
+    if (await confirm("Apakah Anda yakin ingin menghapus penghargaan ini?", "Konfirmasi Hapus")) {
       const { error } = await supabase.from("awards").delete().eq("id", id);
       if (!error) {
         setAwards(awards.filter((a: any) => a.id !== id));
@@ -7529,7 +7529,26 @@ function AdminPenghargaanForm() {
             </div>
           </div>
           <p className="text-xs text-gray-500 mt-2">Catatan: Upload foto penghargaan (otomatis diperkecil).</p>
-          <textarea placeholder="Deskripsi" className="w-full p-2 border rounded" value={newAward.description} onChange={e => setNewAward({...newAward, description: e.target.value})} />
+          <div className="w-full">
+            <label className="block text-[11px] uppercase font-bold text-gray-400 mb-2">
+              Deskripsi Penghargaan (Rich Text)
+            </label>
+            <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-inner min-h-[140px]">
+              <ReactQuill
+                theme="snow"
+                value={newAward.description || ""}
+                onChange={(content) => setNewAward({...newAward, description: content})}
+                className="h-full border-none"
+                modules={{
+                  toolbar: [
+                    ["bold", "italic", "underline", "strike"],
+                    [{ list: "ordered" }, { list: "bullet" }],
+                    ["link", "clean"]
+                  ]
+                }}
+              />
+            </div>
+          </div>
           <div className="flex gap-2">
             <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded">Simpan</button>
             <button type="button" onClick={() => setIsAdding(false)} className="bg-gray-200 px-4 py-2 rounded">Batal</button>
@@ -7622,17 +7641,26 @@ function AdminPenghargaanForm() {
                   />
                 </div>
                 <div className="md:col-span-4">
-                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
-                    Deskripsi
+                  <label className="block text-[10px] uppercase font-bold text-gray-400 mb-2">
+                    Deskripsi (Rich Text)
                   </label>
-                  <textarea
-                    className="w-full border-b border-gray-200 text-sm text-soft-black outline-none bg-transparent"
-                    value={item.description}
-                    rows={2}
-                    onChange={(e) =>
-                      handleUpdate(item.id, { description: e.target.value })
-                    }
-                  />
+                  <div className="bg-white rounded-xl overflow-hidden border border-gray-100 shadow-inner min-h-[140px]">
+                    <ReactQuill
+                      theme="snow"
+                      value={item.description || ""}
+                      onChange={(content) =>
+                        handleUpdate(item.id, { description: content })
+                      }
+                      className="h-full border-none"
+                      modules={{
+                        toolbar: [
+                          ["bold", "italic", "underline", "strike"],
+                          [{ list: "ordered" }, { list: "bullet" }],
+                          ["link", "clean"]
+                        ]
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
               <button

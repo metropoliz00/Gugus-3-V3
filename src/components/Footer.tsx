@@ -1,5 +1,6 @@
+import React from "react";
 import { MapPin, Phone, Mail, Facebook, Instagram, Youtube } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSiteContent } from "../contexts/SiteContext";
 
 function TiktokIcon(props: any) {
@@ -24,6 +25,36 @@ function TiktokIcon(props: any) {
 export default function Footer() {
   const { content } = useSiteContent();
   const social = (content.footer as any).social || {};
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleAnchorClick = (e: React.MouseEvent<HTMLButtonElement>, href: string, label: string) => {
+    e.preventDefault();
+    const id = href.split('#')[1];
+    
+    const performScrollAndFilter = () => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+      if (label === 'Sekolah Imbas') {
+        const filterEvent = new CustomEvent('set-school-filter', { detail: 'Sekolah Imbas' });
+        window.dispatchEvent(filterEvent);
+      } else if (label === 'Sekolah') {
+        const filterEvent = new CustomEvent('set-school-filter', { detail: 'Semua' });
+        window.dispatchEvent(filterEvent);
+      }
+    };
+
+    if (location.pathname !== '/') {
+      navigate('/');
+      setTimeout(() => {
+        performScrollAndFilter();
+      }, 150);
+    } else {
+      performScrollAndFilter();
+    }
+  };
 
   const menuAkses = [
     { label: 'Beranda', href: '/' },
@@ -93,10 +124,14 @@ export default function Footer() {
               {menuAkses.map(link => (
                 <li key={link.label}>
                   {link.href.startsWith('/#') ? (
-                    <a href={link.href} className="text-gray-500 hover:text-main-blue transition-colors text-sm flex items-center gap-2">
-                       <span className="w-1.5 h-1.5 rounded-full bg-main-blue opacity-50" />
+                    <button
+                      type="button"
+                      onClick={(e) => handleAnchorClick(e, link.href, link.label)}
+                      className="text-gray-500 hover:text-main-blue transition-colors text-sm flex items-center gap-2 cursor-pointer text-left w-full focus:outline-none"
+                    >
+                       <span className="w-1.5 h-1.5 rounded-full bg-main-blue opacity-50 text-left" />
                        {link.label}
-                    </a>
+                    </button>
                   ) : (
                     <Link to={link.href} className="text-gray-500 hover:text-main-blue transition-colors text-sm flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-main-blue opacity-50" />
