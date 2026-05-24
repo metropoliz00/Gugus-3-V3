@@ -38,6 +38,7 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
         let targetGroup = "";
         
         if (/pembina/i.test(role)) targetGroup = "Pembina";
+        else if (/penanggung/i.test(role)) targetGroup = "Penanggung Jawab";
         else if (/ketua/i.test(role)) targetGroup = "Ketua";
         else if (/sekretaris|bendahara/i.test(role)) targetGroup = "Sekretariat";
         else if (/pemandu/i.test(role)) targetGroup = "Pemandu";
@@ -49,7 +50,7 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
         levelGroups[targetGroup].push(member);
     });
 
-    const orderedKeys = ["Pembina", "Ketua", "Sekretariat", "Bidang-Bidang", "Pemandu", "Anggota"];
+    const orderedKeys = ["Pembina", "Penanggung Jawab", "Ketua", "Sekretariat", "Bidang-Bidang", "Pemandu", "Anggota"];
     const result = [];
     
     // Add known ordered keys first
