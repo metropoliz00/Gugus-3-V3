@@ -384,19 +384,19 @@ export default function KkgPage() {
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-500 font-medium">Realisasi Program</span>
-                    <span className="font-bold text-main-blue">65%</span>
+                    <span className="font-bold text-main-blue">{kkg.realisasiProgram ?? 65}%</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-main-blue h-2 rounded-full" style={{ width: '65%' }}></div>
+                    <div className="bg-main-blue h-2 rounded-full" style={{ width: `${kkg.realisasiProgram ?? 65}%` }}></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-sm mb-1">
                     <span className="text-gray-500 font-medium">Partisipasi Guru</span>
-                    <span className="font-bold text-leaf-green">88%</span>
+                    <span className="font-bold text-leaf-green">{kkg.partisipasiGuru ?? 88}%</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div className="bg-leaf-green h-2 rounded-full" style={{ width: '88%' }}></div>
+                    <div className="bg-leaf-green h-2 rounded-full" style={{ width: `${kkg.partisipasiGuru ?? 88}%` }}></div>
                   </div>
                 </div>
               </div>

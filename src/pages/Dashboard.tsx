@@ -6057,6 +6057,36 @@ function AdminKKGForm({
                   }
                 />
               </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Realisasi Program (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:border-main-blue outline-none bg-white/50"
+                  value={form.realisasiProgram ?? 65}
+                  onChange={(e) =>
+                    setKkgForm({ ...form, realisasiProgram: parseInt(e.target.value) ?? 0 })
+                  }
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  Partisipasi Guru (%)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:border-main-blue outline-none bg-white/50"
+                  value={form.partisipasiGuru ?? 88}
+                  onChange={(e) =>
+                    setKkgForm({ ...form, partisipasiGuru: parseInt(e.target.value) ?? 0 })
+                  }
+                />
+              </div>
             </div>
 
             {/* KKG Statistics Section */}
