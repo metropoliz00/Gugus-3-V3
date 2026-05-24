@@ -37,8 +37,8 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
         
         let targetGroup = "";
         
-        if (/pembina/i.test(role)) targetGroup = "Pembina & Penanggung Jawab";
-        else if (/penanggung/i.test(role)) targetGroup = "Pembina & Penanggung Jawab";
+        if (/pembina/i.test(role)) targetGroup = "Pembina";
+        else if (/penanggung/i.test(role)) targetGroup = "Penanggung Jawab";
         else if (/ketua/i.test(role)) targetGroup = "Ketua";
         else if (/sekretaris|bendahara/i.test(role)) targetGroup = "Sekretariat";
         else if (/pemandu/i.test(role)) targetGroup = "Pemandu";
@@ -50,28 +50,12 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
         levelGroups[targetGroup].push(member);
     });
 
-    const rolePriority = (roleStr: string) => {
-      const r = roleStr?.toLowerCase() || "";
-      if (/pembina/i.test(r)) return 1;
-      if (/penanggung/i.test(r)) return 2;
-      if (/ketua/i.test(r)) return 3;
-      if (/wakil ketua/i.test(r)) return 4;
-      if (/sekretaris/i.test(r)) return 5;
-      if (/bendahara/i.test(r)) return 6;
-      if (/pemandu/i.test(r)) return 7;
-      if (r.includes("bidang")) return 8;
-      if (/anggota/i.test(r)) return 9;
-      return 10;
-    };
-
-    const orderedKeys = ["Pembina & Penanggung Jawab", "Ketua", "Sekretariat", "Bidang-Bidang", "Pemandu", "Anggota"];
+    const orderedKeys = ["Pembina", "Penanggung Jawab", "Ketua", "Sekretariat", "Bidang-Bidang", "Pemandu", "Anggota"];
     const result = [];
     
     // Add known ordered keys first
     for (const key of orderedKeys) {
         if (levelGroups[key]) {
-            // Sort members within this layer based on their role priority
-            levelGroups[key].sort((a, b) => rolePriority(a.role) - rolePriority(b.role));
             result.push(levelGroups[key]);
             delete levelGroups[key];
         }
@@ -79,7 +63,6 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
     
     // Add remaining groups
     for (const key in levelGroups) {
-        levelGroups[key].sort((a, b) => rolePriority(a.role) - rolePriority(b.role));
         result.push(levelGroups[key]);
     }
     
