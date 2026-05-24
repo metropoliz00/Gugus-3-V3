@@ -302,12 +302,27 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
     loadContent();
   }, []);
 
+  const mergeContent = (base: any, incoming: any) => {
+    if (!incoming) return base;
+    return {
+      ...base,
+      ...incoming,
+      hero: base.hero && incoming.hero ? { ...base.hero, ...incoming.hero } : (incoming.hero || base.hero),
+      profil: base.profil && incoming.profil ? { ...base.profil, ...incoming.profil } : (incoming.profil || base.profil),
+      footer: base.footer && incoming.footer ? { ...base.footer, ...incoming.footer } : (incoming.footer || base.footer),
+      kkg: base.kkg && incoming.kkg ? { ...base.kkg, ...incoming.kkg } : (incoming.kkg || base.kkg),
+      gugus: base.gugus && incoming.gugus ? { ...base.gugus, ...incoming.gugus } : (incoming.gugus || base.gugus),
+      announcement: base.announcement && incoming.announcement ? { ...base.announcement, ...incoming.announcement } : (incoming.announcement || base.announcement),
+      activeMenus: base.activeMenus && incoming.activeMenus ? { ...base.activeMenus, ...incoming.activeMenus } : (incoming.activeMenus || base.activeMenus),
+    };
+  };
+
   const loadContent = async () => {
     setIsLoading(true);
     const local = localStorage.getItem('siteContent');
     if (local) {
       try {
-        setContent({ ...defaultContent, ...JSON.parse(local) });
+        setContent(mergeContent(defaultContent, JSON.parse(local)));
       } catch(e) {}
     }
 
@@ -315,7 +330,7 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
       if (supabase) {
         const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
         if (data && data.content) {
-          const merged = { ...defaultContent, ...data.content };
+          const merged = mergeContent(defaultContent, data.content);
           setContent(merged);
           localStorage.setItem('siteContent', JSON.stringify(merged));
         }

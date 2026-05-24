@@ -6066,10 +6066,11 @@ function AdminKKGForm({
                   min="0"
                   max="100"
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:border-main-blue outline-none bg-white/50"
-                  value={form.realisasiProgram ?? 65}
-                  onChange={(e) =>
-                    setKkgForm({ ...form, realisasiProgram: parseInt(e.target.value) ?? 0 })
-                  }
+                  value={form.realisasiProgram !== undefined && form.realisasiProgram !== null ? form.realisasiProgram : ""}
+                  onChange={(e) => {
+                    const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                    setKkgForm({ ...form, realisasiProgram: isNaN(val) ? 0 : val });
+                  }}
                 />
               </div>
               <div>
@@ -6081,10 +6082,11 @@ function AdminKKGForm({
                   min="0"
                   max="100"
                   className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:border-main-blue outline-none bg-white/50"
-                  value={form.partisipasiGuru ?? 88}
-                  onChange={(e) =>
-                    setKkgForm({ ...form, partisipasiGuru: parseInt(e.target.value) ?? 0 })
-                  }
+                  value={form.partisipasiGuru !== undefined && form.partisipasiGuru !== null ? form.partisipasiGuru : ""}
+                  onChange={(e) => {
+                    const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                    setKkgForm({ ...form, partisipasiGuru: isNaN(val) ? 0 : val });
+                  }}
                 />
               </div>
             </div>
