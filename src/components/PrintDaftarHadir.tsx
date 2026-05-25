@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { Sliders, Settings, Printer, Info, MoveUp, MoveDown, MoveLeft, MoveRight } from "lucide-react";
 
 interface PrintDaftarHadirProps {
   selectedActivity: {
@@ -19,57 +20,221 @@ interface PrintDaftarHadirProps {
   } | null;
 }
 
+type MarginType = "default" | "none" | "compact" | "medium" | "standard" | "custom";
+
+interface CustomMargin {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
 export default function PrintDaftarHadir({ selectedActivity, participants, chairman }: PrintDaftarHadirProps) {
   if (!selectedActivity) return null;
+
+  const [marginType, setMarginType] = useState<MarginType>("standard");
+  const [customMargin, setCustomMargin] = useState<CustomMargin>({
+    top: 5,
+    bottom: 5,
+    left: 15,
+    right: 15,
+  });
 
   const formatName = (name: string | undefined | null) => {
     return name || "-";
   };
 
+  const handlePrint = () => {
+    if (typeof window !== "undefined") {
+      window.print();
+    }
+  };
+
+  // Determine margin specification based on selected marginType
+  let marginRule = "";
+  if (marginType === "none") {
+    marginRule = "0mm 0mm 0mm 0mm";
+  } else if (marginType === "compact") {
+    marginRule = "5mm 5mm 5mm 5mm";
+  } else if (marginType === "medium") {
+    marginRule = "10mm 10mm 10mm 10mm";
+  } else if (marginType === "standard") {
+    marginRule = "12mm 15mm 12mm 15mm";
+  } else if (marginType === "custom") {
+    marginRule = `${customMargin.top}mm ${customMargin.right}mm ${customMargin.bottom}mm ${customMargin.left}mm`;
+  }
+
   return (
-    <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 print:shadow-none print:border-none print:p-0 w-full" id="print-area">
-      <style>{`
-        @media print {
-          @page {
-            size: A4 portrait;
-            margin: 2mm 15mm 5mm 15mm;
+    <div className="space-y-6">
+      {/* Configuration Toolbar - Hidden in Print */}
+      <div className="print:hidden bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200/60 p-6 rounded-3xl space-y-6 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-main-blue/10 text-main-blue rounded-2xl">
+              <Settings className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Pengaturan Margin Cetak</h3>
+              <p className="text-xs text-slate-500 font-medium">Atur margin dokumen agar presisi dan tidak terpotong saat di-print.</p>
+            </div>
+          </div>
+          <button
+            onClick={handlePrint}
+            className="px-6 py-3 bg-main-blue hover:bg-dark-blue text-white rounded-2xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-main-blue/10 transition-all active:scale-95 shrink-0"
+          >
+            <Printer className="w-4 h-4" /> Cetak Sekarang
+          </button>
+        </div>
+
+        {/* Options grid */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2.5">Pilih Preset Margin</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+              {[
+                { id: "default", label: "Gunakan Default", desc: "Sistem browser" },
+                { id: "none", label: "Tanpa Margin", desc: "0 mm" },
+                { id: "compact", label: "Sempit", desc: "5 mm" },
+                { id: "medium", label: "Sedang", desc: "10 mm" },
+                { id: "standard", label: "Standar", desc: "12mm & 15mm" },
+                { id: "custom", label: "Kustom manual", desc: "Atur sendiri" },
+              ].map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => setMarginType(preset.id as MarginType)}
+                  className={`p-3 rounded-2xl border text-left flex flex-col justify-between transition-all select-none hover:border-slate-300 ${
+                    marginType === preset.id
+                      ? "border-main-blue bg-white shadow-sm ring-2 ring-main-blue/10"
+                      : "border-slate-200 bg-white/50"
+                  }`}
+                >
+                  <span className={`text-[11px] font-black ${marginType === preset.id ? "text-main-blue" : "text-slate-700"}`}>
+                    {preset.label}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-medium mt-1">{preset.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Custom Sliders */}
+          {marginType === "custom" && (
+            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-bold text-slate-700">
+                  <span className="flex items-center gap-1.5"><MoveUp className="w-3.5 h-3.5 text-main-blue" /> Atas</span>
+                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">{customMargin.top} mm</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="40"
+                  value={customMargin.top}
+                  onChange={(e) => setCustomMargin({ ...customMargin, top: parseInt(e.target.value) })}
+                  className="w-full accent-main-blue cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-bold text-slate-700">
+                  <span className="flex items-center gap-1.5"><MoveDown className="w-3.5 h-3.5 text-main-blue" /> Bawah</span>
+                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">{customMargin.bottom} mm</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="40"
+                  value={customMargin.bottom}
+                  onChange={(e) => setCustomMargin({ ...customMargin, bottom: parseInt(e.target.value) })}
+                  className="w-full accent-main-blue cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-bold text-slate-700">
+                  <span className="flex items-center gap-1.5"><MoveLeft className="w-3.5 h-3.5 text-main-blue" /> Kiri</span>
+                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">{customMargin.left} mm</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="40"
+                  value={customMargin.left}
+                  onChange={(e) => setCustomMargin({ ...customMargin, left: parseInt(e.target.value) })}
+                  className="w-full accent-main-blue cursor-pointer"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-xs font-bold text-slate-700">
+                  <span className="flex items-center gap-1.5"><MoveRight className="w-3.5 h-3.5 text-main-blue" /> Kanan</span>
+                  <span className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-[10px]">{customMargin.right} mm</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="40"
+                  value={customMargin.right}
+                  onChange={(e) => setCustomMargin({ ...customMargin, right: parseInt(e.target.value) })}
+                  className="w-full accent-main-blue cursor-pointer"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-2 bg-blue-50/50 border border-blue-100 rounded-2xl p-4">
+            <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+            <div className="text-xs text-blue-700 font-medium">
+              <span className="font-bold">Tips Cepat Cetak:</span> Bila kop surat atau tanda tangan terpotong di kertas, silakan perkecil margin dengan memilih preset <span className="font-bold">Sempit</span> atau geser slider <span className="font-bold">Kustom</span>. Di kotak cetak browser Anda, pastikan juga untuk menonaktifkan setelan opsi <span className="font-bold">Headers and Footers</span> demi tampilan kop yang bersih.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Print Area */}
+      <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 print:shadow-none print:border-none print:p-0 w-full" id="print-area">
+        <style>{`
+          @media print {
+            @page {
+              size: A4 portrait;
+              ${marginType !== "default" ? `margin: ${marginRule} !important;` : ""}
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            /* Hide all elements during print */
+            body * {
+              visibility: hidden;
+            }
+            /* Show only the print area and its contents */
+            #print-area, #print-area * {
+              visibility: visible;
+            }
+            #print-area {
+              position: absolute !important;
+              left: 0 !important;
+              top: 0 !important;
+              width: 100% !important;
+              background: white !important;
+              padding: 0 !important;
+              margin: 0 !important;
+              border: none !important;
+            }
+            #print-kop-surat {
+              margin-top: 0 !important;
+              padding-top: 0 !important;
+            }
+            /* Background colors for print */
+            .print-bg-emerald {
+              background-color: #ecfdf5 !important;
+              color: #047857 !important;
+            }
           }
-          html, body {
-            margin: -5 !important;
-            padding: -5 !important;
-            background: white !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          /* Hide all elements during print */
-          body * {
-            visibility: hidden;
-          }
-          /* Show only the print area and its contents */
-          #print-area, #print-area * {
-            visibility: visible;
-          }
-          #print-area {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            background: white !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            border: none !important;
-          }
-          #print-kop-surat {
-            margin-top: -5 !important;
-            padding-top: -5 !important;
-          }
-          /* Background colors for print */
-          .print-bg-emerald {
-            background-color: #ecfdf5 !important;
-            color: #047857 !important;
-          }
-        }
-      `}</style>
+        `}</style>
 
       {/* KOP - Visible on screen and in print */}
       <div id="print-kop-surat" className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
@@ -155,6 +320,7 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
           <p className="text-sm font-bold">NIP. {chairman?.nip || "....................................."}</p>
         </div>
       </div>
+    </div>
     </div>
   );
 }
