@@ -102,10 +102,10 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
         <thead>
           <tr className="bg-gray-100 print:bg-gray-100 font-bold uppercase tracking-wider">
             <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
-            <th className="border-2 border-black px-3 py-2 text-left w-[30%] whitespace-normal">Nama</th>
-            <th className="border-2 border-black px-3 py-2 text-left w-[18%]">NIP</th>
-            <th className="border-2 border-black px-3 py-2 text-left w-[12%]">Jabatan</th>
-            <th className="border-2 border-black px-3 py-2 text-left w-[16%] whitespace-normal">Instansi</th>
+            <th className="border-2 border-black px-3 py-2 text-center w-[30%] whitespace-normal">Nama</th>
+            <th className="border-2 border-black px-3 py-2 text-center w-[18%]">NIP</th>
+            <th className="border-2 border-black px-3 py-2 text-center w-[12%]">Jabatan</th>
+            <th className="border-2 border-black px-3 py-2 text-center w-[16%] whitespace-normal">Instansi</th>
             <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
             <th className="border-2 border-black px-2 py-2 text-center w-[12%]">Tanda Tangan</th>
           </tr>
