@@ -9121,8 +9121,8 @@ function AdminRekapAbsen() {
             }
           `}</style>
 
-          {/* KOP - Only visible in print */}
-          <div className="hidden print:flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0 print:m-0 print:p-0">
+          {/* KOP - Visible on screen and in print */}
+          <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
             <img 
               src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
               className="w-24 h-24 object-contain" 
@@ -9153,11 +9153,11 @@ function AdminRekapAbsen() {
               <tr className="bg-gray-100 print:bg-gray-100 font-bold uppercase tracking-wider">
                 <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
                 <th className="border-2 border-black px-3 py-2 text-left w-[30%] whitespace-normal">Nama</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[20%]">NIP</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[18%]">NIP</th>
                 <th className="border-2 border-black px-3 py-2 text-left w-[12%]">Jabatan</th>
-                <th className="border-2 border-black px-3 py-2 text-left w-[18%] whitespace-normal">Instansi</th>
+                <th className="border-2 border-black px-3 py-2 text-left w-[16%] whitespace-normal">Instansi</th>
                 <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
-                <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Status</th>
+                <th className="border-2 border-black px-2 py-2 text-center w-[12%]">Tanda Tangan</th>
               </tr>
             </thead>
             <tbody>
@@ -9167,16 +9167,6 @@ function AdminRekapAbsen() {
                 </tr>
               ) : (
                 participants.map((p, idx) => {
-                  let status = p.is_guest ? (p.profile?.jabatan || "Tamu Undangan") : "Anggota";
-                  
-                  // If member is pengurus (role is not just 'guru' or has specific jabatan)
-                  if (!p.is_guest && p.profile) {
-                    const role = p.profile.role?.toLowerCase();
-                    if (role && role !== "guru") {
-                      status = p.profile.jabatan || p.profile.role;
-                    }
-                  }
-
                   return (
                     <tr key={idx} className="hover:bg-gray-50 print:hover:bg-transparent transition-colors">
                       <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
@@ -9195,8 +9185,8 @@ function AdminRekapAbsen() {
                       <td className="border-2 border-black px-2 py-2.5 text-center">
                         <span className="px-2 py-1 bg-emerald-50 text-emerald-700 print:bg-emerald-50 print:print-bg-emerald rounded-full font-bold uppercase text-[8px]">Hadir</span>
                       </td>
-                      <td className="border-2 border-black px-2 py-2.5 text-center font-bold text-[9px] leading-tight">
-                        {status}
+                      <td className="border-2 border-black px-2 py-2.5 text-left h-12 relative min-w-[90px]">
+                        <span className="text-[10px] text-gray-400 font-mono absolute left-2 top-2">{idx + 1}.</span>
                       </td>
                     </tr>
                   );
