@@ -82,7 +82,7 @@ export default function PraktikBaikPage() {
               </div>
               <h1 className="text-4xl md:text-5xl font-heading font-black text-soft-black mb-4">Sharing Praktik Baik</h1>
               <p className="text-gray-500 text-lg leading-relaxed">
-                Kumpulan inovasi, metode pembelajaran, dan pengalaman inspiratif dari para pendidik di lingkungan GUGUS 3 Melati.
+                Kumpulan inovasi, metode pembelajaran, dan pengalaman inspiratif dari para pendidik di lingkungan GUGUS 03 Melati.
               </p>
             </div>
             
@@ -154,7 +154,7 @@ export default function PraktikBaikPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               {filteredPractices.map((p) => {
                 const author = p.user_profiles;
-                const authorName = author?.nama || author?.full_name || author?.username || "Guru Gugus 3";
+                const authorName = author?.nama || author?.full_name || author?.username || "Guru Gugus 03";
                 const imageUrl = p.thumbnail_url || p.image_url || "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&q=80";
 
                 return (

@@ -65,7 +65,7 @@ export default function GugusPage() {
               transition={{ delay: 0.1 }}
               className="text-4xl md:text-6xl font-heading font-black text-soft-black mb-6"
             >
-              Profil <span className="text-main-blue underline decoration-leaf-green/30">Gugus 3 Melati</span>
+              Profil <span className="text-main-blue underline decoration-leaf-green/30">Gugus 03 Melati</span>
             </motion.h1>
             
             <motion.p
@@ -209,7 +209,7 @@ export default function GugusPage() {
                    {content.profil.periodeKepengurusan && (
                      <p className="text-main-blue font-bold mb-4 uppercase tracking-widest text-sm text-center">Periode {content.profil.periodeKepengurusan}</p>
                    )}
-                   <p className="text-gray-500">Susunan pengurus Gugus 3 Melati Kecamatan Jenu</p>
+                   <p className="text-gray-500">Susunan pengurus Gugus 03 Melati Kecamatan Jenu</p>
                 </div>
                 
                 <div className="bg-white/50 rounded-3xl p-6 border border-gray-100 overflow-x-auto min-h-[400px]">

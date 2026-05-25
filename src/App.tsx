@@ -203,8 +203,8 @@ export default function App() {
       return; // Dashboard.tsx will handle its own title
     }
 
-    const title = titles[location.pathname] || 'Website Gugus 3';
-    document.title = `${title} | Gugus 3 Melati`;
+    const title = titles[location.pathname] || 'Website Gugus 03';
+    document.title = `${title} | Gugus 03 Melati`;
   }, [location]);
 
   return (

@@ -86,7 +86,7 @@ export default function Footer() {
                 <img src={content.hero.logo} alt="Logo Melati" className="w-full h-full object-contain" />
               </div>
               <div className="font-heading font-bold leading-tight">
-                <span className="block text-lg">GUGUS 3 MELATI</span>
+                <span className="block text-lg">GUGUS 03 MELATI</span>
                 <span className="block text-sm text-dark-green uppercase">KECAMATAN JENU</span>
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function Footer() {
 
         <div className="border-t border-gray-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-500 text-sm text-center md:text-left">
-            © {new Date().getFullYear()} Gugus 3 Melati Kecamatan Jenu. All rights reserved | 
+            © {new Date().getFullYear()} Gugus 03 Melati Kecamatan Jenu. All rights reserved | 
             <a 
               href={`https://wa.me/${content.footer.waNumber || '6281234567890'}`}
               target="_blank" 

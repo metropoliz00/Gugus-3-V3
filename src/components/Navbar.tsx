@@ -80,7 +80,7 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
                 <img src={content.hero.logo} alt="Logo Melati" className="w-full h-full object-contain" />
               </motion.div>
               <div className="flex flex-col hidden xl:flex">
-                <span className="text-sm font-bold tracking-tight text-dark-green uppercase">GUGUS 3 MELATI</span>
+                <span className="text-sm font-bold tracking-tight text-dark-green uppercase">GUGUS 03 MELATI</span>
                 <span className="text-[10px] uppercase tracking-widest text-main-blue font-semibold">KECAMATAN JENU</span>
               </div>
             </Link>

@@ -23,7 +23,7 @@ export default function AdministrasiOnline() {
             <div>
               <h1 className="text-3xl md:text-4xl font-heading font-black text-soft-black mb-4">Administrasi Online</h1>
               <p className="text-gray-500 text-lg leading-relaxed">
-                Transformasi digital untuk manajemen administrasi yang lebih cepat, transparan, dan efisien di lingkungan Gugus 3 Melati.
+                Transformasi digital untuk manajemen administrasi yang lebih cepat, transparan, dan efisien di lingkungan Gugus 03 Melati.
               </p>
             </div>
           </div>

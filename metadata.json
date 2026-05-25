@@ -1,6 +1,6 @@
 {
-  "name": "Gugus 3 | Melati V3",
-  "description": "Platform Digital Gugus 3 Melati Kecamatan Jenu yang kompleks, sebagai Media Layanan Terintegrasi dan Informatif.",
+  "name": "Gugus 03 | Melati V3",
+  "description": "Platform Digital Gugus 03 Melati Kecamatan Jenu yang kompleks, sebagai Media Layanan Terintegrasi dan Informatif.",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -183,7 +183,7 @@ export function SharingPractices({ user }: { user: any }) {
               Sharing Praktik Baik
             </h2>
             <p className="text-sm text-gray-500">
-              Wadah kolaborasi untuk berbagi inovasi pengajaran guna memajukan pendidikan di lingkungan Gugus 3.
+              Wadah kolaborasi untuk berbagi inovasi pengajaran guna memajukan pendidikan di lingkungan Gugus 03.
             </p>
           </div>
         </div>
@@ -317,7 +317,7 @@ export function SharingPractices({ user }: { user: any }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 pb-20">
           {practices.map((p) => {
             const author = p.user_profiles;
-            const authorName = author?.nama || author?.full_name || author?.username || "Guru Gugus 3";
+            const authorName = author?.nama || author?.full_name || author?.username || "Guru Gugus 03";
             const imageUrl = p.thumbnail_url || p.image_url || "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&q=80";
 
             return (

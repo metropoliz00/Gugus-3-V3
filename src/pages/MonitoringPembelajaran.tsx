@@ -23,7 +23,7 @@ export default function MonitoringPembelajaran() {
             <div>
               <h1 className="text-3xl md:text-4xl font-heading font-black text-soft-black mb-4">Monitoring Pembelajaran</h1>
               <p className="text-gray-500 text-lg leading-relaxed">
-                Panel pemantauan kualitas pendidikan dan progress belajar antar sekolah anggota Gugus 3 Melati untuk memastikan standar mutu yang setara.
+                Panel pemantauan kualitas pendidikan dan progress belajar antar sekolah anggota Gugus 03 Melati untuk memastikan standar mutu yang setara.
               </p>
             </div>
           </div>

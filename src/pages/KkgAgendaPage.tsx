@@ -115,7 +115,7 @@ export default function KkgAgendaPage() {
             <span>Jadwal & Agenda</span>
           </motion.div>
           <h1 className="text-4xl md:text-5xl font-heading font-bold text-soft-black mb-4">Timeline Kegiatan KKG</h1>
-          <p className="text-gray-500 max-w-2xl mx-auto">Pantau seluruh rangkaian agenda kegiatan Kelompok Kerja Guru (KKG) Gugus 3 Melati secara real-time.</p>
+          <p className="text-gray-500 max-w-2xl mx-auto">Pantau seluruh rangkaian agenda kegiatan Kelompok Kerja Guru (KKG) Gugus 03 Melati secara real-time.</p>
         </div>
 
         {loading ? (

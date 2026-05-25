@@ -63,8 +63,8 @@ export default function Gallery() {
               viewport={{ once: true }}
             >
               <h2 className="text-leaf-green font-bold tracking-widest text-sm uppercase mb-3 px-4 py-1 bg-leaf-green/10 rounded-full w-max">Dokumentasi</h2>
-              <h3 className="text-4xl md:text-5xl font-heading font-extrabold text-soft-black mb-6">Momen Berharga <span className="text-main-blue">Gugus 3</span></h3>
-              <p className="text-gray-500 text-lg leading-relaxed">Saksikan dokumentasi visual dari berbagai kegiatan kolaboratif dan inovatif yang dilaksanakan oleh seluruh anggota Gugus 3 Melati Kecamatan Jenu.</p>
+              <h3 className="text-4xl md:text-5xl font-heading font-extrabold text-soft-black mb-6">Momen Berharga <span className="text-main-blue">Gugus 03</span></h3>
+              <p className="text-gray-500 text-lg leading-relaxed">Saksikan dokumentasi visual dari berbagai kegiatan kolaboratif dan inovatif yang dilaksanakan oleh seluruh anggota Gugus 03 Melati Kecamatan Jenu.</p>
             </motion.div>
           </div>
           

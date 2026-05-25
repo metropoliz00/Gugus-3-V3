@@ -99,8 +99,8 @@ export default function KegiatanPage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="max-w-2xl text-center md:text-left">
               <span className="text-main-blue font-bold tracking-widest text-xs uppercase mb-3 block">Agenda & Dokumentasi</span>
-              <h1 className="text-4xl md:text-5xl font-heading font-black text-soft-black mb-4">Kegiatan <span className="text-leaf-green">Gugus 3</span></h1>
-              <p className="text-gray-500 text-lg">Ikuti perkembangan aktivitas pendidikan, workshop, dan agenda kolaboratif kami di lingkungan Gugus 3 Melati.</p>
+              <h1 className="text-4xl md:text-5xl font-heading font-black text-soft-black mb-4">Kegiatan <span className="text-leaf-green">Gugus 03</span></h1>
+              <p className="text-gray-500 text-lg">Ikuti perkembangan aktivitas pendidikan, workshop, dan agenda kolaboratif kami di lingkungan Gugus 03 Melati.</p>
             </div>
             
             <div className="flex flex-col items-center md:items-end gap-6">
@@ -234,7 +234,7 @@ export default function KegiatanPage() {
             <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
                <div className="max-w-xl text-center md:text-left">
                   <h3 className="text-3xl font-heading font-bold mb-4">Ingin Menambahkan Kegiatan?</h3>
-                  <p className="text-white/80">Jika sekolah Anda memiliki agenda yang ingin dipublikasikan di lingkup Gugus 3, silakan login ke Dasbor Pengurus atau hubungi sekretariat gugus.</p>
+                  <p className="text-white/80">Jika sekolah Anda memiliki agenda yang ingin dipublikasikan di lingkup Gugus 03, silakan login ke Dasbor Pengurus atau hubungi sekretariat gugus.</p>
                </div>
                <button className="bg-white text-leaf-green px-8 py-4 rounded-2xl font-black shadow-xl hover:scale-105 transition-all">
                   Hubungi Sekretariat

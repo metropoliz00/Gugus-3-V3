@@ -3,9 +3,9 @@ import { supabase } from '../lib/supabase';
 
 export const defaultContent = {
   hero: {
-    title1: "GUGUS 3 MELATI",
+    title1: "GUGUS 03 MELATI",
     title2: "KECAMATAN JENU",
-    description: "Kolaboratif, Inovatif, dan Berkualitas. Menggerakkan komunitas pendidik di Gugus 3 Melati Kecamatan Jenu menuju transformasi digital yang inklusif.",
+    description: "Kolaboratif, Inovatif, dan Berkualitas. Menggerakkan komunitas pendidik di Gugus 03 Melati Kecamatan Jenu menuju transformasi digital yang inklusif.",
     logo: "https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png"
   },
   stats: [
@@ -15,15 +15,15 @@ export const defaultContent = {
   ],
   profil: {
     title: "Bersama Kita Tumbuh, Menginspirasi Masa Depan",
-    quote: "\"Pendidikan bukan sekadar transfer ilmu, melainkan proses membentuk karakter dan peradaban. Di Gugus 3 Melati Kecamatan Jenu, kami berkomitmen menjadi wadah kolaborasi antar sekolah untuk memastikan setiap anak mendapatkan hak pendidikan terbaiknya.\"",
+    quote: "\"Pendidikan bukan sekadar transfer ilmu, melainkan proses membentuk karakter dan peradaban. Di Gugus 03 Melati Kecamatan Jenu, kami berkomitmen menjadi wadah kolaborasi antar sekolah untuk memastikan setiap anak mendapatkan hak pendidikan terbaiknya.\"",
     name: "Sulastri, S.Pd",
-    role: "Ketua Gugus 3 Melati Kecamatan Jenu",
+    role: "Ketua Gugus 03 Melati Kecamatan Jenu",
     periodeKepengurusan: "2024-2027",
     image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1000&auto=format&fit=crop"
   },
   footer: {
     description: "Mewujudkan ekosistem pendidikan yang kolaboratif, inovatif, dan berkualitas di Kecamatan Jenu untuk generasi penerus bangsa.",
-    address: "Sekretariat Gugus 3 Jalan Raya Mentoso, Desa Mentoso Kec. Jenu, Kabupaten Tuban, Jawa Timur 62352",
+    address: "Sekretariat Gugus 03 Jalan Raya Mentoso, Desa Mentoso Kec. Jenu, Kabupaten Tuban, Jawa Timur 62352",
     phone: "085604431706",
     email: "gugus3jenu@gmail.com",
     waNumber: "6281234567890",
@@ -152,7 +152,7 @@ export const defaultContent = {
     }
   ],
   kkg: {
-    sejarah: "Kelompok Kerja Guru (KKG) Gugus 3 Melati Kecamatan Jenu didirikan sebagai wadah pengembangan keprofesian berkelanjutan bagi para pendidik di wilayah Kecamatan Jenu. Sejak berdirinya, KKG ini telah menjadi pusat inovasi dan kolaborasi antar sekolah anggota untuk meningkatkan kualitas pembelajaran.",
+    sejarah: "Kelompok Kerja Guru (KKG) Gugus 03 Melati Kecamatan Jenu didirikan sebagai wadah pengembangan keprofesian berkelanjutan bagi para pendidik di wilayah Kecamatan Jenu. Sejak berdirinya, KKG ini telah menjadi pusat inovasi dan kolaborasi antar sekolah anggota untuk meningkatkan kualitas pembelajaran.",
     gambarProfil: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop",
     persentaseKolaborasi: "100%",
     tahunDedikasi: "10+",
@@ -176,7 +176,7 @@ export const defaultContent = {
     ],
     dokumen: [],
     pengumuman: {
-      title: "Pengumuman Penting KKG Gugus 3",
+      title: "Pengumuman Penting KKG Gugus 03",
       desc: "Seluruh anggota KKG diharapkan hadir dalam rapat koordinasi bulanan yang akan dilaksanakan pada hari Jumat mendatang.",
       isActive: true
     },
@@ -191,7 +191,7 @@ export const defaultContent = {
     programs: {
       tahunan: [
         { title: "Penyusunan Perangkat Pembelajaran Terpadu", desc: "Kolaborasi antara guru kelas untuk menyusun RPP, Silabus, dan Modul Ajar yang adaptif terhadap Kurikulum Merdeka.", date: "Juli 2024", status: "Selesai" },
-        { title: "Evaluasi Hasil Belajar Gugus", desc: "Pertemuan rutin untuk mengevaluasi hasil capaian belajar siswa antar sekolah di Gugus 3 Melati Kecamatan Jenu.", date: "Desember 2024", status: "Berjalan" }
+        { title: "Evaluasi Hasil Belajar Gugus", desc: "Pertemuan rutin untuk mengevaluasi hasil capaian belajar siswa antar sekolah di Gugus 03 Melati Kecamatan Jenu.", date: "Desember 2024", status: "Berjalan" }
       ],
       workshop: [
         { title: "Workshop Pemanfaatan AI dalam Kelas", desc: "Implementasi teknologi AI untuk pembuatan media ajar dan otomatisasi penilaian.", date: "Agustus 2024", status: "Selesai" },
@@ -220,7 +220,7 @@ export const defaultContent = {
     { type: 'image', size: 'medium', url: 'https://images.unsplash.com/photo-1427504494785-3b9ca2044fcc?q=80&w=2000&auto=format&fit=crop' },
   ],
   gugus: {
-    sejarah: "Gugus 3 Melati Kecamatan Jenu didirikan sebagai pusat koordinasi administratif dan pengembangan kualitas antara sekolah-sekolah dasar di wilayah Jenu utara. Organisasi ini telah menjadi pilar penggerak dalam menyelaraskan kebijakan pendidikan pusat dengan implementasi di tingkat sekolah.",
+    sejarah: "Gugus 03 Melati Kecamatan Jenu didirikan sebagai pusat koordinasi administratif dan pengembangan kualitas antara sekolah-sekolah dasar di wilayah Jenu utara. Organisasi ini telah menjadi pilar penggerak dalam menyelaraskan kebijakan pendidikan pusat dengan implementasi di tingkat sekolah.",
     visi: "Terwujudnya Sinergi Antar Sekolah dalam Menciptakan Lingkungan Belajar yang Berkualitas dan Mandiri.",
     misi: [
       "Mengordinasi pelaksanaan program pendidikan di tingkat gugus.",
@@ -249,13 +249,13 @@ export const defaultContent = {
   },
   agenda: [
     { title: 'Rapat Persiapan Ujian', time: 'Kamis, 09:00 WIB', location: 'Ruang Guru Utama' },
-    { title: 'Pertemuan KKG Gugus 3', time: 'Jumat, 13:00 WIB', location: 'SDN Mentoso' },
+    { title: 'Pertemuan KKG Gugus 03', time: 'Jumat, 13:00 WIB', location: 'SDN Mentoso' },
     { title: 'Batas Upload Nilai Akhir', time: 'Senin Depan', location: 'Daring (Sistem)' },
   ],
   announcement: {
     title: "Pengumuman Penting",
     subtitle: "Pendaftaran Peserta Didik Baru Telah Dibuka!",
-    desc: "Mari daftarkan putra/putri Anda di sekolah-sekolah unggulan Gugus 3 Melati Kecamatan Jenu. Kuota terbatas!"
+    desc: "Mari daftarkan putra/putri Anda di sekolah-sekolah unggulan Gugus 03 Melati Kecamatan Jenu. Kuota terbatas!"
   },
   activeMenus: {
     overview: true,

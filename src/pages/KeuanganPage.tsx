@@ -54,7 +54,7 @@ export default function KeuanganPage() {
               <h1 className="text-4xl font-heading font-extrabold text-soft-black mb-2 uppercase tracking-tight">Kondisi Keuangan KAS</h1>
               <div className="flex items-center gap-2 text-main-blue font-bold">
                 <div className="h-1 w-12 bg-main-blue rounded-full" />
-                <span>Gugus 3 Melati</span>
+                <span>Gugus 03 Melati</span>
               </div>
             </div>
             <div className="bg-white/50 backdrop-blur px-4 py-2 rounded-2xl border border-white flex items-center gap-2 text-sm text-gray-500">
@@ -200,7 +200,7 @@ export default function KeuanganPage() {
             </table>
           </div>
           <div className="p-8 bg-gray-50 flex items-center justify-between border-t border-light-gray mt-auto">
-             <div className="text-gray-400 text-xs font-medium">© {new Date().getFullYear()} Gugus 3 Melati · Transparansi Keuangan</div>
+             <div className="text-gray-400 text-xs font-medium">© {new Date().getFullYear()} Gugus 03 Melati · Transparansi Keuangan</div>
              <div className="flex items-center gap-4">
                <div className="flex items-center gap-2">
                  <div className="w-3 h-3 rounded bg-leaf-green"></div>

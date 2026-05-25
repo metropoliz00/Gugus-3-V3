@@ -302,7 +302,7 @@ export default function Dashboard({
   // Set Page Title
   useEffect(() => {
     const fullName = user.nama || user.full_name || user.username || "User";
-    document.title = `Dasbord ${fullName} | Gugus 3 Melati`;
+    document.title = `Dasbord ${fullName} | Gugus 03 Melati`;
   }, [user]);
 
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -580,7 +580,7 @@ export default function Dashboard({
             </motion.div>
             <div>
               <h1 className="font-heading font-black bg-clip-text text-transparent bg-gradient-to-r from-main-blue to-leaf-green text-xl leading-tight">
-                Gugus 3
+                Gugus 03
               </h1>
               <div className="mt-1">
                 <span className="text-[10px] uppercase tracking-wider text-main-blue font-bold px-2 py-0.5 bg-main-blue/10 rounded-full">
@@ -2170,7 +2170,7 @@ function AdminUserManagement() {
                           win.document.write(`
                             <html>
                               <head>
-                                <title>SQL FIX - GUGUS 3 MELATI</title>
+                                <title>SQL FIX - GUGUS 03 MELATI</title>
                                 <style>
                                   body { font-family: monospace; background: #1a1a1a; color: #00ff00; padding: 20px; }
                                   pre { white-space: pre-wrap; word-wrap: break-word; }
@@ -2599,10 +2599,10 @@ function AdminOverview({ user }: { user: any }) {
           </div>
           <div className="text-xl md:text-2xl font-black font-heading leading-tight mb-2">
             <span className="text-orange-500">Selamat Datang,</span><br/>
-            <span className="text-main-blue">{user.nama || user.full_name || "Admin Gugus 3"}</span>
+            <span className="text-main-blue">{user.nama || user.full_name || "Admin Gugus 03"}</span>
           </div>
           <p className="text-sm text-gray-500 font-medium max-w-xl">
-            Pusat kendali operasional GUGUS 3 Kecamatan Jenu. Monitor, kelola, dan tingkatkan performa ekosistem pendidikan kita.
+            Pusat kendali operasional GUGUS 03 Kecamatan Jenu. Monitor, kelola, dan tingkatkan performa ekosistem pendidikan kita.
           </p>
         </div>
       </div>
@@ -2803,7 +2803,7 @@ function AdminOverview({ user }: { user: any }) {
                </div>
                <div>
                  <h3 className="text-lg font-bold font-heading text-soft-black leading-none">Jadwal & Kalender KKG</h3>
-                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Monitoring Kegiatan Gugus 3</p>
+                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Monitoring Kegiatan Gugus 03</p>
                </div>
              </div>
              
@@ -2918,7 +2918,7 @@ function TamuOverview({ user }: { user: any }) {
         <div>
           <h2 className="text-2xl font-black font-heading text-soft-black flex items-center gap-3">
             <span className="w-2 h-8 bg-main-blue rounded-full"></span>
-            Portal Tamu Gugus 3
+            Portal Tamu Gugus 03
           </h2>
           <p className="text-sm text-gray-500 mt-1">Selamat datang kembali, <span className="font-bold text-soft-black">{user.nama || "Tamu"}</span>! Silakan pilih menu di bawah ini.</p>
         </div>
@@ -2951,7 +2951,7 @@ function TamuOverview({ user }: { user: any }) {
           <div className="bg-white/80 backdrop-blur-xl border border-white p-6 md:p-8 rounded-[2.5rem] shadow-sm mt-8">
              <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                <h3 className="text-lg font-bold font-heading flex items-center gap-2 leading-none">
-                 <Calendar className="w-5 h-5 text-main-blue" /> Agenda KKG Gugus 3
+                 <Calendar className="w-5 h-5 text-main-blue" /> Agenda KKG Gugus 03
                </h3>
                
                <div className="flex items-center bg-gray-100 p-1 rounded-xl">
@@ -3125,14 +3125,14 @@ function GuruOverview({ user }: { user: any }) {
         <div className="flex-1 text-center md:text-left">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-main-blue/10 rounded-full border border-main-blue/5 mb-3">
             <div className="w-1.5 h-1.5 rounded-full bg-main-blue animate-pulse" />
-            <span className="text-[10px] font-black text-main-blue uppercase tracking-widest leading-none">Pendidik GUGUS 3</span>
+            <span className="text-[10px] font-black text-main-blue uppercase tracking-widest leading-none">Pendidik GUGUS 03</span>
           </div>
           <div className="text-xl md:text-3xl font-black font-heading leading-tight mb-2">
             <span className="text-leaf-green">Selamat Datang,</span><br/>
             <span className="text-main-blue">{user.nama || user.full_name || "Guru"}! 👋</span>
           </div>
           <p className="text-sm text-gray-500 font-medium max-w-lg">
-            Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan di lingkungan GUGUS 3.
+            Platform terintegrasi untuk administrasi, berbagi perangkat ajar, dan informasi kegiatan di lingkungan GUGUS 03.
           </p>
         </div>
 
@@ -3359,7 +3359,7 @@ function AdminSettingsForm() {
               Pengaturan Website
             </h2>
             <p className="text-sm text-gray-500">
-              Sesuaikan konten dan tampilan website publik GUGUS 3.
+              Sesuaikan konten dan tampilan website publik GUGUS 03.
             </p>
           </div>
         </div>
@@ -3829,7 +3829,7 @@ function AdminBeritaForm({ user }: { user: any }) {
               Kelola Berita
             </h2>
             <p className="text-sm text-gray-500">
-              Publikasikan artikel dan informasi terbaru ke portal GUGUS 3.
+              Publikasikan artikel dan informasi terbaru ke portal GUGUS 03.
             </p>
           </div>
         </div>
@@ -4137,7 +4137,7 @@ function AdminGaleriForm({
               Kelola Galeri
             </h2>
             <p className="text-sm text-gray-500">
-              Kelola koleksi foto kegiatan dan dokumentasi penting GUGUS 3.
+              Kelola koleksi foto kegiatan dan dokumentasi penting GUGUS 03.
             </p>
           </div>
         </div>
@@ -5249,7 +5249,7 @@ function AdminSekolahForm({ user }: { user: any }) {
               Kelola Sekolah
             </h2>
             <p className="text-sm text-gray-500">
-              Manajemen data sekolah inti dan imbas di lingkungan GUGUS 3.
+              Manajemen data sekolah inti dan imbas di lingkungan GUGUS 03.
             </p>
           </div>
         </div>
@@ -5965,7 +5965,7 @@ function AdminKKGForm({
               Kelola KKG
             </h2>
             <p className="text-sm text-gray-500">
-              Manajemen data Kelompok Kerja Guru (KKG) di wilayah GUGUS 3.
+              Manajemen data Kelompok Kerja Guru (KKG) di wilayah GUGUS 03.
             </p>
           </div>
         </div>
@@ -7525,7 +7525,7 @@ function AdminPenghargaanForm() {
               Kelola Penghargaan
             </h2>
             <p className="text-sm text-gray-500">
-              Kelola data penghargaan dan sertifikat prestasi di lingkungan GUGUS 3.
+              Kelola data penghargaan dan sertifikat prestasi di lingkungan GUGUS 03.
             </p>
           </div>
         </div>
@@ -7803,7 +7803,7 @@ function AdminPengumumanForm({ user }: { user: any }) {
               Kelola Pengumuman
             </h2>
             <p className="text-sm text-gray-500">
-              Publikasikan pengumuman mendesak dan informasi resmi Gugus 3.
+              Publikasikan pengumuman mendesak dan informasi resmi Gugus 03.
             </p>
           </div>
         </div>
@@ -8402,7 +8402,7 @@ function AdminGuruForm({ user }: { user: any }) {
             Kelola Guru
           </h2>
           <p className="text-sm text-gray-500">
-            Daftar profil guru yang terdaftar dalam sistem GUGUS 3. Klik baris untuk mengedit data.
+            Daftar profil guru yang terdaftar dalam sistem GUGUS 03. Klik baris untuk mengedit data.
           </p>
         </div>
       </div>
@@ -8704,7 +8704,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
               Kelola Keuangan
             </h2>
             <p className="text-sm text-gray-500">
-              Manajemen arus kas, pemasukan, dan pengeluaran operasional GUGUS 3.
+              Manajemen arus kas, pemasukan, dan pengeluaran operasional GUGUS 03.
             </p>
           </div>
         </div>
@@ -11023,7 +11023,7 @@ function ForumSystem({ user }: { user: any }) {
               Forum Diskusi
             </h2>
             <p className="text-sm text-gray-500">
-              Ruang kolektif untuk berbagi ide, memecahkan masalah, dan menginspirasi sesama pendidik di Gugus 3.
+              Ruang kolektif untuk berbagi ide, memecahkan masalah, dan menginspirasi sesama pendidik di Gugus 03.
             </p>
           </div>
         </div>

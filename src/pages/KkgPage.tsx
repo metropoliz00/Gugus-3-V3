@@ -103,7 +103,7 @@ export default function KkgPage() {
             transition={{ delay: 0.2 }}
             className="text-gray-600 text-lg md:text-xl leading-relaxed mb-10"
           >
-            Bersama Gugus 3 Melati Kecamatan Jenu, kita ciptakan ekosistem belajar yang inovatif, berbagi praktik baik, dan tumbuh bersama demi masa depan cerah anak bangsa.
+            Bersama Gugus 03 Melati Kecamatan Jenu, kita ciptakan ekosistem belajar yang inovatif, berbagi praktik baik, dan tumbuh bersama demi masa depan cerah anak bangsa.
           </motion.p>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -266,7 +266,7 @@ export default function KkgPage() {
           {content.profil.periodeKepengurusan && (
             <p className="text-main-blue font-bold mb-4 uppercase tracking-[0.2em] text-sm">Periode {content.profil.periodeKepengurusan}</p>
           )}
-          <p className="text-gray-500 max-w-2xl mx-auto">Sinergi antara para profesional di lingkungan Gugus 3 Melati Kecamatan Jenu untuk mewujudkan visi bersama.</p>
+          <p className="text-gray-500 max-w-2xl mx-auto">Sinergi antara para profesional di lingkungan Gugus 03 Melati Kecamatan Jenu untuk mewujudkan visi bersama.</p>
         </div>
         <OrgChart members={struktur} />
       </section>

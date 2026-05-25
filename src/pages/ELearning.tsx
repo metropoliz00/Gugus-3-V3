@@ -24,7 +24,7 @@ export default function ELearning() {
               <MonitorPlay className="w-10 h-10" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-heading font-black text-soft-black mb-4">E-Learning Gugus 3</h1>
+              <h1 className="text-3xl md:text-4xl font-heading font-black text-soft-black mb-4">E-Learning Gugus 03</h1>
               <p className="text-gray-500 text-lg leading-relaxed">
                 Platform pembelajaran interaktif terpadu. Akses ribuan materi video, kuis penganalisis, dan ruang kolaborasi virtual dalam satu ekosistem.
               </p>

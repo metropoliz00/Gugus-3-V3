@@ -622,7 +622,7 @@ export default function MapGugus() {
           </div>
           <div>
             <h4 className="font-heading font-extrabold text-lg text-soft-black">Peta Digital Jaringan Pendidikan</h4>
-            <p className="text-xs text-gray-500">Pemetaan visual lokasi Sekolah Inti & Sekolah Imbas Gugus 3 Melati</p>
+            <p className="text-xs text-gray-500">Pemetaan visual lokasi Sekolah Inti & Sekolah Imbas Gugus 03 Melati</p>
           </div>
         </div>
 

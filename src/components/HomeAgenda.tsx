@@ -112,7 +112,7 @@ export default function HomeAgenda() {
                     className="max-w-2xl"
                 >
                     <h2 className="text-dark-green font-bold tracking-widest text-sm uppercase mb-3 text-orange-500">Agenda & Kegiatan</h2>
-                    <h3 className="text-3xl md:text-5xl font-heading font-extrabold text-soft-black mb-4">Jadwal Gugus 3 Melati</h3>
+                    <h3 className="text-3xl md:text-5xl font-heading font-extrabold text-soft-black mb-4">Jadwal Gugus 03 Melati</h3>
                 </motion.div>
                 
                 <div className="flex items-center bg-gray-100 p-1 rounded-2xl">

@@ -87,7 +87,7 @@ export default function AnggotaGugusPage() {
       <div className="container mx-auto max-w-7xl">
         <div className="mb-12 text-center">
             <h1 className="text-3xl font-heading font-extrabold text-soft-black">Anggota Gugus</h1>
-            <p className="text-gray-600 mt-2">Daftar tenaga pendidik profesional anggota Gugus 3 Melati.</p>
+            <p className="text-gray-600 mt-2">Daftar tenaga pendidik profesional anggota Gugus 03 Melati.</p>
         </div>
 
         {isLoading ? (

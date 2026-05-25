@@ -23,7 +23,7 @@ export default function AbsensiKegiatan() {
             <div>
               <h1 className="text-3xl md:text-4xl font-heading font-black text-soft-black mb-4">Absensi Kegiatan</h1>
               <p className="text-gray-500 text-lg leading-relaxed">
-                Sistem pencatatan kehadiran digital untuk setiap agenda rutin, rapat koordinasi, dan workshop di lingkungan Gugus 3 Melati.
+                Sistem pencatatan kehadiran digital untuk setiap agenda rutin, rapat koordinasi, dan workshop di lingkungan Gugus 03 Melati.
               </p>
             </div>
           </div>

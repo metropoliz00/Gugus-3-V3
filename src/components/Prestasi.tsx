@@ -76,7 +76,7 @@ export default function Prestasi() {
           >
             <h2 className="text-dark-green font-bold tracking-widest text-xs sm:text-sm uppercase mb-2 sm:mb-3">Prestasi & Penghargaan</h2>
             <h3 className="text-2xl sm:text-3xl md:text-5xl font-heading font-extrabold text-soft-black mb-2 sm:mb-4">Pencapaian Gemilang</h3>
-            <p className="text-gray-500 text-sm sm:text-lg">Bukti nyata dari komitmen dan dedikasi ekosistem pendidikan Gugus 3 Melati Kecamatan Jenu.</p>
+            <p className="text-gray-500 text-sm sm:text-lg">Bukti nyata dari komitmen dan dedikasi ekosistem pendidikan Gugus 03 Melati Kecamatan Jenu.</p>
           </motion.div>
         </div>
 
