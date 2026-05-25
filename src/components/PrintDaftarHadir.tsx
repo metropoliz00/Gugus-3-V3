@@ -30,12 +30,12 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
     <div className="report-container bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 print:shadow-none print:border-none print:p-0 w-full" id="print-area">
       <style>{`
         .report-container{
-            padding-top:0;
+            padding-top:1;
         }
         @media print {
           @page {
             size: A4 portrait;
-            margin: 2mm 15mm 5mm 15mm;
+            margin: 2mm 2mm 2mm 2mm;
           }
           html, body {
             margin: -5 !important;
@@ -83,7 +83,7 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
         />
         <div className="text-center flex-1 px-4">
           <h1 className="text-xl font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
-          <h2 className="text-2xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
+          <h2 className="text-2xl font-black font-serif leading-tight">GUGUS 3 “MELATI”</h2>
           <p className="text-sm font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
         </div>
         <img 
