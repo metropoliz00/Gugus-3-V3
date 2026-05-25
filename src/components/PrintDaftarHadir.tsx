@@ -34,8 +34,12 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
         }
         @media print {
           @page {
-            size: A4 portrait;
-            margin: 2mm 2mm 2mm 2mm;
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            background: #fff;
+            box-sizing: border-box;
+            padding: 10mm;
           }
           html, body {
             margin: -5 !important;
