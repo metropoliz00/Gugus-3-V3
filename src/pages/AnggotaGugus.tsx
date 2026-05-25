@@ -143,6 +143,20 @@ export default function AnggotaGugusPage() {
           >
             <style>{`
               @media print {
+                @page {
+                  size: A4 portrait;
+                  margin: 5mm 15mm 5mm 15mm;
+                }
+                html, body {
+                  margin: 0 !important;
+                  padding: 0 !important;
+                  height: 100vh !important;
+                  overflow: hidden !important;
+                  max-height: 100vh !important;
+                  background: white !important;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                }
                 /* Hide everything in the page outer shell */
                 body * {
                   visibility: hidden !important;
@@ -159,7 +173,8 @@ export default function AnggotaGugusPage() {
                   max-width: 100% !important;
                   box-shadow: none !important;
                   border: none !important;
-                  padding: 2rem !important;
+                  padding: 1.5rem !important;
+                  margin: 0 !important;
                   background: white !important;
                   color: black !important;
                 }
@@ -196,10 +211,29 @@ export default function AnggotaGugusPage() {
                 </button>
               </div>
 
+              {/* KOP - Visible on screen and in print */}
+              <div id="print-kop-surat" className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
+                <img 
+                  src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
+                  className="w-14 h-14 sm:w-20 sm:h-20 object-contain shrink-0" 
+                  alt="Logo Kemendikdasmen" 
+                />
+                <div className="text-center flex-1 px-2 sm:px-4">
+                  <h1 className="text-xs sm:text-base md:text-lg font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
+                  <h2 className="text-sm sm:text-lg md:text-xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
+                  <p className="text-[9px] sm:text-[11px] md:text-xs font-bold font-serif text-gray-700">KECAMATAN JENU KABUPATEN TUBAN</p>
+                </div>
+                <img 
+                  src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png" 
+                  className="w-14 h-14 sm:w-20 sm:h-20 object-contain shrink-0" 
+                  alt="Logo KKG" 
+                />
+              </div>
+
               {/* Title Header */}
-              <div className="text-center pb-5 mb-8 border-b-2 border-main-blue/10">
-                <h2 className="text-lg sm:text-xl font-extrabold text-main-blue tracking-wider uppercase">
-                  IDENTITAS ANGGOTA GUGUS 3 "MELATI"
+              <div className="text-center pb-3 mb-6">
+                <h2 className="text-base sm:text-lg font-extrabold text-main-blue tracking-wider uppercase underline underline-offset-4 decoration-2">
+                  IDENTITAS ANGGOTA GUGUS
                 </h2>
                 <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Kecamatan Jenu</p>
               </div>
