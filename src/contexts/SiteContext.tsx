@@ -302,8 +302,33 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
     loadContent();
   }, []);
 
-  const mergeContent = (base: any, incoming: any) => {
-    if (!incoming) return base;
+  const recursivelyReplaceGugus3 = (obj: any): any => {
+    if (obj === null || obj === undefined) return obj;
+    if (typeof obj === 'string') {
+      return obj.replace(/Gugus 3(?!\d)/gi, (match) => {
+        if (match.toUpperCase() === match) return 'GUGUS 03';
+        if (match.toLowerCase() === match) return 'gugus 03';
+        return 'Gugus 03';
+      });
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(item => recursivelyReplaceGugus3(item));
+    }
+    if (typeof obj === 'object') {
+      const newObj: any = {};
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          newObj[key] = recursivelyReplaceGugus3(obj[key]);
+        }
+      }
+      return newObj;
+    }
+    return obj;
+  };
+
+  const mergeContent = (base: any, incomingRaw: any) => {
+    if (!incomingRaw) return base;
+    const incoming = recursivelyReplaceGugus3(incomingRaw);
     return {
       ...base,
       ...incoming,
