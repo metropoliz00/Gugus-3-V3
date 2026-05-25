@@ -211,8 +211,8 @@ export default function AnggotaGugusPage() {
                 </button>
               </div>
 
-              {/* KOP - Visible on screen and in print */}
-              <div id="print-kop-surat" className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
+              {/* KOP - Only visible in print */}
+              <div id="print-kop-surat" className="hidden print:flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
                 <img 
                   src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
                   className="w-14 h-14 sm:w-20 sm:h-20 object-contain shrink-0" 
