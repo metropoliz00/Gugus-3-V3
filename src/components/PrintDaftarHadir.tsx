@@ -60,8 +60,8 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
             border: none !important;
           }
           #print-kop-surat {
-            margin-top: 0 !important;
-            padding-top: 0 !important;
+            margin-top: -5 !important;
+            padding-top: -5 !important;
           }
           /* Background colors for print */
           .print-bg-emerald {
