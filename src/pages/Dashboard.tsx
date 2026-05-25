@@ -9085,7 +9085,7 @@ function AdminRekapAbsen() {
             @media print {
               @page {
                 size: A4 portrait;
-                margin: 2mm 10mm 5mm 10mm;
+                margin: 12mm 15mm 12mm 15mm;
               }
               html, body {
                 margin: 0 !important;
@@ -9105,7 +9105,7 @@ function AdminRekapAbsen() {
               #print-area {
                 position: absolute !important;
                 left: 0 !important;
-                top: -5mm !important;
+                top: 0 !important;
                 width: 100% !important;
                 background: white !important;
                 padding: 0 !important;
