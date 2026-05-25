@@ -189,23 +189,27 @@ export default function AnggotaGugusPage() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-[2.5rem] p-6 sm:p-10 max-w-2xl w-full relative shadow-2xl border border-gray-100 text-soft-black"
+              className="bg-white rounded-[2.5rem] p-6 sm:p-10 max-w-2xl w-full relative shadow-[0_0_50px_rgba(249,115,22,0.4)] border-4 border-orange-500 text-soft-black overflow-hidden"
               onClick={e => e.stopPropagation()}
               style={{ contentVisibility: 'auto' }}
             >
+              {/* Glowing Background Spots - Only visible on screen */}
+              <div aria-hidden="true" className="absolute top-0 right-0 -mr-12 -mt-12 w-80 h-80 bg-gradient-to-br from-orange-400 to-amber-300 opacity-20 blur-[80px] rounded-full pointer-events-none no-print"></div>
+              <div aria-hidden="true" className="absolute bottom-0 left-0 -ml-12 -mb-12 w-64 h-64 bg-gradient-to-tr from-amber-500 to-orange-400 opacity-15 blur-[60px] rounded-full pointer-events-none no-print"></div>
+
               {/* Header Action Row */}
-              <div className="absolute top-6 right-6 flex items-center gap-2.5 no-print">
+              <div className="absolute top-6 right-6 flex items-center gap-2.5 no-print z-10">
                 <button 
                   onClick={() => window.print()} 
                   title="Cetak Identitas"
-                  className="text-gray-400 hover:text-main-blue hover:scale-105 active:scale-95 bg-gray-50 hover:bg-blue-50 hover:border-blue-200 border border-gray-100 p-2.5 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                  className="text-orange-600 hover:text-white hover:scale-105 active:scale-95 bg-orange-50 hover:bg-orange-500 hover:border-orange-600 border border-orange-200 p-2.5 rounded-xl transition-all flex items-center justify-center cursor-pointer shadow-md shadow-orange-100"
                 >
                   <Printer size={18} />
                 </button>
                 <button 
                   onClick={() => setSelectedGuru(null)} 
                   title="Tutup"
-                  className="text-gray-400 hover:text-soft-black hover:scale-105 active:scale-95 bg-gray-50 hover:bg-gray-100 border border-gray-100 p-2.5 rounded-xl transition-all flex items-center justify-center cursor-pointer"
+                  className="text-gray-400 hover:text-orange-600 hover:scale-105 active:scale-95 bg-gray-50 hover:bg-orange-50 border border-gray-100 hover:border-orange-200 p-2.5 rounded-xl transition-all flex items-center justify-center cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -231,11 +235,12 @@ export default function AnggotaGugusPage() {
               </div>
 
               {/* Title Header */}
-              <div className="text-center pb-3 mb-6">
-                <h2 className="text-base sm:text-lg font-extrabold text-main-blue tracking-wider uppercase underline underline-offset-4 decoration-2">
+              <div className="text-center pb-3 mb-6 relative">
+                <h2 className="text-base sm:text-lg font-extrabold text-orange-600 print:text-black tracking-wider uppercase underline underline-offset-8 decoration-orange-500 print:decoration-black decoration-2">
                   IDENTITAS ANGGOTA GUGUS
                 </h2>
-                <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-1 font-bold">Kecamatan Jenu</p>
+                <p className="text-[10px] sm:text-xs text-orange-500 print:text-gray-500 uppercase tracking-widest mt-2 font-bold no-print">GUGUS 03 "MELATI" • KECAMATAN JENU</p>
+                <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-widest mt-2 font-bold hidden print:block">Kecamatan Jenu</p>
               </div>
 
               {/* Horizontal Layout (Photo Left, Column Right) */}
@@ -243,9 +248,9 @@ export default function AnggotaGugusPage() {
                 
                 {/* Photo Left Side */}
                 <div className="flex flex-col items-center shrink-0">
-                  <div className="w-32 h-44 sm:w-36 sm:h-48 rounded-2xl bg-gray-50 p-1 border-2 border-gray-200/80 shadow-md overflow-hidden bg-white">
+                  <div className="w-32 h-44 sm:w-36 sm:h-48 rounded-2xl bg-gray-50 p-1 border-4 border-orange-500 shadow-[0_0_25px_rgba(249,115,22,0.5)] print:shadow-none print:border-2 print:border-black overflow-hidden bg-white">
                     <img 
-                      src={selectedGuru.foto || selectedGuru.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedGuru.nama || 'G')}&background=0284c7&color=fff&size=200`} 
+                      src={selectedGuru.foto || selectedGuru.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedGuru.nama || 'G')}&background=ea580c&color=fff&size=200`} 
                       alt={selectedGuru.nama} 
                       className="w-full h-full object-cover object-top rounded-xl print:object-cover" 
                     />
@@ -254,39 +259,39 @@ export default function AnggotaGugusPage() {
 
                 {/* Data Column Right Side */}
                 <div className="flex-1 w-full space-y-4 text-left font-sans text-xs sm:text-sm">
-                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
-                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Nama Lengkap</span>
-                    <span className="text-gray-400 font-bold">:</span>
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-orange-100/50 print:border-black pb-2">
+                    <span className="font-bold text-orange-600 print:text-gray-500 uppercase tracking-wider text-[10px] sm:text-xs">Nama Lengkap</span>
+                    <span className="text-orange-400 print:text-black font-bold">:</span>
                     <span className="font-extrabold text-soft-black text-sm break-words pl-1">{selectedGuru.nama || '-'}</span>
                   </div>
                   
-                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
-                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">NIP</span>
-                    <span className="text-gray-400 font-bold">:</span>
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-orange-100/50 print:border-black pb-2">
+                    <span className="font-bold text-orange-600 print:text-gray-500 uppercase tracking-wider text-[10px] sm:text-xs">NIP</span>
+                    <span className="text-orange-400 print:text-black font-bold">:</span>
                     <span className="font-mono text-gray-800 font-semibold break-all pl-1">{selectedGuru.nip || '-'}</span>
                   </div>
 
-                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
-                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Pangkat/Gol</span>
-                    <span className="text-gray-400 font-bold">:</span>
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-orange-100/50 print:border-black pb-2">
+                    <span className="font-bold text-orange-600 print:text-gray-500 uppercase tracking-wider text-[10px] sm:text-xs">Pangkat/Gol</span>
+                    <span className="text-orange-400 print:text-black font-bold">:</span>
                     <span className="text-gray-800 font-bold pl-1">{selectedGuru.pangkat || '-'}</span>
                   </div>
 
-                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
-                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Jabatan</span>
-                    <span className="text-gray-400 font-bold">:</span>
-                    <span className="text-main-blue font-bold pl-1">{selectedGuru.jabatan || '-'}</span>
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-orange-100/50 print:border-black pb-2">
+                    <span className="font-bold text-orange-600 print:text-gray-500 uppercase tracking-wider text-[10px] sm:text-xs">Jabatan</span>
+                    <span className="text-orange-400 print:text-black font-bold">:</span>
+                    <span className="text-orange-600 print:text-black font-bold pl-1">{selectedGuru.jabatan || '-'}</span>
                   </div>
 
-                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-gray-100/80 pb-2">
-                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Kepegawaian</span>
-                    <span className="text-gray-400 font-bold">:</span>
+                  <div className="grid grid-cols-[120px_8px_1fr] items-baseline border-b border-orange-100/50 print:border-black pb-2">
+                    <span className="font-bold text-orange-600 print:text-gray-500 uppercase tracking-wider text-[10px] sm:text-xs">Kepegawaian</span>
+                    <span className="text-orange-400 print:text-black font-bold">:</span>
                     <span className="text-gray-700 font-medium pl-1">{selectedGuru.kepegawaian || '-'}</span>
                   </div>
 
                   <div className="grid grid-cols-[120px_8px_1fr] items-baseline">
-                    <span className="font-bold text-gray-400 uppercase tracking-wider text-[10px] sm:text-xs">Sekolah</span>
-                    <span className="text-gray-400 font-bold">:</span>
+                    <span className="font-bold text-orange-600 print:text-gray-500 uppercase tracking-wider text-[10px] sm:text-xs">Sekolah</span>
+                    <span className="text-orange-400 print:text-black font-bold">:</span>
                     <span className="text-soft-black font-extrabold pl-1">{selectedGuru.sekolah || '-'}</span>
                   </div>
                 </div>
