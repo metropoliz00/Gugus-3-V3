@@ -9085,7 +9085,7 @@ function AdminRekapAbsen() {
             @media print {
               @page {
                 size: A4 portrait;
-                margin: 5mm 5mm 5mm 5mm;
+                margin: 2mm 10mm 5mm 10mm;
               }
               html, body {
                 margin: 0 !important;
@@ -9105,13 +9105,16 @@ function AdminRekapAbsen() {
               #print-area {
                 position: absolute !important;
                 left: 0 !important;
-                top: 0 !important;
+                top: -5mm !important;
                 width: 100% !important;
-                height: 100% !important;
                 background: white !important;
                 padding: 0 !important;
                 margin: 0 !important;
                 border: none !important;
+              }
+              #print-kop-surat {
+                margin-top: 0 !important;
+                padding-top: 0 !important;
               }
               /* Background colors for print */
               .print-bg-emerald {
@@ -9122,7 +9125,7 @@ function AdminRekapAbsen() {
           `}</style>
 
           {/* KOP - Visible on screen and in print */}
-          <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
+          <div id="print-kop-surat" className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
             <img 
               src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
               className="w-24 h-24 object-contain" 
