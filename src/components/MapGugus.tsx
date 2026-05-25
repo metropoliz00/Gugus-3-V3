@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { MapPin, School, Info, ArrowRight, Compass, Layers, ShieldCheck, HelpCircle, X } from "lucide-react";
 import { motion } from "motion/react";
+import SchoolDetailModal from "./SchoolDetailModal";
 
 interface SchoolData {
   id: string;
@@ -180,6 +181,7 @@ export default function MapGugus() {
   const [schools, setSchools] = useState<SchoolData[]>([]);
   const [dbLandmarks, setDbLandmarks] = useState<Landmark[]>(LANDMARKS);
   const [selectedSchool, setSelectedSchool] = useState<SchoolData | null>(null);
+  const [detailSchool, setDetailSchool] = useState<SchoolData | null>(null);
   const [selectedLandmark, setSelectedLandmark] = useState<Landmark | null>(null);
   const [hoveredSchoolId, setHoveredSchoolId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -779,6 +781,9 @@ export default function MapGugus() {
                   href="#sekolah"
                   onClick={(e) => {
                     e.preventDefault();
+                    if (selectedSchool) {
+                      setDetailSchool(selectedSchool);
+                    }
                     // Scroll to sekolah section
                     const el = document.getElementById("sekolah");
                     if (el) el.scrollIntoView({ behavior: "smooth" });
@@ -893,6 +898,8 @@ export default function MapGugus() {
           )}
         </div>
       </div>
+      {/* School Detail Modal Overlay */}
+      <SchoolDetailModal school={detailSchool} onClose={() => setDetailSchool(null)} />
     </div>
   );
 }
