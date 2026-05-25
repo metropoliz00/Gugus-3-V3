@@ -9085,7 +9085,7 @@ function AdminRekapAbsen() {
             @media print {
               @page {
                 size: A4 portrait;
-                margin: 5mm 15mm 10mm 15mm;
+                margin: 2mm 15mm 5mm 15mm;
               }
               html, body {
                 margin: 0 !important;
