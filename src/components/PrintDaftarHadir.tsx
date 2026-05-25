@@ -35,8 +35,8 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
             margin: 2mm 15mm 5mm 15mm;
           }
           html, body {
-            margin: -5 !important;
-            padding: -5 !important;
+            margin: 0 !important;
+            padding: 0 !important;
             background: white !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -54,14 +54,20 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
-            background: white !important;
-            padding: 0 !important;
-            margin: 0 !important;
+            max-width: 100% !important;
+            box-shadow: none !important;
             border: none !important;
+            padding: 1.5rem !important;
+            margin: 0 !important;
+            background: white !important;
+            color: black !important;
+          }
+          .no-print {
+            display: none !important;
           }
           #print-kop-surat {
-            margin-top: -5 !important;
-            padding-top: -5 !important;
+            margin-top: -5px !important;
+            padding-top: -5px !important;
           }
           /* Background colors for print */
           .print-bg-emerald {
