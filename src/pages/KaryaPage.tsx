@@ -67,8 +67,7 @@ export default function KaryaPage() {
                   <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500">Guru</th>
                   <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500">Judul Karya</th>
                   <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500">Jenis</th>
-                  <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500">Link URL</th>
-                  <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500 text-right font-sans">Aksi</th>
+                  <th className="py-4 px-6 font-bold text-xs uppercase tracking-widest text-gray-500 text-center font-sans">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -77,30 +76,21 @@ export default function KaryaPage() {
                     <td className="py-4 px-6 font-medium text-soft-black text-sm">{work.profiles?.nama || "Guru"}</td>
                     <td className="py-4 px-6 text-gray-600 text-sm font-medium">{work.title}</td>
                     <td className="py-4 px-6 uppercase text-[10px] tracking-widest font-bold text-main-blue">{work.work_type}</td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-6 text-center">
                        {work.file_url ? (
-                         <a href={work.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs bg-blue-50 text-main-blue hover:bg-main-blue hover:text-white px-3 py-1 rounded-full font-semibold transition-all select-none">
-                           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                           Buka Link
+                         <a href={getDirectDownloadUrl(work.file_url)} download={work.title} className="inline-flex items-center gap-1.5 text-xs bg-green-50 text-green-700 hover:bg-green-600 hover:text-white px-4 py-1.5 rounded-full font-bold transition-all select-none" title="Download Karya">
+                           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                           Download Karya
                          </a>
                        ) : (
                          <span className="text-gray-400">-</span>
                        )}
                     </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex justify-end gap-2">
-                        {work.file_url && (
-                          <a href={getDirectDownloadUrl(work.file_url)} download={work.title} className="inline-flex flex-shrink-0 items-center justify-center w-8 h-8 bg-green-50 text-green-600 hover:bg-green-100 rounded-xl transition-colors" title="Download">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                          </a>
-                        )}
-                      </div>
-                    </td>
                   </tr>
                 ))}
                 {works.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="py-10 text-center text-gray-400 italic">Belum ada karya yang diunggah.</td>
+                    <td colSpan={4} className="py-10 text-center text-gray-400 italic">Belum ada karya yang diunggah.</td>
                   </tr>
                 )}
               </tbody>

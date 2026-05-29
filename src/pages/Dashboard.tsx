@@ -1180,6 +1180,7 @@ export default function Dashboard({
                                 name: "file_url",
                                 label: "Link URL Karya",
                                 type: "url",
+                                hideInTable: true,
                               },
                             ]}
                           />
@@ -1317,6 +1318,7 @@ export default function Dashboard({
                                 name: "file_url",
                                 label: "Link URL Karya (Google Drive/YouTube/Situs)",
                                 type: "url",
+                                hideInTable: true,
                               },
                             ]}
                           />
@@ -10216,7 +10218,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
           <table className="w-full text-left">
             <thead className="bg-gray-50">
               <tr>
-                {fields.map((f: any) => (
+                {fields.filter((f: any) => !f.hideInTable).map((f: any) => (
                   <th
                     key={f.name}
                     className="px-6 py-4 text-xs font-bold text-gray-500 uppercase"
@@ -10233,7 +10235,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
               {loading ? (
                 <tr>
                   <td
-                    colSpan={fields.length + 1}
+                    colSpan={fields.filter((f: any) => !f.hideInTable).length + 1}
                     className="p-10 text-center text-gray-400 italic"
                   >
                     Memuat data...
@@ -10242,7 +10244,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
               ) : data.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={fields.length + 1}
+                    colSpan={fields.filter((f: any) => !f.hideInTable).length + 1}
                     className="p-10 text-center text-gray-400 italic"
                   >
                     Belum ada data.
@@ -10254,7 +10256,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                     key={item.id}
                     className="hover:bg-gray-50/50 transition-colors"
                   >
-                    {fields.map((f: any) => (
+                    {fields.filter((f: any) => !f.hideInTable).map((f: any) => (
                       <td
                         key={f.name}
                         className="px-6 py-4 text-sm font-medium text-gray-700 max-w-[200px] truncate"
@@ -10296,9 +10298,9 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                               ? (item[f.name] ? "Ya" : "Tidak")
                             : f.type === "url"
                               ? (item[f.name] ? (
-                                  <a href={item[f.name]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs bg-blue-50 text-main-blue hover:bg-main-blue hover:text-white px-3 py-1 rounded-full font-semibold transition-all select-none">
-                                    <ExternalLink className="w-3 h-3" />
-                                    Buka Link
+                                  <a href={getDirectDownloadUrl(item[f.name])} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs bg-green-50 text-green-700 hover:bg-green-600 hover:text-white px-3 py-1 rounded-full font-semibold transition-all select-none">
+                                    <Download className="w-3 h-3" />
+                                    Download
                                   </a>
                                 ) : "-")
                             : f.type === "file"
@@ -10320,8 +10322,8 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                           if (f.type === "url" && item[f.name]) {
                             const downloadUrl = getDirectDownloadUrl(item[f.name]);
                             return (
-                              <a key={"url-"+f.name} href={downloadUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-main-blue hover:bg-blue-50 rounded-lg" title="Buka Link">
-                                <ExternalLink className="w-4 h-4" />
+                              <a key={"url-"+f.name} href={downloadUrl} target="_self" download rel="noopener noreferrer" className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Unduh">
+                                <Download className="w-4 h-4" />
                               </a>
                             );
                           }
