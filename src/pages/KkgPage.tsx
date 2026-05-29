@@ -12,6 +12,24 @@ import { useState, useEffect } from "react";
 import { useSiteContent, defaultContent } from "../contexts/SiteContext";
 import { supabase } from '../lib/supabase';
 
+const getDirectDownloadUrl = (url: string | null | undefined): string => {
+  if (!url) return "";
+  const trimmed = url.trim();
+  const fileDMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileDMatch && fileDMatch[1]) {
+    return `https://drive.google.com/uc?export=download&id=${fileDMatch[1]}&confirm=t`;
+  }
+  const idMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (idMatch && idMatch[1]) {
+    return `https://drive.google.com/uc?export=download&id=${idMatch[1]}&confirm=t`;
+  }
+  const dMatch = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (dMatch && dMatch[1] && trimmed.includes("drive.google.com")) {
+    return `https://drive.google.com/uc?export=download&id=${dMatch[1]}&confirm=t`;
+  }
+  return trimmed;
+};
+
 export default function KkgPage() {
   const [activeProgramGroup, setActiveProgramGroup] = useState('tahunan');
   const [openProgramIdx, setOpenProgramIdx] = useState<number | null>(0);
@@ -415,7 +433,7 @@ export default function KkgPage() {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {(kkg.dokumen || []).map((doc: any, i: number) => (
-            <a key={i} href={doc.url} download={doc.title} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex items-center gap-4 group">
+            <a key={i} href={getDirectDownloadUrl(doc.url)} download={doc.title} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex items-center gap-4 group">
               <div className="p-3 bg-blue-50 text-main-blue rounded-xl">
                  <FileText className="w-6 h-6" />
               </div>

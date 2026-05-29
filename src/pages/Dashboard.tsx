@@ -39,6 +39,7 @@ import {
   Wallet,
   Trash2,
   Globe,
+  ExternalLink,
   ArrowLeft,
   Send,
   ChevronDown,
@@ -99,6 +100,24 @@ import PrintDaftarHadir from "../components/PrintDaftarHadir";
 import * as XLSX from "xlsx";
 import Webcam from "react-webcam";
 const WebcamComponent = Webcam as any;
+
+const getDirectDownloadUrl = (url: string | null | undefined): string => {
+  if (!url) return "";
+  const trimmed = url.trim();
+  const fileDMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileDMatch && fileDMatch[1]) {
+    return `https://drive.google.com/uc?export=download&id=${fileDMatch[1]}&confirm=t`;
+  }
+  const idMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (idMatch && idMatch[1]) {
+    return `https://drive.google.com/uc?export=download&id=${idMatch[1]}&confirm=t`;
+  }
+  const dMatch = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (dMatch && dMatch[1] && trimmed.includes("drive.google.com")) {
+    return `https://drive.google.com/uc?export=download&id=${dMatch[1]}&confirm=t`;
+  }
+  return trimmed;
+};
 
 // Countdown Timer Component
 const CountdownTimer = ({ targetDate, simple = false }: { targetDate: string, simple?: boolean }) => {
@@ -1159,8 +1178,8 @@ export default function Dashboard({
                               { name: "work_type", label: "Jenis Karya" },
                               {
                                 name: "file_url",
-                                label: "URL File",
-                                type: "file",
+                                label: "Link URL Karya",
+                                type: "url",
                               },
                             ]}
                           />
@@ -1296,8 +1315,8 @@ export default function Dashboard({
                               { name: "work_type", label: "Jenis Karya" },
                               {
                                 name: "file_url",
-                                label: "File Laporan (PDF/Doc)",
-                                type: "file",
+                                label: "Link URL Karya (Google Drive/YouTube/Situs)",
+                                type: "url",
                               },
                             ]}
                           />
@@ -4793,7 +4812,7 @@ function AdminAgendaForm({ user }: { user: any }) {
                               </div>
                               <div className="flex items-center gap-1 shrink-0">
                                 <a 
-                                  href={item.materi_url} 
+                                  href={getDirectDownloadUrl(item.materi_url)} 
                                   download={`Materi_${item.title}`}
                                   className="p-1.5 bg-indigo-100/50 hover:bg-indigo-100 text-indigo-650 rounded transition-colors flex items-center gap-0.5"
                                   title="Download Materi"
@@ -10275,7 +10294,14 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                               })()
                             : f.type === "checkbox"
                               ? (item[f.name] ? "Ya" : "Tidak")
-                            : f.type === "file" || f.type === "url"
+                            : f.type === "url"
+                              ? (item[f.name] ? (
+                                  <a href={item[f.name]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs bg-blue-50 text-main-blue hover:bg-main-blue hover:text-white px-3 py-1 rounded-full font-semibold transition-all select-none">
+                                    <ExternalLink className="w-3 h-3" />
+                                    Buka Link
+                                  </a>
+                                ) : "-")
+                            : f.type === "file"
                               ? (item[f.name] ? <span className="text-[10px] bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold uppercase tracking-widest whitespace-nowrap">Terupload</span> : "-")
                               : item[f.name] || "-"}
                       </td>
@@ -10283,15 +10309,19 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
                         {fields.map((f: any) => {
-                          if ((f.type === "file" || f.type === 'url') && item[f.name]) {
-                            let downloadUrl = item[f.name];
-                            const match = downloadUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-                            if (match && match[1]) {
-                              downloadUrl = `https://drive.google.com/uc?export=download&id=${match[1]}&confirm=t`;
-                            }
+                          if (f.type === "file" && item[f.name]) {
+                            const downloadUrl = getDirectDownloadUrl(item[f.name]);
                             return (
                               <a key={"dl-"+f.name} href={downloadUrl} target="_self" download rel="noopener noreferrer" className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Unduh">
                                 <Download className="w-4 h-4" />
+                              </a>
+                            );
+                          }
+                          if (f.type === "url" && item[f.name]) {
+                            const downloadUrl = getDirectDownloadUrl(item[f.name]);
+                            return (
+                              <a key={"url-"+f.name} href={downloadUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-main-blue hover:bg-blue-50 rounded-lg" title="Buka Link">
+                                <ExternalLink className="w-4 h-4" />
                               </a>
                             );
                           }
@@ -10432,7 +10462,7 @@ function DataViewList({
                 <div className="flex flex-col gap-3">
                   {item.file_url && (
                     <a
-                      href={item.file_url}
+                      href={getDirectDownloadUrl(item.file_url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-4 bg-gradient-to-r from-main-blue to-indigo-600 text-white rounded-2xl text-[10px] font-black tracking-widest text-center uppercase shadow-lg shadow-main-blue/20 hover:scale-105 active:scale-95 transition-all"
@@ -12210,7 +12240,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                              <div className="flex flex-wrap items-center gap-2 mt-1">
                                {item.materi_url && (
                                  <a 
-                                   href={item.materi_url} 
+                                   href={getDirectDownloadUrl(item.materi_url)} 
                                    target="_blank" 
                                    rel="noopener noreferrer" 
                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-main-blue rounded-lg text-[10px] font-black uppercase hover:bg-blue-100 transition-colors border border-blue-100"
