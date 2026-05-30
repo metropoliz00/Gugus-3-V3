@@ -74,6 +74,11 @@ export default function PrintLaporanKeuangan({
       id="print-area-keuangan"
     >
       <style>{`
+        @media screen {
+          #print-area-keuangan {
+            display: none !important;
+          }
+        }
         @media print {
           @page {
             size: A4 landscape;
@@ -153,12 +158,12 @@ export default function PrintLaporanKeuangan({
         <table className="w-full text-sm border-collapse border border-black text-left">
           <thead>
             <tr className="bg-gray-100 print:bg-gray-150 text-black border border-black font-bold uppercase text-[11px] tracking-wider">
-              <th className="border border-black px-3 py-2 text-center w-10">No</th>
-              <th className="border border-black px-3 py-2 text-center w-32">Tanggal</th>
-              <th className="border border-black px-4 py-2">Uraian / Keterangan Kegiatan</th>
-              <th className="border border-black px-3 py-2 text-right w-36">Pemasukan (Debit)</th>
-              <th className="border border-black px-3 py-2 text-right w-36">Pengeluaran (Kredit)</th>
-              <th className="border border-black px-3 py-2 text-right w-36">Saldo</th>
+              <th className="border border-black px-3 py-2 text-center" style={{ width: "5%" }}>No</th>
+              <th className="border border-black px-3 py-2 text-center" style={{ width: "12%" }}>Tanggal</th>
+              <th className="border border-black px-4 py-2" style={{ width: "47%" }}>Uraian / Keterangan Kegiatan</th>
+              <th className="border border-black px-3 py-2 text-right" style={{ width: "12%" }}>Pemasukan (Debit)</th>
+              <th className="border border-black px-3 py-2 text-right" style={{ width: "12%" }}>Pengeluaran (Kredit)</th>
+              <th className="border border-black px-3 py-2 text-right" style={{ width: "12%" }}>Saldo</th>
             </tr>
           </thead>
           <tbody>
