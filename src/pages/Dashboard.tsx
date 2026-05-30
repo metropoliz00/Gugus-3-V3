@@ -8613,7 +8613,7 @@ function AdminGuruForm({ user }: { user: any }) {
 }
 
 function AdminFinanceManagement({ user }: { user: any }) {
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
   const [records, setRecords] = useState<FinanceTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -8751,7 +8751,11 @@ function AdminFinanceManagement({ user }: { user: any }) {
           ? `Mengubah data keuangan: ${formData.activity_name}`
           : `Menambah data keuangan: ${formData.activity_name}`,
       );
-      await alert(editId ? "Data keuangan berhasil diperbarui!" : "Data keuangan berhasil disimpan!");
+      await alert(
+        editId ? "Data keuangan berhasil diperbarui!" : "Data keuangan berhasil disimpan!",
+        "Sukses",
+        "success"
+      );
       setFormData({
         activity_name: "",
         income: 0,
@@ -8768,7 +8772,8 @@ function AdminFinanceManagement({ user }: { user: any }) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Hapus data keuangan ini?")) return;
+    const isConfirmed = await confirm("Apakah Anda yakin ingin menghapus catatan keuangan ini?", "Konfirmasi Hapus");
+    if (!isConfirmed) return;
 
     try {
       const response = await fetch(`/api/finance/records/${id}`, {
