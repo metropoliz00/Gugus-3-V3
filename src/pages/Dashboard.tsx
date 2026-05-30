@@ -9174,7 +9174,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
                       />
                       <input 
                         type="text"
-                        placeholder="NIP/NIGB Bendahara"
+                        placeholder="NIP Bendahara"
                         className="w-full bg-white border border-gray-200 px-3 py-1.5 rounded-lg outline-none focus:border-main-blue text-xs font-mono"
                         value={bendahara.nip}
                         onChange={(e) => setBendahara({ ...bendahara, nip: e.target.value })}

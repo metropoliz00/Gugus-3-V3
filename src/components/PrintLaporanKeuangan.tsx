@@ -105,7 +105,6 @@ export default function PrintLaporanKeuangan({
             border: none !important;
             padding: 0 !important;
             margin: 0 !important;
-            margin-top: -0.6cm !important;
             background: white !important;
             color: black !important;
           }
@@ -261,7 +260,7 @@ export default function PrintLaporanKeuangan({
             <div className="h-16" /> {/* Spacer for physical signature */}
             <p className="font-bold underline">{bendahara.name || "[Nama Bendahara]"}</p>
             <p className="text-xs text-gray-650">
-              NIP/NIGB. {bendahara.nip || "____________________"}
+              NIP. {bendahara.nip || "____________________"}
             </p>
           </div>
         </div>
