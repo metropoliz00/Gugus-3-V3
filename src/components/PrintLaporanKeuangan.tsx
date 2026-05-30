@@ -76,8 +76,8 @@ export default function PrintLaporanKeuangan({
       <style>{`
         @media print {
           @page {
-            size: A4 portrait;
-            margin: 15mm 15mm 15mm 15mm;
+            size: A4 landscape;
+            margin: 10mm 15mm 10mm 15mm;
           }
           html, body {
             margin: 0 !important;
@@ -111,6 +111,10 @@ export default function PrintLaporanKeuangan({
           .no-print {
             display: none !important;
           }
+          .avoid-break {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
         }
       `}</style>
 
@@ -125,7 +129,6 @@ export default function PrintLaporanKeuangan({
           <h1 className="text-lg font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
           <h2 className="text-xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
           <p className="text-xs font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
-          <p className="text-[10px] text-gray-500 italic mt-0.5">Alamat: UPT Sekolah Dasar se-Gugus 03, Kecamatan Jenu, Tuban</p>
         </div>
         <img
           src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png"
@@ -239,14 +242,14 @@ export default function PrintLaporanKeuangan({
       </div>
 
       {/* Signature Section - exact layout requested */}
-      <div className="mt-8 text-black text-sm">
+      <div className="mt-6 text-black text-sm avoid-break break-inside-avoid">
         {/* Row 1: Left (Ketua KKG) and Right (Tempat, Tanggal + Bendahara) */}
-        <div className="grid grid-cols-2 gap-12 text-center pb-8">
+        <div className="grid grid-cols-2 gap-8 text-center pb-4">
           <div>
             <p className="font-semibold invisible">Mengetahui,</p>
             <p className="font-bold">Mengetahui,</p>
             <p className="font-bold text-gray-800">Ketua KKG Gugus 03 Melati</p>
-            <div className="h-20" /> {/* Spacer for physical signature */}
+            <div className="h-16" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{ketuaKkg.name || "[Nama Ketua KKG]"}</p>
             <p className="text-xs text-gray-600">
               NIP. {ketuaKkg.nip || "____________________"}
@@ -258,7 +261,7 @@ export default function PrintLaporanKeuangan({
               {tempatLaporan}, {tanggalLaporan}
             </p>
             <p className="font-bold">Bendahara KKG Gugus 03</p>
-            <div className="h-20" /> {/* Spacer for physical signature */}
+            <div className="h-16" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{bendahara.name || "[Nama Bendahara]"}</p>
             <p className="text-xs text-gray-600">
               NIP/NIGB. {bendahara.nip || "____________________"}
@@ -267,11 +270,11 @@ export default function PrintLaporanKeuangan({
         </div>
 
         {/* Row 2: Tengah bawah (Mengetahui, Ketua Gugus) */}
-        <div className="flex justify-center text-center mt-4">
+        <div className="flex justify-center text-center mt-2">
           <div className="w-1/2">
             <p className="font-bold">Mengetahui,</p>
             <p className="font-bold text-gray-800">Ketua Gugus 03 Melati</p>
-            <div className="h-20" /> {/* Spacer for physical signature */}
+            <div className="h-16" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{ketuaGugus.name || "[Nama Ketua Gugus]"}</p>
             <p className="text-xs text-gray-600">
               NIP. {ketuaGugus.nip || "____________________"}
