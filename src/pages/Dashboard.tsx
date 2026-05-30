@@ -61,6 +61,7 @@ import {
   XCircle,
   LayoutList,
   Check,
+  Pencil,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -8696,6 +8697,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
     expense: 0,
     date: getJakartaDateString(),
   });
+  const [editId, setEditId] = useState<string | null>(null);
 
   const fetchRecords = async () => {
     setIsLoading(true);
@@ -8732,8 +8734,10 @@ function AdminFinanceManagement({ user }: { user: any }) {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/finance/records", {
-        method: "POST",
+      const url = editId ? `/api/finance/records/${editId}` : "/api/finance/records";
+      const method = editId ? "PUT" : "POST";
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
@@ -8742,16 +8746,19 @@ function AdminFinanceManagement({ user }: { user: any }) {
 
       logActivity(
         user,
-        "create_finance",
-        `Menambah data keuangan: ${formData.activity_name}`,
+        editId ? "update_finance" : "create_finance",
+        editId
+          ? `Mengubah data keuangan: ${formData.activity_name}`
+          : `Menambah data keuangan: ${formData.activity_name}`,
       );
-      await alert("Data keuangan berhasil disimpan!");
+      await alert(editId ? "Data keuangan berhasil diperbarui!" : "Data keuangan berhasil disimpan!");
       setFormData({
         activity_name: "",
         income: 0,
         expense: 0,
         date: getJakartaDateString(),
       });
+      setEditId(null);
       fetchRecords();
     } catch (err: any) {
       console.error(err);
@@ -8928,14 +8935,31 @@ function AdminFinanceManagement({ user }: { user: any }) {
                 }
               />
             </div>
-            <div className="md:col-span-4 flex justify-end">
+            <div className="md:col-span-4 flex justify-end gap-3">
+              {editId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditId(null);
+                    setFormData({
+                      activity_name: "",
+                      income: 0,
+                      expense: 0,
+                      date: getJakartaDateString(),
+                    });
+                  }}
+                  className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold transition-all"
+                >
+                  Batal Edit
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="px-8 py-3 bg-main-blue text-white rounded-xl font-bold flex items-center gap-2 hover:bg-dark-blue transition-all shadow-lg shadow-main-blue/20"
               >
                 <PlusCircle className="w-5 h-5" />
-                {isSubmitting ? "Menyimpan..." : "Tambah Catatan"}
+                {isSubmitting ? "Menyimpan..." : editId ? "Simpan Perubahan" : "Tambah Catatan"}
               </button>
             </div>
           </form>
@@ -9062,13 +9086,35 @@ function AdminFinanceManagement({ user }: { user: any }) {
                             record.runningBalance,
                           )}
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <button
-                            onClick={() => handleDelete(record.id)}
-                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => {
+                                setEditId(record.id);
+                                setFormData({
+                                  activity_name: record.activity_name || "",
+                                  income: Number(record.income) || 0,
+                                  expense: Number(record.expense) || 0,
+                                  date: record.date ? record.date.substring(0, 10) : getJakartaDateString(),
+                                });
+                                const formEl = document.querySelector("form");
+                                if (formEl) {
+                                  formEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                                }
+                              }}
+                              className="p-2 text-gray-400 hover:text-main-blue hover:bg-blue-50 rounded-lg transition-all"
+                              title="Ubah"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(record.id)}
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                              title="Hapus"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ));

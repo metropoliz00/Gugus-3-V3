@@ -468,6 +468,24 @@ app.delete("/api/finance/records/:id", async (req, res) => {
   }
 });
 
+app.put("/api/finance/records/:id", async (req, res) => {
+  const { id } = req.params;
+  const { activity_name, income, expense, date } = req.body;
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin
+      .from('finance_transactions')
+      .update({ activity_name, income, expense, date })
+      .eq('id', id)
+      .select();
+    
+    if (error) throw error;
+    res.json(data[0]);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // For production static serving
 if (process.env.NODE_ENV === "production") {
     const distPath = path.join(process.cwd(), "dist");

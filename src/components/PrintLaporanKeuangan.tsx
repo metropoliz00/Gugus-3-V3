@@ -124,8 +124,7 @@ export default function PrintLaporanKeuangan({
         <div className="text-center flex-1 px-4">
           <h1 className="text-sm font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
           <h2 className="text-base font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
-          <p className="text-[10px] font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
-          <p className="text-[9px] text-gray-500 italic mt-0.5">Alamat: UPT Sekolah Dasar se-Gugus 03, Kecamatan Jenu, Tuban</p>
+          <p className="text-[10px] font-bold font-serif leading-tight uppercase">KECAMATAN JENU KABUPATEN TUBAN</p>
         </div>
         <img
           src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png"
