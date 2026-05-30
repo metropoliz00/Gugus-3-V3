@@ -164,7 +164,7 @@ export default function PrintLaporanKeuangan({
                 {formatDateId(`${selectedMonth}-01`)}
               </td>
               <td className="border border-black px-3 py-1.5 italic text-gray-650 text-[11px]">
-                Saldo Awal (Carryforward)
+                Saldo Awal
               </td>
               <td className="border border-black px-2.5 py-1.5 text-right">-</td>
               <td className="border border-black px-2.5 py-1.5 text-right">-</td>
@@ -223,11 +223,8 @@ export default function PrintLaporanKeuangan({
 
             {/* Saldo Akhir Summary Row */}
             <tr className="bg-emerald-50/10 print:bg-gray-150 font-black border-t-2 border-black text-[12px]">
-              <td colSpan={3} className="border border-black px-3 py-2 text-right uppercase text-emerald-800 print:text-black">
+              <td colSpan={5} className="border border-black px-3 py-2 text-right uppercase text-emerald-800 print:text-black">
                 Saldo Akhir per {formatPeriod}
-              </td>
-              <td colSpan={2} className="border border-black px-2.5 py-2 text-center text-gray-505 font-normal italic text-[10px]">
-                (Saldo Awal + Pemasukan - Pengeluaran)
               </td>
               <td className="border border-black px-2.5 py-2 text-right font-mono text-emerald-800 print:text-black">
                 {formatCurrency(saldoAkhir)}
