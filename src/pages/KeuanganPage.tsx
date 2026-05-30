@@ -7,6 +7,10 @@ import { FinanceTransaction } from "../types";
 export default function KeuanganPage() {
   const [records, setRecords] = useState<FinanceTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filterMonth, setFilterMonth] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
 
   useEffect(() => {
     fetchRecords();
@@ -29,9 +33,79 @@ export default function KeuanganPage() {
     }
   };
 
-  const totalIncome = records.reduce((sum, r) => sum + (Number(r.income) || 0), 0);
-  const totalExpense = records.reduce((sum, r) => sum + (Number(r.expense) || 0), 0);
-  const currentBalance = totalIncome - totalExpense;
+  const getAvailableMonths = () => {
+    const months = new Set<string>();
+    records.forEach(r => {
+      if (r.date && r.date.length >= 7) {
+        months.add(r.date.substring(0, 7));
+      }
+    });
+    if (months.size === 0) {
+      const today = new Date();
+      months.add(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return Array.from(months).sort().reverse();
+  };
+
+  const availableMonths = getAvailableMonths();
+
+  // Set filterMonth to the latest available month if the default current month has no transactions
+  useEffect(() => {
+    if (records.length > 0 && availableMonths.length > 0) {
+      const today = new Date();
+      const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+      const currentHasRecords = records.some(r => r.date && r.date.startsWith(currentMonthStr));
+      if (!currentHasRecords) {
+        setFilterMonth(availableMonths[0]);
+      }
+    }
+  }, [records, availableMonths]);
+
+  // We need to calculate running balance over ALL transactions from oldest to newest to ensure correctness
+  const sortedAllForBalance = [...records].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  let runningBal = 0;
+  const recordsWithBalance = sortedAllForBalance.map(r => {
+    runningBal += (Number(r.income) || 0) - (Number(r.expense) || 0);
+    return { ...r, runningBalance: runningBal };
+  });
+
+  // Now filter display records based on selected month
+  const displayRecords = filterMonth === "all"
+    ? [...recordsWithBalance].reverse()
+    : [...recordsWithBalance].filter(r => r.date && r.date.startsWith(filterMonth)).reverse();
+
+  // Stats calculation
+  const totalIncomeAll = records.reduce((sum, r) => sum + (Number(r.income) || 0), 0);
+  const totalExpenseAll = records.reduce((sum, r) => sum + (Number(r.expense) || 0), 0);
+  const currentBalanceAll = totalIncomeAll - totalExpenseAll;
+
+  const currentMonthTransactions = records.filter(r => r.date && r.date.startsWith(filterMonth));
+  const totalIncomeFiltered = filterMonth === "all"
+    ? totalIncomeAll
+    : currentMonthTransactions.reduce((sum, r) => sum + (Number(r.income) || 0), 0);
+  
+  const totalExpenseFiltered = filterMonth === "all"
+    ? totalExpenseAll
+    : currentMonthTransactions.reduce((sum, r) => sum + (Number(r.expense) || 0), 0);
+
+  const getBalanceFiltered = () => {
+    if (filterMonth === "all") {
+      return currentBalanceAll;
+    }
+    // Saldo akhir di bulan tersebut adalah runningBalance dari transaksi paling baru di bulan tersebut
+    if (displayRecords.length > 0) {
+      return displayRecords[0].runningBalance;
+    }
+    
+    // If no transactions in that month, find the last transaction before that month
+    const beforeMonthRecords = recordsWithBalance.filter(r => r.date && r.date < `${filterMonth}-01`);
+    if (beforeMonthRecords.length > 0) {
+      return beforeMonthRecords[beforeMonthRecords.length - 1].runningBalance;
+    }
+    return 0;
+  };
+
+  const currentBalanceFiltered = getBalanceFiltered();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -41,6 +115,16 @@ export default function KeuanganPage() {
     }).format(value);
   };
 
+  const getMonthName = (monthStr: string) => {
+    if (monthStr === "all") return "";
+    const [yr, mn] = monthStr.split("-");
+    const monthNames = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+    return `${monthNames[parseInt(mn, 10) - 1]} ${yr}`;
+  };
+
   return (
     <div className="min-h-screen bg-light-gray pt-32 pb-20">
       <div className="container mx-auto px-6 max-w-7xl">
@@ -48,7 +132,7 @@ export default function KeuanganPage() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row justify-between md:items-end gap-6"
+            className="flex flex-col md:flex-row justify-between md:items-center gap-6"
           >
             <div>
               <h1 className="text-4xl font-heading font-extrabold text-soft-black mb-2 uppercase tracking-tight">Kondisi Keuangan KAS</h1>
@@ -57,15 +141,43 @@ export default function KeuanganPage() {
                 <span>Gugus 03 Melati</span>
               </div>
             </div>
-            <div className="bg-white/50 backdrop-blur px-4 py-2 rounded-2xl border border-white flex items-center gap-2 text-sm text-gray-500">
-               <Info className="w-4 h-4" />
-               Update terakhir: {new Date().toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'long', year: 'numeric' })}
+
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Dropdown Filter Bulan */}
+              <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-gray-150 shadow-sm">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Periode:</span>
+                <select
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(e.target.value)}
+                  className="bg-transparent border-none text-xs font-bold text-gray-700 outline-none pr-2 cursor-pointer focus:ring-0"
+                >
+                  <option value="all">Semua Bulan</option>
+                  {availableMonths.map(m => {
+                    const [yr, mn] = m.split("-");
+                    const monthNames = [
+                      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                    ];
+                    return (
+                      <option key={m} value={m}>
+                        {monthNames[parseInt(mn, 10) - 1]} {yr}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div className="bg-white/50 backdrop-blur px-4 py-2.5 rounded-2xl border border-white flex items-center gap-2 text-xs text-gray-500 shadow-sm">
+                 <Info className="w-4 h-4 text-main-blue" />
+                 <span>Update terakhir: {new Date().toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              </div>
             </div>
           </motion.div>
         </header>
 
         {/* Summary Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {/* Card 1: Saldo */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -77,11 +189,14 @@ export default function KeuanganPage() {
                <Wallet className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Total Saldo KAS</p>
-              <h2 className="text-3xl font-extrabold text-soft-black tracking-tight">{formatCurrency(currentBalance)}</h2>
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">
+                {filterMonth === "all" ? "Total Saldo KAS" : `Saldo Akhir (${getMonthName(filterMonth)})`}
+              </p>
+              <h2 className="text-3xl font-extrabold text-soft-black tracking-tight">{formatCurrency(currentBalanceFiltered)}</h2>
             </div>
           </motion.div>
 
+          {/* Card 2: Pemasukan */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -93,11 +208,14 @@ export default function KeuanganPage() {
                <TrendingUp className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Total Pemasukan</p>
-              <h2 className="text-3xl font-extrabold text-leaf-green tracking-tight">{formatCurrency(totalIncome)}</h2>
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">
+                {filterMonth === "all" ? "Total Pemasukan" : `Pemasukan (${getMonthName(filterMonth)})`}
+              </p>
+              <h2 className="text-3xl font-extrabold text-leaf-green tracking-tight">{formatCurrency(totalIncomeFiltered)}</h2>
             </div>
           </motion.div>
 
+          {/* Card 3: Pengeluaran */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -109,8 +227,10 @@ export default function KeuanganPage() {
                <TrendingDown className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Total Pengeluaran</p>
-              <h2 className="text-3xl font-extrabold text-red-500 tracking-tight">{formatCurrency(totalExpense)}</h2>
+              <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">
+                {filterMonth === "all" ? "Total Pengeluaran" : `Pengeluaran (${getMonthName(filterMonth)})`}
+              </p>
+              <h2 className="text-3xl font-extrabold text-red-500 tracking-tight">{formatCurrency(totalExpenseFiltered)}</h2>
             </div>
           </motion.div>
         </div>
@@ -121,8 +241,15 @@ export default function KeuanganPage() {
            animate={{ opacity: 1, scale: 1 }}
            className="bg-white rounded-[2.5rem] shadow-xl shadow-gray-200/50 border border-white overflow-hidden"
         >
-          <div className="p-8 border-b border-light-gray flex items-center justify-between">
-            <h3 className="text-xl font-bold font-heading">Riwayat Transaksi</h3>
+          <div className="p-8 border-b border-light-gray flex items-center justify-between flex-wrap gap-4">
+            <h3 className="text-xl font-bold font-heading flex items-center gap-2">
+              Riwayat Transaksi
+              {filterMonth !== "all" && (
+                <span className="text-xs bg-main-blue/10 text-main-blue px-2.5 py-0.5 rounded-full font-bold uppercase">
+                  {getMonthName(filterMonth)}
+                </span>
+              )}
+            </h3>
             <div className="flex items-center gap-2 text-xs font-bold text-gray-400 bg-light-gray px-3 py-1 rounded-full uppercase">
               <Calendar className="w-3 h-3" />
               Laporan Real-time
@@ -149,57 +276,49 @@ export default function KeuanganPage() {
                       </div>
                     </td>
                   </tr>
-                ) : records.length === 0 ? (
+                ) : displayRecords.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-8 py-20 text-center text-gray-400 italic">
-                      Belum ada data transaksi yang tercatat.
+                      Tidak ada data transaksi yang tercatat untuk periode ini.
                     </td>
                   </tr>
                 ) : (
-                  (() => {
-                    let runningBalance = 0;
-                    // Prepare records for running balance (oldest to newest)
-                    const sortedForBalance = [...records].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-                    const recordsWithBalance = sortedForBalance.map(r => {
-                      runningBalance += (Number(r.income) || 0) - (Number(r.expense) || 0);
-                      return { ...r, runningBalance };
-                    });
-                    // Present in UI: Newest to oldest
-                    return recordsWithBalance.reverse().map((record) => (
-                      <tr key={record.id} className="hover:bg-gray-50/50 transition-colors group">
-                        <td className="px-8 py-5">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-gray-700">{new Date(record.date).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'short' })}</span>
-                            <span className="text-[10px] text-gray-400">{new Date(record.date).getFullYear()}</span>
-                          </div>
-                        </td>
-                        <td className="px-8 py-5">
-                          <div className="font-bold text-soft-black group-hover:text-main-blue transition-colors flex items-center gap-2">
-                             {record.income > 0 ? (
-                               <ArrowUpRight className="w-3 h-3 text-leaf-green" />
-                             ) : (
-                               <ArrowDownRight className="w-3 h-3 text-red-500" />
-                             )}
-                             {record.activity_name}
-                          </div>
-                        </td>
-                        <td className="px-8 py-5 text-right font-mono font-bold text-leaf-green">
-                          {record.income > 0 ? `+ ${formatCurrency(record.income)}` : '-'}
-                        </td>
-                        <td className="px-8 py-5 text-right font-mono font-bold text-red-500">
-                          {record.expense > 0 ? `- ${formatCurrency(record.expense)}` : '-'}
-                        </td>
-                        <td className="px-8 py-5 text-right font-mono font-bold text-soft-black bg-gray-50/30">
-                          {formatCurrency(record.runningBalance)}
-                        </td>
-                      </tr>
-                    ));
-                  })()
+                  displayRecords.map((record) => (
+                    <tr key={record.id} className="hover:bg-gray-50/50 transition-colors group">
+                      <td className="px-8 py-5">
+                        <div className="flex flex-col">
+                          <span className="font-bold text-gray-700">
+                            {new Date(record.date).toLocaleDateString('id-ID', { timeZone: "Asia/Jakarta",  day: 'numeric', month: 'short' })}
+                          </span>
+                          <span className="text-[10px] text-gray-400">{new Date(record.date).getFullYear()}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="font-bold text-soft-black group-hover:text-main-blue transition-colors flex items-center gap-2">
+                           {record.income > 0 ? (
+                             <ArrowUpRight className="w-3 h-3 text-leaf-green" />
+                           ) : (
+                             <ArrowDownRight className="w-3 h-3 text-red-500" />
+                           )}
+                           {record.activity_name}
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-right font-mono font-bold text-leaf-green">
+                        {record.income > 0 ? `+ ${formatCurrency(record.income)}` : '-'}
+                      </td>
+                      <td className="px-8 py-5 text-right font-mono font-bold text-red-500">
+                        {record.expense > 0 ? `- ${formatCurrency(record.expense)}` : '-'}
+                      </td>
+                      <td className="px-8 py-5 text-right font-mono font-bold text-soft-black bg-gray-50/30">
+                        {formatCurrency(record.runningBalance)}
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
-          <div className="p-8 bg-gray-50 flex items-center justify-between border-t border-light-gray mt-auto">
+          <div className="p-8 bg-gray-50 flex items-center justify-between border-t border-light-gray mt-auto flex-wrap gap-4">
              <div className="text-gray-400 text-xs font-medium">© {new Date().getFullYear()} Gugus 03 Melati · Transparansi Keuangan</div>
              <div className="flex items-center gap-4">
                <div className="flex items-center gap-2">
