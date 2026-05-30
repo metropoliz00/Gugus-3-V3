@@ -115,10 +115,30 @@ export default function PrintLaporanKeuangan({
         }
       `}</style>
 
+      {/* KOP - Double Border & Official Logos */}
+      <div className="flex items-center justify-between border-b-4 border-double border-black pb-2 mb-4 mt-0">
+        <img
+          src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png"
+          className="w-16 h-16 object-contain"
+          alt="Logo Kemendikdasmen"
+        />
+        <div className="text-center flex-1 px-4">
+          <h1 className="text-sm font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
+          <h2 className="text-base font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
+          <p className="text-[10px] font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
+          <p className="text-[9px] text-gray-500 italic mt-0.5">Alamat: UPT Sekolah Dasar se-Gugus 03, Kecamatan Jenu, Tuban</p>
+        </div>
+        <img
+          src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png"
+          className="w-16 h-16 object-contain"
+          alt="Logo KKG"
+        />
+      </div>
+
       {/* Document Header */}
       <div className="text-center mb-4 pt-0 mt-0">
-        <h3 className="text-base font-bold uppercase tracking-wider">
-          LAPORAN PERTANGGUNGJAWABAN KEUANGAN BULANAN
+        <h3 className="text-sm font-bold uppercase tracking-wider">
+          LAPORAN KEUANGAN
         </h3>
         <p className="text-xs font-semibold text-gray-700 uppercase tracking-widest mt-0.5">
           PERIODE: {formatPeriod}
@@ -227,7 +247,7 @@ export default function PrintLaporanKeuangan({
             <p className="font-bold">Mengetahui,</p>
             <p className="font-bold text-gray-800 font-heading">Ketua KKG Gugus 03 Melati</p>
             <div className="h-16" /> {/* Spacer for physical signature */}
-            <p className="font-bold underline uppercase">{ketuaKkg.name || "[Nama Ketua KKG]"}</p>
+            <p className="font-bold underline">{ketuaKkg.name || "[Nama Ketua KKG]"}</p>
             <p className="text-xs text-gray-650">
               NIP. {ketuaKkg.nip || "____________________"}
             </p>
@@ -239,7 +259,7 @@ export default function PrintLaporanKeuangan({
             </p>
             <p className="font-bold text-gray-808 font-heading">Bendahara KKG Gugus 03</p>
             <div className="h-16" /> {/* Spacer for physical signature */}
-            <p className="font-bold underline uppercase">{bendahara.name || "[Nama Bendahara]"}</p>
+            <p className="font-bold underline">{bendahara.name || "[Nama Bendahara]"}</p>
             <p className="text-xs text-gray-650">
               NIP/NIGB. {bendahara.nip || "____________________"}
             </p>
@@ -252,7 +272,7 @@ export default function PrintLaporanKeuangan({
             <p className="font-bold">Mengetahui,</p>
             <p className="font-bold text-gray-800">Ketua Gugus 03 Melati</p>
             <div className="h-16" /> {/* Spacer for physical signature */}
-            <p className="font-bold underline uppercase">{ketuaGugus.name || "[Nama Ketua Gugus]"}</p>
+            <p className="font-bold underline">{ketuaGugus.name || "[Nama Ketua Gugus]"}</p>
             <p className="text-xs text-gray-600">
               NIP. {ketuaGugus.nip || "____________________"}
             </p>
