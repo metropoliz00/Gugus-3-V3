@@ -114,28 +114,8 @@ export default function PrintLaporanKeuangan({
         }
       `}</style>
 
-      {/* KOP - Double Border & Official Logos */}
-      <div className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
-        <img
-          src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png"
-          className="w-20 h-20 object-contain"
-          alt="Logo Kemendikdasmen"
-        />
-        <div className="text-center flex-1 px-4">
-          <h1 className="text-lg font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
-          <h2 className="text-xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
-          <p className="text-xs font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
-          <p className="text-[10px] text-gray-500 italic mt-0.5">Alamat: UPT Sekolah Dasar se-Gugus 03, Kecamatan Jenu, Tuban</p>
-        </div>
-        <img
-          src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png"
-          className="w-20 h-20 object-contain"
-          alt="Logo KKG"
-        />
-      </div>
-
       {/* Document Header */}
-      <div className="text-center mb-6">
+      <div className="text-center mb-6 pt-4">
         <h3 className="text-lg font-bold uppercase tracking-wider">
           LAPORAN PERTANGGUNGJAWABAN KEUANGAN BULANAN
         </h3>
@@ -243,24 +223,23 @@ export default function PrintLaporanKeuangan({
         {/* Row 1: Left (Ketua KKG) and Right (Tempat, Tanggal + Bendahara) */}
         <div className="grid grid-cols-2 gap-12 text-center pb-8">
           <div>
-            <p className="font-semibold invisible">Mengetahui,</p>
             <p className="font-bold">Mengetahui,</p>
-            <p className="font-bold text-gray-800">Ketua KKG Gugus 03 Melati</p>
+            <p className="font-bold text-gray-800 font-heading">Ketua KKG Gugus 03 Melati</p>
             <div className="h-20" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{ketuaKkg.name || "[Nama Ketua KKG]"}</p>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-650">
               NIP. {ketuaKkg.nip || "____________________"}
             </p>
           </div>
 
           <div>
-            <p className="font-semibold text-gray-800">
+            <p className="font-semibold text-gray-805">
               {tempatLaporan}, {tanggalLaporan}
             </p>
-            <p className="font-bold">Bendahara KKG Gugus 03</p>
+            <p className="font-bold text-gray-808 font-heading">Bendahara KKG Gugus 03</p>
             <div className="h-20" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{bendahara.name || "[Nama Bendahara]"}</p>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-650">
               NIP/NIGB. {bendahara.nip || "____________________"}
             </p>
           </div>

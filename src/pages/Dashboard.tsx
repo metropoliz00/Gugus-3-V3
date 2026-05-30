@@ -8625,6 +8625,10 @@ function AdminFinanceManagement({ user }: { user: any }) {
   const [bendahara, setBendahara] = useState({ name: "", nip: "" });
   const [ketuaKkg, setKetuaKkg] = useState({ name: "", nip: "" });
   const [ketuaGugus, setKetuaGugus] = useState({ name: "", nip: "" });
+  const [mainFilterMonth, setMainFilterMonth] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
 
   const getJakartaDateString = () => {
     const d = new Date();
@@ -8781,6 +8785,19 @@ function AdminFinanceManagement({ user }: { user: any }) {
   );
   const balance = totalIncome - totalExpense;
 
+  const filteredRecords = mainFilterMonth === "all"
+    ? records
+    : records.filter(r => r.date && r.date.startsWith(mainFilterMonth));
+
+  const filteredIncome = filteredRecords.reduce(
+    (sum, r) => sum + (Number(r.income) || 0),
+    0,
+  );
+  const filteredExpense = filteredRecords.reduce(
+    (sum, r) => sum + (Number(r.expense) || 0),
+    0,
+  );
+
   const getAvailableMonths = () => {
     const months = new Set<string>();
     records.forEach(r => {
@@ -8925,15 +8942,36 @@ function AdminFinanceManagement({ user }: { user: any }) {
         </div>
 
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-            <h3 className="font-bold text-lg text-soft-black">Data Transaksi</h3>
+          <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <h3 className="font-bold text-lg text-soft-black">Data Transaksi</h3>
+              <select
+                value={mainFilterMonth}
+                onChange={(e) => setMainFilterMonth(e.target.value)}
+                className="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-500 rounded-xl px-3 py-1.5 outline-none focus:border-main-blue focus:bg-white transition-colors"
+              >
+                <option value="all">Semua Bulan</option>
+                {availableMonths.map(m => {
+                  const [yr, mn] = m.split("-");
+                  const monthNames = [
+                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                  ];
+                  return (
+                    <option key={m} value={m}>
+                      {monthNames[parseInt(mn, 10) - 1]} {yr}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
             <div className="flex gap-4">
               <div className="text-right">
                 <span className="text-[10px] font-bold text-gray-400 uppercase block">
                   Total Pemasukan
                 </span>
                 <span className="text-leaf-green font-bold">
-                  {new Intl.NumberFormat("id-ID").format(totalIncome)}
+                  {new Intl.NumberFormat("id-ID").format(filteredIncome)}
                 </span>
               </div>
               <div className="text-right">
@@ -8941,7 +8979,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
                   Total Pengeluaran
                 </span>
                 <span className="text-red-500 font-bold">
-                  {new Intl.NumberFormat("id-ID").format(totalExpense)}
+                  {new Intl.NumberFormat("id-ID").format(filteredExpense)}
                 </span>
               </div>
             </div>
@@ -8968,13 +9006,13 @@ function AdminFinanceManagement({ user }: { user: any }) {
                       Memuat data...
                     </td>
                   </tr>
-                ) : records.length === 0 ? (
+                ) : filteredRecords.length === 0 ? (
                   <tr>
                     <td
                       colSpan={6}
                       className="px-6 py-10 text-center text-gray-400 italic"
                     >
-                      Belum ada data transaksi.
+                      {mainFilterMonth === "all" ? "Belum ada data transaksi." : "Belum ada data transaksi untuk bulan ini."}
                     </td>
                   </tr>
                 ) : (
@@ -8989,7 +9027,12 @@ function AdminFinanceManagement({ user }: { user: any }) {
                         (Number(r.income) || 0) - (Number(r.expense) || 0);
                       return { ...r, runningBalance };
                     });
-                    return recordsWithBalance.reverse().map((record) => (
+                    
+                    const displayRecords = mainFilterMonth === "all"
+                      ? recordsWithBalance
+                      : recordsWithBalance.filter(r => r.date && r.date.startsWith(mainFilterMonth));
+
+                    return displayRecords.reverse().map((record) => (
                       <tr
                         key={record.id}
                         className="hover:bg-gray-50 transition-colors"
