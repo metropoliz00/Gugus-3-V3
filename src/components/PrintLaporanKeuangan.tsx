@@ -77,34 +77,35 @@ export default function PrintLaporanKeuangan({
         @media print {
           @page {
             size: A4 landscape;
-            margin: 10mm 15mm 10mm 15mm;
+            margin: 15mm 15mm 15mm 15mm;
           }
-          html, body {
+          html, body, #root {
             margin: 0 !important;
             padding: 0 !important;
             background: white !important;
+            height: auto !important;
+            min-height: 100% !important;
+            overflow: visible !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          /* Hide everything first */
-          body * {
-            visibility: hidden;
-            background-color: transparent !important;
+          /* Hide all page content during print securely */
+          body {
+            visibility: hidden !important;
           }
-          /* Show only print-area-keuangan and its descendants */
+          /* Show specifically the financial report print area and all its inner components */
           #print-area-keuangan, #print-area-keuangan * {
-            visibility: visible;
+            visibility: visible !important;
           }
           #print-area-keuangan {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+            position: relative !important;
+            display: block !important;
             width: 100% !important;
             max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
             box-shadow: none !important;
             border: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
             background: white !important;
             color: black !important;
           }
