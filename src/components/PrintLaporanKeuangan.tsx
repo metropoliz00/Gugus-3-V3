@@ -77,7 +77,7 @@ export default function PrintLaporanKeuangan({
         @media print {
           @page {
             size: A4 portrait;
-            margin: 15mm 15mm 15mm 15mm;
+            margin: 1cm 1cm 1cm 1cm;
           }
           html, body {
             margin: 0 !important;
@@ -115,48 +115,48 @@ export default function PrintLaporanKeuangan({
       `}</style>
 
       {/* Document Header */}
-      <div className="text-center mb-6 pt-4">
-        <h3 className="text-lg font-bold uppercase tracking-wider">
+      <div className="text-center mb-4 pt-1">
+        <h3 className="text-base font-bold uppercase tracking-wider">
           LAPORAN PERTANGGUNGJAWABAN KEUANGAN BULANAN
         </h3>
-        <p className="text-sm font-semibold text-gray-700 uppercase tracking-widest mt-1">
+        <p className="text-xs font-semibold text-gray-700 uppercase tracking-widest mt-0.5">
           PERIODE: {formatPeriod}
         </p>
       </div>
 
       {/* Transaction Table */}
-      <div className="overflow-x-auto mb-8">
-        <table className="w-full text-sm border-collapse border border-black text-left">
+      <div className="overflow-x-auto mb-6">
+        <table className="w-full text-xs border-collapse border border-black text-left">
           <thead>
-            <tr className="bg-gray-100 print:bg-gray-150 text-black border border-black font-bold uppercase text-[11px] tracking-wider">
-              <th className="border border-black px-3 py-2 text-center w-10">No</th>
-              <th className="border border-black px-3 py-2 text-center w-32">Tanggal</th>
-              <th className="border border-black px-4 py-2">Uraian / Keterangan Kegiatan</th>
-              <th className="border border-black px-3 py-2 text-right w-36">Pemasukan (Debit)</th>
-              <th className="border border-black px-3 py-2 text-right w-36">Pengeluaran (Kredit)</th>
-              <th className="border border-black px-3 py-2 text-right w-36">Saldo</th>
+            <tr className="bg-gray-100 print:bg-gray-150 text-black border border-black font-bold uppercase text-[10px] tracking-wider">
+              <th className="border border-black px-2.5 py-1.5 text-center w-8">No</th>
+              <th className="border border-black px-2.5 py-1.5 text-center w-28">Tanggal</th>
+              <th className="border border-black px-3 py-1.5">Uraian / Keterangan Kegiatan</th>
+              <th className="border border-black px-2.5 py-1.5 text-right w-32">Pemasukan (Debit)</th>
+              <th className="border border-black px-2.5 py-1.5 text-right w-32">Pengeluaran (Kredit)</th>
+              <th className="border border-black px-2.5 py-1.5 text-right w-32">Saldo</th>
             </tr>
           </thead>
           <tbody>
             {/* Saldo Awal Row */}
             <tr className="bg-gray-50/50 font-semibold text-gray-750">
-              <td className="border border-black px-3 py-2 text-center">-</td>
-              <td className="border border-black px-3 py-2 text-center">
+              <td className="border border-black px-2.5 py-1.5 text-center">-</td>
+              <td className="border border-black px-2.5 py-1.5 text-center text-[11px]">
                 {formatDateId(`${selectedMonth}-01`)}
               </td>
-              <td className="border border-black px-4 py-2 italic text-gray-600">
+              <td className="border border-black px-3 py-1.5 italic text-gray-650 text-[11px]">
                 Saldo Awal (Carryforward)
               </td>
-              <td className="border border-black px-3 py-2 text-right">-</td>
-              <td className="border border-black px-3 py-2 text-right">-</td>
-              <td className="border border-black px-3 py-2 text-right font-mono font-bold">
+              <td className="border border-black px-2.5 py-1.5 text-right">-</td>
+              <td className="border border-black px-2.5 py-1.5 text-right">-</td>
+              <td className="border border-black px-2.5 py-1.5 text-right font-mono font-bold">
                 {formatCurrency(saldoAwal)}
               </td>
             </tr>
 
             {currentMonthTransactions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="border border-black px-4 py-6 text-center text-gray-400 italic">
+                <td colSpan={6} className="border border-black px-3 py-4 text-center text-gray-405 italic">
                   Tidak ada transaksi di periode {formatPeriod}
                 </td>
               </tr>
@@ -165,20 +165,20 @@ export default function PrintLaporanKeuangan({
                 cumulativeBalance += (Number(r.income) || 0) - (Number(r.expense) || 0);
                 return (
                   <tr key={r.id} className="text-black">
-                    <td className="border border-black px-3 py-2 text-center">{index + 1}</td>
-                    <td className="border border-black px-3 py-2 text-center whitespace-nowrap">
+                    <td className="border border-black px-2.5 py-1.5 text-center">{index + 1}</td>
+                    <td className="border border-black px-2.5 py-1.5 text-center whitespace-nowrap text-[11px]">
                       {formatDateId(r.date)}
                     </td>
-                    <td className="border border-black px-4 py-2 font-medium">
+                    <td className="border border-black px-3 py-1.5 font-medium">
                       {r.activity_name}
                     </td>
-                    <td className="border border-black px-3 py-2 text-right font-mono">
+                    <td className="border border-black px-2.5 py-1.5 text-right font-mono">
                       {r.income > 0 ? formatCurrency(r.income) : "-"}
                     </td>
-                    <td className="border border-black px-3 py-2 text-right font-mono text-red-600 print:text-black">
+                    <td className="border border-black px-2.5 py-1.5 text-right font-mono text-red-600 print:text-black">
                       {r.expense > 0 ? formatCurrency(r.expense) : "-"}
                     </td>
-                    <td className="border border-black px-3 py-2 text-right font-mono font-bold">
+                    <td className="border border-black px-2.5 py-1.5 text-right font-mono font-bold">
                       {formatCurrency(cumulativeBalance)}
                     </td>
                   </tr>
@@ -188,29 +188,29 @@ export default function PrintLaporanKeuangan({
 
             {/* Total Row */}
             <tr className="bg-gray-100 print:bg-gray-200 font-bold border-t-2 border-black">
-              <td colSpan={3} className="border border-black px-4 py-2 text-right uppercase">
+              <td colSpan={3} className="border border-black px-3 py-1.5 text-right uppercase">
                 Jumlah Mutasi Bulanan
               </td>
-              <td className="border border-black px-3 py-2 text-right font-mono">
+              <td className="border border-black px-2.5 py-1.5 text-right font-mono">
                 {formatCurrency(currentMonthIncome)}
               </td>
-              <td className="border border-black px-3 py-2 text-right font-mono">
+              <td className="border border-black px-2.5 py-1.5 text-right font-mono">
                 {formatCurrency(currentMonthExpense)}
               </td>
-              <td className="border border-black px-3 py-2 text-right font-mono bg-gray-50/50">
+              <td className="border border-black px-2.5 py-1.5 text-right font-mono bg-gray-50/50">
                 -
               </td>
             </tr>
 
             {/* Saldo Akhir Summary Row */}
-            <tr className="bg-emerald-50/20 print:bg-gray-150 font-black border-t-2 border-black text-[13px]">
-              <td colSpan={3} className="border border-black px-4 py-3 text-right uppercase text-emerald-800 print:text-black">
+            <tr className="bg-emerald-50/10 print:bg-gray-150 font-black border-t-2 border-black text-[12px]">
+              <td colSpan={3} className="border border-black px-3 py-2 text-right uppercase text-emerald-800 print:text-black">
                 Saldo Akhir per {formatPeriod}
               </td>
-              <td colSpan={2} className="border border-black px-3 py-3 text-center text-gray-500 font-normal italic">
+              <td colSpan={2} className="border border-black px-2.5 py-2 text-center text-gray-505 font-normal italic text-[10px]">
                 (Saldo Awal + Pemasukan - Pengeluaran)
               </td>
-              <td className="border border-black px-3 py-3 text-right font-mono text-emerald-800 print:text-black">
+              <td className="border border-black px-2.5 py-2 text-right font-mono text-emerald-800 print:text-black">
                 {formatCurrency(saldoAkhir)}
               </td>
             </tr>
@@ -219,13 +219,13 @@ export default function PrintLaporanKeuangan({
       </div>
 
       {/* Signature Section - exact layout requested */}
-      <div className="mt-8 text-black text-sm">
+      <div className="mt-4 text-black text-xs">
         {/* Row 1: Left (Ketua KKG) and Right (Tempat, Tanggal + Bendahara) */}
-        <div className="grid grid-cols-2 gap-12 text-center pb-8">
+        <div className="grid grid-cols-2 gap-8 text-center pb-4">
           <div>
             <p className="font-bold">Mengetahui,</p>
             <p className="font-bold text-gray-800 font-heading">Ketua KKG Gugus 03 Melati</p>
-            <div className="h-20" /> {/* Spacer for physical signature */}
+            <div className="h-16" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{ketuaKkg.name || "[Nama Ketua KKG]"}</p>
             <p className="text-xs text-gray-650">
               NIP. {ketuaKkg.nip || "____________________"}
@@ -237,7 +237,7 @@ export default function PrintLaporanKeuangan({
               {tempatLaporan}, {tanggalLaporan}
             </p>
             <p className="font-bold text-gray-808 font-heading">Bendahara KKG Gugus 03</p>
-            <div className="h-20" /> {/* Spacer for physical signature */}
+            <div className="h-16" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{bendahara.name || "[Nama Bendahara]"}</p>
             <p className="text-xs text-gray-650">
               NIP/NIGB. {bendahara.nip || "____________________"}
@@ -246,11 +246,11 @@ export default function PrintLaporanKeuangan({
         </div>
 
         {/* Row 2: Tengah bawah (Mengetahui, Ketua Gugus) */}
-        <div className="flex justify-center text-center mt-4">
+        <div className="flex justify-center text-center mt-2">
           <div className="w-1/2">
             <p className="font-bold">Mengetahui,</p>
             <p className="font-bold text-gray-800">Ketua Gugus 03 Melati</p>
-            <div className="h-20" /> {/* Spacer for physical signature */}
+            <div className="h-16" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{ketuaGugus.name || "[Nama Ketua Gugus]"}</p>
             <p className="text-xs text-gray-600">
               NIP. {ketuaGugus.nip || "____________________"}
