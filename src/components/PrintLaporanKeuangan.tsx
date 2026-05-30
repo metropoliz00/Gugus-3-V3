@@ -74,52 +74,42 @@ export default function PrintLaporanKeuangan({
       id="print-area-keuangan"
     >
       <style>{`
-        @media screen {
-          #print-area-keuangan {
-            display: none !important;
-          }
-        }
         @media print {
           @page {
-            size: A4 landscape;
+            size: A4 portrait;
             margin: 15mm 15mm 15mm 15mm;
           }
-          html, body, #root {
+          html, body {
             margin: 0 !important;
             padding: 0 !important;
             background: white !important;
-            height: auto !important;
-            min-height: 100% !important;
-            overflow: visible !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
-          /* Hide all page content during print securely */
-          body {
-            visibility: hidden !important;
+          /* Hide everything first */
+          body * {
+            visibility: hidden;
+            background-color: transparent !important;
           }
-          /* Show specifically the financial report print area and all its inner components */
+          /* Show only print-area-keuangan and its descendants */
           #print-area-keuangan, #print-area-keuangan * {
-            visibility: visible !important;
+            visibility: visible;
           }
           #print-area-keuangan {
-            position: relative !important;
-            display: block !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
             box-shadow: none !important;
             border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
             background: white !important;
             color: black !important;
           }
           .no-print {
             display: none !important;
-          }
-          .avoid-break {
-            page-break-inside: avoid !important;
-            break-inside: avoid !important;
           }
         }
       `}</style>
@@ -135,6 +125,7 @@ export default function PrintLaporanKeuangan({
           <h1 className="text-lg font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
           <h2 className="text-xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
           <p className="text-xs font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
+          <p className="text-[10px] text-gray-500 italic mt-0.5">Alamat: UPT Sekolah Dasar se-Gugus 03, Kecamatan Jenu, Tuban</p>
         </div>
         <img
           src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png"
@@ -158,12 +149,12 @@ export default function PrintLaporanKeuangan({
         <table className="w-full text-sm border-collapse border border-black text-left">
           <thead>
             <tr className="bg-gray-100 print:bg-gray-150 text-black border border-black font-bold uppercase text-[11px] tracking-wider">
-              <th className="border border-black px-3 py-2 text-center" style={{ width: "5%" }}>No</th>
-              <th className="border border-black px-3 py-2 text-center" style={{ width: "12%" }}>Tanggal</th>
-              <th className="border border-black px-4 py-2" style={{ width: "47%" }}>Uraian / Keterangan Kegiatan</th>
-              <th className="border border-black px-3 py-2 text-right" style={{ width: "12%" }}>Pemasukan (Debit)</th>
-              <th className="border border-black px-3 py-2 text-right" style={{ width: "12%" }}>Pengeluaran (Kredit)</th>
-              <th className="border border-black px-3 py-2 text-right" style={{ width: "12%" }}>Saldo</th>
+              <th className="border border-black px-3 py-2 text-center w-10">No</th>
+              <th className="border border-black px-3 py-2 text-center w-32">Tanggal</th>
+              <th className="border border-black px-4 py-2">Uraian / Keterangan Kegiatan</th>
+              <th className="border border-black px-3 py-2 text-right w-36">Pemasukan (Debit)</th>
+              <th className="border border-black px-3 py-2 text-right w-36">Pengeluaran (Kredit)</th>
+              <th className="border border-black px-3 py-2 text-right w-36">Saldo</th>
             </tr>
           </thead>
           <tbody>
@@ -248,14 +239,14 @@ export default function PrintLaporanKeuangan({
       </div>
 
       {/* Signature Section - exact layout requested */}
-      <div className="mt-6 text-black text-sm avoid-break break-inside-avoid">
+      <div className="mt-8 text-black text-sm">
         {/* Row 1: Left (Ketua KKG) and Right (Tempat, Tanggal + Bendahara) */}
-        <div className="grid grid-cols-2 gap-8 text-center pb-4">
+        <div className="grid grid-cols-2 gap-12 text-center pb-8">
           <div>
             <p className="font-semibold invisible">Mengetahui,</p>
             <p className="font-bold">Mengetahui,</p>
             <p className="font-bold text-gray-800">Ketua KKG Gugus 03 Melati</p>
-            <div className="h-16" /> {/* Spacer for physical signature */}
+            <div className="h-20" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{ketuaKkg.name || "[Nama Ketua KKG]"}</p>
             <p className="text-xs text-gray-600">
               NIP. {ketuaKkg.nip || "____________________"}
@@ -267,7 +258,7 @@ export default function PrintLaporanKeuangan({
               {tempatLaporan}, {tanggalLaporan}
             </p>
             <p className="font-bold">Bendahara KKG Gugus 03</p>
-            <div className="h-16" /> {/* Spacer for physical signature */}
+            <div className="h-20" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{bendahara.name || "[Nama Bendahara]"}</p>
             <p className="text-xs text-gray-600">
               NIP/NIGB. {bendahara.nip || "____________________"}
@@ -276,11 +267,11 @@ export default function PrintLaporanKeuangan({
         </div>
 
         {/* Row 2: Tengah bawah (Mengetahui, Ketua Gugus) */}
-        <div className="flex justify-center text-center mt-2">
+        <div className="flex justify-center text-center mt-4">
           <div className="w-1/2">
             <p className="font-bold">Mengetahui,</p>
             <p className="font-bold text-gray-800">Ketua Gugus 03 Melati</p>
-            <div className="h-16" /> {/* Spacer for physical signature */}
+            <div className="h-20" /> {/* Spacer for physical signature */}
             <p className="font-bold underline uppercase">{ketuaGugus.name || "[Nama Ketua Gugus]"}</p>
             <p className="text-xs text-gray-600">
               NIP. {ketuaGugus.nip || "____________________"}

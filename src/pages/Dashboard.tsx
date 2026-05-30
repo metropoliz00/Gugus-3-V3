@@ -8617,13 +8617,6 @@ function AdminFinanceManagement({ user }: { user: any }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Dashboard state to filter transactions by month
-  const currentMonthYear = () => {
-    const today = new Date();
-    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-  };
-  const [dashboardFilterMonth, setDashboardFilterMonth] = useState<string>(currentMonthYear());
-
   // Print Keuangan States
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -8788,21 +8781,6 @@ function AdminFinanceManagement({ user }: { user: any }) {
   );
   const balance = totalIncome - totalExpense;
 
-  // Filtered values for the dashboard
-  const dashboardFilteredRecords = records.filter((r) => {
-    if (dashboardFilterMonth === "all") return true;
-    return r.date && r.date.startsWith(dashboardFilterMonth);
-  });
-
-  const dashboardFilteredIncome = dashboardFilteredRecords.reduce(
-    (sum, r) => sum + (Number(r.income) || 0),
-    0
-  );
-  const dashboardFilteredExpense = dashboardFilteredRecords.reduce(
-    (sum, r) => sum + (Number(r.expense) || 0),
-    0
-  );
-
   const getAvailableMonths = () => {
     const months = new Set<string>();
     records.forEach(r => {
@@ -8947,47 +8925,23 @@ function AdminFinanceManagement({ user }: { user: any }) {
         </div>
 
         <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              <h3 className="font-bold text-lg text-soft-black">Data Transaksi</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 font-bold">Periode:</span>
-                <select
-                  value={dashboardFilterMonth}
-                  onChange={(e) => setDashboardFilterMonth(e.target.value)}
-                  className="bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-xs font-bold px-3 py-1.5 rounded-xl outline-none focus:ring-2 focus:ring-main-blue/20 transition-all cursor-pointer text-soft-black"
-                >
-                  <option value="all">Semua Bulan</option>
-                  {availableMonths.map(month => {
-                    const [yr, mn] = month.split("-");
-                    const monthNames = [
-                      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-                    ];
-                    return (
-                      <option key={month} value={month}>
-                        {monthNames[parseInt(mn, 10) - 1] || mn} {yr}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-6">
+          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h3 className="font-bold text-lg text-soft-black">Data Transaksi</h3>
+            <div className="flex gap-4">
               <div className="text-right">
                 <span className="text-[10px] font-bold text-gray-400 uppercase block">
-                  Pemasukan Bulanan
+                  Total Pemasukan
                 </span>
-                <span className="text-leaf-green font-extrabold text-sm font-mono">
-                  Rp {new Intl.NumberFormat("id-ID").format(dashboardFilteredIncome)}
+                <span className="text-leaf-green font-bold">
+                  {new Intl.NumberFormat("id-ID").format(totalIncome)}
                 </span>
               </div>
               <div className="text-right">
                 <span className="text-[10px] font-bold text-gray-400 uppercase block">
-                  Pengeluaran Bulanan
+                  Total Pengeluaran
                 </span>
-                <span className="text-red-500 font-extrabold text-sm font-mono">
-                  Rp {new Intl.NumberFormat("id-ID").format(dashboardFilteredExpense)}
+                <span className="text-red-500 font-bold">
+                  {new Intl.NumberFormat("id-ID").format(totalExpense)}
                 </span>
               </div>
             </div>
@@ -9035,26 +8989,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
                         (Number(r.income) || 0) - (Number(r.expense) || 0);
                       return { ...r, runningBalance };
                     });
-
-                    const filtered = recordsWithBalance.filter((r) => {
-                      if (dashboardFilterMonth === "all") return true;
-                      return r.date && r.date.startsWith(dashboardFilterMonth);
-                    });
-
-                    if (filtered.length === 0) {
-                      return (
-                        <tr>
-                          <td
-                            colSpan={6}
-                            className="px-6 py-10 text-center text-gray-400 italic"
-                          >
-                            Tidak ada data transaksi pada periode bulan yang dipilih.
-                          </td>
-                        </tr>
-                      );
-                    }
-
-                    return filtered.reverse().map((record) => (
+                    return recordsWithBalance.reverse().map((record) => (
                       <tr
                         key={record.id}
                         className="hover:bg-gray-50 transition-colors"
@@ -9291,16 +9226,18 @@ function AdminFinanceManagement({ user }: { user: any }) {
         </div>
       )}
 
-      {/* Printable Area - Controlled by media queries style of component */}
-      <PrintLaporanKeuangan
-        selectedMonth={selectedMonth}
-        records={records}
-        tempatLaporan={tempatLaporan}
-        tanggalLaporan={tanggalLaporan}
-        bendahara={bendahara}
-        ketuaKkg={ketuaKkg}
-        ketuaGugus={ketuaGugus}
-      />
+      {/* Printable Area - Hidden on screen, visible during window.print() */}
+      <div className="hidden print:block">
+        <PrintLaporanKeuangan
+          selectedMonth={selectedMonth}
+          records={records}
+          tempatLaporan={tempatLaporan}
+          tanggalLaporan={tanggalLaporan}
+          bendahara={bendahara}
+          ketuaKkg={ketuaKkg}
+          ketuaGugus={ketuaGugus}
+        />
+      </div>
     </>
   );
 }
