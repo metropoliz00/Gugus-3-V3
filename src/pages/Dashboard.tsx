@@ -96,6 +96,7 @@ import AdminCertificateEditor, {
 import { SharingPractices } from "../components/SharingPractices";
 import MainCalendar from "../components/MainCalendar";
 import PrintDaftarHadir from "../components/PrintDaftarHadir";
+import PrintLaporanKeuangan from "../components/PrintLaporanKeuangan";
 
 import * as XLSX from "xlsx";
 import Webcam from "react-webcam";
@@ -8615,6 +8616,16 @@ function AdminFinanceManagement({ user }: { user: any }) {
   const [records, setRecords] = useState<FinanceTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Print Keuangan States
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [tempatLaporan, setTempatLaporan] = useState("Tuban");
+  const [tanggalLaporan, setTanggalLaporan] = useState("");
+  const [bendahara, setBendahara] = useState({ name: "", nip: "" });
+  const [ketuaKkg, setKetuaKkg] = useState({ name: "", nip: "" });
+  const [ketuaGugus, setKetuaGugus] = useState({ name: "", nip: "" });
+
   const getJakartaDateString = () => {
     const d = new Date();
     const options: Intl.DateTimeFormatOptions = { timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit' };
@@ -8622,6 +8633,57 @@ function AdminFinanceManagement({ user }: { user: any }) {
     const z: any = {};
     parts.forEach(p => z[p.type] = p.value);
     return `${z.year}-${z.month}-${z.day}`;
+  };
+
+  const loadSignatures = async () => {
+    try {
+      const todayString = new Date().toLocaleDateString("id-ID", {
+        timeZone: 'Asia/Jakarta',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      setTanggalLaporan(todayString);
+
+      const { data: kkgData } = await supabase
+        .from("org_kkg")
+        .select("name, role, nip");
+
+      if (kkgData && kkgData.length > 0) {
+        const ketua = kkgData.find(item => item.role && item.role.toLowerCase().includes("ketua"));
+        if (ketua) {
+          setKetuaKkg({ name: ketua.name || "Drs. Budi Santoso, M.Pd", nip: ketua.nip || "" });
+        } else {
+          setKetuaKkg({ name: "Drs. Budi Santoso, M.Pd", nip: "" });
+        }
+        const bend = kkgData.find(item => item.role && item.role.toLowerCase().includes("bendahara"));
+        if (bend) {
+          setBendahara({ name: bend.name || "Rina Kusuma, S.Pd", nip: bend.nip || "" });
+        } else {
+          setBendahara({ name: "Rina Kusuma, S.Pd", nip: "" });
+        }
+      } else {
+        setKetuaKkg({ name: "Drs. Budi Santoso, M.Pd", nip: "" });
+        setBendahara({ name: "Rina Kusuma, S.Pd", nip: "" });
+      }
+
+      const { data: gugusData } = await supabase
+        .from("org_gugus")
+        .select("name, role, nip");
+
+      if (gugusData && gugusData.length > 0) {
+        const ketuaG = gugusData.find(item => item.role && item.role.toLowerCase().includes("ketua"));
+        if (ketuaG) {
+          setKetuaGugus({ name: ketuaG.name || "Sulastri, S.Pd", nip: ketuaG.nip || "" });
+        } else {
+          setKetuaGugus({ name: "Sulastri, S.Pd", nip: "" });
+        }
+      } else {
+        setKetuaGugus({ name: "Sulastri, S.Pd", nip: "" });
+      }
+    } catch (e) {
+      console.error("Error loading signatures:", e);
+    }
   };
 
   const [formData, setFormData] = useState({
@@ -8647,7 +8709,18 @@ function AdminFinanceManagement({ user }: { user: any }) {
 
   useEffect(() => {
     fetchRecords();
+    loadSignatures();
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    setSelectedMonth(`${year}-${month}`);
   }, []);
+
+  useEffect(() => {
+    if (isPrintModalOpen) {
+      loadSignatures();
+    }
+  }, [isPrintModalOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -8708,234 +8781,464 @@ function AdminFinanceManagement({ user }: { user: any }) {
   );
   const balance = totalIncome - totalExpense;
 
+  const getAvailableMonths = () => {
+    const months = new Set<string>();
+    records.forEach(r => {
+      if (r.date && r.date.length >= 7) {
+        months.add(r.date.substring(0, 7));
+      }
+    });
+    if (months.size === 0) {
+      const today = new Date();
+      months.add(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`);
+    }
+    return Array.from(months).sort().reverse();
+  };
+
+  const availableMonths = getAvailableMonths();
+
   return (
-    <div className="space-y-10">
-      {/* Keuangan Clean Header */}
-      <div className="bg-white p-8 rounded-[2rem] border-l-8 border-leaf-green shadow-sm mb-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
-        <div className="flex items-center gap-8">
-          <div className="w-16 h-16 bg-leaf-green/10 rounded-2xl flex items-center justify-center text-leaf-green border border-leaf-green/10 shrink-0">
-            <Wallet className="w-8 h-8" />
-          </div>
-          <div>
-            <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-leaf-green/10 rounded-full border border-leaf-green/5 mb-2">
-              <div className="w-1 h-1 rounded-full bg-leaf-green animate-pulse" />
-              <span className="text-[10px] font-bold text-leaf-green uppercase tracking-widest font-heading">Akuntansi Gugus</span>
+    <>
+      <div className="space-y-10 print:hidden">
+        {/* Keuangan Clean Header */}
+        <div className="bg-white p-8 rounded-[2rem] border-l-8 border-leaf-green shadow-sm mb-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+          <div className="flex items-center gap-8">
+            <div className="w-16 h-16 bg-leaf-green/10 rounded-2xl flex items-center justify-center text-leaf-green border border-leaf-green/10 shrink-0">
+              <Wallet className="w-8 h-8" />
             </div>
-            <h2 className="text-2xl font-bold font-heading text-soft-black">
-              Kelola Keuangan
-            </h2>
-            <p className="text-sm text-gray-500">
-              Manajemen arus kas, pemasukan, dan pengeluaran operasional GUGUS 03.
-            </p>
+            <div>
+              <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-leaf-green/10 rounded-full border border-leaf-green/5 mb-2">
+                <div className="w-1 h-1 rounded-full bg-leaf-green animate-pulse" />
+                <span className="text-[10px] font-bold text-leaf-green uppercase tracking-widest font-heading">Akuntansi Gugus</span>
+              </div>
+              <h2 className="text-2xl font-bold font-heading text-soft-black">
+                Kelola Keuangan
+              </h2>
+              <p className="text-sm text-gray-500">
+                Manajemen arus kas, pemasukan, dan pengeluaran operasional GUGUS 03.
+              </p>
+            </div>
           </div>
-        </div>
-        
-        <div className="text-right bg-gray-50 px-6 py-4 rounded-2xl border border-gray-100 shadow-inner">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Saldo Saat Ini
-          </p>
-          <h3 className="text-2xl font-bold text-soft-black truncate">
-            {new Intl.NumberFormat("id-ID", {
-              style: "currency",
-              currency: "IDR",
-              minimumFractionDigits: 0,
-            }).format(balance)}
-          </h3>
-        </div>
-      </div>
-
-      <div className="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-main-orange/20 shadow-xl shadow-blue-500/5">
-
-        <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end"
-        >
-          <div className="md:col-span-1 space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              Tanggal
-            </label>
-            <input
-              type="date"
-              className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-main-blue transition-colors"
-              value={formData.date}
-              onChange={(e) =>
-                setFormData({ ...formData, date: e.target.value })
-              }
-            />
-          </div>
-          <div className="md:col-span-1 space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              Keterangan / Kegiatan
-            </label>
-            <input
-              type="text"
-              placeholder="Contoh: Iuran Bulanan"
-              className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-main-blue transition-colors"
-              value={formData.activity_name}
-              onChange={(e) =>
-                setFormData({ ...formData, activity_name: e.target.value })
-              }
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-leaf-green">
-              Pemasukan (Rp)
-            </label>
-            <input
-              type="number"
-              className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-leaf-green transition-colors font-mono font-bold text-leaf-green"
-              value={formData.income}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  income: Number(e.target.value),
-                  expense: 0,
-                })
-              }
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-red-500">
-              Pengeluaran (Rp)
-            </label>
-            <input
-              type="number"
-              className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-red-500 transition-colors font-mono font-bold text-red-500"
-              value={formData.expense}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  expense: Number(e.target.value),
-                  income: 0,
-                })
-              }
-            />
-          </div>
-          <div className="md:col-span-4 flex justify-end">
+          
+          <div className="flex flex-wrap items-center gap-4">
             <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-main-blue text-white rounded-xl font-bold flex items-center gap-2 hover:bg-dark-blue transition-all shadow-lg shadow-main-blue/20"
+              onClick={() => setIsPrintModalOpen(true)}
+              className="px-6 py-4 bg-main-blue hover:bg-dark-blue text-white rounded-2xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-main-blue/15 hover:shadow-main-blue/25 hover:-translate-y-0.5"
             >
-              <PlusCircle className="w-5 h-5" />
-              {isSubmitting ? "Menyimpan..." : "Tambah Catatan"}
+              <Printer className="w-5 h-5" />
+              <span>Cetak LPJ Bulanan</span>
             </button>
+
+            <div className="text-right bg-gray-50 px-6 py-4 rounded-2xl border border-gray-100 shadow-inner">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+                Saldo Saat Ini
+              </p>
+              <h3 className="text-2xl font-bold text-soft-black truncate min-w-[130px]">
+                {new Intl.NumberFormat("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                  minimumFractionDigits: 0,
+                }).format(balance)}
+              </h3>
+            </div>
           </div>
-        </form>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur-xl p-8 rounded-[2rem] border border-main-orange/20 shadow-xl shadow-blue-500/5">
+
+          <form
+            onSubmit={handleSubmit}
+            className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end"
+          >
+            <div className="md:col-span-1 space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                Tanggal
+              </label>
+              <input
+                type="date"
+                className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-main-blue transition-colors"
+                value={formData.date}
+                onChange={(e) =>
+                  setFormData({ ...formData, date: e.target.value })
+                }
+              />
+            </div>
+            <div className="md:col-span-1 space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                Keterangan / Kegiatan
+              </label>
+              <input
+                type="text"
+                placeholder="Contoh: Iuran Bulanan"
+                className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-main-blue transition-colors"
+                value={formData.activity_name}
+                onChange={(e) =>
+                  setFormData({ ...formData, activity_name: e.target.value })
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-leaf-green">
+                Pemasukan (Rp)
+              </label>
+              <input
+                type="number"
+                className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-leaf-green transition-colors font-mono font-bold text-leaf-green"
+                value={formData.income}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    income: Number(e.target.value),
+                    expense: 0,
+                  })
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-red-500">
+                Pengeluaran (Rp)
+              </label>
+              <input
+                type="number"
+                className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-red-500 transition-colors font-mono font-bold text-red-500"
+                value={formData.expense}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    expense: Number(e.target.value),
+                    income: 0,
+                  })
+                }
+              />
+            </div>
+            <div className="md:col-span-4 flex justify-end">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-main-blue text-white rounded-xl font-bold flex items-center gap-2 hover:bg-dark-blue transition-all shadow-lg shadow-main-blue/20"
+              >
+                <PlusCircle className="w-5 h-5" />
+                {isSubmitting ? "Menyimpan..." : "Tambah Catatan"}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5 overflow-hidden">
+          <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+            <h3 className="font-bold text-lg text-soft-black">Data Transaksi</h3>
+            <div className="flex gap-4">
+              <div className="text-right">
+                <span className="text-[10px] font-bold text-gray-400 uppercase block">
+                  Total Pemasukan
+                </span>
+                <span className="text-leaf-green font-bold">
+                  {new Intl.NumberFormat("id-ID").format(totalIncome)}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-bold text-gray-400 uppercase block">
+                  Total Pengeluaran
+                </span>
+                <span className="text-red-500 font-bold">
+                  {new Intl.NumberFormat("id-ID").format(totalExpense)}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  <th className="px-6 py-4">Tanggal</th>
+                  <th className="px-6 py-4">Keterangan</th>
+                  <th className="px-6 py-4 text-right">Pemasukan</th>
+                  <th className="px-6 py-4 text-right">Pengeluaran</th>
+                  <th className="px-6 py-4 text-right">Saldo</th>
+                  <th className="px-6 py-4 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {isLoading ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-10 text-center text-gray-400 animate-pulse"
+                    >
+                      Memuat data...
+                    </td>
+                  </tr>
+                ) : records.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-6 py-10 text-center text-gray-400 italic"
+                    >
+                      Belum ada data transaksi.
+                    </td>
+                  </tr>
+                ) : (
+                  (() => {
+                    let runningBalance = 0;
+                    const sortedForBalance = [...records].sort(
+                      (a, b) =>
+                        new Date(a.date).getTime() - new Date(b.date).getTime(),
+                    );
+                    const recordsWithBalance = sortedForBalance.map((r) => {
+                      runningBalance +=
+                        (Number(r.income) || 0) - (Number(r.expense) || 0);
+                      return { ...r, runningBalance };
+                    });
+                    return recordsWithBalance.reverse().map((record) => (
+                      <tr
+                        key={record.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 text-sm text-gray-600">
+                          {new Date(record.date).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </td>
+                        <td className="px-6 py-4 font-bold text-soft-black">
+                          {record.activity_name}
+                        </td>
+                        <td className="px-6 py-4 text-right font-mono font-bold text-leaf-green">
+                          {record.income > 0
+                            ? `+ ${new Intl.NumberFormat("id-ID").format(record.income)}`
+                            : "-"}
+                        </td>
+                        <td className="px-6 py-4 text-right font-mono font-bold text-red-500">
+                          {record.expense > 0
+                            ? `- ${new Intl.NumberFormat("id-ID").format(record.expense)}`
+                            : "-"}
+                        </td>
+                        <td className="px-6 py-4 text-right font-mono font-bold text-gray-400">
+                          {new Intl.NumberFormat("id-ID").format(
+                            record.runningBalance,
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <button
+                            onClick={() => handleDelete(record.id)}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ));
+                  })()
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
-      <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-main-orange/20 shadow-xl shadow-blue-500/5 overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="font-bold text-lg text-soft-black">Data Transaksi</h3>
-          <div className="flex gap-4">
-            <div className="text-right">
-              <span className="text-[10px] font-bold text-gray-400 uppercase block">
-                Total Pemasukan
-              </span>
-              <span className="text-leaf-green font-bold">
-                {new Intl.NumberFormat("id-ID").format(totalIncome)}
-              </span>
+      {/* Print Configurator Modal */}
+      {isPrintModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[999] flex items-center justify-center p-4 no-print">
+          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in-50 zoom-in-95 duration-200 border border-gray-100 flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-main-blue/10 rounded-xl flex items-center justify-center text-main-blue border border-main-blue/5">
+                  <Printer className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-extrabold text-soft-black font-heading leading-tight">Cetak Laporan Keuangan</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">Konfigurasi format laporan bulanan & penandatangan</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsPrintModalOpen(false)}
+                className="p-2 text-gray-400 hover:text-soft-black hover:bg-gray-150 rounded-full transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div className="text-right">
-              <span className="text-[10px] font-bold text-gray-400 uppercase block">
-                Total Pengeluaran
-              </span>
-              <span className="text-red-500 font-bold">
-                {new Intl.NumberFormat("id-ID").format(totalExpense)}
-              </span>
+
+            {/* Modal Body */}
+            <div className="p-8 overflow-y-auto space-y-6">
+              
+              {/* Periode Laporan */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-wider font-extrabold text-gray-400 block">Pilih Bulan Laporan</label>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="w-full bg-white border border-gray-200 hover:border-gray-300 px-4 py-2.5 rounded-xl outline-none focus:border-main-blue transition-colors text-sm font-semibold"
+                  >
+                    {availableMonths.map(month => {
+                      const [yr, mn] = month.split("-");
+                      const monthNames = [
+                        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                      ];
+                      return (
+                        <option key={month} value={month}>
+                          {monthNames[parseInt(mn, 10) - 1]} {yr}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider font-extrabold text-gray-400 block">Tempat Dokumen</label>
+                    <input 
+                      type="text"
+                      className="w-full bg-white border border-gray-200 hover:border-gray-300 px-4 py-2.5 rounded-xl outline-none focus:border-main-blue text-sm transition-colors"
+                      value={tempatLaporan}
+                      onChange={(e) => setTempatLaporan(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase tracking-wider font-extrabold text-gray-400 block">Tanggal Dokumen</label>
+                    <input 
+                      type="text"
+                      className="w-full bg-white border border-gray-200 hover:border-gray-300 px-4 py-2.5 rounded-xl outline-none focus:border-main-blue text-sm transition-colors"
+                      value={tanggalLaporan}
+                      onChange={(e) => setTanggalLaporan(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sebelah Kanan & Kiri Signatures */}
+              <div className="border-t border-gray-100 pt-6">
+                <h4 className="text-xs uppercase tracking-widest font-black text-main-blue mb-4">Konfigurasi Penandatangan</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Bendahara (Kanan) */}
+                  <div className="space-y-3 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-main-blue" />
+                      <span className="text-[11px] uppercase tracking-widest font-black text-gray-500">Bendahara</span>
+                    </div>
+                    <div className="space-y-2">
+                      <input 
+                        type="text"
+                        placeholder="Nama Bendahara"
+                        className="w-full bg-white border border-gray-200 px-3 py-1.5 rounded-lg outline-none focus:border-main-blue text-xs"
+                        value={bendahara.name}
+                        onChange={(e) => setBendahara({ ...bendahara, name: e.target.value })}
+                      />
+                      <input 
+                        type="text"
+                        placeholder="NIP/NIGB Bendahara"
+                        className="w-full bg-white border border-gray-200 px-3 py-1.5 rounded-lg outline-none focus:border-main-blue text-xs font-mono"
+                        value={bendahara.nip}
+                        onChange={(e) => setBendahara({ ...bendahara, nip: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Ketua KKG (Kiri) */}
+                  <div className="space-y-3 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-amber-500" />
+                      <span className="text-[11px] uppercase tracking-widest font-black text-gray-500">Ketua KKG</span>
+                    </div>
+                    <div className="space-y-2">
+                      <input 
+                        type="text"
+                        placeholder="Nama Ketua KKG"
+                        className="w-full bg-white border border-gray-200 px-3 py-1.5 rounded-lg outline-none focus:border-main-blue text-xs"
+                        value={ketuaKkg.name}
+                        onChange={(e) => setKetuaKkg({ ...ketuaKkg, name: e.target.value })}
+                      />
+                      <input 
+                        type="text"
+                        placeholder="NIP Ketua KKG"
+                        className="w-full bg-white border border-gray-200 px-3 py-1.5 rounded-lg outline-none focus:border-main-blue text-xs font-mono"
+                        value={ketuaKkg.nip}
+                        onChange={(e) => setKetuaKkg({ ...ketuaKkg, nip: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Ketua Gugus (Tengah Bawah) */}
+                  <div className="space-y-3 bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-leaf-green" />
+                      <span className="text-[11px] uppercase tracking-widest font-black text-gray-500">Ketua Gugus</span>
+                    </div>
+                    <div className="space-y-2">
+                      <input 
+                        type="text"
+                        placeholder="Nama Ketua Gugus"
+                        className="w-full bg-white border border-gray-200 px-3 py-1.5 rounded-lg outline-none focus:border-main-blue text-xs"
+                        value={ketuaGugus.name}
+                        onChange={(e) => setKetuaGugus({ ...ketuaGugus, name: e.target.value })}
+                      />
+                      <input 
+                        type="text"
+                        placeholder="NIP Ketua Gugus"
+                        className="w-full bg-white border border-gray-200 px-3 py-1.5 rounded-lg outline-none focus:border-main-blue text-xs font-mono"
+                        value={ketuaGugus.nip}
+                        onChange={(e) => setKetuaGugus({ ...ketuaGugus, nip: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Data Preview Info */}
+              <div className="bg-blue-50/30 p-5 rounded-3xl border border-main-blue/10 flex items-start gap-4">
+                <Info className="w-5 h-5 text-main-blue mt-0.5 shrink-0" />
+                <div className="text-xs text-blue-900 leading-relaxed">
+                  <span className="font-bold block text-sm text-blue-950 mb-1 font-heading">Format Cetak Laporan Keuangan per Bulan</span>
+                  Sistem akan menyusun laporan keuangan bulanan secara kronologis (dari tanggal terlama ke terbaru) dengan menghitung **Saldo Awal otomatis**, jumlah mutasi debit/kredit bulanan, serta **Saldo Akhir periode**. Ukuran dokumen diatur ke **A4 Portrait** secara otomatis.
+                </div>
+              </div>
+
             </div>
+
+            {/* Modal Footer */}
+            <div className="p-8 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+              <button
+                onClick={() => setIsPrintModalOpen(false)}
+                className="px-6 py-3 bg-white hover:bg-gray-100 border border-gray-200 hover:border-gray-300 text-gray-500 font-bold rounded-xl transition-all text-sm"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  setIsPrintModalOpen(false);
+                  setTimeout(() => {
+                    window.print();
+                  }, 150);
+                }}
+                className="px-8 py-3 bg-main-blue hover:bg-dark-blue text-white font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-main-blue/20 text-sm hover:-translate-y-0.5"
+              >
+                <Printer className="w-5 h-5" />
+                <span>Mulai Cetak</span>
+              </button>
+            </div>
+
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                <th className="px-6 py-4">Tanggal</th>
-                <th className="px-6 py-4">Keterangan</th>
-                <th className="px-6 py-4 text-right">Pemasukan</th>
-                <th className="px-6 py-4 text-right">Pengeluaran</th>
-                <th className="px-6 py-4 text-right">Saldo</th>
-                <th className="px-6 py-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {isLoading ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-6 py-10 text-center text-gray-400 animate-pulse"
-                  >
-                    Memuat data...
-                  </td>
-                </tr>
-              ) : records.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-6 py-10 text-center text-gray-400 italic"
-                  >
-                    Belum ada data transaksi.
-                  </td>
-                </tr>
-              ) : (
-                (() => {
-                  let runningBalance = 0;
-                  const sortedForBalance = [...records].sort(
-                    (a, b) =>
-                      new Date(a.date).getTime() - new Date(b.date).getTime(),
-                  );
-                  const recordsWithBalance = sortedForBalance.map((r) => {
-                    runningBalance +=
-                      (Number(r.income) || 0) - (Number(r.expense) || 0);
-                    return { ...r, runningBalance };
-                  });
-                  return recordsWithBalance.reverse().map((record) => (
-                    <tr
-                      key={record.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {new Date(record.date).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </td>
-                      <td className="px-6 py-4 font-bold text-soft-black">
-                        {record.activity_name}
-                      </td>
-                      <td className="px-6 py-4 text-right font-mono font-bold text-leaf-green">
-                        {record.income > 0
-                          ? `+ ${new Intl.NumberFormat("id-ID").format(record.income)}`
-                          : "-"}
-                      </td>
-                      <td className="px-6 py-4 text-right font-mono font-bold text-red-500">
-                        {record.expense > 0
-                          ? `- ${new Intl.NumberFormat("id-ID").format(record.expense)}`
-                          : "-"}
-                      </td>
-                      <td className="px-6 py-4 text-right font-mono font-bold text-gray-400">
-                        {new Intl.NumberFormat("id-ID").format(
-                          record.runningBalance,
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() => handleDelete(record.id)}
-                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ));
-                })()
-              )}
-            </tbody>
-          </table>
-        </div>
+      )}
+
+      {/* Printable Area - Hidden on screen, visible during window.print() */}
+      <div className="hidden print:block">
+        <PrintLaporanKeuangan
+          selectedMonth={selectedMonth}
+          records={records}
+          tempatLaporan={tempatLaporan}
+          tanggalLaporan={tanggalLaporan}
+          bendahara={bendahara}
+          ketuaKkg={ketuaKkg}
+          ketuaGugus={ketuaGugus}
+        />
       </div>
-    </div>
+    </>
   );
 }
 
