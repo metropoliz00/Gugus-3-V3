@@ -2440,7 +2440,7 @@ function AdminOverview({ user }: { user: any }) {
             supabase
               .from("events")
               .select("*")
-              .order("date_start", { ascending: true }),
+              .order("date_start", { ascending: false }),
             supabase
               .from("user_profiles")
               .select("*", { count: "exact", head: true })
@@ -2900,7 +2900,7 @@ function TamuOverview({ user }: { user: any }) {
         const { data: evData } = await supabase
           .from("events")
           .select("*")
-          .order("date_start", { ascending: true });
+          .order("date_start", { ascending: false });
         if (evData) setEvents(evData);
       } catch (e) {
         console.error(e);
@@ -3055,7 +3055,7 @@ function GuruOverview({ user }: { user: any }) {
         const { data: evData } = await supabase
           .from("events")
           .select("*")
-          .order("date_start", { ascending: true })
+          .order("date_start", { ascending: false })
           .limit(5);
         if (evData) setEvents(evData);
 
@@ -4467,7 +4467,7 @@ function AdminAgendaForm({ user }: { user: any }) {
         const { data } = await supabase
           .from("events")
           .select("*")
-          .order("date_start", { ascending: true });
+          .order("date_start", { ascending: false });
         setEvents(data || []);
       } catch (err) {
         console.error("Error fetching events:", err);
@@ -4571,7 +4571,7 @@ function AdminAgendaForm({ user }: { user: any }) {
       const { data: updatedData } = await supabase
         .from("events")
         .select("*")
-        .order("date_start", { ascending: true });
+        .order("date_start", { ascending: false });
 
       if (updatedData) {
         setEvents(updatedData);
@@ -4598,7 +4598,7 @@ function AdminAgendaForm({ user }: { user: any }) {
       const { data: updatedData } = await supabase
         .from("events")
         .select("*")
-        .order("date_start", { ascending: true });
+        .order("date_start", { ascending: false });
       if (updatedData) {
         setEvents(updatedData);
       }

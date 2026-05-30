@@ -83,7 +83,7 @@ export default function KegiatanPage() {
     
     async function fetchEvents() {
         if (!supabase) return;
-        const { data } = await supabase.from('events').select('*').order('date_start', { ascending: true });
+        const { data } = await supabase.from('events').select('*').order('date_start', { ascending: false });
         setKegiatan(data || []);
         setIsLoading(false);
     }

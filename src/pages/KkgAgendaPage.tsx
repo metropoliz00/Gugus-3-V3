@@ -91,7 +91,7 @@ export default function KkgAgendaPage() {
       const { data, error } = await supabase
         .from("events")
         .select("*")
-        .order("date_start", { ascending: true });
+        .order("date_start", { ascending: false });
       
       if (error) throw error;
       setEvents(data || []);

@@ -87,7 +87,7 @@ export default function HomeAgenda() {
           const { data, error } = await supabase
             .from("events")
             .select("*")
-            .order("date_start", { ascending: true })
+            .order("date_start", { ascending: false })
             .limit(5);
           
           if (error) throw error;
