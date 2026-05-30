@@ -150,10 +150,10 @@ export default function PrintLaporanKeuangan({
             <tr className="bg-gray-100 print:bg-gray-150 text-black border border-black font-bold uppercase text-[10px] tracking-wider">
               <th className="border border-black px-2.5 py-1.5 text-center w-8">No</th>
               <th className="border border-black px-2.5 py-1.5 text-center w-28">Tanggal</th>
-              <th className="border border-black px-3 py-1.5">Uraian / Keterangan Kegiatan</th>
-              <th className="border border-black px-2.5 py-1.5 text-right w-32">Pemasukan (Debit)</th>
-              <th className="border border-black px-2.5 py-1.5 text-right w-32">Pengeluaran (Kredit)</th>
-              <th className="border border-black px-2.5 py-1.5 text-right w-32">Saldo</th>
+              <th className="border border-black px-3 py-1.5 text-center">Uraian / Keterangan Kegiatan</th>
+              <th className="border border-black px-2.5 py-1.5 text-center w-32">Pemasukan (Debit)</th>
+              <th className="border border-black px-2.5 py-1.5 text-center w-32">Pengeluaran (Kredit)</th>
+              <th className="border border-black px-2.5 py-1.5 text-center w-32">Saldo</th>
             </tr>
           </thead>
           <tbody>
@@ -255,7 +255,7 @@ export default function PrintLaporanKeuangan({
             <p className="font-semibold text-gray-805">
               {tempatLaporan}, {tanggalLaporan}
             </p>
-            <p className="font-bold text-gray-808 font-heading">Bendahara KKG Gugus 03</p>
+            <p className="font-bold text-gray-808 font-heading">Bendahara KKG Gugus 03 Melati</p>
             <div className="h-16" /> {/* Spacer for physical signature */}
             <p className="font-bold underline">{bendahara.name || "[Nama Bendahara]"}</p>
             <p className="text-xs text-gray-650">
