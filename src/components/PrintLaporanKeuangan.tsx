@@ -105,6 +105,7 @@ export default function PrintLaporanKeuangan({
             border: none !important;
             padding: 0 !important;
             margin: 0 !important;
+            margin-top: -0.6cm !important;
             background: white !important;
             color: black !important;
           }
@@ -115,7 +116,7 @@ export default function PrintLaporanKeuangan({
       `}</style>
 
       {/* Document Header */}
-      <div className="text-center mb-4 pt-1">
+      <div className="text-center mb-4 pt-0 mt-0">
         <h3 className="text-base font-bold uppercase tracking-wider">
           LAPORAN PERTANGGUNGJAWABAN KEUANGAN BULANAN
         </h3>
