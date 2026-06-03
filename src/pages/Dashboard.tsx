@@ -32,6 +32,7 @@ import {
   Bell,
   Shield,
   ChevronRight,
+  ChevronLeft,
   BarChart3,
   GraduationCap,
   Play,
@@ -8617,6 +8618,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
   const [records, setRecords] = useState<FinanceTransaction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Print Keuangan States
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
@@ -8818,6 +8820,28 @@ function AdminFinanceManagement({ user }: { user: any }) {
     0,
   );
 
+  let runningBalance = 0;
+  const sortedForBalance = [...records].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+  const recordsWithBalance = sortedForBalance.map((r) => {
+    runningBalance += (Number(r.income) || 0) - (Number(r.expense) || 0);
+    return { ...r, runningBalance };
+  });
+
+  const displayRecords = mainFilterMonth === "all"
+    ? recordsWithBalance
+    : recordsWithBalance.filter(r => r.date && r.date.startsWith(mainFilterMonth));
+
+  const displayRecordsOrdered = [...displayRecords].reverse();
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(displayRecordsOrdered.length / itemsPerPage) || 1;
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedRecords = displayRecordsOrdered.slice(
+    (safeCurrentPage - 1) * itemsPerPage,
+    safeCurrentPage * itemsPerPage
+  );
+
   const getAvailableMonths = () => {
     const months = new Set<string>();
     records.forEach(r => {
@@ -8980,7 +9004,10 @@ function AdminFinanceManagement({ user }: { user: any }) {
               <h3 className="font-bold text-lg text-soft-black">Data Transaksi</h3>
               <select
                 value={mainFilterMonth}
-                onChange={(e) => setMainFilterMonth(e.target.value)}
+                onChange={(e) => {
+                  setMainFilterMonth(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-500 rounded-xl px-3 py-1.5 outline-none focus:border-main-blue focus:bg-white transition-colors"
               >
                 <option value="all">Semua Bulan</option>
@@ -9049,87 +9076,115 @@ function AdminFinanceManagement({ user }: { user: any }) {
                     </td>
                   </tr>
                 ) : (
-                  (() => {
-                    let runningBalance = 0;
-                    const sortedForBalance = [...records].sort(
-                      (a, b) =>
-                        new Date(a.date).getTime() - new Date(b.date).getTime(),
-                    );
-                    const recordsWithBalance = sortedForBalance.map((r) => {
-                      runningBalance +=
-                        (Number(r.income) || 0) - (Number(r.expense) || 0);
-                      return { ...r, runningBalance };
-                    });
-                    
-                    const displayRecords = mainFilterMonth === "all"
-                      ? recordsWithBalance
-                      : recordsWithBalance.filter(r => r.date && r.date.startsWith(mainFilterMonth));
-
-                    return displayRecords.reverse().map((record) => (
-                      <tr
-                        key={record.id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {new Date(record.date).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                          })}
-                        </td>
-                        <td className="px-6 py-4 font-bold text-soft-black">
-                          {record.activity_name}
-                        </td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-leaf-green">
-                          {record.income > 0
-                            ? `+ Rp. ${new Intl.NumberFormat("id-ID").format(record.income)}`
-                            : "-"}
-                        </td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-red-500">
-                          {record.expense > 0
-                            ? `- Rp. ${new Intl.NumberFormat("id-ID").format(record.expense)}`
-                            : "-"}
-                        </td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-gray-400">
-                          {formatCurrency(record.runningBalance)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center justify-center gap-1">
-                            <button
-                              onClick={() => {
-                                setEditId(record.id);
-                                setFormData({
-                                  activity_name: record.activity_name || "",
-                                  income: Number(record.income) || 0,
-                                  expense: Number(record.expense) || 0,
-                                  date: record.date ? record.date.substring(0, 10) : getJakartaDateString(),
-                                });
-                                const formEl = document.querySelector("form");
-                                if (formEl) {
-                                  formEl.scrollIntoView({ behavior: "smooth", block: "center" });
-                                }
-                              }}
-                              className="p-2 text-gray-400 hover:text-main-blue hover:bg-blue-50 rounded-lg transition-all"
-                              title="Ubah"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(record.id)}
-                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                              title="Hapus"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ));
-                  })()
+                  paginatedRecords.map((record) => (
+                    <tr
+                      key={record.id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(record.date).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </td>
+                      <td className="px-6 py-4 font-bold text-soft-black">
+                        {record.activity_name}
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono font-bold text-leaf-green">
+                        {record.income > 0
+                          ? `+ Rp. ${new Intl.NumberFormat("id-ID").format(record.income)}`
+                          : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono font-bold text-red-500">
+                        {record.expense > 0
+                          ? `- Rp. ${new Intl.NumberFormat("id-ID").format(record.expense)}`
+                          : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono font-bold text-gray-400">
+                        {formatCurrency(record.runningBalance)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => {
+                              setEditId(record.id);
+                              setFormData({
+                                activity_name: record.activity_name || "",
+                                income: Number(record.income) || 0,
+                                expense: Number(record.expense) || 0,
+                                date: record.date ? record.date.substring(0, 10) : getJakartaDateString(),
+                              });
+                              const formEl = document.querySelector("form");
+                              if (formEl) {
+                                formEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                              }
+                            }}
+                            className="p-2 text-gray-400 hover:text-main-blue hover:bg-blue-50 rounded-lg transition-all"
+                            title="Ubah"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(record.id)}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/35 gap-4">
+              <div className="text-xs font-semibold text-gray-500">
+                Menampilkan <span className="text-soft-black font-bold">{Math.min((safeCurrentPage - 1) * itemsPerPage + 1, displayRecordsOrdered.length)}</span> - <span className="text-soft-black font-bold">{Math.min(safeCurrentPage * itemsPerPage, displayRecordsOrdered.length)}</span> dari <span className="text-soft-black font-bold">{displayRecordsOrdered.length}</span> transaksi
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={safeCurrentPage === 1}
+                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:text-soft-black hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  title="Sebelumnya"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-1.5 max-w-[180px] overflow-x-auto sm:max-w-none py-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-7 h-7 text-xs font-bold rounded-lg transition-all shrink-0 ${
+                        safeCurrentPage === page
+                          ? "bg-main-blue text-white shadow-sm"
+                          : "text-gray-500 hover:text-soft-black hover:bg-gray-100"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={safeCurrentPage === totalPages}
+                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:text-soft-black hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  title="Selanjutnya"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
