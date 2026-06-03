@@ -164,7 +164,7 @@ export default function PrintKartuTamu({ account, onClose }: PrintKartuTamuProps
                 Lembar Akses Login Tamu
               </h2>
               <p className="text-xs font-mono text-gray-500 mt-1">
-                Nomor: {year}/KKG-G03.Melati/TAMU/{account.id.substring(0, 5).toUpperCase()}
+                Nomor: AKSES/{account.id.substring(0, 5).toUpperCase()}/KKG-G03/TAMU/{year}
               </p>
             </div>
 
