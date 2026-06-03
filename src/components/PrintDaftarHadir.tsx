@@ -78,20 +78,20 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
       `}</style>
 
       {/* KOP - Visible on screen and in print */}
-      <div id="print-kop-surat" className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0">
+      <div id="print-kop-surat" className="flex items-center justify-between border-b-4 border-double border-black pb-4 mb-6 mt-0 w-full box-border">
         <img 
           src="https://www.image2url.com/r2/default/images/1778851343355-1a6a088b-6728-48ec-b530-6f16d372b2ee.png" 
-          className="w-24 h-24 object-contain" 
+          className="w-20 h-20 sm:w-24 sm:h-24 object-contain shrink-0 print:w-16 print:h-16" 
           alt="Logo Kemendikdasmen" 
         />
-        <div className="text-center flex-1 px-4">
-          <h1 className="text-xl font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
-          <h2 className="text-2xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
-          <p className="text-sm font-bold font-serif">KECAMATAN JENU KABUPATEN TUBAN</p>
+        <div className="text-center flex-1 px-4 min-w-0">
+          <h1 className="text-lg sm:text-xl font-bold font-serif leading-tight print:text-base">KELOMPOK KERJA GURU ( KKG )</h1>
+          <h2 className="text-xl sm:text-2xl font-black font-serif leading-tight print:text-lg">GUGUS 03 “MELATI”</h2>
+          <p className="text-xs sm:text-sm font-bold font-serif print:text-xs">KECAMATAN JENU KABUPATEN TUBAN</p>
         </div>
         <img 
           src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png" 
-          className="w-24 h-24 object-contain" 
+          className="w-20 h-20 sm:w-24 sm:h-24 object-contain shrink-0 print:w-16 print:h-16" 
           alt="Logo KKG" 
         />
       </div>
@@ -104,16 +104,16 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
         </p>
       </div>
 
-      <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs">
+      <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs table-auto">
         <thead>
           <tr className="bg-gray-100 print:bg-gray-100 font-bold uppercase tracking-wider">
             <th className="border-2 border-black px-2 py-3 w-[4%] text-center whitespace-nowrap">No</th>
-            <th className="border-2 border-black px-3 py-2 text-center whitespace-nowrap">Nama</th>
-            <th className="border-2 border-black px-3 py-2 text-center whitespace-nowrap">NIP</th>
-            <th className="border-2 border-black px-3 py-2 text-center whitespace-nowrap">Jabatan</th>
-            <th className="border-2 border-black px-3 py-2 text-center whitespace-nowrap">Instansi</th>
-            <th className="border-2 border-black px-2 py-2 text-center whitespace-nowrap">Kehadiran</th>
-            <th className="border-2 border-black px-2 py-2 text-center w-[12%] whitespace-nowrap">Tanda Tangan</th>
+            <th className="border-2 border-black px-3 py-2 text-center whitespace-nowrap w-[30%]">Nama</th>
+            <th className="border-2 border-black px-3 py-2 text-center w-[15%]">NIP</th>
+            <th className="border-2 border-black px-3 py-2 text-center w-[15%]">Jabatan</th>
+            <th className="border-2 border-black px-3 py-2 text-center w-[22%]">Instansi</th>
+            <th className="border-2 border-black px-2 py-2 text-center whitespace-nowrap w-[8%]">Kehadiran</th>
+            <th className="border-2 border-black px-2 py-2 text-center w-[10%] whitespace-nowrap">Tanda Tangan</th>
           </tr>
         </thead>
         <tbody>
@@ -131,19 +131,19 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
                   <td className="border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight whitespace-nowrap text-[11px] sm:text-xs">
                     {formatName(nama)}
                   </td>
-                  <td className="border-2 border-black px-3 py-2.5 font-mono leading-tight whitespace-nowrap text-[10px] sm:text-xs">
+                  <td className="border-2 border-black px-3 py-2.5 font-mono leading-tight whitespace-normal break-all text-[10px] sm:text-xs text-center">
                     {profile?.nip || "-"}
                   </td>
-                  <td className="border-2 border-black px-3 py-2.5 leading-tight whitespace-nowrap text-[10px] sm:text-xs">
+                  <td className="border-2 border-black px-3 py-2.5 leading-tight whitespace-normal break-words text-[10px] sm:text-xs">
                     {profile?.jabatan || "-"}
                   </td>
-                  <td className="border-2 border-black px-3 py-2.5 leading-tight whitespace-nowrap text-[10px] sm:text-xs">
+                  <td className="border-2 border-black px-3 py-2.5 leading-tight whitespace-normal break-words text-[10px] sm:text-xs">
                     {profile?.sekolah || "-"}
                   </td>
                   <td className="border-2 border-black px-2 py-2.5 text-center">
                     <span className="px-2 py-1 bg-emerald-50 text-emerald-700 print:bg-emerald-50 print:print-bg-emerald rounded-full font-bold uppercase text-[8px]">Hadir</span>
                   </td>
-                  <td className="border-2 border-black px-2 py-2.5 text-left h-12 relative min-w-[90px]">
+                  <td className="border-2 border-black px-2 py-2.5 text-left h-12 relative min-w-[80px]">
                     <span className="text-[10px] text-gray-400 font-mono absolute left-2 top-2">{idx + 1}.</span>
                   </td>
                 </tr>
