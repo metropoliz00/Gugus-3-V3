@@ -150,7 +150,6 @@ export default function PrintKartuTamu({ account, onClose }: PrintKartuTamuProps
                 <h1 className="text-lg font-bold font-serif leading-tight">KELOMPOK KERJA GURU ( KKG )</h1>
                 <h2 className="text-2xl font-black font-serif leading-tight">GUGUS 03 “MELATI”</h2>
                 <h3 className="text-sm font-bold font-serif leading-tight">KECAMATAN JENU KABUPATEN TUBAN</h3>
-                <p className="text-[10px] text-gray-500 font-sans mt-0.5">Sekretariat: UPT SDN Remen 1 Jenu KKG Melati, Jenu - Tuban</p>
               </div>
               <img
                 src="https://www.image2url.com/r2/default/images/1778156189287-e4930eb4-3c36-4ace-8420-ca8908132e66.png"
@@ -162,7 +161,7 @@ export default function PrintKartuTamu({ account, onClose }: PrintKartuTamuProps
             {/* Document Title */}
             <div className="text-center mb-6">
               <h2 className="text-lg font-bold uppercase underline decoration-2 underline-offset-4 tracking-wide font-sans">
-                Surat Mandat Akses Login Tamu
+                Lembar Akses Login Tamu
               </h2>
               <p className="text-xs font-mono text-gray-500 mt-1">
                 Nomor: {year}/KKG-G03.Melati/TAMU/{account.id.substring(0, 5).toUpperCase()}
@@ -253,25 +252,6 @@ export default function PrintKartuTamu({ account, onClose }: PrintKartuTamuProps
                     </div>
                   </div>
                 </div>
-
-                <div className="w-full sm:w-44 text-center sm:border-l sm:border-gray-200 sm:pl-6 print:border-l-black/20">
-                  <div className="border border-gray-200 rounded-lg p-2 bg-white inline-block mb-1.5 print:border-black/25">
-                    {/* Retro Mock QR Code layout */}
-                    <div className="grid grid-cols-3 gap-1 w-20 h-20 bg-gray-50 p-1">
-                      <div className="bg-soft-black rounded-sm"></div>
-                      <div className="bg-soft-black rounded-sm"></div>
-                      <div className="bg-soft-black rounded-sm"></div>
-                      <div className="bg-soft-black rounded-sm"></div>
-                      <div className="bg-gray-200 rounded-sm"></div>
-                      <div className="bg-soft-black rounded-sm"></div>
-                      <div className="bg-soft-black rounded-sm"></div>
-                      <div className="bg-soft-black rounded-sm"></div>
-                      <div className="bg-soft-black rounded-sm"></div>
-                    </div>
-                  </div>
-                  <span className="block text-[8px] uppercase tracking-wider text-gray-400 font-black">Scan QR</span>
-                  <span className="text-[10px] text-gray-400 leading-none">Untuk Akses Cepat</span>
-                </div>
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-100 print:border-t-black/15 text-[10px] text-gray-500 font-medium leading-relaxed">
@@ -282,7 +262,7 @@ export default function PrintKartuTamu({ account, onClose }: PrintKartuTamuProps
 
             <div className="text-sm text-soft-black leading-relaxed mt-6">
               <p>
-                Demikian surat mandat sekaligus kartu akses ini diterbitkan secara sah oleh Kelompok Kerja Guru Gugus 03 Melati untuk digunakan sebagaimana mestinya.
+                Demikian lembar akses sekaligus kartu login ini diterbitkan secara sah oleh Kelompok Kerja Guru Gugus 03 Melati untuk digunakan sebagaimana mestinya.
               </p>
             </div>
           </div>
