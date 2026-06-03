@@ -99,6 +99,7 @@ import { SharingPractices } from "../components/SharingPractices";
 import MainCalendar from "../components/MainCalendar";
 import PrintDaftarHadir from "../components/PrintDaftarHadir";
 import PrintLaporanKeuangan from "../components/PrintLaporanKeuangan";
+import PrintKartuTamu from "../components/PrintKartuTamu";
 
 import * as XLSX from "xlsx";
 import Webcam from "react-webcam";
@@ -9582,6 +9583,7 @@ function AdminGuestAccountsManager() {
     pangkat_golongan: "",
     peran: "Tamu Undangan",
   });
+  const [selectedPrintAccount, setSelectedPrintAccount] = useState<any | null>(null);
 
   useEffect(() => {
     fetchAccounts();
@@ -9746,6 +9748,13 @@ function AdminGuestAccountsManager() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => setSelectedPrintAccount(acc)} 
+                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title="Cetak Kartu Login"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
                         <button onClick={() => handleEdit(acc)} className="p-2 text-main-blue hover:bg-main-blue/10 rounded-lg transition-colors">
                           <PenTool className="w-4 h-4" />
                         </button>
@@ -9872,6 +9881,12 @@ function AdminGuestAccountsManager() {
             </form>
           </motion.div>
         </div>
+      )}
+      {selectedPrintAccount && (
+        <PrintKartuTamu
+          account={selectedPrintAccount}
+          onClose={() => setSelectedPrintAccount(null)}
+        />
       )}
     </div>
   );
