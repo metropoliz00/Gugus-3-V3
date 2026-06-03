@@ -41,13 +41,25 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
+          /* Reset ancestor styling to prevent pushing down or cropping */
+          body *:has(#print-area) {
+            margin: 0 !important;
+            padding: 0 !important;
+            position: static !important;
+            display: block !important;
+            height: auto !important;
+            width: auto !important;
+            box-shadow: none !important;
+            border: none !important;
+            background: transparent !important;
+          }
           /* Hide all elements during print */
           body * {
             visibility: hidden;
           }
           /* Show only the print area and its contents */
           #print-area, #print-area * {
-            visibility: visible;
+            visibility: visible !important;
           }
           #print-area {
             position: absolute !important;
@@ -57,17 +69,18 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
             max-width: 100% !important;
             box-shadow: none !important;
             border: none !important;
-            padding: 1.5rem !important;
+            padding: 0 !important;
             margin: 0 !important;
             background: white !important;
             color: black !important;
+            display: block !important;
           }
-          .no-print {
+          .no-print, .print\:hidden {
             display: none !important;
           }
           #print-kop-surat {
-            margin-top: -5px !important;
-            padding-top: -5px !important;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
           }
           /* Background colors for print */
           .print-bg-emerald {
