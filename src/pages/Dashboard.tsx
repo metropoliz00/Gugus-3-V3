@@ -8640,6 +8640,14 @@ function AdminFinanceManagement({ user }: { user: any }) {
     return `${z.year}-${z.month}-${z.day}`;
   };
 
+  const formatCurrency = (val: number) => {
+    const isNegative = val < 0;
+    const formatted = new Intl.NumberFormat("id-ID", {
+      minimumFractionDigits: 0,
+    }).format(Math.abs(val));
+    return `${isNegative ? "-" : ""}Rp. ${formatted}`;
+  };
+
   const loadSignatures = async () => {
     try {
       const todayString = new Date().toLocaleDateString("id-ID", {
@@ -8863,11 +8871,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
                 Saldo Saat Ini
               </p>
               <h3 className="text-2xl font-bold text-soft-black truncate min-w-[130px]">
-                {new Intl.NumberFormat("id-ID", {
-                  style: "currency",
-                  currency: "IDR",
-                  minimumFractionDigits: 0,
-                }).format(balance)}
+                {formatCurrency(balance)}
               </h3>
             </div>
           </div>
@@ -9000,7 +9004,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
                   Total Pemasukan
                 </span>
                 <span className="text-leaf-green font-bold">
-                  {new Intl.NumberFormat("id-ID").format(filteredIncome)}
+                  {formatCurrency(filteredIncome)}
                 </span>
               </div>
               <div className="text-right">
@@ -9008,7 +9012,7 @@ function AdminFinanceManagement({ user }: { user: any }) {
                   Total Pengeluaran
                 </span>
                 <span className="text-red-500 font-bold">
-                  {new Intl.NumberFormat("id-ID").format(filteredExpense)}
+                  {formatCurrency(filteredExpense)}
                 </span>
               </div>
             </div>
@@ -9078,18 +9082,16 @@ function AdminFinanceManagement({ user }: { user: any }) {
                         </td>
                         <td className="px-6 py-4 text-right font-mono font-bold text-leaf-green">
                           {record.income > 0
-                            ? `+ ${new Intl.NumberFormat("id-ID").format(record.income)}`
+                            ? `+ Rp. ${new Intl.NumberFormat("id-ID").format(record.income)}`
                             : "-"}
                         </td>
                         <td className="px-6 py-4 text-right font-mono font-bold text-red-500">
                           {record.expense > 0
-                            ? `- ${new Intl.NumberFormat("id-ID").format(record.expense)}`
+                            ? `- Rp. ${new Intl.NumberFormat("id-ID").format(record.expense)}`
                             : "-"}
                         </td>
                         <td className="px-6 py-4 text-right font-mono font-bold text-gray-400">
-                          {new Intl.NumberFormat("id-ID").format(
-                            record.runningBalance,
-                          )}
+                          {formatCurrency(record.runningBalance)}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-1">

@@ -50,11 +50,12 @@ export default function PrintLaporanKeuangan({
   const saldoAkhir = saldoAwal + currentMonthIncome - currentMonthExpense;
 
   const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
+    const isNegative = val < 0;
+    const absValue = Math.abs(val);
+    const formatted = new Intl.NumberFormat("id-ID", {
       minimumFractionDigits: 0,
-    }).format(val);
+    }).format(absValue);
+    return `${isNegative ? "-" : ""}Rp. ${formatted}`;
   };
 
   const formatDateId = (dateStr: string) => {
