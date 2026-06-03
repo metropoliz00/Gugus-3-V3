@@ -13118,17 +13118,19 @@ function AdminGuestBookView() {
              <thead className="bg-gray-50 border-b border-gray-100">
                <tr>
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tgl Kunjungan</th>
-                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama / NIP</th>
-                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instansi / Jabatan</th>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama</th>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">NIP</th>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instansi</th>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Jabatan / Golongan</th>
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tujuan</th>
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Aksi</th>
                </tr>
              </thead>
              <tbody className="divide-y divide-gray-100">
                {loading ? (
-                 <tr><td colSpan={5} className="px-6 py-10 text-center text-gray-400 italic">Memuat arsip...</td></tr>
+                 <tr><td colSpan={7} className="px-6 py-10 text-center text-gray-400 italic">Memuat arsip...</td></tr>
                ) : entries.length === 0 ? (
-                 <tr><td colSpan={5} className="px-6 py-10 text-center text-gray-400 italic">Belum ada kunjungan tamu.</td></tr>
+                 <tr><td colSpan={7} className="px-6 py-10 text-center text-gray-400 italic">Belum ada kunjungan tamu...</td></tr>
                ) : (
                  entries.map((entry) => (
                    <tr key={entry.id} className="hover:bg-gray-50/50 transition-colors">
@@ -13142,12 +13144,19 @@ function AdminGuestBookView() {
                         <div className="flex flex-col">
                            <span className="text-sm font-bold text-soft-black">{entry.guest_name}</span>
                            <span className="text-[10px] text-indigo-600 font-bold">{entry.guest_peran || "Tamu"}</span>
-                           <span className="text-[10px] text-gray-400">NIP: {entry.guest_nip || "-"}</span>
+                        </div>
+                     </td>
+                     <td className="px-6 py-4 text-xs font-mono font-medium text-gray-600">
+                        {entry.guest_nip || "-"}
+                     </td>
+
+                     <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                           <span className="text-sm font-medium text-gray-600">{entry.guest_institution || "-"}</span>
                         </div>
                      </td>
                      <td className="px-6 py-4">
                         <div className="flex flex-col">
-                           <span className="text-sm font-medium text-gray-600">{entry.guest_institution}</span>
                            <span className="text-[10px] text-main-blue font-bold uppercase tracking-widest">{entry.guest_position}</span>
                            <span className="text-[10px] text-gray-400 italic">{entry.guest_pangkat}</span>
                         </div>
