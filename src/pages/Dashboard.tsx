@@ -13123,14 +13123,15 @@ function AdminGuestBookView() {
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instansi</th>
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Jabatan / Golongan</th>
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tujuan</th>
+                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Testimoni</th>
                  <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Aksi</th>
                </tr>
              </thead>
              <tbody className="divide-y divide-gray-100">
                {loading ? (
-                 <tr><td colSpan={7} className="px-6 py-10 text-center text-gray-400 italic">Memuat arsip...</td></tr>
+                 <tr><td colSpan={8} className="px-6 py-10 text-center text-gray-400 italic">Memuat arsip...</td></tr>
                ) : entries.length === 0 ? (
-                 <tr><td colSpan={7} className="px-6 py-10 text-center text-gray-400 italic">Belum ada kunjungan tamu...</td></tr>
+                 <tr><td colSpan={8} className="px-6 py-10 text-center text-gray-400 italic">Belum ada kunjungan tamu...</td></tr>
                ) : (
                  entries.map((entry) => (
                    <tr key={entry.id} className="hover:bg-gray-50/50 transition-colors">
@@ -13164,7 +13165,11 @@ function AdminGuestBookView() {
                      <td className="px-6 py-4">
                         <div className="flex flex-col max-w-xs">
                            <span className="text-sm font-bold text-soft-black">{entry.purpose}</span>
-                           <span className="text-xs text-gray-500 line-clamp-1 italic">{entry.notes || "-"}</span>
+                        </div>
+                     </td>
+                     <td className="px-6 py-4">
+                        <div className="flex flex-col max-w-xs">
+                           <span className="text-xs text-gray-500 italic break-words">{entry.notes || "-"}</span>
                         </div>
                      </td>
                      <td className="px-6 py-4 text-right">
