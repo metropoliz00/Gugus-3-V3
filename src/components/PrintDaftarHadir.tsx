@@ -32,7 +32,7 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
         @media print {
           @page {
             size: A4 portrait;
-            margin: 2mm 15mm 5mm 15mm;
+            margin: 5mm;
           }
           html, body {
             margin: 0 !important;
@@ -57,7 +57,7 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
             max-width: 100% !important;
             box-shadow: none !important;
             border: none !important;
-            padding: 1.5rem !important;
+            padding: 0 !important;
             margin: 0 !important;
             background: white !important;
             color: black !important;
@@ -107,13 +107,13 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
       <table className="w-full border-collapse border-2 border-black text-[11px] sm:text-xs">
         <thead>
           <tr className="bg-gray-100 print:bg-gray-100 font-bold uppercase tracking-wider">
-            <th className="border-2 border-black px-2 py-3 w-[4%] text-center">No</th>
-            <th className="border-2 border-black px-3 py-2 text-center w-[30%] whitespace-normal">Nama</th>
-            <th className="border-2 border-black px-3 py-2 text-center w-[18%]">NIP</th>
-            <th className="border-2 border-black px-3 py-2 text-center w-[12%]">Jabatan</th>
-            <th className="border-2 border-black px-3 py-2 text-center w-[16%] whitespace-normal">Instansi</th>
-            <th className="border-2 border-black px-2 py-2 text-center w-[8%]">Kehadiran</th>
-            <th className="border-2 border-black px-2 py-2 text-center w-[12%]">Tanda Tangan</th>
+            <th className="border-2 border-black px-2 py-3 w-[4%] text-center whitespace-nowrap">No</th>
+            <th className="border-2 border-black px-3 py-2 text-center whitespace-nowrap">Nama</th>
+            <th className="border-2 border-black px-3 py-2 text-center whitespace-nowrap">NIP</th>
+            <th className="border-2 border-black px-3 py-2 text-center whitespace-nowrap">Jabatan</th>
+            <th className="border-2 border-black px-3 py-2 text-center whitespace-nowrap">Instansi</th>
+            <th className="border-2 border-black px-2 py-2 text-center whitespace-nowrap">Kehadiran</th>
+            <th className="border-2 border-black px-2 py-2 text-center w-[12%] whitespace-nowrap">Tanda Tangan</th>
           </tr>
         </thead>
         <tbody>
@@ -128,16 +128,16 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
               return (
                 <tr key={idx} className="hover:bg-gray-50 print:hover:bg-transparent transition-colors">
                   <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
-                  <td className={`border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight break-words ${nama.length > 35 ? "text-[8px]" : nama.length > 25 ? "text-[9px]" : "text-[10px]"}`}>
+                  <td className="border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight whitespace-nowrap text-[11px] sm:text-xs">
                     {formatName(nama)}
                   </td>
-                  <td className={`border-2 border-black px-3 py-2.5 font-mono leading-tight ${profile?.nip && profile.nip.length > 18 ? "text-[8px]" : "text-[9px]"}`}>
+                  <td className="border-2 border-black px-3 py-2.5 font-mono leading-tight whitespace-nowrap text-[10px] sm:text-xs">
                     {profile?.nip || "-"}
                   </td>
-                  <td className={`border-2 border-black px-3 py-2.5 leading-tight ${profile?.jabatan && profile.jabatan.length > 20 ? "text-[8px]" : "text-[9px]"}`}>
+                  <td className="border-2 border-black px-3 py-2.5 leading-tight whitespace-nowrap text-[10px] sm:text-xs">
                     {profile?.jabatan || "-"}
                   </td>
-                  <td className={`border-2 border-black px-3 py-2.5 leading-tight ${profile?.sekolah && profile.sekolah.length > 25 ? "text-[8px]" : "text-[9px]"}`}>
+                  <td className="border-2 border-black px-3 py-2.5 leading-tight whitespace-nowrap text-[10px] sm:text-xs">
                     {profile?.sekolah || "-"}
                   </td>
                   <td className="border-2 border-black px-2 py-2.5 text-center">
