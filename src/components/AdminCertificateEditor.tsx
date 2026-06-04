@@ -442,6 +442,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
     placeholder: "",
     dbField: "",
   });
+  const [downloadEnabled, setDownloadEnabled] = useState<boolean>(true);
 
   // =================================
   // LOAD CONFIG FROM DB
@@ -489,10 +490,12 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         if (config.fields)
           setFields(config.fields.map((f) => ({ ...f, page: f.page || 1 })));
         if (config.placeholders) setAvailablePlaceholders(config.placeholders);
+        setDownloadEnabled(config.downloadEnabled !== false);
       } else {
         // Reset to default
         setTemplateUrl("");
         setTemplateUrl2("");
+        setDownloadEnabled(true);
         setFields([
           {
             id: "nama",
@@ -578,6 +581,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         availablePlaceholders,
         canvasWidth: CANVAS_WIDTH,
         canvasHeight: CANVAS_HEIGHT,
+        downloadEnabled: downloadEnabled,
       };
 
       const newContent = {
@@ -967,6 +971,27 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
       {/* Control Sidebar */}
       <div className="w-full lg:w-[400px] space-y-6">
         <div className="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-lg space-y-8 h-full">
+          {/* Status Unduh Sertifikat Khas Kegiatan */}
+          <div className="bg-amber-50/50 p-6 rounded-2xl border border-amber-100 space-y-4">
+            <div className="flex items-center gap-2">
+              <Award className="w-5 h-5 text-amber-600" />
+              <div>
+                <h3 className="font-bold text-gray-700 text-xs">Status Tombol Unduh</h3>
+                <p className="text-[10px] text-gray-400">Atur akses tombol download sertifikat untuk kegiatan ini</p>
+              </div>
+            </div>
+            
+            <label className="flex items-center gap-3 cursor-pointer bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-amber-500 rounded"
+                checked={downloadEnabled}
+                onChange={(e) => setDownloadEnabled(e.target.checked)}
+              />
+              <span className="text-xs font-bold text-gray-700">Aktifkan Sertifikat</span>
+            </label>
+          </div>
+
           {/* Template Selection */}
           <div className="space-y-6">
             <div className="flex items-center gap-2">

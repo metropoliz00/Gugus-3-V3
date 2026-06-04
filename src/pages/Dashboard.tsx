@@ -12334,7 +12334,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                               <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-600 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-green-100 w-full md:w-auto justify-center">
                                 <CheckCircle className="w-4 h-4" /> Hadir
                               </div>
-                              {isDownloadEnabled ? (
+                              {(certConfig && certConfig[item.id] ? certConfig[item.id].downloadEnabled !== false : isDownloadEnabled) ? (
                                 <button
                                   onClick={() => handleDownload(item)}
                                   className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-white rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto justify-center"
@@ -12896,7 +12896,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                               <div className="w-full sm:w-auto px-5 py-2.5 bg-white text-emerald-600 rounded-xl text-[10px] font-black border border-emerald-100 shadow-sm flex justify-center items-center gap-2 shrink-0">
                                  <CheckCircle className="w-4 h-4 text-emerald-500" /> <span className="truncate">Selesai</span>
                               </div>
-                              {isDownloadEnabled ? (
+                              {(certConfig && certConfig[item.id] ? certConfig[item.id].downloadEnabled !== false : isDownloadEnabled) ? (
                                 <button
                                   onClick={() => handleDownload(item)}
                                   className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-black hover:bg-amber-600 shadow-lg shadow-amber-500/25 transition-all flex justify-center items-center gap-2 shrink-0 hover:scale-[1.03] active:scale-95 text-center"
@@ -13075,7 +13075,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                           </div>
                         </div>
 
-                        {isDownloadEnabled ? (
+                        {(certConfig && certConfig[training.id] ? certConfig[training.id].downloadEnabled !== false : isDownloadEnabled) ? (
                           <button
                             onClick={() => handleDownload(training)}
                             className={`px-8 py-4 text-white rounded-2xl transition-all shadow-2xl relative z-10 flex items-center gap-3 font-black text-xs active:scale-90 ${
