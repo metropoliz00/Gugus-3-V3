@@ -138,49 +138,59 @@ export function useCertificateGenerator() {
         return result;
       };
 
-      // Helper to embed image safely
+      // Helper to embed image safely and with compression (target size 200-300 KB)
       const embedImage = async (url: string) => {
         try {
-          const isWebP =
-            url.toLowerCase().includes(".webp") ||
-            url.startsWith("data:image/webp");
-          let buffer: ArrayBuffer;
-          let isPng =
-            url.toLowerCase().includes(".png") ||
-            url.startsWith("data:image/png");
-
-          if (isWebP) {
-            // Convert WebP to PNG using canvas
-            const pngDataUrl = await new Promise<string>((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = "anonymous";
-              img.onload = () => {
-                const canvas = document.createElement("canvas");
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext("2d");
-                if (!ctx) return reject("Canvas context error");
-                ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL("image/png"));
-              };
-              img.onerror = () => reject("Image load error");
-              img.src = url;
-            });
-            const res = await fetch(pngDataUrl);
-            buffer = await res.arrayBuffer();
-            isPng = true;
-          } else {
-            const res = await fetch(url);
-            const contentType = res.headers.get("content-type");
-            buffer = await res.arrayBuffer();
-            if (contentType?.includes("png")) isPng = true;
-          }
-
-          if (isPng) return await pdfDoc.embedPng(buffer);
+          const jpegDataUrl = await new Promise<string>((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              
+              const maxWidth = 1400;
+              let width = img.width;
+              let height = img.height;
+              if (width > maxWidth) {
+                const ratio = maxWidth / width;
+                width = maxWidth;
+                height = img.height * ratio;
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              if (!ctx) return reject("Canvas context error");
+              
+              // Draw white background in case source image has transparency
+              ctx.fillStyle = "#FFFFFF";
+              ctx.fillRect(0, 0, width, height);
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              // Compress to JPEG with 0.70 quality
+              resolve(canvas.toDataURL("image/jpeg", 0.70));
+            };
+            img.onerror = () => reject("Image load error");
+            img.src = url;
+          });
+          
+          const res = await fetch(jpegDataUrl);
+          const buffer = await res.arrayBuffer();
           return await pdfDoc.embedJpg(buffer);
         } catch (err) {
-          console.error("Embed error:", err);
-          return null;
+          console.error("Embed error, attempting fallback:", err);
+          try {
+            const res = await fetch(url);
+            const contentType = res.headers.get("content-type");
+            const buffer = await res.arrayBuffer();
+            const isPng = contentType?.includes("png") || url.toLowerCase().includes(".png") || url.startsWith("data:image/png");
+            if (isPng) {
+              return await pdfDoc.embedPng(buffer);
+            }
+            return await pdfDoc.embedJpg(buffer);
+          } catch (fallbackErr) {
+            console.error("Fallback embed error:", fallbackErr);
+            return null;
+          }
         }
       };
 
@@ -617,48 +627,59 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
       const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-      // Helper to embed image safely (shared logic)
+      // Helper to embed image safely and with compression (target size 200-300 KB)
       const embedImage = async (url: string) => {
         try {
-          const isWebP =
-            url.toLowerCase().includes(".webp") ||
-            url.startsWith("data:image/webp");
-          let buffer: ArrayBuffer;
-          let isPng =
-            url.toLowerCase().includes(".png") ||
-            url.startsWith("data:image/png");
-
-          if (isWebP) {
-            const pngDataUrl = await new Promise<string>((resolve, reject) => {
-              const img = new Image();
-              img.crossOrigin = "anonymous";
-              img.onload = () => {
-                const canvas = document.createElement("canvas");
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext("2d");
-                if (!ctx) return reject("Canvas context error");
-                ctx.drawImage(img, 0, 0);
-                resolve(canvas.toDataURL("image/png"));
-              };
-              img.onerror = () => reject("Image load error");
-              img.src = url;
-            });
-            const res = await fetch(pngDataUrl);
-            buffer = await res.arrayBuffer();
-            isPng = true;
-          } else {
-            const res = await fetch(url);
-            const contentType = res.headers.get("content-type");
-            buffer = await res.arrayBuffer();
-            if (contentType?.includes("png")) isPng = true;
-          }
-
-          if (isPng) return await pdfDoc.embedPng(buffer);
+          const jpegDataUrl = await new Promise<string>((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              
+              const maxWidth = 1400;
+              let width = img.width;
+              let height = img.height;
+              if (width > maxWidth) {
+                const ratio = maxWidth / width;
+                width = maxWidth;
+                height = img.height * ratio;
+              }
+              
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d");
+              if (!ctx) return reject("Canvas context error");
+              
+              // Draw white background in case source image has transparency
+              ctx.fillStyle = "#FFFFFF";
+              ctx.fillRect(0, 0, width, height);
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              // Compress to JPEG with 0.70 quality
+              resolve(canvas.toDataURL("image/jpeg", 0.70));
+            };
+            img.onerror = () => reject("Image load error");
+            img.src = url;
+          });
+          
+          const res = await fetch(jpegDataUrl);
+          const buffer = await res.arrayBuffer();
           return await pdfDoc.embedJpg(buffer);
         } catch (err) {
-          console.error("Embed error:", err);
-          return null;
+          console.error("Embed error, attempting fallback:", err);
+          try {
+            const res = await fetch(url);
+            const contentType = res.headers.get("content-type");
+            const buffer = await res.arrayBuffer();
+            const isPng = contentType?.includes("png") || url.toLowerCase().includes(".png") || url.startsWith("data:image/png");
+            if (isPng) {
+              return await pdfDoc.embedPng(buffer);
+            }
+            return await pdfDoc.embedJpg(buffer);
+          } catch (fallbackErr) {
+            console.error("Fallback embed error:", fallbackErr);
+            return null;
+          }
         }
       };
 
