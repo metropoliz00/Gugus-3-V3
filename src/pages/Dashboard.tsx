@@ -12243,7 +12243,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
           </button>
         </div>
       ) : viewType === 'timeline' ? (
-        <div className="relative border-l-4 border-orange-500/20 ml-4 md:ml-8 space-y-12 pb-10 mt-8">
+        <div className="relative border-l-4 border-orange-500/20 ml-4 md:ml-24 space-y-12 pb-10 mt-8">
           {agendas.map((item, index) => {
             const dateObj = new Date(item.date_start);
             const now = new Date();
@@ -12259,7 +12259,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
               >
                 {/* Node Marker */}
                 <div className={`absolute -left-[14px] top-8 w-6 h-6 bg-white border-4 ${isEnded ? 'border-gray-400 shadow-gray-400/40' : isStarted ? 'border-orange-500 shadow-orange-500/40 animate-pulse' : 'border-orange-500 shadow-orange-500/40'} rounded-full shadow-lg group-hover:scale-125 transition-transform z-10`} />
-                <div className={`absolute -left-12 top-6 text-right w-12 hidden md:block`}>
+                <div className={`absolute -left-20 top-6 text-right w-16 hidden md:block`}>
                    <p className="text-xl font-black text-gray-800 leading-none">{dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric" })}</p>
                    <p className="text-xs font-bold text-gray-500 uppercase">{dateObj.toLocaleString("id-ID", { timeZone: "Asia/Jakarta",  month: "short" })}</p>
                 </div>

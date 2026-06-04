@@ -185,7 +185,7 @@ export default function KkgAgendaPage() {
                           autoStatus === 'selesai' ? 'border-gray-100 opacity-80' : autoStatus === 'berjalan' ? 'border-orange-500/20 shadow-xl shadow-orange-500/5' : 'border-main-blue/20 shadow-xl shadow-main-blue/5 group-hover:border-main-blue/40'
                         }`}>
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                            <div className="space-y-1">
+                            <div className="space-y-1 flex-1 min-w-0">
                               <div className="flex items-center gap-2">
                                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                                   autoStatus === 'selesai' ? 'bg-gray-100 text-gray-500' : 
@@ -206,8 +206,8 @@ export default function KkgAgendaPage() {
                               {!isStarted && <CountdownTimer targetDate={a.date_start} />}
                             </div>
                             
-                            <div className="flex flex-col items-start md:items-end">
-                              <div className="text-right">
+                            <div className="flex flex-col items-start md:items-end shrink-0">
+                              <div className="text-left md:text-right">
                                 <p className={`text-lg font-black ${isEnded ? 'text-gray-400' : 'text-main-blue'}`}>
                                   {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric" })} {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", month: "long" })}
                                 </p>
