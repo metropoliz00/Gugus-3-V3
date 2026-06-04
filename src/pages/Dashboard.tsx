@@ -9895,6 +9895,7 @@ function AdminGuestAccountsManager() {
 function AdminCertificateManager({ user }: { user: any }) {
   const [activeSubTab, setActiveSubTab] = useState<"editor" | "list">("list");
   const [trainings, setTrainings] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [selectedTrainingId, setSelectedTrainingId] = useState<string>("");
   const { content, updateContent } = useSiteContent() as any;
   const isDownloadEnabled = content?.certificateDownloadEnabled !== false;
@@ -9904,7 +9905,12 @@ function AdminCertificateManager({ user }: { user: any }) {
       const { data } = await supabase.from("trainings").select("*");
       setTrainings(data || []);
     };
+    const fetchEvents = async () => {
+      const { data } = await supabase.from("events").select("*");
+      setEvents(data || []);
+    };
     fetchTrainings();
+    fetchEvents();
   }, []);
 
   const handleToggleDownload = () => {
@@ -9962,7 +9968,7 @@ function AdminCertificateManager({ user }: { user: any }) {
           icon={Award}
           fields={[
             { name: "user_id", label: "ID Guru / Email" },
-            { name: "training_id", label: "ID Pelatihan" },
+            { name: "training_id", label: "ID Pelatihan / Kegiatan" },
             { name: "certificate_number", label: "Nomor Sertifikat" },
             {
               name: "certificate_url",
@@ -9978,12 +9984,21 @@ function AdminCertificateManager({ user }: { user: any }) {
             value={selectedTrainingId}
             onChange={(e) => setSelectedTrainingId(e.target.value)}
           >
-            <option value="">Pilih Pelatihan (Default/Global)</option>
-            {trainings.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.title}
-              </option>
-            ))}
+            <option value="">Pilih Kegiatan / Pelatihan (Default/Global)</option>
+            <optgroup label="Program Pelatihan Mandiri">
+              {trainings.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.title}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Agenda Kegiatan KKG">
+              {events.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.title}
+                </option>
+              ))}
+            </optgroup>
           </select>
           <AdminCertificateEditor trainingId={selectedTrainingId} />
         </div>
@@ -11930,6 +11945,12 @@ function TeacherJadwalCards({ user }: { user?: any }) {
   const [attendances, setAttendances] = useState<Record<string, boolean>>({});
   const [viewType, setViewType] = useState<'timeline' | 'calendar'>('timeline');
 
+  const [certConfig, setCertConfig] = useState<any>(null);
+  const [certRecords, setCertRecords] = useState<Record<string, any>>({});
+  const { content } = useSiteContent() as any;
+  const isDownloadEnabled = content?.certificateDownloadEnabled !== false;
+  const { generateTeacherPDF } = useCertificateGenerator();
+
   const fetchAgendas = async () => {
     setLoading(true);
     try {
@@ -11960,6 +11981,36 @@ function TeacherJadwalCards({ user }: { user?: any }) {
           attData.forEach(a => attMap[a.event_id] = true);
         }
         setAttendances(attMap);
+
+        // Fetch User Certificate Records
+        const certQuery = supabase
+          .from("training_certificates")
+          .select("*");
+          
+        if (user.is_guest) {
+          certQuery.eq("guest_account_id", user.id);
+        } else {
+          certQuery.eq("user_id", user.id);
+        }
+        
+        const { data: certData } = await certQuery;
+          
+        const certMap: Record<string, any> = {};
+        certData?.forEach((cert) => {
+          certMap[cert.training_id] = cert;
+        });
+        setCertRecords(certMap);
+      }
+
+      // Fetch Certificate Config
+      const { data: sData } = await supabase
+        .from("site_settings")
+        .select("content")
+        .eq("id", 1)
+        .single();
+
+      if (sData?.content?.certificate_configs) {
+        setCertConfig(sData.content.certificate_configs);
       }
     } catch (err) {
       console.error(err);
@@ -11971,6 +12022,72 @@ function TeacherJadwalCards({ user }: { user?: any }) {
   useEffect(() => {
     fetchAgendas();
   }, []);
+
+  const handleDownload = async (item: any) => {
+    const config = certConfig ? (certConfig[item.id] || certConfig["default"]) : null;
+    if (!config) {
+      alert("Template sertifikat belum diatur oleh admin.", "Info", "info");
+      return;
+    }
+
+    let certNumber = "";
+
+    if (supabase) {
+      try {
+        const certQuery = supabase
+          .from("training_certificates")
+          .select("certificate_number")
+          .eq("training_id", item.id);
+        
+        if (user?.is_guest) {
+          certQuery.eq("guest_account_id", user.id);
+        } else {
+          certQuery.eq("user_id", user.id);
+        }
+
+        const { data: existingCert } = await certQuery.maybeSingle();
+
+        if (existingCert?.certificate_number) {
+          certNumber = existingCert.certificate_number;
+        } else {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth() + 1;
+          const romanMonths = [
+            "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
+          ];
+          const randomPart = Math.floor(1000 + Math.random() * 9000);
+          certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
+
+          const certPayload: any = {
+            training_id: item.id,
+            certificate_number: certNumber,
+            certificate_url: "Generated Individually",
+          };
+
+          if (user?.is_guest) {
+            certPayload.guest_account_id = user.id;
+          } else {
+            certPayload.user_id = user.id;
+          }
+
+          const { data: newCert } = await supabase.from("training_certificates").insert(certPayload).select().single();
+
+          if (newCert) setCertRecords((prev) => ({ ...prev, [item.id]: newCert }));
+
+          logActivity(
+            user,
+            "download_cert",
+            `Mengunduh sertifikat agenda: ${item.title}`,
+          );
+        }
+      } catch (err) {
+        console.error("Gagal mencatat rincian sertifikat:", err);
+      }
+    }
+
+    await generateTeacherPDF(user, item, config, certNumber);
+  };
 
   const handleAbsenClick = (id: string) => {
     setSelectedAgendaId(id);
@@ -12212,8 +12329,22 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                       {user && (
                         <div className="shrink-0 w-full md:w-auto">
                           {attendances[item.id] ? (
-                            <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-600 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-green-100 w-full md:w-auto justify-center">
-                              <CheckCircle className="w-4 h-4" /> Hadir
+                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                              <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-600 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-green-100 w-full md:w-auto justify-center">
+                                <CheckCircle className="w-4 h-4" /> Hadir
+                              </div>
+                              {isDownloadEnabled ? (
+                                <button
+                                  onClick={() => handleDownload(item)}
+                                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-white rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto justify-center"
+                                >
+                                  <Download className="w-4 h-4" /> Unduh Sertifikat
+                                </button>
+                              ) : (
+                                <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-gray-200 w-full md:w-auto justify-center cursor-not-allowed">
+                                  <Shield className="w-4 h-4" /> Belum Siap
+                                </div>
+                              )}
                             </div>
                           ) : item.is_attendance_open ? (
                             <button
