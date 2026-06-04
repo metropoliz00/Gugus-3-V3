@@ -12760,8 +12760,24 @@ function TeacherTrainingCards({ user }: { user: any }) {
                                </div>
                             )
                           ) : (
-                            <div className="w-full sm:w-auto px-5 py-2.5 bg-white text-gray-400 rounded-xl text-[10px] font-black border border-gray-100 shadow-sm flex justify-center items-center gap-2 shrink-0">
-                               <Award className="w-4 h-4 text-amber-500" /> <span className="truncate">Selesai</span>
+                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                              <div className="w-full sm:w-auto px-5 py-2.5 bg-white text-emerald-600 rounded-xl text-[10px] font-black border border-emerald-100 shadow-sm flex justify-center items-center gap-2 shrink-0">
+                                 <CheckCircle className="w-4 h-4 text-emerald-500" /> <span className="truncate">Selesai</span>
+                              </div>
+                              {isDownloadEnabled ? (
+                                <button
+                                  onClick={() => handleDownload(item)}
+                                  className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-black hover:bg-amber-600 shadow-lg shadow-amber-500/25 transition-all flex justify-center items-center gap-2 shrink-0 hover:scale-[1.03] active:scale-95 text-center"
+                                >
+                                  <Download className="w-4 h-4 shrink-0" />
+                                  <span className="truncate">Unduh Sertifikat</span>
+                                </button>
+                              ) : (
+                                <div className="w-full sm:w-auto px-5 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-[10px] font-black border border-gray-100 shadow-sm flex justify-center items-center gap-2 shrink-0 cursor-not-allowed">
+                                  <Shield className="w-4 h-4 shrink-0" />
+                                  <span className="truncate">Belum Siap</span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
