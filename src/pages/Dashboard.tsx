@@ -1563,7 +1563,6 @@ function AdminUserManagement() {
       foto: user.foto || "",
     });
     setShowAddForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -1966,193 +1965,248 @@ function AdminUserManagement() {
         )}
 
         {showAddForm && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden bg-white p-8 rounded-3xl border border-blue-100"
-          >
-            <h3 className="text-lg font-bold mb-6 flex items-center gap-2 text-main-blue">
-              {editId ? (
-                <PenTool className="w-5 h-5" />
-              ) : (
-                <PlusCircle className="w-5 h-5" />
-              )}
-              {editId ? "Edit User" : "Tambah User Baru"}
-            </h3>
-            <form
-              onSubmit={handleManualSubmit}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white w-full max-w-4xl rounded-[2.5rem] shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh]"
             >
-              <div className="space-y-1 lg:col-span-3">
-                <ImageUpload
-                  label="Unggah Foto Profil"
-                  value={formData.foto}
-                  onChange={(base64) =>
-                    setFormData({ ...formData, foto: base64 })
-                  }
-                  maxWidth={400}
-                  maxHeight={400}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Username
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.username}
-                  onChange={(e) =>
-                    setFormData({ ...formData, username: e.target.value })
-                  }
-                  placeholder="e.g. budismart"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  placeholder="••••••••"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Email (Opsional)
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="guru@example.com"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Nama Lengkap
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.nama}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nama: e.target.value })
-                  }
-                  placeholder="Nama Beserta Gelar"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  NIP
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.nip}
-                  onChange={(e) =>
-                    setFormData({ ...formData, nip: e.target.value })
-                  }
-                  placeholder="NIP (jika ada)"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Peran (Role)
-                </label>
-                <select
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none bg-white"
-                  value={formData.role}
-                  onChange={(e) =>
-                    setFormData({ ...formData, role: e.target.value })
-                  }
-                >
-                  <option value="guru">Guru</option>
-                  <option value="admin">Administrator</option>
-                </select>
-              </div>
-              <div className="space-y-1 lg:col-span-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Sekolah
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.sekolah}
-                  onChange={(e) =>
-                    setFormData({ ...formData, sekolah: e.target.value })
-                  }
-                  placeholder="Asal Sekolah"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Jabatan
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.jabatan}
-                  onChange={(e) =>
-                    setFormData({ ...formData, jabatan: e.target.value })
-                  }
-                  placeholder="e.g. Guru Kelas IV"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Kepegawaian
-                </label>
-                <select
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none bg-white"
-                  value={formData.kepegawaian}
-                  onChange={(e) =>
-                    setFormData({ ...formData, kepegawaian: e.target.value })
-                  }
-                >
-                  <option value="">Pilih Status</option>
-                  <option value="PNS">PNS</option>
-                  <option value="PPPK">PPPK</option>
-                  <option value="GTT">GTT</option>
-                  <option value="Honorer">Honorer</option>
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-gray-500 uppercase">
-                  Pangkat / Golongan
-                </label>
-                <input
-                  className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
-                  value={formData.pangkat}
-                  onChange={(e) =>
-                    setFormData({ ...formData, pangkat: e.target.value })
-                  }
-                  placeholder="e.g. Penata / IIIc"
-                />
-              </div>
-              <div className="md:col-span-2 lg:col-span-3 flex justify-end gap-3 pt-4">
-                {formError && (
-                  <p className="text-red-500 text-sm italic py-2">
-                    {formError}
-                  </p>
-                )}
+              <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h3 className="text-lg font-bold flex items-center gap-2 text-main-blue">
+                  {editId ? (
+                    <PenTool className="w-5 h-5 text-main-blue" />
+                  ) : (
+                    <PlusCircle className="w-5 h-5 text-main-blue" />
+                  )}
+                  {editId ? "Edit User / Akun" : "Tambah User Baru"}
+                </h3>
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-10 py-3 bg-gradient-to-r from-main-blue to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20"
+                  type="button"
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditId(null);
+                    setFormData({
+                      username: "",
+                      password: "",
+                      email: "",
+                      nama: "",
+                      nip: "",
+                      role: "guru",
+                      sekolah: "",
+                      jabatan: "",
+                      kepegawaian: "",
+                      pangkat: "",
+                      foto: "",
+                    });
+                  }}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-all"
                 >
-                  {isSubmitting
-                    ? "Menyimpan..."
-                    : editId
-                      ? "Perbarui User"
-                      : "Simpan User"}
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-            </form>
-          </motion.div>
+
+              <div className="p-6 md:p-8 overflow-y-auto">
+                <form
+                  onSubmit={handleManualSubmit}
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                  <div className="space-y-1 lg:col-span-3">
+                    <ImageUpload
+                      label="Unggah Foto Profil"
+                      value={formData.foto}
+                      onChange={(base64) =>
+                        setFormData({ ...formData, foto: base64 })
+                      }
+                      maxWidth={400}
+                      maxHeight={400}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      Username
+                    </label>
+                    <input
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                      value={formData.username}
+                      onChange={(e) =>
+                        setFormData({ ...formData, username: e.target.value })
+                      }
+                      placeholder="e.g. budismart"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase flex justify-between items-center">
+                      <span>Password</span>
+                      {editId && <span className="text-[9px] text-gray-400 normal-case font-normal">(Opsional)</span>}
+                    </label>
+                    <input
+                      type="password"
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      placeholder={editId ? "Biarkan kosong jika tidak diubah" : "••••••••"}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      Email (Opsional)
+                    </label>
+                    <input
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="guru@example.com"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      Nama Lengkap
+                    </label>
+                    <input
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                      value={formData.nama}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nama: e.target.value })
+                      }
+                      placeholder="Nama Beserta Gelar"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      NIP
+                    </label>
+                    <input
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                      value={formData.nip}
+                      onChange={(e) =>
+                        setFormData({ ...formData, nip: e.target.value })
+                      }
+                      placeholder="NIP (jika ada)"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      Peran (Role)
+                    </label>
+                    <select
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none bg-white"
+                      value={formData.role}
+                      onChange={(e) =>
+                        setFormData({ ...formData, role: e.target.value })
+                      }
+                    >
+                      <option value="guru">Guru</option>
+                      <option value="admin">Administrator</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1 lg:col-span-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      Sekolah
+                    </label>
+                    <input
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                      value={formData.sekolah}
+                      onChange={(e) =>
+                        setFormData({ ...formData, sekolah: e.target.value })
+                      }
+                      placeholder="Asal Sekolah"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      Jabatan
+                    </label>
+                    <input
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                      value={formData.jabatan}
+                      onChange={(e) =>
+                        setFormData({ ...formData, jabatan: e.target.value })
+                      }
+                      placeholder="e.g. Guru Kelas IV"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      Kepegawaian
+                    </label>
+                    <select
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none bg-white"
+                      value={formData.kepegawaian}
+                      onChange={(e) =>
+                        setFormData({ ...formData, kepegawaian: e.target.value })
+                      }
+                    >
+                      <option value="">Pilih Status</option>
+                      <option value="PNS">PNS</option>
+                      <option value="PPPK">PPPK</option>
+                      <option value="GTT">GTT</option>
+                      <option value="Honorer">Honorer</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-500 uppercase">
+                      Pangkat / Golongan
+                    </label>
+                    <input
+                      className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none"
+                      value={formData.pangkat}
+                      onChange={(e) =>
+                        setFormData({ ...formData, pangkat: e.target.value })
+                      }
+                      placeholder="e.g. Penata / IIIc"
+                    />
+                  </div>
+                  <div className="md:col-span-2 lg:col-span-3 flex justify-end gap-3 pt-6 border-t border-gray-100 mt-4">
+                    {formError && (
+                      <p className="text-red-500 text-sm italic py-2">
+                        {formError}
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddForm(false);
+                        setEditId(null);
+                        setFormData({
+                          username: "",
+                          password: "",
+                          email: "",
+                          nama: "",
+                          nip: "",
+                          role: "guru",
+                          sekolah: "",
+                          border: "",
+                          jabatan: "",
+                          kepegawaian: "",
+                          pangkat: "",
+                          foto: "",
+                        });
+                      }}
+                      className="px-6 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-all text-xs uppercase"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="px-10 py-3 bg-gradient-to-r from-main-blue to-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/25 text-xs uppercase active:scale-[0.98] transition-all"
+                    >
+                      {isSubmitting
+                        ? "Menyimpan..."
+                        : editId
+                          ? "Perbarui User"
+                          : "Simpan User"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
