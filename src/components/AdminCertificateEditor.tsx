@@ -360,6 +360,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activePage, setActivePage] = useState<number>(1);
+  const [isCustomConfig, setIsCustomConfig] = useState(false);
 
   // TEMPLATE IMAGES
   const [templateUrl, setTemplateUrl] = useState("");
@@ -441,7 +442,20 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
 
       // Access per-training config if trainingId is provided, else use global/default
       const allConfigs = data?.content?.certificate_configs || {};
-      const config = trainingId ? allConfigs[trainingId] : data?.content?.certificate_config as CertificateConfig;
+      const hasCustom = trainingId ? !!allConfigs[trainingId] : false;
+      setIsCustomConfig(hasCustom);
+
+      let config = trainingId ? allConfigs[trainingId] : null;
+
+      // Fallback 1: load default key from certificate_configs
+      if (!config) {
+        config = allConfigs["default"];
+      }
+
+      // Fallback 2: load legacy certificate_config key
+      if (!config) {
+        config = data?.content?.certificate_config as CertificateConfig;
+      }
 
       if (config) {
         if (config.templateUrl) setTemplateUrl(config.templateUrl);
@@ -530,20 +544,27 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         .eq("id", 1)
         .maybeSingle();
 
+      const activeKey = trainingId || "default";
+      const configPayload = {
+        templateUrl,
+        templateUrl2,
+        fields,
+        availablePlaceholders,
+        canvasWidth: CANVAS_WIDTH,
+        canvasHeight: CANVAS_HEIGHT,
+      };
+
       const newContent = {
         ...(current?.content || {}),
         certificate_configs: {
           ...(current?.content?.certificate_configs || {}),
-          [trainingId || "default"]: {
-            templateUrl,
-            templateUrl2,
-            fields,
-            availablePlaceholders,
-            canvasWidth: CANVAS_WIDTH,
-            canvasHeight: CANVAS_HEIGHT,
-          },
+          [activeKey]: configPayload,
         },
       };
+
+      if (!trainingId || trainingId === "default") {
+        newContent.certificate_config = configPayload;
+      }
 
       const { error } = await supabase.from("site_settings").upsert({
         id: 1,
@@ -552,6 +573,11 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
       });
 
       if (error) throw error;
+
+      if (trainingId) {
+        setIsCustomConfig(true);
+      }
+
       await alert(
         "Konfigurasi sertifikat berhasil disimpan",
         "Sukses",
@@ -776,6 +802,21 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
               <p className="text-xs text-gray-500">
                 Atur tata letak teks pada sertifikat pelatihan.
               </p>
+              {trainingId && (
+                <div className="mt-1.5 flex items-center">
+                  {isCustomConfig ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      Desain Khas Kegiatan
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-500 border border-amber-200" title="Lakukan modifikasi lalu klik Simpan Layout untuk menyimpan desain unik untuk kegiatan ini">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      Menggunakan Desain Default
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
