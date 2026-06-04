@@ -4,6 +4,7 @@ import { Calendar, LayoutList, Clock, MapPin, Activity, ArrowRight } from 'lucid
 import { supabase } from '../lib/supabase';
 import MainCalendar from './MainCalendar';
 import { Link } from 'react-router-dom';
+import { getAutomatedStatus } from '../utils/statusHelper';
 
 // Copying CountdownTimer logic
 const CountdownTimer = ({ targetDate, simple = false }: { targetDate: string, simple?: boolean }) => {
@@ -151,33 +152,30 @@ export default function HomeAgenda() {
                                 {events.map((a, i) => {
                                     const d = new Date(a.date_start);
                                     const now = new Date();
-                                    const isStarted = d < now;
-                                    const isEnded = new Date(a.date_end || a.date_start) < now;
+                                    const autoStatus = getAutomatedStatus(a);
 
                                     return (
                                         <div key={a.id} className="relative group">
                                             <div className={`absolute -left-[31px] md:-left-[35px] top-2 w-7 h-7 rounded-full border-4 border-white shadow-xl z-20 transition-all duration-300 group-hover:scale-125 ${
-                                                isEnded ? 'bg-gray-400 shadow-gray-200' : isStarted ? 'bg-orange-500 shadow-orange-500/30' : 'bg-orange-400 shadow-orange-500/30'
+                                                autoStatus === 'selesai' ? 'bg-gray-400 shadow-gray-200' : autoStatus === 'berjalan' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-orange-400 shadow-orange-500/30'
                                             }`} />
                                             
                                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                                 <div className="space-y-1">
                                                   <div className="flex items-center gap-3">
-                                                        <span className={`text-[10px] font-black uppercase tracking-widest ${isEnded ? 'text-gray-400' : 'text-orange-600'}`}>
+                                                        <span className={`text-[10px] font-black uppercase tracking-widest ${autoStatus === 'selesai' ? 'text-gray-400' : 'text-orange-600'}`}>
                                                             {d.toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", weekday: 'long', day: "numeric", month: "long" })}
                                                         </span>
-                                                        {a.status && (
-                                                          <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest
-                                                            ${a.status === 'selesai' ? 'bg-green-100 text-green-600' : 
-                                                              a.status === 'berjalan' ? 'bg-blue-100 text-blue-600 animate-pulse' : 
-                                                              'bg-orange-100 text-orange-600'}
-                                                          `}>
-                                                            {a.status}
-                                                          </span>
-                                                        )}
-                                                        {!isStarted && !isEnded && a.status !== 'selesai' && <CountdownTimer targetDate={a.date_start} simple />}
+                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border
+                                                          ${autoStatus === 'selesai' ? 'bg-green-100 text-green-600 border-green-200' : 
+                                                            autoStatus === 'berjalan' ? 'bg-blue-100 text-blue-600 animate-pulse border-blue-200' : 
+                                                            'bg-orange-100 text-orange-600 border-orange-200'}
+                                                        `}>
+                                                          {autoStatus === 'selesai' ? 'Selesai' : autoStatus === 'berjalan' ? 'Berjalan' : 'Rencana'}
+                                                        </span>
+                                                        {autoStatus === 'rencana' && <CountdownTimer targetDate={a.date_start} simple />}
                                                     </div>
-                                                    <h4 className={`text-xl font-bold font-heading ${isEnded ? 'text-gray-400' : 'text-soft-black hover:text-orange-600 transition-colors'}`}>
+                                                    <h4 className={`text-xl font-bold font-heading ${autoStatus === 'selesai' ? 'text-gray-400' : 'text-soft-black hover:text-orange-600 transition-colors'}`}>
                                                         {a.title}
                                                     </h4>
                                                     <div className="flex items-center gap-4 text-xs font-bold text-gray-400">

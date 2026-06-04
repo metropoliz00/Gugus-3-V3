@@ -100,6 +100,7 @@ import MainCalendar from "../components/MainCalendar";
 import PrintDaftarHadir from "../components/PrintDaftarHadir";
 import PrintLaporanKeuangan from "../components/PrintLaporanKeuangan";
 import PrintKartuTamu from "../components/PrintKartuTamu";
+import { getAutomatedStatus, getEnglishStatus, getIndonesianStatusLabel } from "../utils/statusHelper";
 
 import * as XLSX from "xlsx";
 import Webcam from "react-webcam";
@@ -4700,11 +4701,11 @@ function AdminAgendaForm({ user }: { user: any }) {
                                 {item.category}
                               </span>
                               <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9px] uppercase font-extrabold border ${
-                                item.status === 'selesai' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                item.status === 'berjalan' ? 'bg-indigo-50 text-indigo-650 border-indigo-100' :
+                                getAutomatedStatus(item) === 'selesai' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                getAutomatedStatus(item) === 'berjalan' ? 'bg-indigo-50 text-indigo-650 border-indigo-100' :
                                 'bg-amber-50 text-amber-600 border-amber-100'
                               }`}>
-                                {item.status || "rencana"}
+                                {getAutomatedStatus(item)}
                               </span>
                             </div>
                           </div>

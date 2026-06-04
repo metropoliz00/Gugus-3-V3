@@ -4,6 +4,7 @@ import { Calendar, MapPin, Clock, ChevronRight, Activity, LayoutList } from 'luc
 import { useSiteContent } from '../contexts/SiteContext';
 import { supabase } from '../lib/supabase';
 import MainCalendar from '../components/MainCalendar';
+import { getAutomatedStatus } from '../utils/statusHelper';
 
 // Countdown Timer Component
 const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
@@ -157,6 +158,7 @@ export default function KkgAgendaPage() {
                     const isStarted = d < now;
                     const isEnded = new Date(a.date_end || a.date_start) < now;
                     const isToday = d.toDateString() === now.toDateString();
+                    const autoStatus = getAutomatedStatus(a);
 
                     return (
                       <motion.div 
@@ -169,31 +171,30 @@ export default function KkgAgendaPage() {
                       >
                         {/* Dot Marker */}
                         <div className={`absolute -left-[31px] md:-left-[35px] top-2 w-7 h-7 rounded-full border-4 border-white shadow-xl z-20 transition-all duration-300 group-hover:scale-125 ${
-                          isEnded ? 'bg-gray-400 shadow-gray-200' : isStarted ? 'bg-orange-500 shadow-orange-500/30' : 'bg-main-blue shadow-main-blue/30 scale-110'
+                          autoStatus === 'selesai' ? 'bg-gray-400 shadow-gray-200' : autoStatus === 'berjalan' ? 'bg-orange-500 shadow-orange-500/30' : 'bg-main-blue shadow-main-blue/30 scale-110'
                         }`} >
-                          {!isStarted && (
+                          {autoStatus === 'rencana' && (
                             <div className="absolute inset-0 rounded-full animate-ping bg-main-blue/40" />
                           )}
-                          {isStarted && !isEnded && (
+                          {autoStatus === 'berjalan' && (
                             <div className="absolute inset-0 rounded-full animate-pulse bg-orange-500/40" />
                           )}
                         </div>
 
                         <div className={`bg-white p-6 md:p-8 rounded-[2rem] border transition-all duration-300 ${
-                          isEnded ? 'border-gray-100 opacity-80' : isStarted ? 'border-orange-500/20 shadow-xl shadow-orange-500/5' : 'border-main-blue/20 shadow-xl shadow-main-blue/5 group-hover:border-main-blue/40'
+                          autoStatus === 'selesai' ? 'border-gray-100 opacity-80' : autoStatus === 'berjalan' ? 'border-orange-500/20 shadow-xl shadow-orange-500/5' : 'border-main-blue/20 shadow-xl shadow-main-blue/5 group-hover:border-main-blue/40'
                         }`}>
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
-                                  a.status === 'selesai' || isEnded ? 'bg-gray-100 text-gray-500' : 
-                                  a.status === 'berjalan' || (isStarted && !isEnded) ? 'bg-orange-500 text-white animate-pulse' : 
+                                  autoStatus === 'selesai' ? 'bg-gray-100 text-gray-500' : 
+                                  autoStatus === 'berjalan' ? 'bg-orange-500 text-white animate-pulse' : 
                                   'bg-main-blue text-white'
                                 }`}>
-                                  {a.status === 'selesai' ? 'Selesai' : 
-                                   a.status === 'berjalan' ? 'Sedang Berlangsung' : 
-                                   a.status === 'rencana' ? 'Mendatang' :
-                                   (isEnded ? 'Selesai' : isStarted ? 'Sedang Berlangsung' : isToday ? 'Hari Ini' : 'Mendatang')}
+                                  {autoStatus === 'selesai' ? 'Selesai' : 
+                                   autoStatus === 'berjalan' ? 'Sedang Berlangsung' : 
+                                   'Mendatang'}
                                 </span>
                                 <span className="text-xs font-bold text-gray-400 flex items-center gap-1">
                                   <Clock className="w-3 h-3" /> {d.toLocaleTimeString("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" })} WIB

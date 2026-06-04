@@ -15,6 +15,7 @@ import { useSiteContent } from '../contexts/SiteContext';
 import OrgChart from '../components/OrgChart';
 import { supabase } from '../lib/supabase';
 import MapGugus from '../components/MapGugus';
+import { getAutomatedProgramStatus } from '../utils/statusHelper';
 
 export default function GugusPage() {
   const { content } = useSiteContent();
@@ -231,37 +232,38 @@ export default function GugusPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {data.programs.map((program, idx) => (
-                    <div key={idx} className="group p-8 rounded-3xl bg-white border border-gray-100 hover:border-main-blue transition-all hover:shadow-xl shadow-soft-black/5 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-main-blue/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-main-blue/10 transition-colors" />
-                      <div className="relative z-10">
-                        <div className="flex items-start justify-between mb-6">
-                           <div className="p-3 bg-blue-50 text-main-blue rounded-xl group-hover:bg-main-blue group-hover:text-white transition-colors">
-                              <BookOpen className="w-6 h-6" />
-                           </div>
-                           <div className="flex flex-col items-end gap-1">
-                             <span className="text-[10px] font-bold px-3 py-1 bg-leaf-green/10 text-leaf-green rounded-full uppercase tracking-tighter">
-                               {program.date}
-                             </span>
-                             {program.status && (
+                  {data.programs.map((program, idx) => {
+                    const autoStatus = getAutomatedProgramStatus(program);
+                    return (
+                      <div key={idx} className="group p-8 rounded-3xl bg-white border border-gray-100 hover:border-main-blue transition-all hover:shadow-xl shadow-soft-black/5 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-main-blue/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2 group-hover:bg-main-blue/10 transition-colors" />
+                        <div className="relative z-10">
+                          <div className="flex items-start justify-between mb-6">
+                             <div className="p-3 bg-blue-50 text-main-blue rounded-xl group-hover:bg-main-blue group-hover:text-white transition-colors">
+                                <BookOpen className="w-6 h-6" />
+                             </div>
+                             <div className="flex flex-col items-end gap-1">
+                               <span className="text-[10px] font-bold px-3 py-1 bg-leaf-green/10 text-leaf-green rounded-full uppercase tracking-tighter">
+                                 {program.date}
+                               </span>
                                <span className={`text-[9px] font-bold px-3 py-0.5 rounded-full uppercase tracking-tighter border
-                                 ${program.status === 'selesai' ? 'bg-green-50 text-green-700 border-green-100' : 
-                                   program.status === 'berjalan' ? 'bg-blue-50 text-blue-700 border-blue-100 animate-pulse' : 
+                                 ${autoStatus === 'selesai' ? 'bg-green-50 text-green-700 border-green-100' : 
+                                   autoStatus === 'berjalan' ? 'bg-blue-50 text-blue-700 border-blue-100 animate-pulse' : 
                                    'bg-orange-50 text-orange-700 border-orange-100'}
                                `}>
-                                 {program.status}
+                                 {autoStatus}
                                </span>
-                             )}
-                           </div>
-                        </div>
-                        <h3 className="text-xl font-heading font-bold text-soft-black mb-3 group-hover:text-main-blue transition-colors">{program.title}</h3>
-                        <p className="text-sm text-gray-500 leading-relaxed mb-6">{program.desc}</p>
-                        <div className="flex items-center text-main-blue text-sm font-bold opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all">
-                          Selengkapnya <ChevronRight className="w-4 h-4" />
+                             </div>
+                          </div>
+                          <h3 className="text-xl font-heading font-bold text-soft-black mb-3 group-hover:text-main-blue transition-colors">{program.title}</h3>
+                          <p className="text-sm text-gray-500 leading-relaxed mb-6">{program.desc}</p>
+                          <div className="flex items-center text-main-blue text-sm font-bold opacity-0 group-hover:opacity-100 -translate-x-4 group-hover:translate-x-0 transition-all">
+                            Selengkapnya <ChevronRight className="w-4 h-4" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

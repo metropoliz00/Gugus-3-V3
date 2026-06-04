@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Briefcase, Calendar, ChevronDown, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useSiteContent } from '../contexts/SiteContext';
+import { getAutomatedProgramStatus } from '../utils/statusHelper';
 
 export default function KkgProgramPage() {
   const [activeProgramGroup, setActiveProgramGroup] = useState('tahunan');
@@ -51,38 +52,39 @@ export default function KkgProgramPage() {
             ))}
         </div>
         <div className="space-y-4">
-            {(programsData[activeGroup] || [])?.map((prog: any, idx: number) => (
-                <div key={idx} className={`bg-white border rounded-2xl overflow-hidden`}>
-                    <button 
-                        onClick={() => setOpenProgramIdx(openProgramIdx === idx ? null : idx)}
-                        className="w-full px-6 py-5 flex items-center justify-between text-left"
-                    >
-                        <div className="flex flex-col">
-                            <h4 className="font-semibold text-soft-black">{prog.title}</h4>
-                            <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" /> {prog.date}
-                                </span>
-                                {prog.status && (
+            {(programsData[activeGroup] || [])?.map((prog: any, idx: number) => {
+                const autoStatus = getAutomatedProgramStatus(prog);
+                return (
+                    <div key={idx} className={`bg-white border rounded-2xl overflow-hidden`}>
+                        <button 
+                            onClick={() => setOpenProgramIdx(openProgramIdx === idx ? null : idx)}
+                            className="w-full px-6 py-5 flex items-center justify-between text-left"
+                        >
+                            <div className="flex flex-col">
+                                <h4 className="font-semibold text-soft-black">{prog.title}</h4>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1">
+                                        <Calendar className="w-3 h-3" /> {prog.date}
+                                    </span>
                                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border
-                                        ${prog.status === 'selesai' ? 'bg-green-50 text-green-700 border-green-100' : 
-                                          prog.status === 'berjalan' ? 'bg-blue-50 text-blue-700 border-blue-100 animate-pulse' : 
+                                        ${autoStatus === 'selesai' ? 'bg-green-50 text-green-700 border-green-100' : 
+                                          autoStatus === 'berjalan' ? 'bg-blue-50 text-blue-700 border-blue-100 animate-pulse' : 
                                           'bg-orange-50 text-orange-700 border-orange-100'}
                                     `}>
-                                        {prog.status}
+                                        {autoStatus === 'selesai' ? 'selesai' : autoStatus === 'berjalan' ? 'berjalan' : 'rencana'}
                                     </span>
-                                )}
+                                </div>
                             </div>
-                        </div>
-                        <ChevronDown className={`w-5 h-5 transition-transform ${openProgramIdx === idx ? 'rotate-180 text-main-blue' : 'text-gray-400'}`} />
-                    </button>
-                    {openProgramIdx === idx && (
-                        <div className="px-6 pb-5 pt-2 text-gray-600 border-t border-gray-50">
-                             <p className="text-sm leading-relaxed">{prog.desc}</p>
-                        </div>
-                    )}
-                </div>
-            ))}
+                            <ChevronDown className={`w-5 h-5 transition-transform ${openProgramIdx === idx ? 'rotate-180 text-main-blue' : 'text-gray-400'}`} />
+                        </button>
+                        {openProgramIdx === idx && (
+                            <div className="px-6 pb-5 pt-2 text-gray-600 border-t border-gray-50">
+                                 <p className="text-sm leading-relaxed">{prog.desc}</p>
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
         </div>
       </div>
     </div>

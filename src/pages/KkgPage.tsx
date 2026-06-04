@@ -11,6 +11,7 @@ import {
 import { useState, useEffect } from "react";
 import { useSiteContent, defaultContent } from "../contexts/SiteContext";
 import { supabase } from '../lib/supabase';
+import { getAutomatedProgramStatus } from "../utils/statusHelper";
 
 const getDirectDownloadUrl = (url: string | null | undefined): string => {
   if (!url) return "";
@@ -361,13 +362,18 @@ export default function KkgPage() {
                               <div className="flex items-center gap-2 text-sm font-semibold text-soft-black">
                                 <Calendar className="w-4 h-4 text-main-blue" /> {prog.date}
                               </div>
-                              <div className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest self-start border
-                                ${prog.status === 'selesai' ? 'bg-green-50 text-green-700 border-green-100' : 
-                                  prog.status === 'berjalan' ? 'bg-blue-50 text-blue-700 border-blue-100 animate-pulse' : 
-                                  'bg-orange-50 text-orange-700 border-orange-100'}
-                              `}>
-                                {prog.status || 'rencana'}
-                              </div>
+                              {(() => {
+                                const autoStatus = getAutomatedProgramStatus(prog);
+                                return (
+                                  <div className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest self-start border
+                                    ${autoStatus === 'selesai' ? 'bg-green-50 text-green-700 border-green-100' : 
+                                      autoStatus === 'berjalan' ? 'bg-blue-50 text-blue-700 border-blue-100 animate-pulse' : 
+                                      'bg-orange-50 text-orange-700 border-orange-100'}
+                                  `}>
+                                    {autoStatus === 'selesai' ? 'selesai' : autoStatus === 'berjalan' ? 'berjalan' : 'rencana'}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </div>
                         </motion.div>
