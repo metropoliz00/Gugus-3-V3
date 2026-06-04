@@ -285,9 +285,25 @@ export function useCertificateGenerator() {
       const pdfBytes = await pdfDoc.save();
       const namaLengkap =
         teacher.nama || teacher.full_name || teacher.name || "Peserta";
+      
+      const getExecutionYear = () => {
+        if (training.date_start) {
+          const d = new Date(training.date_start);
+          if (!isNaN(d.getTime())) return d.getFullYear().toString();
+        }
+        if (training.date) {
+          const match = training.date.match(/\b(20\d{2})\b/);
+          if (match) return match[1];
+        }
+        return new Date().getFullYear().toString();
+      };
+
+      const executionYear = getExecutionYear();
+      const fileName = `${namaLengkap}_${training.title || "Kegiatan"}_${executionYear}.pdf`;
+
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
-        `sertifikat_${training.title}_${namaLengkap}.pdf`,
+        fileName,
       );
     } catch (err: any) {
       alert("Gagal generate sertifikat: " + err.message, "Error", "error");
