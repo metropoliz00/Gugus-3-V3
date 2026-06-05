@@ -374,11 +374,11 @@ export function SharingPractices({ user }: { user: any }) {
                 </p>
 
                 <div className="pt-8 border-t border-white/10 flex items-center justify-between mt-auto gap-4">
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2.5 shrink-0">
                      {p.video_url ? (
                        <button 
                         onClick={() => setActiveVideoUrl(p.video_url)}
-                        className="w-10 h-10 rounded-full bg-main-blue text-white flex items-center justify-center border border-white/30 shadow-lg hover:scale-110 active:scale-95 transition-all group/play"
+                        className="w-10 h-10 rounded-full bg-main-blue text-white flex items-center justify-center border border-white/30 shadow-lg hover:scale-110 active:scale-95 transition-all group/play cursor-pointer"
                        >
                           <Play className="w-4 h-4 fill-white group-hover/play:scale-110 transition-transform" />
                        </button>
@@ -392,11 +392,11 @@ export function SharingPractices({ user }: { user: any }) {
                   
                   <div className="text-right flex-1 min-w-0">
                     <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest leading-none mb-2">Penulis</p>
-                    <div className="flex items-center justify-end gap-3 text-white">
-                      <span className="text-sm sm:text-base font-black drop-shadow-lg leading-tight break-words text-right whitespace-normal">
+                    <div className="flex items-center justify-end gap-2.5 text-white">
+                      <span className="text-xs sm:text-sm font-black drop-shadow-lg leading-relaxed break-words text-right whitespace-normal block pr-0.5">
                         {authorName}
                       </span>
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-main-blue to-leaf-green flex items-center justify-center shadow-xl border border-white/10 overflow-hidden shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-main-blue to-leaf-green flex items-center justify-center shadow-xl border border-white/10 overflow-hidden shrink-0">
                         {author?.foto ? (
                           <img src={author.foto} className="w-full h-full object-cover" alt={authorName} />
                         ) : (
