@@ -357,7 +357,11 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
         if (data && data.content) {
           const merged = mergeContent(defaultContent, data.content);
           setContent(merged);
-          localStorage.setItem('siteContent', JSON.stringify(merged));
+          try {
+            localStorage.setItem('siteContent', JSON.stringify(merged));
+          } catch (storageError) {
+            console.warn("Failed to store siteContent in localStorage (quota exceeded):", storageError);
+          }
         }
       }
     } catch (e) {
@@ -370,7 +374,11 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
   const updateContent = async (newContent: Partial<SiteContent>) => {
     const updated = { ...content, ...newContent };
     setContent(updated);
-    localStorage.setItem('siteContent', JSON.stringify(updated));
+    try {
+      localStorage.setItem('siteContent', JSON.stringify(updated));
+    } catch (storageError) {
+      console.warn("Failed to store siteContent in localStorage (quota exceeded):", storageError);
+    }
     setSaveMessage("Menyimpan...");
     
     try {
