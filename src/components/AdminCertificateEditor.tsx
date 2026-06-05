@@ -604,6 +604,13 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
 
       if (error) throw error;
 
+      // Auto generate certificates for participants who have 'attended' this activity
+      try {
+        await ensureCertificatesExist();
+      } catch (err) {
+        console.error("Auto generate certificates on template save failed:", err);
+      }
+
       if (trainingId) {
         setIsCustomConfig(true);
       }
@@ -1355,3 +1362,96 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
     </div>
   );
 }
+
+export async function ensureCertificatesExist(userId?: string) {
+  if (!supabase) return;
+  try {
+    // 1. Fetch certificate configurations
+    const { data: sData } = await supabase
+      .from("site_settings")
+      .select("content")
+      .eq("id", 1)
+      .single();
+
+    const configs = sData?.content?.certificate_configs || {};
+    const actIds = Object.keys(configs); // These are the IDs of trainings/events with templates
+
+    if (actIds.length === 0) return;
+
+    // 2. Fetch attended participants
+    let partQuery = supabase
+      .from("training_participants")
+      .select("*")
+      .eq("status", "attended");
+
+    if (userId) {
+      partQuery = partQuery.or(`user_id.eq.${userId},guest_account_id.eq.${userId}`);
+    }
+
+    const { data: participants } = await partQuery;
+    if (!participants || participants.length === 0) return;
+
+    // 3. Fetch existing certificate records to prevent duplicate generation
+    let certQuery = supabase
+      .from("training_certificates")
+      .select("*");
+
+    if (userId) {
+      certQuery = certQuery.or(`user_id.eq.${userId},guest_account_id.eq.${userId}`);
+    }
+
+    const { data: existingCerts } = await certQuery;
+    const existingSet = new Set<string>();
+    existingCerts?.forEach((c: any) => {
+      const uId = c.user_id || c.guest_account_id;
+      if (uId) {
+        existingSet.add(`${uId}_${c.training_id}`);
+      }
+    });
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const romanMonths = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+
+    // 4. Generate missing certificates
+    for (const p of participants) {
+      const actId = p.training_id || p.event_id;
+      if (!actId) continue;
+
+      // Check if there is a config for this activity, or fallback to default
+      const hasConfig = !!configs[actId] || !!configs["default"];
+      if (!hasConfig) continue;
+
+      const pId = p.user_id || p.guest_account_id;
+      if (pId) {
+        const key = `${pId}_${actId}`;
+        if (!existingSet.has(key)) {
+          existingSet.add(key);
+
+          // Unique combo user_activity is missing, let's create a certificate
+          const randomPart = Math.floor(1000 + Math.random() * 9000);
+          const certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
+
+          const certPayload: any = {
+            training_id: actId,
+            certificate_number: certNumber,
+            certificate_url: "Generated Individually",
+            created_at: new Date().toISOString()
+          };
+
+          if (p.is_guest) {
+            certPayload.guest_account_id = p.guest_account_id;
+          } else {
+            certPayload.user_id = p.user_id;
+          }
+
+          await supabase.from("training_certificates").insert(certPayload);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error auto-generating certificates:", err);
+  }
+}
+

@@ -94,6 +94,7 @@ import { FinanceTransaction } from "../types";
 import { logActivity, ActivityLog } from "../lib/activity";
 import AdminCertificateEditor, {
   useCertificateGenerator,
+  ensureCertificatesExist,
 } from "../components/AdminCertificateEditor";
 import { SharingPractices } from "../components/SharingPractices";
 import MainCalendar from "../components/MainCalendar";
@@ -10511,6 +10512,13 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
   const fetchData = async () => {
     setLoading(true);
     try {
+      if (table === "training_certificates") {
+        try {
+          await ensureCertificatesExist();
+        } catch (e) {
+          console.error("Auto generation inside DataManagementTable failed:", e);
+        }
+      }
       let query = supabase
         .from(table)
         .select(selectQuery)
@@ -10911,6 +10919,13 @@ function DataViewList({
     const fetchData = async () => {
       setLoading(true);
       try {
+        if (table === "training_certificates") {
+          try {
+            await ensureCertificatesExist(filterColumn === "user_id" ? filterValue : undefined);
+          } catch (e) {
+            console.error("Auto generation check inside DataViewList failed:", e);
+          }
+        }
         let query: any = supabase
           .from(table)
           .select("*")
@@ -12037,6 +12052,12 @@ function TeacherJadwalCards({ user }: { user?: any }) {
         }
         setAttendances(attMap);
 
+        try {
+          await ensureCertificatesExist(user.id);
+        } catch (e) {
+          console.error("Auto generation check inside fetchAgendas failed:", e);
+        }
+
         // Fetch User Certificate Records
         const certQuery = supabase
           .from("training_certificates")
@@ -12489,6 +12510,12 @@ function TeacherTrainingCards({ user }: { user: any }) {
         regMap[reg.training_id] = reg;
       });
       setRegistrations(regMap);
+      
+      try {
+        await ensureCertificatesExist(user.id);
+      } catch (e) {
+        console.error("Auto generation inside TeacherTrainingCards failed:", e);
+      }
       
       // Fetch User Certificate Records
       const certQuery = supabase
