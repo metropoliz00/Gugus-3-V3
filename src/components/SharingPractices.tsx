@@ -321,93 +321,96 @@ export function SharingPractices({ user }: { user: any }) {
             const imageUrl = p.thumbnail_url || p.image_url || "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&q=80";
 
             return (
-            <motion.div
-              key={p.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-[3rem] overflow-hidden border border-gray-100 shadow-2xl shadow-gray-200 flex flex-col group h-full relative"
-            >
-              {/* Card Background Image (Full) */}
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                style={{
-                  backgroundImage: `url(${imageUrl})`,
-                }}
-              />
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 transition-opacity group-hover:opacity-100" />
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="group bg-white rounded-[2.5rem] overflow-hidden border border-gray-100 shadow-xl shadow-gray-200/50 flex flex-col h-full hover:shadow-2xl hover:shadow-main-blue/10 transition-all duration-500 relative"
+              >
+                {/* Image Area - scale 16:9 (aspect-video) */}
+                <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                  <img 
+                    src={imageUrl} 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                    alt={p.title} 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  {/* Play Button Overlay */}
+                  {p.video_url && (
+                    <button 
+                      onClick={() => setActiveVideoUrl(p.video_url)}
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-main-blue/90 backdrop-blur-md text-white flex items-center justify-center shadow-2xl scale-0 group-hover:scale-100 transition-transform duration-500 hover:bg-main-blue cursor-pointer z-10"
+                    >
+                      <Play className="w-8 h-8 fill-white ml-1" />
+                    </button>
+                  )}
 
-              {/* Card Content Overlaid */}
-              <div className="relative z-10 p-6 sm:p-8 h-full flex flex-col justify-end min-h-[500px]">
-                {/* Admin/Owner Controls */}
-                {(p.user_id === user.id || user.role === "admin") && (
-                  <div className="absolute top-8 right-8 flex gap-3">
-                    <button
-                      onClick={() => setEditingId(p.id)}
-                      className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-white hover:bg-main-blue transition-all border border-white/20 shadow-2xl group/btn"
-                      title="Edit Praktik Baik"
-                    >
-                      <PlusCircle className="w-5 h-5 group-hover/btn:rotate-90 transition-transform" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(p.id)}
-                      className="w-12 h-12 rounded-2xl bg-red-500/10 backdrop-blur-xl flex items-center justify-center text-white hover:bg-red-500 transition-all border border-white/20 shadow-2xl"
-                      title="Hapus"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                  {/* Category Tag */}
+                  <div className="absolute top-6 left-6 z-10">
+                    <span className="px-4 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest text-main-blue shadow-lg border border-white/20">
+                      {p.category || "Inovasi"}
+                    </span>
                   </div>
-                )}
 
-                <div className="flex items-center gap-2 mb-6">
-                  <span className="bg-leaf-green text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-lg border border-leaf-green/20">
-                    {p.category || "Praktik Baik"}
-                  </span>
+                  {/* Admin/Owner Controls displayed over image */}
+                  {(p.user_id === user.id || user.role === "admin") && (
+                    <div className="absolute top-6 right-6 flex gap-3 z-20">
+                      <button
+                        onClick={() => setEditingId(p.id)}
+                        className="w-10 h-10 rounded-2xl bg-white/80 backdrop-blur-md flex items-center justify-center text-gray-700 hover:bg-main-blue hover:text-white transition-all border border-white/20 shadow-lg group/btn cursor-pointer"
+                        title="Edit Praktik Baik"
+                      >
+                        <PlusCircle className="w-5 h-5 group-hover/btn:rotate-90 transition-transform" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="w-10 h-10 rounded-2xl bg-red-500/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-red-600 transition-all border border-white/20 shadow-lg cursor-pointer"
+                        title="Hapus"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                <h3 className="text-3xl font-black text-white mb-4 leading-tight tracking-tight drop-shadow-2xl group-hover:text-main-blue transition-colors duration-500">
-                  {p.title}
-                </h3>
+                {/* Content Area - underneath the image */}
+                <div className="p-8 flex flex-col flex-1">
+                  <h3 className="text-2xl font-black text-soft-black mb-4 leading-tight line-clamp-2 group-hover:text-main-blue transition-colors">
+                    {p.title}
+                  </h3>
+                  <p className="text-gray-500 text-sm leading-relaxed mb-8 line-clamp-3 italic flex-1">
+                    "{p.description}"
+                  </p>
 
-                <p className="text-gray-300 text-sm mb-10 line-clamp-3 leading-relaxed drop-shadow-lg flex-1 font-medium italic">
-                  "{p.description}"
-                </p>
-
-                <div className="pt-8 border-t border-white/10 flex items-center justify-between mt-auto gap-4">
-                  <div className="flex items-center gap-2.5 shrink-0">
-                     {p.video_url ? (
-                       <button 
-                        onClick={() => setActiveVideoUrl(p.video_url)}
-                        className="w-10 h-10 rounded-full bg-main-blue text-white flex items-center justify-center border border-white/30 shadow-lg hover:scale-110 active:scale-95 transition-all group/play cursor-pointer"
-                       >
-                          <Play className="w-4 h-4 fill-white group-hover/play:scale-110 transition-transform" />
-                       </button>
-                     ) : (
-                       <div className="w-10 h-10 rounded-full bg-main-blue/20 backdrop-blur-md flex items-center justify-center border border-main-blue/30">
-                          <Play className="w-4 h-4 text-main-blue fill-main-blue" />
-                       </div>
-                     )}
-                     <span className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">{p.category || "Inovasi"}</span>
-                  </div>
-                  
-                  <div className="text-right flex-1 min-w-0">
-                    <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest leading-none mb-2">Penulis</p>
-                    <div className="flex items-center justify-end gap-2.5 text-white">
-                      <span className="text-xs sm:text-sm font-black drop-shadow-lg leading-relaxed break-words text-right whitespace-normal block pr-0.5">
-                        {authorName}
-                      </span>
-                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-main-blue to-leaf-green flex items-center justify-center shadow-xl border border-white/10 overflow-hidden shrink-0">
+                  <div className="mt-auto pt-6 border-t border-gray-50 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shrink-0">
                         {author?.foto ? (
                           <img src={author.foto} className="w-full h-full object-cover" alt={authorName} />
                         ) : (
-                          <Award className="w-4 h-4 text-white" />
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-50">
+                            <Award className="w-5 h-5" />
+                          </div>
                         )}
                       </div>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">DIBAGIKAN OLEH</span>
+                        <span className="text-xs sm:text-sm font-black text-soft-black break-words leading-tight whitespace-normal">{authorName}</span>
+                      </div>
                     </div>
+
+                    {p.video_url && (
+                      <button 
+                        onClick={() => setActiveVideoUrl(p.video_url)}
+                        className="p-2.5 rounded-xl bg-main-blue/5 text-main-blue hover:bg-main-blue hover:text-white transition-all shadow-sm shrink-0 cursor-pointer"
+                      >
+                        <Play className="w-5 h-5 fill-current" />
+                      </button>
+                    )}
                   </div>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
             );
           })}
         </div>
