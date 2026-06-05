@@ -9,9 +9,71 @@ export function SharingPractices({ user }: { user: any }) {
   const [practices, setPractices] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [tempPractice, setTempPractice] = useState<any | null>(null);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
   const { alert, confirm } = useAlert();
+
+  const startEditing = (p: any) => {
+    setTempPractice({ ...p });
+    setEditingId(p.id);
+  };
+
+  const handleCloseModal = async () => {
+    const original = practices.find(p => p.id === editingId);
+    if (original && tempPractice) {
+      const hasChanges = 
+        original.title !== tempPractice.title ||
+        original.category !== tempPractice.category ||
+        original.video_url !== tempPractice.video_url ||
+        original.description !== tempPractice.description ||
+        (original.thumbnail_url || original.image_url || "") !== (tempPractice.thumbnail_url || tempPractice.image_url || "");
+
+      if (hasChanges) {
+        const confirmClose = await confirm(
+          "Ada perubahan yang belum disimpan. Yakin ingin menutup tanpa menyimpan?",
+          "Konfirmasi"
+        );
+        if (!confirmClose) return;
+      }
+    }
+    setEditingId(null);
+    setTempPractice(null);
+  };
+
+  const handleSave = async () => {
+    if (!tempPractice || !supabase || isSaving) return;
+    setIsSaving(true);
+    try {
+      const dbUpdates = {
+        title: tempPractice.title,
+        category: tempPractice.category,
+        video_url: tempPractice.video_url,
+        description: tempPractice.description,
+        thumbnail_url: tempPractice.thumbnail_url || tempPractice.image_url,
+      };
+
+      const { error } = await supabase
+        .from("best_practices")
+        .update(dbUpdates)
+        .eq("id", tempPractice.id);
+
+      if (error) throw error;
+
+      setPractices(
+        practices.map((p) => (p.id === tempPractice.id ? { ...p, ...tempPractice } : p))
+      );
+      setEditingId(null);
+      setTempPractice(null);
+      await alert("Praktik baik berhasil disimpan dan dipublikasikan!", "Sukses", "success");
+    } catch (err: any) {
+      console.error("Error saving practice:", err);
+      await alert(`Gagal menyimpan: ${err.message}`, "Kesalahan", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const getYouTubeId = (url: string) => {
     if (!url) return null;
@@ -105,6 +167,7 @@ export function SharingPractices({ user }: { user: any }) {
         };
 
         setPractices([fullNewRecord, ...practices]);
+        setTempPractice({ ...fullNewRecord });
         setEditingId(data[0].id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         await alert("Draft praktik baik berhasil dibuat. Silakan lengkapi detailnya.", "Sukses", "success");
@@ -201,13 +264,13 @@ export function SharingPractices({ user }: { user: any }) {
 
       {/* Modal for Editing/Adding */}
       <AnimatePresence>
-        {editingId && (
+        {editingId && tempPractice && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setEditingId(null)}
+              onClick={handleCloseModal}
               className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
             >
               <motion.div
@@ -222,20 +285,19 @@ export function SharingPractices({ user }: { user: any }) {
                     <h3 className="text-xl font-black text-soft-black">Form Praktik Baik</h3>
                     <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Lengkapi Detail Inspirasi Anda</p>
                   </div>
-                  <button onClick={() => setEditingId(null)} className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 hover:text-soft-black transition-colors">
+                  <button onClick={handleCloseModal} className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-400 hover:text-soft-black transition-colors cursor-pointer">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
                  <div className="p-8 overflow-y-auto space-y-6 modern-scrollbar">
-                  {practices.filter(p => p.id === editingId).map(p => (
-                    <div key={p.id} className="space-y-6">
+                    <div className="space-y-6">
                       <div className="group">
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Judul Praktik</label>
                         <input
                           className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
-                          value={p.title}
-                          onChange={(e) => handleUpdate(p.id, { title: e.target.value })}
+                          value={tempPractice.title || ""}
+                          onChange={(e) => setTempPractice({ ...tempPractice, title: e.target.value })}
                           placeholder="Contoh: Metode Belajar Seru di Luar Kelas"
                         />
                       </div>
@@ -244,8 +306,8 @@ export function SharingPractices({ user }: { user: any }) {
                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Kategori</label>
                           <select
                             className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all appearance-none"
-                            value={p.category || "Inovasi"}
-                            onChange={(e) => handleUpdate(p.id, { category: e.target.value })}
+                            value={tempPractice.category || "Inovasi"}
+                            onChange={(e) => setTempPractice({ ...tempPractice, category: e.target.value })}
                           >
                             <option value="Inovasi">Inovasi</option>
                             <option value="Inovasi Pembelajaran">Inovasi Pembelajaran</option>
@@ -258,8 +320,8 @@ export function SharingPractices({ user }: { user: any }) {
                           <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Link Video YouTube</label>
                           <input
                             className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-bold focus:border-main-blue focus:bg-white outline-none transition-all"
-                            value={p.video_url || ""}
-                            onChange={(e) => handleUpdate(p.id, { video_url: e.target.value })}
+                            value={tempPractice.video_url || ""}
+                            onChange={(e) => setTempPractice({ ...tempPractice, video_url: e.target.value })}
                             placeholder="https://youtube.com/watch?v=..."
                           />
                         </div>
@@ -267,7 +329,7 @@ export function SharingPractices({ user }: { user: any }) {
                       <div className="group">
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Nama Penulis</label>
                         <div className="w-full bg-gray-100/50 border-2 border-transparent rounded-2xl p-4 text-sm font-bold text-gray-400 cursor-not-allowed">
-                          {p.user_profiles?.nama || p.user_profiles?.full_name || p.user_profiles?.username || "Profil Anda"}
+                          {tempPractice.user_profiles?.nama || tempPractice.user_profiles?.full_name || tempPractice.user_profiles?.username || "Profil Anda"}
                         </div>
                         <p className="text-[9px] text-gray-400 mt-2 ml-1 italic">*Nama penulis diambil otomatis dari profil akun Anda.</p>
                       </div>
@@ -275,28 +337,35 @@ export function SharingPractices({ user }: { user: any }) {
                         <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-main-blue transition-colors">Deskripsi Inspirasi</label>
                         <textarea
                           className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl p-4 text-sm font-medium h-40 focus:border-main-blue focus:bg-white outline-none transition-all leading-relaxed"
-                          value={p.description}
-                          onChange={(e) => handleUpdate(p.id, { description: e.target.value })}
+                          value={tempPractice.description || ""}
+                          onChange={(e) => setTempPractice({ ...tempPractice, description: e.target.value })}
                           placeholder="Ceritakan tantangan, langkah-langkah, dan keberhasilan praktik baik yang Anda lakukan..."
                         />
                       </div>
                       <div className="pt-2">
                         <ImageUpload
                           label="Upload Foto Sampul"
-                          value={p.image_url || p.thumbnail_url || ""}
-                          onChange={(url) => handleUpdate(p.id, { image_url: url })}
+                          value={tempPractice.image_url || tempPractice.thumbnail_url || ""}
+                          onChange={(url) => setTempPractice({ ...tempPractice, image_url: url, thumbnail_url: url })}
                         />
                       </div>
                     </div>
-                  ))}
                 </div>
 
                 <div className="p-8 bg-gray-50/50 border-t border-gray-100">
                   <button
-                    onClick={() => setEditingId(null)}
-                    className="w-full bg-gradient-to-r from-main-blue to-indigo-600 text-white py-4 rounded-2xl text-sm font-black shadow-xl shadow-main-blue/20 hover:scale-[1.02] active:scale-95 transition-all"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="w-full bg-gradient-to-r from-main-blue to-indigo-600 text-white py-4 rounded-2xl text-sm font-black shadow-xl shadow-main-blue/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    Simpan & Publikasikan Sekarang
+                    {isSaving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Menyimpan...
+                      </>
+                    ) : (
+                      "Simpan & Publikasikan Sekarang"
+                    )}
                   </button>
                 </div>
               </motion.div>
@@ -354,7 +423,7 @@ export function SharingPractices({ user }: { user: any }) {
                   {(p.user_id === user.id || user.role === "admin") && (
                     <div className="absolute top-6 right-6 flex gap-3 z-20">
                       <button
-                        onClick={() => setEditingId(p.id)}
+                        onClick={() => startEditing(p)}
                         className="w-10 h-10 rounded-2xl bg-white/80 backdrop-blur-md flex items-center justify-center text-gray-700 hover:bg-main-blue hover:text-white transition-all border border-white/20 shadow-lg group/btn cursor-pointer"
                         title="Edit Praktik Baik"
                       >
