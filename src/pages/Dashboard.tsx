@@ -12431,6 +12431,17 @@ function TeacherJadwalCards({ user }: { user?: any }) {
 
                 {/* Content Card */}
                 <div className={`bg-white rounded-[2rem] shadow-xl shadow-gray-200 border border-gray-100 overflow-hidden flex flex-col md:flex-row relative transition-all hover:shadow-2xl hover:-translate-y-1 ${isEnded ? 'opacity-80 grayscale-[20%]' : isStarted ? 'ring-2 ring-orange-500/20' : ''}`}>
+                  {/* Event Cover Image (16:9 ratio, clearly visible) */}
+                  {item.image_url && (
+                    <div className="w-full md:w-1/3 aspect-[16/9] overflow-hidden relative group shrink-0 border-r border-gray-100/50 bg-gray-50/50">
+                      <img 
+                        src={item.image_url} 
+                        alt={item.title} 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
+                      />
+                    </div>
+                  )}
+
                   {/* Left Side: Date Banner (Mobile only) */}
                   <div className={`md:hidden bg-gradient-to-br ${isEnded ? 'from-gray-100 to-gray-200' : isStarted ? 'from-orange-100 to-orange-200 shadow-inner' : 'from-orange-50 to-orange-100'} p-6 border-b border-gray-50 flex items-center gap-4`}>
                      <div className={`w-16 h-16 bg-white rounded-[1.25rem] flex flex-col items-center justify-center shadow-md border border-gray-100`}>

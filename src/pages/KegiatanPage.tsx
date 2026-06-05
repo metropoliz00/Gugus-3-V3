@@ -162,7 +162,7 @@ export default function KegiatanPage() {
                                 viewport={{ once: true }}
                                 className="bg-white rounded-[2.5rem] overflow-hidden shadow-2xl shadow-blue-500/5 border border-main-orange/20 flex flex-col lg:flex-row transition-all hover:shadow-orange-500/10"
                             >
-                                <div className="lg:w-1/3 h-64 lg:h-auto overflow-hidden relative group">
+                                <div className="w-full lg:w-1/3 aspect-[16/9] overflow-hidden relative group shrink-0">
                                     <img src={item.image_url || "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?q=80&w=2000&auto=format&fit=crop"} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-8">
                                         <div className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold text-main-blue flex items-center gap-2">
