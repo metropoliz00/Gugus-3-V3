@@ -10023,13 +10023,40 @@ function AdminCertificateManager({ user }: { user: any }) {
           title="Daftar Sertifikat Terbit"
           icon={Award}
           fields={[
-            { name: "user_id", label: "ID Guru / Email" },
-            { name: "training_id", label: "ID Pelatihan / Kegiatan" },
+            { 
+              name: "guru_name", 
+              label: "Nama Guru / Penerima",
+              render: (item: any) => (
+                <div className="flex flex-col py-1">
+                  <span className="font-bold text-gray-950 text-sm">{item.guru_name || "Materi Umum"}</span>
+                  <span className="text-[10px] text-gray-400 font-mono tracking-tight">{item.user_id || item.guest_account_id}</span>
+                </div>
+              )
+            },
+            { 
+              name: "activity_name", 
+              label: "Nama Kegiatan / Pelatihan",
+              render: (item: any) => (
+                <div className="flex flex-col py-1">
+                  <span className="font-semibold text-main-blue text-sm">{item.activity_name || "Pelatihan Mandiri"}</span>
+                  <span className="text-[10px] text-gray-400 font-mono tracking-tight">{item.training_id}</span>
+                </div>
+              )
+            },
             { name: "certificate_number", label: "Nomor Sertifikat" },
             {
-              name: "certificate_url",
-              label: "File Sertifikat (PDF)",
-              type: "file",
+              name: "certificate_download",
+              label: "File Sertifikat (Unduh)",
+              render: (item: any, downloadFn: any) => (
+                <button
+                  type="button"
+                  onClick={() => downloadFn && downloadFn(item)}
+                  className="inline-flex items-center gap-1.5 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-xl font-bold border border-indigo-100 shadow-sm transition-all select-none cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Unduh PDF (Sertifikat)
+                </button>
+              )
             },
           ]}
         />
@@ -10509,6 +10536,39 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
   const [editId, setEditId] = useState<string | null>(null);
   const { alert, confirm } = useAlert();
 
+  const { generateTeacherPDF } = useCertificateGenerator();
+
+  const handleAdminDownloadCert = async (item: any) => {
+    if (!supabase) return;
+    try {
+      // 1. Get the certificate configs
+      const { data: sData } = await supabase
+        .from("site_settings")
+        .select("content")
+        .eq("id", 1)
+        .single();
+      
+      const configs = sData?.content?.certificate_configs || {};
+      const actId = item.training_id;
+      const config = configs[actId] || configs["default"];
+      if (!config) {
+        alert("Template sertifikat belum diatur.", "Info", "info");
+        return;
+      }
+
+      // 2. Prepare the teacher object
+      const teacher = item._teacher_obj || { nama: item.guru_name || "-", nip: "-", sekolah: "-" };
+      // 3. Prepare the training object
+      const trainingObj = item._activity_obj || { title: item.activity_name || "Pelatihan Mandiri", date_start: "" };
+
+      // 4. Generate
+      await generateTeacherPDF(teacher, trainingObj, config, item.certificate_number);
+    } catch (err: any) {
+      console.error("Gagal mengunduh sertifikat admin:", err);
+      alert("Gagal mengunduh sertifikat: " + err.message, "Gagal", "error");
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -10533,19 +10593,98 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
       
       let fetchedData = res || [];
       
-      // Attempt manual profile resolution for user_id fields
-      const userIds = [...new Set(fetchedData.map((d: any) => d.user_id).filter(Boolean))];
-      if (userIds.length > 0) {
-        const { data: pData } = await supabase.from("user_profiles").select("id, nama, username").in("id", userIds);
-        if (pData) {
-          fetchedData = fetchedData.map((d: any) => {
-            const profile = pData.find(p => p.id === d.user_id);
-            return {
-              ...d,
-              profiles: profile || null,
-              guru: profile?.nama || profile?.username || "-" // Add easy access guru name
-            };
+      if (table === "training_certificates") {
+        // Build keys to fetch relation details for certificates
+        const certUserIds = [...new Set(fetchedData.map((d: any) => d.user_id).filter(Boolean))];
+        const certGuestIds = [...new Set(fetchedData.map((d: any) => d.guest_account_id).filter(Boolean))];
+        const certActIds = [...new Set(fetchedData.map((d: any) => d.training_id).filter(Boolean))];
+
+        let profilesMap: Record<string, any> = {};
+        let guestsMap: Record<string, any> = {};
+        let activitiesMap: Record<string, any> = {};
+
+        if (certUserIds.length > 0) {
+          const { data: pData } = await supabase
+            .from("user_profiles")
+            .select("id, nama, username, nip, sekolah")
+            .in("id", certUserIds);
+          pData?.forEach(p => {
+            profilesMap[p.id] = p;
           });
+        }
+
+        if (certGuestIds.length > 0) {
+          const { data: gData } = await supabase
+            .from("guest_accounts")
+            .select("id, name, nip, institution, position")
+            .in("id", certGuestIds);
+          gData?.forEach(g => {
+            guestsMap[g.id] = g;
+          });
+        }
+
+        if (certActIds.length > 0) {
+          const [{ data: tData }, { data: eData }] = await Promise.all([
+            supabase.from("trainings").select("id, title, date_start").in("id", certActIds),
+            supabase.from("events").select("id, title, date_start").in("id", certActIds)
+          ]);
+
+          tData?.forEach(t => {
+            activitiesMap[t.id] = { id: t.id, title: t.title, date_start: t.date_start };
+          });
+          eData?.forEach(e => {
+            activitiesMap[e.id] = { id: e.id, title: e.title, date_start: e.date_start };
+          });
+        }
+
+        fetchedData = fetchedData.map((d: any) => {
+          let resolvedGuru = "-";
+          let teacherObj: any = null;
+
+          if (d.user_id && profilesMap[d.user_id]) {
+            const p = profilesMap[d.user_id];
+            resolvedGuru = p.nama || p.username || "-";
+            teacherObj = {
+              nama: resolvedGuru,
+              nip: p.nip || "-",
+              sekolah: p.sekolah || "-"
+            };
+          } else if (d.guest_account_id && guestsMap[d.guest_account_id]) {
+            const g = guestsMap[d.guest_account_id];
+            resolvedGuru = g.name || "-";
+            teacherObj = {
+              nama: resolvedGuru,
+              nip: g.nip || "-",
+              sekolah: g.institution || "-"
+            };
+          }
+
+          const actObj = d.training_id ? activitiesMap[d.training_id] : null;
+          const resolvedActivity = actObj ? actObj.title : "-";
+
+          return {
+            ...d,
+            guru_name: resolvedGuru,
+            activity_name: resolvedActivity,
+            _teacher_obj: teacherObj,
+            _activity_obj: actObj
+          };
+        });
+      } else {
+        // Attempt manual profile resolution for user_id fields
+        const userIds = [...new Set(fetchedData.map((d: any) => d.user_id).filter(Boolean))];
+        if (userIds.length > 0) {
+          const { data: pData } = await supabase.from("user_profiles").select("id, nama, username").in("id", userIds);
+          if (pData) {
+            fetchedData = fetchedData.map((d: any) => {
+              const profile = pData.find(p => p.id === d.user_id);
+              return {
+                ...d,
+                profiles: profile || null,
+                guru: profile?.nama || profile?.username || "-" // Add easy access guru name
+              };
+            });
+          }
         }
       }
       
@@ -10806,10 +10945,10 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                     {fields.filter((f: any) => !f.hideInTable).map((f: any) => (
                       <td
                         key={f.name}
-                        className="px-6 py-4 text-sm font-medium text-gray-700 max-w-[200px] truncate"
+                        className={`px-6 py-4 text-sm font-medium text-gray-700 ${f.render ? "" : "max-w-[200px] truncate"}`}
                       >
                         {f.render
-                          ? f.render(item)
+                          ? f.render(item, handleAdminDownloadCert)
                           : f.type === "date"
                           ? new Date(item[f.name]).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })
                           : f.type === "datetime-local"
