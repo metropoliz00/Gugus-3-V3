@@ -338,7 +338,7 @@ export function SharingPractices({ user }: { user: any }) {
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-90 transition-opacity group-hover:opacity-100" />
 
               {/* Card Content Overlaid */}
-              <div className="relative z-10 p-10 h-full flex flex-col justify-end min-h-[500px]">
+              <div className="relative z-10 p-6 sm:p-8 h-full flex flex-col justify-end min-h-[500px]">
                 {/* Admin/Owner Controls */}
                 {(p.user_id === user.id || user.role === "admin") && (
                   <div className="absolute top-8 right-8 flex gap-3">
@@ -373,8 +373,8 @@ export function SharingPractices({ user }: { user: any }) {
                   "{p.description}"
                 </p>
 
-                <div className="pt-8 border-t border-white/10 flex items-center justify-between mt-auto">
-                  <div className="flex items-center gap-3">
+                <div className="pt-8 border-t border-white/10 flex items-center justify-between mt-auto gap-4">
+                  <div className="flex items-center gap-3 shrink-0">
                      {p.video_url ? (
                        <button 
                         onClick={() => setActiveVideoUrl(p.video_url)}
@@ -390,13 +390,13 @@ export function SharingPractices({ user }: { user: any }) {
                      <span className="text-[10px] text-white/50 font-black uppercase tracking-[0.2em]">{p.category || "Inovasi"}</span>
                   </div>
                   
-                  <div className="text-right">
+                  <div className="text-right flex-1 min-w-0">
                     <p className="text-[9px] text-gray-500 font-black uppercase tracking-widest leading-none mb-2">Penulis</p>
                     <div className="flex items-center justify-end gap-3 text-white">
-                      <span className="text-base font-black drop-shadow-lg leading-tight break-words text-right">
+                      <span className="text-sm sm:text-base font-black drop-shadow-lg leading-tight break-words text-right whitespace-normal">
                         {authorName}
                       </span>
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-main-blue to-leaf-green flex items-center justify-center shadow-xl border border-white/10 overflow-hidden">
+                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-main-blue to-leaf-green flex items-center justify-center shadow-xl border border-white/10 overflow-hidden shrink-0">
                         {author?.foto ? (
                           <img src={author.foto} className="w-full h-full object-cover" alt={authorName} />
                         ) : (
