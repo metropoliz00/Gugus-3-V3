@@ -9949,7 +9949,6 @@ function AdminGuestAccountsManager() {
 }
 
 function AdminCertificateManager({ user }: { user: any }) {
-  const [activeSubTab, setActiveSubTab] = useState<"editor" | "list">("list");
   const [trainings, setTrainings] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
   const [selectedTrainingId, setSelectedTrainingId] = useState<string>("");
@@ -9999,93 +9998,33 @@ function AdminCertificateManager({ user }: { user: any }) {
             />
             Tombol Unduh Guru
           </label>
-          <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100">
-            <button
-              onClick={() => setActiveSubTab("list")}
-              className={`px-6 py-2 rounded-lg font-bold text-xs transition-all ${activeSubTab === "list" ? "bg-white text-main-blue shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-            >
-              Daftar Sertifikat
-            </button>
-            <button
-              onClick={() => setActiveSubTab("editor")}
-              className={`px-6 py-2 rounded-lg font-bold text-xs transition-all ${activeSubTab === "editor" ? "bg-white text-main-blue shadow-sm" : "text-gray-400 hover:text-gray-600"}`}
-            >
-              Desain Template
-            </button>
-          </div>
         </div>
       </div>
 
-      {activeSubTab === "list" ? (
-        <DataManagementTable
-          user={user}
-          table="training_certificates"
-          title="Daftar Sertifikat Terbit"
-          icon={Award}
-          fields={[
-            { 
-              name: "guru_name", 
-              label: "Nama Guru / Penerima",
-              render: (item: any) => (
-                <div className="flex flex-col py-1">
-                  <span className="font-bold text-gray-950 text-sm">{item.guru_name || "Materi Umum"}</span>
-                  <span className="text-[10px] text-gray-400 font-mono tracking-tight">{item.user_id || item.guest_account_id}</span>
-                </div>
-              )
-            },
-            { 
-              name: "activity_name", 
-              label: "Nama Kegiatan / Pelatihan",
-              render: (item: any) => (
-                <div className="flex flex-col py-1">
-                  <span className="font-semibold text-main-blue text-sm">{item.activity_name || "Pelatihan Mandiri"}</span>
-                  <span className="text-[10px] text-gray-400 font-mono tracking-tight">{item.training_id}</span>
-                </div>
-              )
-            },
-            { name: "certificate_number", label: "Nomor Sertifikat" },
-            {
-              name: "certificate_download",
-              label: "File Sertifikat (Unduh)",
-              render: (item: any, downloadFn: any) => (
-                <button
-                  type="button"
-                  onClick={() => downloadFn && downloadFn(item)}
-                  className="inline-flex items-center gap-1.5 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-xl font-bold border border-indigo-100 shadow-sm transition-all select-none cursor-pointer hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  Unduh PDF (Sertifikat)
-                </button>
-              )
-            },
-          ]}
-        />
-      ) : (
-        <div className="space-y-4">
-          <select
-            className="w-full p-4 rounded-xl border border-gray-200"
-            value={selectedTrainingId}
-            onChange={(e) => setSelectedTrainingId(e.target.value)}
-          >
-            <option value="">Pilih Kegiatan / Pelatihan (Default/Global)</option>
-            <optgroup label="Program Pelatihan Mandiri">
-              {trainings.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.title}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Agenda Kegiatan KKG">
-              {events.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.title}
-                </option>
-              ))}
-            </optgroup>
-          </select>
-          <AdminCertificateEditor trainingId={selectedTrainingId} />
-        </div>
-      )}
+      <div className="space-y-4">
+        <select
+          className="w-full p-4 rounded-xl border border-gray-200"
+          value={selectedTrainingId}
+          onChange={(e) => setSelectedTrainingId(e.target.value)}
+        >
+          <option value="">Pilih Kegiatan / Pelatihan (Default/Global)</option>
+          <optgroup label="Program Pelatihan Mandiri">
+            {trainings.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.title}
+              </option>
+            ))}
+          </optgroup>
+          <optgroup label="Agenda Kegiatan KKG">
+            {events.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.title}
+              </option>
+            ))}
+          </optgroup>
+        </select>
+        <AdminCertificateEditor trainingId={selectedTrainingId} />
+      </div>
     </div>
   );
 }
