@@ -3385,6 +3385,7 @@ function GuruOverview({ user }: { user: any }) {
 
 function AdminSettingsForm() {
   const { content, updateContent, isLoading } = useSiteContent();
+  const { alert, confirm } = useAlert();
 
   const [heroForm, setHeroForm] = useState(content.hero);
   const [profilForm, setProfilForm] = useState(content.profil);
@@ -3408,15 +3409,26 @@ function AdminSettingsForm() {
     }
   }, [content, isLoading]);
 
-  const handleSaveContent = (e: React.FormEvent) => {
+  const handleSaveContent = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateContent({
-      hero: heroForm,
-      profil: profilForm,
-      footer: footerForm,
-      announcement: announcementForm,
-      activeMenus: activeMenusForm,
-    });
+    const isConfirmed = await confirm(
+      "Apakah Anda yakin ingin menyimpan perubahan pengaturan website?",
+      "Konfirmasi Simpan"
+    );
+    if (!isConfirmed) return;
+
+    try {
+      await updateContent({
+        hero: heroForm,
+        profil: profilForm,
+        footer: footerForm,
+        announcement: announcementForm,
+        activeMenus: activeMenusForm,
+      });
+      await alert("Pengaturan website berhasil disimpan!", "Sukses", "success");
+    } catch (err: any) {
+      await alert("Gagal menyimpan pengaturan: " + err.message, "Gagal", "error");
+    }
   };
 
   return (
