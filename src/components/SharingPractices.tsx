@@ -128,9 +128,6 @@ export function SharingPractices({ user }: { user: any }) {
       if (dbUpdates.author_name) {
         delete dbUpdates.author_name; // This is from join, not updatable directly here
       }
-      if (dbUpdates.category !== undefined) {
-        delete dbUpdates.category;
-      }
 
       const { error } = await supabase
         .from("best_practices")
