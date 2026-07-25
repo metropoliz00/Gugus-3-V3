@@ -138,9 +138,12 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
             participants.map((p, idx) => {
               const profile = p.profile;
               const nama = profile?.nama || "";
+              const rowNum = idx + 1;
+              const isGanjil = rowNum % 2 !== 0;
+
               return (
                 <tr key={idx} className="hover:bg-gray-50 print:hover:bg-transparent transition-colors">
-                  <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{idx + 1}</td>
+                  <td className="border-2 border-black px-2 py-2.5 text-center font-bold">{rowNum}</td>
                   <td className={`border-2 border-black px-3 py-2.5 font-bold text-soft-black leading-tight break-words ${nama.length > 35 ? "text-[8px]" : nama.length > 25 ? "text-[9px]" : "text-[10px]"}`}>
                     {formatName(nama)}
                   </td>
@@ -156,8 +159,14 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
                   <td className="border-2 border-black px-2 py-2.5 text-center">
                     <span className="px-2 py-1 bg-emerald-50 text-emerald-700 print:bg-emerald-50 print:print-bg-emerald rounded-full font-bold uppercase text-[8px]">Hadir</span>
                   </td>
-                  <td className="border-2 border-black px-2 py-2.5 text-left h-12 relative min-w-[90px]">
-                    <span className="text-[10px] text-gray-400 font-mono absolute left-2 top-2">{idx + 1}.</span>
+                  <td className="border-2 border-black px-2 py-2.5 h-12 relative min-w-[100px]">
+                    <span 
+                      className={`text-[10px] text-gray-500 font-mono absolute top-2 ${
+                        isGanjil ? "left-2 text-left" : "left-1/2 -translate-x-1/2 text-center"
+                      }`}
+                    >
+                      {rowNum}.
+                    </span>
                   </td>
                 </tr>
               );
