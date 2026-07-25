@@ -4188,6 +4188,82 @@ function AdminGaleriForm({
     }
   };
 
+  const handleCreateVideo = async () => {
+    if (!supabase) return;
+    const newItem = {
+      media_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      title: "Video Dokumentasi Kegiatan",
+      type: "video",
+    };
+    const { data, error } = await supabase
+      .from("gallery")
+      .insert([newItem])
+      .select();
+    if (!error && data) {
+      logActivity(user, "create_galeri_video", `Menambah video ke galeri`);
+      setGallery([data[0], ...gallery]);
+    }
+  };
+
+  const getEmbedUrl = (url: string) => {
+    if (!url) return "";
+    if (url.includes("youtube.com/embed/")) return url;
+    const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+    if (ytMatch && ytMatch[1]) {
+      return `https://www.youtube.com/embed/${ytMatch[1]}`;
+    }
+    const vimeoMatch = url.match(/vimeo\.com\/(?:.*\/)?(\d+)/);
+    if (vimeoMatch && vimeoMatch[1]) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+    return url;
+  };
+
+  const isVideoItem = (item: any) => {
+    if (!item) return false;
+    if (item.type === 'video') return true;
+    if (typeof item.media_url === 'string') {
+      const url = item.media_url.toLowerCase();
+      if (
+        url.includes('youtube.com') ||
+        url.includes('youtu.be') ||
+        url.includes('vimeo.com') ||
+        url.endsWith('.mp4') ||
+        url.endsWith('.webm')
+      ) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const slides = React.useMemo(() => {
+    const result: any[] = [];
+    let photoBuffer: any[] = [];
+
+    for (const item of gallery) {
+      if (isVideoItem(item)) {
+        if (photoBuffer.length > 0) {
+          result.push({ type: 'photo_grid', items: photoBuffer });
+          photoBuffer = [];
+        }
+        result.push({ type: 'video', items: [item] });
+      } else {
+        photoBuffer.push(item);
+        if (photoBuffer.length === 4) {
+          result.push({ type: 'photo_grid', items: photoBuffer });
+          photoBuffer = [];
+        }
+      }
+    }
+
+    if (photoBuffer.length > 0) {
+      result.push({ type: 'photo_grid', items: photoBuffer });
+    }
+
+    return result;
+  }, [gallery]);
+
   const handleUpdate = async (id: string, updates: any) => {
     if (!supabase) return;
     const { error } = await supabase
@@ -4237,6 +4313,12 @@ function AdminGaleriForm({
         
         <div className="flex flex-wrap gap-3">
           <button
+            onClick={handleCreateVideo}
+            className="bg-purple-600 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-md hover:bg-purple-700 active:scale-95 transition-all flex items-center gap-2"
+          >
+            <Video className="w-4 h-4" /> Sematkan Video
+          </button>
+          <button
             onClick={() => setShowBulkUpload(!showBulkUpload)}
             className={`px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-md transition-all flex items-center gap-3 ${showBulkUpload ? "bg-pink-600 text-white" : "bg-white text-pink-600 border border-pink-200"}`}
           >
@@ -4247,7 +4329,7 @@ function AdminGaleriForm({
             onClick={handleCreate}
             className="bg-pink-500 text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-md hover:bg-pink-600 active:scale-95 transition-all flex items-center gap-3"
           >
-            <PlusCircle className="w-4 h-4" /> Tambah Satuan
+            <PlusCircle className="w-4 h-4" /> Tambah Foto
           </button>
         </div>
       </div>
@@ -4342,66 +4424,100 @@ function AdminGaleriForm({
           </div>
         ) : (
           <div className="space-y-8">
-            {(() => {
-              const groups = [];
-              for (let i = 0; i < gallery.length; i += 4) {
-                groups.push(gallery.slice(i, i + 4));
-              }
-              return groups.map((group: any[], groupIdx) => (
+            {slides.map((slide: any, slideIdx: number) => {
+              const isVideoSlide = slide.type === 'video';
+              return (
                 <div
-                  key={groupIdx}
-                  className="p-8 border border-gray-100 rounded-[2.5rem] bg-white shadow-sm hover:shadow-md transition-all group"
+                  key={slideIdx}
+                  className={`p-8 border rounded-[2.5rem] bg-white shadow-sm hover:shadow-md transition-all group ${
+                    isVideoSlide ? "border-purple-200 bg-purple-50/20" : "border-gray-100"
+                  }`}
                 >
                   <div className="flex flex-col lg:flex-row gap-8">
                     <div className="w-full lg:w-1/2">
-                      <div className="grid grid-cols-2 gap-4 aspect-square md:aspect-video lg:aspect-square bg-gray-50 rounded-3xl p-4">
-                        {[0, 1, 2, 3].map((idx) => {
-                          const item = group[idx];
-                          return (
-                            <div key={idx} className="relative group/item aspect-square rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
-                              {item ? (
-                                <>
-                                  {item.type === "photo" ? (
-                                    <img src={item.media_url} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-indigo-50 text-indigo-500">
-                                      <Play className="w-8 h-8 opacity-50" />
-                                      <span className="text-[10px] font-bold mt-2 uppercase tracking-widest">Video</span>
-                                    </div>
-                                  )}
-                                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                     <button 
-                                      onClick={() => handleDelete(item.id)}
-                                      className="p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors shadow-lg"
-                                      title="Hapus"
-                                     >
-                                       <X className="w-4 h-4" />
-                                     </button>
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl">
-                                   <ImageIcon className="w-6 h-6 text-gray-300" />
+                      {isVideoSlide ? (
+                        <div className="relative aspect-video rounded-3xl overflow-hidden bg-black border border-purple-200 shadow-md flex flex-col justify-center items-center">
+                          {(() => {
+                            const videoItem = slide.items[0];
+                            const embedUrl = getEmbedUrl(videoItem.media_url);
+                            const isDirectMp4 = typeof videoItem.media_url === 'string' && videoItem.media_url.match(/\.(mp4|webm|ogg)$/i);
+
+                            if (isDirectMp4) {
+                              return (
+                                <video src={videoItem.media_url} controls className="w-full h-full object-contain" />
+                              );
+                            } else if (embedUrl) {
+                              return (
+                                <iframe
+                                  src={embedUrl}
+                                  title={videoItem.title || "Video Preview"}
+                                  className="w-full h-full border-0"
+                                  allowFullScreen
+                                />
+                              );
+                            } else {
+                              return (
+                                <div className="flex flex-col items-center justify-center p-6 text-center text-gray-400">
+                                  <Video className="w-10 h-10 mb-2 text-purple-500 animate-pulse" />
+                                  <p className="text-xs font-bold text-white">Frame 1 Video Kegiatan</p>
+                                  <p className="text-[10px] text-gray-400 mt-1">Masukkan URL YouTube/Vimeo pada kolom sebelah kanan</p>
                                 </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                              );
+                            }
+                          })()}
+                          <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-purple-300 flex items-center gap-1.5 border border-white/10">
+                            <Video className="w-3.5 h-3.5 text-purple-400" /> Frame Single Video
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={`grid gap-3 aspect-square md:aspect-video lg:aspect-square bg-gray-50 rounded-3xl p-4 ${
+                          slide.items.length === 1 ? 'grid-cols-1' :
+                          slide.items.length === 2 ? 'grid-cols-2' :
+                          'grid-cols-2 grid-rows-2'
+                        }`}>
+                          {[0, 1, 2, 3].map((idx) => {
+                            const item = slide.items[idx];
+                            return (
+                              <div key={idx} className="relative group/item aspect-square rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+                                {item ? (
+                                  <>
+                                    <img src={item.media_url} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                       <button 
+                                        onClick={() => handleDelete(item.id)}
+                                        className="p-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors shadow-lg"
+                                        title="Hapus"
+                                       >
+                                         <X className="w-4 h-4" />
+                                       </button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl">
+                                     <ImageIcon className="w-6 h-6 text-gray-300" />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1 space-y-6">
                       <div>
                         <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-pink-500" />
-                          Informasi Grup Galeri #{groups.length - groupIdx}
+                          <div className={`w-2 h-2 rounded-full ${isVideoSlide ? 'bg-purple-500' : 'bg-pink-500'}`} />
+                          Slide #{slides.length - slideIdx} ({isVideoSlide ? 'Frame 1 Video' : `Grid Foto (${slide.items.length})`})
                         </h4>
                         
                         <div className="space-y-4">
-                          {group.map((item, idx) => (
+                          {slide.items.map((item: any, idx: number) => (
                             <div key={item.id} className="p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3">
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-black text-pink-500 uppercase tracking-tighter">Media {idx + 1}</span>
+                                <span className="text-[10px] font-black text-pink-500 uppercase tracking-tighter">
+                                  {item.type === 'video' ? 'Media Video' : `Media Foto ${idx + 1}`}
+                                </span>
                                 <div className="flex items-center gap-2">
                                   <select
                                     className="text-[10px] font-bold uppercase bg-white border border-gray-200 rounded-lg px-2 py-1 outline-none"
@@ -4411,12 +4527,19 @@ function AdminGaleriForm({
                                     <option value="photo">Foto</option>
                                     <option value="video">Video</option>
                                   </select>
+                                  <button
+                                    onClick={() => handleDelete(item.id)}
+                                    className="p-1.5 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors"
+                                    title="Hapus Media"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
                                 </div>
                               </div>
                               
                               <input
                                 className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-soft-black outline-none focus:border-pink-300 transition-all"
-                                placeholder="Judul Media..."
+                                placeholder="Judul Media / Kegiatan..."
                                 value={item.title || ""}
                                 onChange={(e) => handleUpdate(item.id, { title: e.target.value })}
                               />
@@ -4432,52 +4555,25 @@ function AdminGaleriForm({
                                   />
                                 </div>
                               ) : (
-                                <input
-                                  className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-pink-300 transition-all font-mono"
-                                  placeholder="Video URL (Youtube/Vimeo)..."
-                                  value={item.media_url || ""}
-                                  onChange={(e) => handleUpdate(item.id, { media_url: e.target.value })}
-                                />
+                                <div className="space-y-1">
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase">Link Video (YouTube / Vimeo / MP4)</label>
+                                  <input
+                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs outline-none focus:border-pink-300 transition-all font-mono"
+                                    placeholder="Sematkan Link Video YouTube/Vimeo..."
+                                    value={item.media_url || ""}
+                                    onChange={(e) => handleUpdate(item.id, { media_url: e.target.value })}
+                                  />
+                                </div>
                               )}
                             </div>
                           ))}
                         </div>
                       </div>
-
-                      {group.length > 0 && group.every(i => i.title === group[0].title) && (
-                         <div className="p-4 bg-pink-50 rounded-2xl border border-pink-100">
-                            <p className="text-[10px] text-pink-600 font-bold uppercase mb-2">Update Judul Masal</p>
-                            <div className="flex gap-2">
-                               <input 
-                                 type="text" 
-                                 placeholder="Ganti judul untuk semua media di grup ini..."
-                                 className="flex-1 px-3 py-2 bg-white border border-pink-200 rounded-xl text-sm outline-none"
-                                 onKeyDown={(e) => {
-                                   if (e.key === 'Enter') {
-                                     const target = e.target as HTMLInputElement;
-                                     group.forEach(item => handleUpdate(item.id, { title: target.value }));
-                                   }
-                                 }}
-                               />
-                               <button 
-                                 className="px-4 py-2 bg-pink-500 text-white rounded-xl text-xs font-bold"
-                                 onClick={(e) => {
-                                   const input = (e.currentTarget.previousSibling as HTMLInputElement);
-                                   if (input.value) {
-                                     group.forEach(item => handleUpdate(item.id, { title: input.value }));
-                                   }
-                                 }}
-                               >
-                                 Apply
-                               </button>
-                            </div>
-                         </div>
-                      )}
                     </div>
                   </div>
                 </div>
-              ));
-            })()}
+              );
+            })}
           </div>
         )}
       </div>
@@ -5832,24 +5928,24 @@ function AdminSekolahForm({ user }: { user: any }) {
                       )}
 
                     <div className="pt-6 border-t border-gray-100">
-                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Foto Prestasi (Max 4 - Rasio 4:6)</label>
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {[0, 1, 2, 3].map((idx) => {
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Foto Prestasi Sekolah (Max 2 - Landscape 16:9)</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[0, 1].map((idx) => {
                           const prestasi = (school.prestasi_images || [])[idx] || { image: "", description: "" };
                           return (
                             <div key={idx} className="space-y-2">
                               <ImageUpload
-                                label={`Foto ${idx + 1}`}
+                                label={`Foto Prestasi ${idx + 1}`}
                                 value={typeof prestasi === 'string' ? prestasi : prestasi.image || ""}
                                 onChange={(base64) => {
                                   const curr = [...(school.prestasi_images || [])];
                                   const item = typeof curr[idx] === 'object' ? { ...curr[idx] } : { description: "" };
                                   item.image = base64;
                                   curr[idx] = item;
-                                  handleUpdate(school.id, { prestasi_images: curr });
+                                  handleUpdate(school.id, { prestasi_images: curr.slice(0, 2) });
                                 }}
-                                maxWidth={600}
-                                maxHeight={900}
+                                maxWidth={960}
+                                maxHeight={540}
                               />
                               <textarea
                                 className="w-full text-[10px] p-2 border border-gray-100 rounded-lg bg-gray-50 focus:ring-1 focus:ring-main-orange/30 outline-none resize-none"
@@ -5861,7 +5957,7 @@ function AdminSekolahForm({ user }: { user: any }) {
                                   const item = typeof curr[idx] === 'object' ? { ...curr[idx] } : { image: "" };
                                   item.description = e.target.value;
                                   curr[idx] = item;
-                                  handleUpdate(school.id, { prestasi_images: curr });
+                                  handleUpdate(school.id, { prestasi_images: curr.slice(0, 2) });
                                 }}
                               />
                             </div>

@@ -169,16 +169,17 @@ export default function SchoolDetailModal({ school, onClose }: SchoolDetailModal
                         </div>
                         <h4 className="text-xl font-bold font-heading">Prestasi Sekolah</h4>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-2">
-                        {school.prestasi_images.slice(0, 4).map((item: any, idx: number) => {
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-2">
+                        {school.prestasi_images.slice(0, 2).map((item: any, idx: number) => {
                           const img = typeof item === 'string' ? item : item.image;
                           const desc = typeof item === 'object' ? item.description : "";
+                          if (!img) return null;
                           return (
-                            <div key={idx} className="group/item relative aspect-[2/3] rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-gray-50">
-                              <img src={img} className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110" alt={`Prestasi ${idx + 1}`} />
+                            <div key={idx} className="group/item relative aspect-[16/9] rounded-2xl overflow-hidden shadow-lg border border-gray-100 bg-gray-50">
+                              <img src={img} className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-105" alt={`Prestasi ${idx + 1}`} />
                               {desc && (
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                                  <p className="text-white text-[10px] font-bold leading-tight italic">
+                                  <p className="text-white text-[11px] font-bold leading-tight italic">
                                     "{desc}"
                                   </p>
                                 </div>
