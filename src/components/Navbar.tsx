@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Menu, X, User, LogIn, ChevronDown, Home, School, Newspaper, LayoutDashboard } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useSiteContent } from "../contexts/SiteContext";
+import VisitorCounter from "./VisitorCounter";
 
 export default function Navbar({ onLoginClick, user }: { onLoginClick: () => void; user?: any }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -141,19 +142,20 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
             ))}
           </nav>
 
-          {/* Login Buttons */}
-          <div className="flex items-center gap-3">
+          {/* Visitor Counter & Login Buttons */}
+          <div className="flex items-center gap-2.5">
+            <VisitorCounter variant="navbar" />
             {user ? (
               <Link 
                 to="/dashboard"
-                className="px-6 py-2 rounded-full bg-gradient-to-r from-main-blue to-leaf-green text-white text-sm font-semibold shadow-lg shadow-main-blue/20 hover:scale-105 transition-transform flex items-center gap-2"
+                className="px-5 py-2 rounded-full bg-gradient-to-r from-main-blue to-leaf-green text-white text-xs xl:text-sm font-semibold shadow-md shadow-main-blue/20 hover:scale-105 transition-transform flex items-center gap-2 shrink-0"
               >
                 <LayoutDashboard className="w-4 h-4" /> Ke Dashboard
               </Link>
             ) : (
               <button 
                 onClick={() => onLoginClick()}
-                className="px-6 py-2 rounded-full bg-gradient-to-r from-main-blue to-leaf-green text-white text-sm font-semibold shadow-lg shadow-main-blue/20 hover:scale-105 transition-transform flex items-center gap-2"
+                className="px-5 py-2 rounded-full bg-gradient-to-r from-main-blue to-leaf-green text-white text-xs xl:text-sm font-semibold shadow-md shadow-main-blue/20 hover:scale-105 transition-transform flex items-center gap-2 shrink-0"
               >
                 <LogIn className="w-4 h-4" /> Login
               </button>
@@ -233,7 +235,10 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-8">
-                <div className="font-heading font-bold text-xl text-dark-gray">Menu Utama</div>
+                <div className="flex items-center gap-3">
+                  <div className="font-heading font-bold text-xl text-dark-gray">Menu Utama</div>
+                  <VisitorCounter variant="navbar" />
+                </div>
                 <button onClick={() => setMobileMenuOpen(false)} className="p-2 bg-light-gray rounded-full">
                   <X className="w-6 h-6" />
                 </button>

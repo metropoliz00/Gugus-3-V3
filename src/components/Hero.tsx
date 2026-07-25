@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { ArrowRight, BookOpen, Users } from "lucide-react";
 import { useSiteContent } from "../contexts/SiteContext";
+import VisitorCounter from "./VisitorCounter";
 
 const backgroundImages = [
   "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop",
@@ -22,6 +23,11 @@ export default function Hero() {
 
   return (
     <section id="beranda" className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden">
+      {/* Top Right Visitor Badge on Beranda */}
+      <div className="absolute top-20 right-4 sm:top-24 sm:right-8 lg:top-28 lg:right-12 z-20">
+        <VisitorCounter variant="badge" />
+      </div>
+
       {/* Floating Abstract Shapes based on Natural Tones Design */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-light-gray">
         <div className="absolute top-[-100px] right-[-100px] w-[500px] h-[500px] bg-gradient-to-br from-[#1F8FE5]/10 to-[#7AC943]/10 rounded-full blur-3xl"></div>
