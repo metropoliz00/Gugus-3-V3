@@ -486,6 +486,84 @@ app.put("/api/finance/records/:id", async (req, res) => {
   }
 });
 
+// Guest Registration API
+app.post("/api/guest-register", async (req, res) => {
+  const { name, nip, pangkat_golongan, position, institution, peran } = req.body;
+
+  if (!name || !nip) {
+    return res.status(400).json({ error: "Nama lengkap dan NIP wajib diisi." });
+  }
+
+  const cleanNip = String(nip).trim();
+
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+
+    // Check if username/nip already exists in guest_accounts
+    const { data: existingGuest } = await supabaseAdmin
+      .from("guest_accounts")
+      .select("*")
+      .or(`username.eq.${cleanNip},nip.eq.${cleanNip}`)
+      .maybeSingle();
+
+    if (existingGuest) {
+      // Update existing record
+      const { data: updated, error: updateErr } = await supabaseAdmin
+        .from("guest_accounts")
+        .update({
+          username: cleanNip,
+          password: cleanNip,
+          name: name.trim(),
+          nip: cleanNip,
+          position: position ? String(position).trim() : "",
+          institution: institution ? String(institution).trim() : "",
+          pangkat_golongan: pangkat_golongan ? String(pangkat_golongan).trim() : "",
+          peran: peran ? String(peran).trim() : "Tamu Undangan",
+        })
+        .eq("id", existingGuest.id)
+        .select()
+        .single();
+
+      if (updateErr) throw updateErr;
+
+      return res.json({
+        success: true,
+        message: "Registrasi Akun Tamu berhasil diperbarui!",
+        guest: updated,
+      });
+    }
+
+    // Insert new guest account
+    const { data: newGuest, error: insertErr } = await supabaseAdmin
+      .from("guest_accounts")
+      .insert([
+        {
+          username: cleanNip,
+          password: cleanNip,
+          name: name.trim(),
+          nip: cleanNip,
+          position: position ? String(position).trim() : "",
+          institution: institution ? String(institution).trim() : "",
+          pangkat_golongan: pangkat_golongan ? String(pangkat_golongan).trim() : "",
+          peran: peran ? String(peran).trim() : "Tamu Undangan",
+        },
+      ])
+      .select()
+      .single();
+
+    if (insertErr) throw insertErr;
+
+    res.json({
+      success: true,
+      message: "Registrasi Akun Tamu berhasil!",
+      guest: newGuest,
+    });
+  } catch (err: any) {
+    console.error("Guest Register API error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // For production static serving
 if (process.env.NODE_ENV === "production") {
     const distPath = path.join(process.cwd(), "dist");

@@ -34,6 +34,7 @@ import ELearning from './pages/ELearning';
 import AnggotaGugusPage from './pages/AnggotaGugus';
 import KeuanganPage from './pages/KeuanganPage';
 import PraktikBaikPage from './pages/PraktikBaikPage';
+import RegistrasiTamu from './pages/RegistrasiTamu';
 import { AlertProvider } from './contexts/AlertContext';
 import { logActivity } from './lib/activity';
 
@@ -196,6 +197,7 @@ export default function App() {
       '/layanan/upload': 'Upload Berkas',
       '/layanan/monitoring': 'Monitoring Pembelajaran',
       '/layanan/elearning': 'E-Learning',
+      '/registrasi-tamu': 'Registrasi Tamu',
       '/dashboard': 'Dashboard Admin',
     };
 
@@ -237,6 +239,7 @@ export default function App() {
             <Route path="/layanan/upload" element={<UploadBerkas />} />
             <Route path="/layanan/monitoring" element={<MonitoringPembelajaran />} />
             <Route path="/layanan/elearning" element={<ELearning />} />
+            <Route path="/registrasi-tamu" element={<RegistrasiTamu onLoginSuccess={handleLoginSuccess} />} />
             <Route 
               path="/dashboard/*" 
               element={isInitialAuthLoading ? <></> : (user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/" replace />)} 
