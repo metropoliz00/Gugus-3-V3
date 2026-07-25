@@ -115,12 +115,12 @@ export default function VisitorCounter({ className = "", variant = "navbar" }: V
           const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
           const pagePath = typeof window !== 'undefined' ? window.location.pathname || 'beranda' : 'beranda';
 
-          // Insert visit record
+          // Insert visit record to database
           await supabase
             .from('site_visitors')
             .insert([{ visited_at: new Date().toISOString(), page: pagePath, user_agent: userAgent }]);
 
-          // Fetch total count from site_visitors
+          // Fetch total count from database
           const { count, error: countErr } = await supabase
             .from('site_visitors')
             .select('*', { count: 'exact', head: true });
@@ -128,7 +128,7 @@ export default function VisitorCounter({ className = "", variant = "navbar" }: V
           if (!countErr && typeof count === 'number' && count > 0) {
             remoteCount = count;
           } else {
-            // Backup fallback to site_settings
+            // Backup database fallback using site_settings
             try {
               const { data: settingsData } = await supabase
                 .from('site_settings')
@@ -138,7 +138,7 @@ export default function VisitorCounter({ className = "", variant = "navbar" }: V
 
               if (settingsData && settingsData.content) {
                 const currentContent = settingsData.content;
-                const dbVisitorCount = (currentContent.visitor_count || 1) + 1;
+                const dbVisitorCount = (currentContent.visitor_count || 0) + 1;
                 remoteCount = dbVisitorCount;
 
                 await supabase
@@ -151,7 +151,16 @@ export default function VisitorCounter({ className = "", variant = "navbar" }: V
           }
         }
 
-        const finalCount = Math.max(newLocalCount, remoteCount);
+        // Use real count from database if available; purge stale dummy cache if needed
+        let finalCount = 1;
+        if (remoteCount > 0) {
+          finalCount = remoteCount;
+        } else if (newLocalCount < 1000) {
+          finalCount = newLocalCount;
+        } else {
+          finalCount = 1;
+        }
+
         localStorage.setItem(STORAGE_KEY, finalCount.toString());
 
         if (isMounted) {
