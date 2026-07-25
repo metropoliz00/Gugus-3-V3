@@ -146,70 +146,86 @@ export default function KkgPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="bg-white rounded-[2.5rem] p-8 md:p-16 shadow-xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden"
+          className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-64 h-64 bg-main-blue/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2" />
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 text-leaf-green font-bold text-sm uppercase tracking-widest mb-4">
-                <BookOpen className="w-5 h-5" />
+          <div className="grid lg:grid-cols-12 gap-10 items-center">
+            {/* Left Content */}
+            <div className="lg:col-span-6 space-y-6">
+              <div className="inline-flex items-center gap-2 text-leaf-green font-bold text-sm uppercase tracking-widest px-3.5 py-1.5 bg-leaf-green/10 rounded-full">
+                <BookOpen className="w-4 h-4" />
                 <span>Profil & Sejarah</span>
               </div>
-              <h2 className="text-3xl md:text-4xl font-heading font-bold text-soft-black mb-6">Membangun Fondasi Pendidikan Sejak Dini</h2>
+              <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-soft-black leading-tight">
+                Membangun Fondasi Pendidikan Sejak Dini
+              </h2>
               <div className="space-y-4 text-gray-600 leading-relaxed">
                 <p>{sejarah}</p>
               </div>
+              <div className="pt-2">
+                <img 
+                  src={kkg.gambarProfil || "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop"} 
+                  className="rounded-2xl shadow-md w-full h-52 object-cover border border-gray-100" 
+                  alt="Profil KKG" 
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <img src={kkg.gambarProfil || "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop"} className="rounded-2xl shadow-lg w-full h-48 object-cover" alt="Profil KKG" />
-                <div className="bg-leaf-green p-6 rounded-2xl text-white shadow-lg">
-                  <span className="text-4xl font-bold block mb-1">{kkg.tahunDedikasi || "10+"}</span>
-                  <span className="text-sm font-medium opacity-80 uppercase tracking-wider">Tahun Berdedikasi</span>
+
+            {/* Right Cards Stack */}
+            <div className="lg:col-span-6 space-y-4">
+              {/* Row 1: Tahun Berdedikasi & Anggota Aktif Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Card 1: Tahun Berdedikasi */}
+                <div className="bg-gradient-to-br from-leaf-green to-dark-green p-6 rounded-3xl text-white shadow-lg shadow-leaf-green/15 flex flex-col justify-between min-h-[130px]">
+                  <div>
+                    <span className="text-3xl md:text-4xl font-black font-heading block mb-1">
+                      {kkg.tahunDedikasi || "10+"}
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold opacity-90 uppercase tracking-wider">
+                    Tahun Berdedikasi
+                  </span>
+                </div>
+
+                {/* Card 2: Anggota Aktif */}
+                <div className="bg-gradient-to-br from-main-blue to-dark-blue p-6 rounded-3xl text-white shadow-lg shadow-main-blue/15 flex flex-col justify-between min-h-[130px]">
+                  <div>
+                    <span className="text-3xl md:text-4xl font-black font-heading block mb-1">
+                      {kkg.anggotaAktif || "120+"}
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold opacity-90 uppercase tracking-wider">
+                    Anggota Aktif
+                  </span>
                 </div>
               </div>
-              <div className="pt-8 space-y-4">
-                <div className="bg-main-blue p-6 rounded-2xl text-white shadow-lg">
-                  <span className="text-4xl font-bold block mb-1">{kkg.persentaseKolaborasi || "100%"}</span>
-                  <span className="text-sm font-medium opacity-80 uppercase tracking-wider">Kolaborasi Aktif</span>
+
+              {/* Row 2 (Placed DIRECTLY UNDER Anggota Aktif & Top Cards): 13 PROGRAM DISELESAIKAN & 5 WORKSHOP */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Card 3: Program Diselesaikan */}
+                <div className="bg-white border-2 border-gray-100/90 p-6 md:p-8 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/30 transition-all flex flex-col items-center justify-center min-h-[130px] group">
+                  <span className="text-4xl md:text-5xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
+                    {kkg.programDiselesaikan || 13}
+                  </span>
+                  <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
+                    Program Diselesaikan
+                  </span>
                 </div>
-                {kkg.statistikKkg && kkg.statistikKkg.length > 0 && (
-                  <div className="bg-orange-500 p-6 rounded-2xl text-white shadow-lg">
-                    <span className="text-4xl font-bold block mb-1">{kkg.statistikKkg[0].value}{kkg.statistikKkg[0].suffix}</span>
-                    <span className="text-sm font-medium opacity-80 uppercase tracking-wider">{kkg.statistikKkg[0].label}</span>
-                  </div>
-                )}
-                {(!kkg.statistikKkg || kkg.statistikKkg.length === 0) && (
-                   <img src="https://images.unsplash.com/photo-1546410531-bea4cada4ff8?q=80&w=2000&auto=format&fit=crop" className="rounded-2xl shadow-lg w-full h-48 object-cover" alt="Kolaborasi" />
-                )}
+
+                {/* Card 4: Workshop */}
+                <div className="bg-white border-2 border-gray-100/90 p-6 md:p-8 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/30 transition-all flex flex-col items-center justify-center min-h-[130px] group">
+                  <span className="text-4xl md:text-5xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
+                    {kkg.totalWorkshop || 5}
+                  </span>
+                  <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
+                    Workshop
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </motion.div>
       </section>
-
-      {/* Statistik Tambahan */}
-      {kkg.statistikKkg && kkg.statistikKkg.length > 1 && (
-        <section className="container mx-auto px-6 max-w-7xl mb-24">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-            {kkg.statistikKkg.slice(1).map((stat: any, idx: number) => (
-              <motion.div 
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-white p-6 md:p-8 rounded-[2rem] shadow-xl shadow-gray-200/50 border border-gray-100 text-center"
-              >
-                <div className="text-4xl md:text-5xl font-black font-heading text-main-blue mb-2">
-                  {stat.value}{stat.suffix}
-                </div>
-                <div className="text-sm font-bold text-gray-500 uppercase tracking-widest">{stat.label}</div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Visi Misi Tujuan */}
       <section className="container mx-auto px-6 max-w-7xl mb-24">

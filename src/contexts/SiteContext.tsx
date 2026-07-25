@@ -156,12 +156,15 @@ export const defaultContent = {
     gambarProfil: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop",
     persentaseKolaborasi: "100%",
     tahunDedikasi: "10+",
+    anggotaAktif: "120+",
+    programDiselesaikan: 13,
+    totalWorkshop: 5,
     realisasiProgram: 65,
     partisipasiGuru: 88,
     statistikKkg: [
-      { label: "Anggota Aktif", value: 45, suffix: "+" },
-      { label: "Program Diselesaikan", value: 120, suffix: "" },
-      { label: "Workshop", value: 24, suffix: "" }
+      { label: "Anggota Aktif", value: 120, suffix: "+" },
+      { label: "Program Diselesaikan", value: 13, suffix: "" },
+      { label: "Workshop", value: 5, suffix: "" }
     ],
     visi: "Terwujudnya Guru Profesional, Kreatif, and Inovatif dalam Menyelenggarakan Pembelajaran yang Berpusat pada Peserta Didik.",
     misi: [
