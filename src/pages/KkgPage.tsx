@@ -6,7 +6,7 @@ import {
   Users, Target, Lightbulb, FileText, Download, Upload, 
   Calendar, BarChart3, Bell, ChevronDown, CheckCircle2,
   Briefcase, BookOpen, Quote, Image as ImageIcon, Video, PlayCircle,
-  Megaphone
+  Megaphone, Award
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSiteContent, defaultContent } from "../contexts/SiteContext";
@@ -149,9 +149,10 @@ export default function KkgPage() {
           className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-64 h-64 bg-main-blue/5 rounded-full blur-3xl -z-10 translate-x-1/2 -translate-y-1/2" />
-          <div className="grid lg:grid-cols-12 gap-10 items-center">
+          {/* Top Row: Text on Left, Photo on Right (16:9 aspect ratio) */}
+          <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-10">
             {/* Left Content */}
-            <div className="lg:col-span-6 space-y-6">
+            <div className="lg:col-span-6 space-y-5">
               <div className="inline-flex items-center gap-2 text-leaf-green font-bold text-sm uppercase tracking-widest px-3.5 py-1.5 bg-leaf-green/10 rounded-full">
                 <BookOpen className="w-4 h-4" />
                 <span>Profil & Sejarah</span>
@@ -159,69 +160,74 @@ export default function KkgPage() {
               <h2 className="text-3xl md:text-4xl font-heading font-extrabold text-soft-black leading-tight">
                 Membangun Fondasi Pendidikan Sejak Dini
               </h2>
-              <div className="space-y-4 text-gray-600 leading-relaxed">
+              <div className="space-y-4 text-gray-600 leading-relaxed text-base">
                 <p>{sejarah}</p>
-              </div>
-              <div className="pt-2">
-                <img 
-                  src={kkg.gambarProfil || "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop"} 
-                  className="rounded-2xl shadow-md w-full h-52 object-cover border border-gray-100" 
-                  alt="Profil KKG" 
-                />
               </div>
             </div>
 
-            {/* Right Cards Stack */}
-            <div className="lg:col-span-6 space-y-4">
-              {/* Row 1: Tahun Berdedikasi & Anggota Aktif Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Card 1: Tahun Berdedikasi */}
-                <div className="bg-gradient-to-br from-leaf-green to-dark-green p-6 rounded-3xl text-white shadow-lg shadow-leaf-green/15 flex flex-col justify-between min-h-[130px]">
-                  <div>
-                    <span className="text-3xl md:text-4xl font-black font-heading block mb-1">
-                      {kkg.tahunDedikasi || "10+"}
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold opacity-90 uppercase tracking-wider">
-                    Tahun Berdedikasi
-                  </span>
-                </div>
+            {/* Right Photo with Aspect Ratio 16:9 */}
+            <div className="lg:col-span-6">
+              <div className="relative group overflow-hidden rounded-3xl shadow-lg border border-gray-100">
+                <img 
+                  src={kkg.gambarProfil || "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop"} 
+                  className="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-500" 
+                  alt="Profil KKG" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-60" />
+              </div>
+            </div>
+          </div>
 
-                {/* Card 2: Anggota Aktif */}
-                <div className="bg-gradient-to-br from-main-blue to-dark-blue p-6 rounded-3xl text-white shadow-lg shadow-main-blue/15 flex flex-col justify-between min-h-[130px]">
-                  <div>
-                    <span className="text-3xl md:text-4xl font-black font-heading block mb-1">
-                      {kkg.anggotaAktif || "120+"}
-                    </span>
-                  </div>
-                  <span className="text-xs font-bold opacity-90 uppercase tracking-wider">
-                    Anggota Aktif
-                  </span>
+          {/* Bottom Row: 4 Cards in a Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 pt-8 border-t border-gray-100">
+            {/* Card 1: Tahun Berdedikasi */}
+            <div className="bg-gradient-to-br from-leaf-green to-dark-green p-6 rounded-3xl text-white shadow-lg shadow-leaf-green/15 flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl md:text-4xl font-black font-heading block">
+                  {kkg.tahunDedikasi || "10+"}
+                </span>
+                <div className="p-2.5 bg-white/10 backdrop-blur-sm rounded-2xl">
+                  <Award className="w-6 h-6 text-white" />
                 </div>
               </div>
+              <span className="text-xs font-bold opacity-90 uppercase tracking-wider mt-4">
+                Tahun Berdedikasi
+              </span>
+            </div>
 
-              {/* Row 2 (Placed DIRECTLY UNDER Anggota Aktif & Top Cards): 13 PROGRAM DISELESAIKAN & 5 WORKSHOP */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Card 3: Program Diselesaikan */}
-                <div className="bg-white border-2 border-gray-100/90 p-6 md:p-8 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/30 transition-all flex flex-col items-center justify-center min-h-[130px] group">
-                  <span className="text-4xl md:text-5xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
-                    {kkg.programDiselesaikan || 13}
-                  </span>
-                  <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
-                    Program Diselesaikan
-                  </span>
-                </div>
-
-                {/* Card 4: Workshop */}
-                <div className="bg-white border-2 border-gray-100/90 p-6 md:p-8 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/30 transition-all flex flex-col items-center justify-center min-h-[130px] group">
-                  <span className="text-4xl md:text-5xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
-                    {kkg.totalWorkshop || 5}
-                  </span>
-                  <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
-                    Workshop
-                  </span>
+            {/* Card 2: Anggota Aktif */}
+            <div className="bg-gradient-to-br from-main-blue to-dark-blue p-6 rounded-3xl text-white shadow-lg shadow-main-blue/15 flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl md:text-4xl font-black font-heading block">
+                  {kkg.anggotaAktif || "120+"}
+                </span>
+                <div className="p-2.5 bg-white/10 backdrop-blur-sm rounded-2xl">
+                  <Users className="w-6 h-6 text-white" />
                 </div>
               </div>
+              <span className="text-xs font-bold opacity-90 uppercase tracking-wider mt-4">
+                Anggota Aktif
+              </span>
+            </div>
+
+            {/* Card 3: Program Diselesaikan */}
+            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/40 hover:shadow-main-blue/10 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center min-h-[130px] group">
+              <span className="text-3xl md:text-4xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
+                {kkg.programDiselesaikan || 13}
+              </span>
+              <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
+                Program Diselesaikan
+              </span>
+            </div>
+
+            {/* Card 4: Workshop */}
+            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/40 hover:shadow-main-blue/10 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center min-h-[130px] group">
+              <span className="text-3xl md:text-4xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
+                {kkg.totalWorkshop || 5}
+              </span>
+              <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
+                Workshop
+              </span>
             </div>
           </div>
         </motion.div>
