@@ -69,7 +69,7 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
             : "bg-gradient-to-b from-white/90 via-white/70 to-transparent py-4"
         )}
       >
-        <div className="w-full max-w-[1800px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-2 lg:gap-4">
+        <div className="w-full max-w-[1920px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-2 lg:gap-6">
           {/* Logo container */}
           <div className="flex items-center gap-3 shrink-0">
             <Link to="/" className="flex items-center gap-3">
@@ -87,8 +87,8 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
             </Link>
           </div>
 
-          {/* Desktop Nav */}
-          <nav className="flex items-center gap-1 xl:gap-2.5 2xl:gap-4 text-[12px] xl:text-[13px] font-medium text-gray-700 hidden lg:flex shrink-0 overflow-x-auto no-scrollbar py-1">
+          {/* Desktop Nav - Auto Expanding Container */}
+          <nav className="flex-1 flex items-center justify-center gap-1 xl:gap-2 2xl:gap-3 text-[12px] xl:text-[13px] font-medium text-gray-700 hidden lg:flex min-w-0 overflow-x-auto no-scrollbar py-1">
             {menuItems.map((item) => (
               <div 
                 key={item.label} 

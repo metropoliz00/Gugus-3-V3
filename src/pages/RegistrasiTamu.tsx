@@ -182,14 +182,14 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pt-28 pb-20 px-4 md:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-sky-50/40 pt-28 pb-20 px-4 md:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Top Header Card */}
-        <div className="bg-gradient-to-r from-white via-sky-50 to-emerald-50/90 p-8 md:p-12 rounded-[2.5rem] text-soft-black border border-blue-100 shadow-xl shadow-blue-500/5 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-white via-sky-50 to-emerald-50/80 p-8 md:p-12 rounded-[2.5rem] text-soft-black border border-blue-100 shadow-xl shadow-blue-500/5 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200/20 rounded-full blur-3xl pointer-events-none" />
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-3 text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-100/80 backdrop-blur-md rounded-full border border-blue-200 text-xs font-bold uppercase tracking-widest text-main-blue">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-blue-50 backdrop-blur-md rounded-full border border-blue-200 text-xs font-bold uppercase tracking-widest text-main-blue">
                 <ShieldCheck className="w-4 h-4 text-main-blue" /> Registrasi Akses Mandiri
               </div>
               <h1 className="text-3xl md:text-4xl font-black font-heading tracking-tight leading-tight text-soft-black">
@@ -212,7 +212,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-emerald-900/5 border border-emerald-100 space-y-8"
+              className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-blue-900/5 border border-emerald-100 space-y-8"
             >
               <div className="text-center space-y-4">
                 <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto border-4 border-emerald-100 shadow-md">
@@ -227,7 +227,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
               </div>
 
               {/* Credentials Card */}
-              <div className="bg-gradient-to-br from-indigo-50/90 via-blue-50/60 to-emerald-50/60 p-6 md:p-8 rounded-3xl border border-indigo-100 space-y-6">
+              <div className="bg-gradient-to-br from-indigo-50/80 via-sky-50/50 to-emerald-50/50 p-6 md:p-8 rounded-3xl border border-indigo-100 space-y-6">
                 <div className="flex items-center gap-3 text-indigo-800 font-bold text-sm border-b border-indigo-100 pb-4">
                   <KeyRound className="w-5 h-5 text-indigo-600" />
                   <span>Kredensial Login Akun Tamu Anda</span>
@@ -253,7 +253,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
                   </div>
                 </div>
 
-                <div className="bg-white/90 p-5 rounded-2xl border border-gray-100 space-y-2 text-xs text-gray-600">
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 space-y-2 text-xs text-gray-600">
                   <div className="flex items-center gap-2 font-bold text-soft-black">
                     <User className="w-4 h-4 text-main-blue" />
                     <span>Detail Profil Terdaftar:</span>
@@ -302,10 +302,10 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-blue-900/5 border border-blue-100/80"
+              className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-blue-900/5 border border-blue-100/80"
             >
               {/* Form Info Box */}
-              <div className="bg-blue-50/80 border border-blue-100 p-5 rounded-2xl flex items-start gap-4 mb-8 text-xs text-blue-900 leading-relaxed">
+              <div className="bg-sky-50/80 border border-sky-100 p-5 rounded-2xl flex items-start gap-4 mb-8 text-xs text-sky-900 leading-relaxed">
                 <Sparkles className="w-5 h-5 text-main-blue shrink-0 mt-0.5" />
                 <div>
                   <strong className="font-bold text-main-blue block mb-0.5">Catatan Penting Login Tamu:</strong>
@@ -326,7 +326,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Nama Lengkap & Gelar"
-                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
+                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100/80 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
                     />
                   </div>
 
@@ -341,7 +341,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
                       value={formData.nip}
                       onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
                       placeholder="NIP / Nomor Identitas"
-                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100 p-4 rounded-2xl text-sm font-mono font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
+                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100/80 p-4 rounded-2xl text-sm font-mono font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
                     />
                     <p className="text-[11px] text-gray-400 italic">
                       *Akan menjadi dasar Username & Password akun tamu Anda.
@@ -358,7 +358,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
                       value={formData.pangkat_golongan}
                       onChange={(e) => setFormData({ ...formData, pangkat_golongan: e.target.value })}
                       placeholder="Pangkat / Golongan"
-                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
+                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100/80 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
                     />
                   </div>
 
@@ -373,7 +373,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
                       value={formData.position}
                       onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                       placeholder="Jabatan"
-                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
+                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100/80 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
                     />
                   </div>
 
@@ -388,7 +388,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
                       value={formData.institution}
                       onChange={(e) => setFormData({ ...formData, institution: e.target.value })}
                       placeholder="Asal Instansi"
-                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
+                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100/80 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
                     />
                   </div>
 
@@ -400,7 +400,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
                     <select
                       value={formData.peran}
                       onChange={(e) => setFormData({ ...formData, peran: e.target.value })}
-                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm cursor-pointer"
+                      className="w-full bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100/80 p-4 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm cursor-pointer"
                     >
                       {peranOptions.map((opt) => (
                         <option key={opt} value={opt}>
@@ -416,7 +416,7 @@ export default function RegistrasiTamu({ onLoginSuccess }: { onLoginSuccess?: (u
                         value={formData.customPeran}
                         onChange={(e) => setFormData({ ...formData, customPeran: e.target.value })}
                         placeholder="Peran / Kategori Tamu"
-                        className="w-full mt-3 bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100 p-3 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
+                        className="w-full mt-3 bg-white border border-gray-200 focus:border-main-blue focus:ring-4 focus:ring-blue-100/80 p-3 rounded-2xl text-sm font-bold text-soft-black outline-none transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
                       />
                     )}
                   </div>
