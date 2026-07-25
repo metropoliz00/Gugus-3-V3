@@ -102,66 +102,81 @@ export default function VisitorCounter({ className = "", variant = "navbar" }: V
         const STORAGE_KEY = 'gugus03_visitor_local_count';
         const SESSION_FLAG = 'gugus03_visited_session_id';
 
-        let localCount = parseInt(localStorage.getItem(STORAGE_KEY) || '1', 10);
-        
-        // Every page refresh counts as +1
-        const newLocalCount = localCount + 1;
-        localStorage.setItem(STORAGE_KEY, newLocalCount.toString());
-        sessionStorage.setItem(SESSION_FLAG, Date.now().toString());
-
         let remoteCount = 0;
 
         if (supabase) {
           const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
           const pagePath = typeof window !== 'undefined' ? window.location.pathname || 'beranda' : 'beranda';
 
-          // Insert visit record to database
-          await supabase
-            .from('site_visitors')
-            .insert([{ visited_at: new Date().toISOString(), page: pagePath, user_agent: userAgent }]);
+          // 1. Record visit to site_visitors table in Supabase
+          try {
+            await supabase
+              .from('site_visitors')
+              .insert([{ visited_at: new Date().toISOString(), page: pagePath, user_agent: userAgent }]);
+          } catch (e) {
+            // site_visitors table might not exist yet
+          }
 
-          // Fetch total count from database
+          // 2. Fetch total count from site_visitors table
           const { count, error: countErr } = await supabase
             .from('site_visitors')
             .select('*', { count: 'exact', head: true });
 
           if (!countErr && typeof count === 'number' && count > 0) {
             remoteCount = count;
-          } else {
-            // Backup database fallback using site_settings
-            try {
-              const { data: settingsData } = await supabase
-                .from('site_settings')
-                .select('content')
-                .eq('id', 1)
-                .single();
+          }
 
-              if (settingsData && settingsData.content) {
-                const currentContent = settingsData.content;
-                const dbVisitorCount = (currentContent.visitor_count || 0) + 1;
-                remoteCount = dbVisitorCount;
+          // 3. Sync or fallback with site_settings table in Supabase
+          try {
+            const { data: settingsData } = await supabase
+              .from('site_settings')
+              .select('content')
+              .eq('id', 1)
+              .single();
 
+            if (settingsData && settingsData.content) {
+              const currentContent = settingsData.content || {};
+              const currentDbCount = Number(currentContent.visitor_count || 0);
+
+              if (remoteCount > 0) {
+                // Keep site_settings in sync with site_visitors count
+                if (currentDbCount !== remoteCount) {
+                  await supabase
+                    .from('site_settings')
+                    .upsert({ id: 1, content: { ...currentContent, visitor_count: remoteCount } });
+                }
+              } else {
+                // If site_visitors count is 0 or unavailable, increment site_settings visitor_count in database
+                const newDbCount = currentDbCount + 1;
+                remoteCount = newDbCount;
                 await supabase
                   .from('site_settings')
-                  .upsert({ id: 1, content: { ...currentContent, visitor_count: dbVisitorCount } });
+                  .upsert({ id: 1, content: { ...currentContent, visitor_count: newDbCount } });
               }
-            } catch (e) {
-              // ignore error
+            } else if (remoteCount === 0) {
+              // Initialize site_settings row in database
+              remoteCount = 1;
+              await supabase
+                .from('site_settings')
+                .upsert({ id: 1, content: { visitor_count: 1 } });
             }
+          } catch (e) {
+            // ignore
           }
         }
 
-        // Use real count from database if available; purge stale dummy cache if needed
-        let finalCount = 1;
-        if (remoteCount > 0) {
-          finalCount = remoteCount;
-        } else if (newLocalCount < 1000) {
-          finalCount = newLocalCount;
-        } else {
-          finalCount = 1;
+        // Determine final display count strictly based on real database value
+        let finalCount = remoteCount;
+        
+        if (finalCount <= 0) {
+          // If database is not reachable, fallback to 1 + local tracking
+          const localCount = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+          finalCount = localCount > 0 && localCount < 1000 ? localCount + 1 : 1;
         }
 
+        // Save real count back to localStorage to clear any old dummy data
         localStorage.setItem(STORAGE_KEY, finalCount.toString());
+        sessionStorage.setItem(SESSION_FLAG, Date.now().toString());
 
         if (isMounted) {
           setVisitorCount(finalCount);
@@ -169,8 +184,7 @@ export default function VisitorCounter({ className = "", variant = "navbar" }: V
         }
       } catch (error) {
         if (isMounted) {
-          const fallback = parseInt(localStorage.getItem('gugus03_visitor_local_count') || '1', 10);
-          setVisitorCount(fallback);
+          setVisitorCount(1);
           setIsLoading(false);
         }
       }
