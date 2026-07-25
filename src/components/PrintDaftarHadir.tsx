@@ -26,6 +26,77 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
     return name || "-";
   };
 
+  const getJabatanRank = (jabatanRaw?: string): number => {
+    if (!jabatanRaw) return 5;
+    const j = jabatanRaw.trim().toLowerCase();
+
+    // Rank 1: Pejabat Dinas Pendidikan
+    if (
+      j.includes("pejabat dinas") ||
+      j.includes("dinas pendidikan") ||
+      j.includes("pejabat dinas pendidikan") ||
+      j.includes("pejabat")
+    ) {
+      return 1;
+    }
+
+    // Rank 2: Pengawas
+    if (j.includes("pengawas")) {
+      return 2;
+    }
+
+    // Rank 3: Narasumber
+    if (j.includes("narasumber") || j.includes("pemateri")) {
+      return 3;
+    }
+
+    // Rank 4: Kepala Sekolah
+    if (
+      j.includes("kepala sekolah") ||
+      j.includes("kepala sd") ||
+      j.includes("kepsek") ||
+      j === "ks"
+    ) {
+      return 4;
+    }
+
+    // Rank 5: selanjutnya sesuai dengan urutan masuk absennya
+    return 5;
+  };
+
+  const sortedParticipants = React.useMemo(() => {
+    if (!participants || participants.length === 0) return [];
+
+    return [...participants]
+      .map((item, originalIndex) => ({ item, originalIndex }))
+      .sort((a, b) => {
+        const jabatanA = a.item.profile?.jabatan || "";
+        const jabatanB = b.item.profile?.jabatan || "";
+
+        const rankA = getJabatanRank(jabatanA);
+        const rankB = getJabatanRank(jabatanB);
+
+        if (rankA !== rankB) {
+          return rankA - rankB;
+        }
+
+        // Within same rank, sort by attendance time / original arrival order
+        const timeA = (a.item as any).attended_at || (a.item as any).created_at;
+        const timeB = (b.item as any).attended_at || (b.item as any).created_at;
+
+        if (timeA && timeB) {
+          const tA = new Date(timeA).getTime();
+          const tB = new Date(timeB).getTime();
+          if (!isNaN(tA) && !isNaN(tB) && tA !== tB) {
+            return tA - tB;
+          }
+        }
+
+        return a.originalIndex - b.originalIndex;
+      })
+      .map((wrapper) => wrapper.item);
+  }, [participants]);
+
   return (
     <div className="bg-white p-12 rounded-[3rem] shadow-xl border border-gray-100 print:shadow-none print:border-none print:p-0 w-full" id="print-area">
       <style>{`
@@ -130,12 +201,12 @@ export default function PrintDaftarHadir({ selectedActivity, participants, chair
           </tr>
         </thead>
         <tbody>
-          {participants.length === 0 ? (
+          {sortedParticipants.length === 0 ? (
             <tr>
               <td colSpan={7} className="border-2 border-black px-4 py-12 text-center italic text-gray-400">Belum ada participant yang hadir</td>
             </tr>
           ) : (
-            participants.map((p, idx) => {
+            sortedParticipants.map((p, idx) => {
               const profile = p.profile;
               const nama = profile?.nama || "";
               const rowNum = idx + 1;
