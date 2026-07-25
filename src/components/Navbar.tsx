@@ -46,7 +46,6 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
     { label: "Beranda", href: "/", type: 'nav' },
     { label: "Profil Gugus", href: "/profil-gugus", type: 'nav' },
     { label: "KKG", href: "/kkg", type: 'nav' },
-    { label: "Registrasi Tamu", href: "/registrasi-tamu", type: 'nav' },
     { label: "Sekolah", href: "/#sekolah", type: 'anchor' },
     { label: "Kegiatan", href: "/kegiatan", type: 'nav' },
     { label: "Media & Informasi", href: "/#media", type: 'anchor' },
@@ -55,6 +54,7 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
     { label: "Galeri", href: "/#galeri", type: 'anchor' },
     { label: "Anggota Gugus", href: "/anggota-gugus", type: 'nav' },
     { label: "Hasil Karya", href: "/hasil-karya", type: 'nav' },
+    { label: "Registrasi Tamu", href: "/registrasi-tamu", type: 'nav' },
   ];
 
   const isKkgPage = location.pathname === '/kkg';
@@ -65,16 +65,16 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
         className={cn(
           "fixed top-0 w-full z-50 transition-all duration-300 hidden lg:block",
           isScrolled 
-            ? "bg-white/80 backdrop-blur-md shadow-sm py-3" 
-            : "bg-transparent py-5"
+            ? "bg-white/90 backdrop-blur-md shadow-sm py-3" 
+            : "bg-gradient-to-b from-white/90 via-white/70 to-transparent py-4"
         )}
       >
-        <div className="container mx-auto px-6 max-w-9xl flex items-center justify-between">
+        <div className="w-full max-w-[1800px] mx-auto px-4 lg:px-8 flex items-center justify-between gap-2 lg:gap-4">
           {/* Logo container */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <Link to="/" className="flex items-center gap-3">
               <motion.div 
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}
                 className="w-10 h-10 rounded-full bg-white border-2 border-main-blue flex items-center justify-center p-1.5 shadow-sm overflow-hidden"
               >
@@ -88,11 +88,11 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
           </div>
 
           {/* Desktop Nav */}
-          <nav className="flex items-center gap-2 xl:gap-6 text-[13px] font-medium text-gray-600 hidden lg:flex">
+          <nav className="flex items-center gap-1 xl:gap-2.5 2xl:gap-4 text-[12px] xl:text-[13px] font-medium text-gray-700 hidden lg:flex shrink-0 overflow-x-auto no-scrollbar py-1">
             {menuItems.map((item) => (
               <div 
                 key={item.label} 
-                className="relative group"
+                className="relative group shrink-0"
                 onMouseEnter={() => setActiveDropdown(item.label)}
                 onMouseLeave={() => setActiveDropdown(null)}
               >
@@ -100,8 +100,8 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
                   <Link
                     to={item.href}
                     className={cn(
-                      "px-2 py-1 transition-colors flex items-center gap-1 hover:text-leaf-green",
-                      location.pathname === item.href && "text-main-blue font-bold"
+                      "px-2 xl:px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 hover:text-leaf-green hover:bg-gray-50 whitespace-nowrap",
+                      location.pathname === item.href && "text-main-blue font-bold bg-blue-50/80"
                     )}
                   >
                     {item.label}
@@ -120,7 +120,7 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
                         document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
                       }
                     }}
-                    className="px-2 py-1 transition-colors flex items-center gap-1 hover:text-leaf-green cursor-pointer"
+                    className="px-2 xl:px-2.5 py-1.5 rounded-lg transition-all flex items-center gap-1 hover:text-leaf-green hover:bg-gray-50 cursor-pointer whitespace-nowrap"
                   >
                     {item.label}
                     {item.dropdown && <ChevronDown className="w-4 h-4 ml-0.5" />}
