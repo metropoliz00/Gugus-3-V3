@@ -9638,6 +9638,7 @@ function AdminRekapAbsen() {
 function AdminGuestAccountsManager() {
   const { alert, confirm } = useAlert();
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -9664,7 +9665,51 @@ function AdminGuestAccountsManager() {
       .select("*")
       .order("created_at", { ascending: false });
     if (!error) setAccounts(data || []);
+    setSelectedIds([]);
     setLoading(false);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedIds.length === accounts.length && accounts.length > 0) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(accounts.map((acc) => acc.id));
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((item) => item !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  const handleBulkDelete = async (targetIds?: string[]) => {
+    const ids = targetIds && targetIds.length > 0 ? targetIds : selectedIds;
+    if (ids.length === 0) {
+      await alert("Pilih minimal satu akun tamu yang ingin dihapus dengan memberi tanda ceklist.", "Perhatian", "warning");
+      return;
+    }
+
+    const isAll = ids.length === accounts.length;
+    const confirmMessage = isAll
+      ? `Apakah Anda yakin ingin menghapus SEMUA (${ids.length}) akun tamu?\n\nSemua akun tamu akan dihapus sehingga jika ada kegiatan lain dapat diisi oleh tamu yang berbeda.`
+      : `Apakah Anda yakin ingin menghapus ${ids.length} akun tamu terpilih? Tindakan ini tidak dapat dibatalkan.`;
+
+    const isConfirmed = await confirm(confirmMessage);
+    if (!isConfirmed) return;
+
+    try {
+      const { error } = await supabase.from("guest_accounts").delete().in("id", ids);
+      if (error) throw error;
+
+      await alert(`Berhasil menghapus ${ids.length} akun tamu.`, "Sukses", "success");
+      setSelectedIds([]);
+      fetchAccounts();
+    } catch (err: any) {
+      await alert(err.message || "Gagal menghapus akun tamu.", "Error", "error");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -9744,35 +9789,87 @@ function AdminGuestAccountsManager() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold font-heading text-soft-black">Kelola Akun Tamu</h2>
-          <p className="text-sm text-gray-500">Buat dan kelola akun khusus untuk para tamu undangan.</p>
+          <p className="text-sm text-gray-500">Buat dan kelola akun khusus untuk para tamu undangan kegiatan.</p>
         </div>
-        <button
-          onClick={() => {
-            setFormData({
-              id: "",
-              username: "",
-              password: "",
-              name: "",
-              nip: "",
-              position: "",
-              institution: "",
-              pangkat_golongan: "",
-              peran: "Tamu Undangan",
-            });
-            setIsModalOpen(true);
-          }}
-          className="px-6 py-3 bg-main-blue text-white rounded-xl font-bold flex items-center gap-2 hover:bg-dark-blue shadow-lg shadow-main-blue/20"
-        >
-          <PlusCircle className="w-5 h-5" /> Buat Akun Tamu
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {accounts.length > 0 && (
+            <button
+              onClick={() => {
+                const allIds = accounts.map((a) => a.id);
+                setSelectedIds(allIds);
+                handleBulkDelete(allIds);
+              }}
+              className="px-5 py-3 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 rounded-xl font-bold flex items-center gap-2 transition-colors text-sm"
+              title="Hapus semua akun tamu agar dapat diisi tamu baru untuk kegiatan berikutnya"
+            >
+              <Trash2 className="w-4 h-4" /> Hapus Semua Tamu
+            </button>
+          )}
+
+          <button
+            onClick={() => {
+              setFormData({
+                id: "",
+                username: "",
+                password: "",
+                name: "",
+                nip: "",
+                position: "",
+                institution: "",
+                pangkat_golongan: "",
+                peran: "Tamu Undangan",
+              });
+              setIsModalOpen(true);
+            }}
+            className="px-6 py-3 bg-main-blue text-white rounded-xl font-bold flex items-center gap-2 hover:bg-dark-blue shadow-lg shadow-main-blue/20 text-sm"
+          >
+            <PlusCircle className="w-5 h-5" /> Buat Akun Tamu
+          </button>
+        </div>
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className="bg-red-50/90 border border-red-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 bg-red-100 text-red-700 rounded-full flex items-center justify-center font-bold text-xs">
+              {selectedIds.length}
+            </span>
+            <p className="text-sm font-bold text-red-900">
+              {selectedIds.length} dari {accounts.length} akun tamu dipilih (ter-ceklist)
+            </p>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-4 py-2 bg-white text-gray-600 hover:bg-gray-100 border border-gray-200 rounded-xl text-xs font-bold transition-colors"
+            >
+              Batal Pilih
+            </button>
+            <button
+              onClick={() => handleBulkDelete()}
+              className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-red-600/20 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Hapus Terpilih ({selectedIds.length})
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50/50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-12">No</th>
+                <th className="px-4 py-4 text-center w-10">
+                  <input
+                    type="checkbox"
+                    checked={accounts.length > 0 && selectedIds.length === accounts.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 text-main-blue rounded border-gray-300 focus:ring-main-blue cursor-pointer"
+                    title="Pilih Semua / Batal Pilih Semua"
+                  />
+                </th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-12">No</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Username / Password</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama / Pangkat</th>
                 <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Instansi & Jabatan</th>
@@ -9782,57 +9879,73 @@ function AdminGuestAccountsManager() {
             <tbody className="divide-y divide-gray-100">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">Memuat data...</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">Memuat data...</td>
                 </tr>
               ) : accounts.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm italic">Belum ada akun tamu yang dibuat.</td>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm italic">Belum ada akun tamu yang dibuat.</td>
                 </tr>
               ) : (
-                accounts.map((acc, idx) => (
-                  <tr key={acc.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-bold text-gray-400 text-center">{idx + 1}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-soft-black">{acc.username}</span>
-                        <span className="text-[10px] text-gray-400 font-mono italic">Pass: {acc.password}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-soft-black">{acc.name}</span>
-                        <div className="flex items-center gap-2">
-                           <span className="text-[10px] text-main-blue font-bold px-2 py-0.5 bg-main-blue/10 rounded-full">{acc.peran || "Tamu"}</span>
-                           <span className="text-[10px] text-gray-500 font-bold">{acc.pangkat_golongan || "-"}</span>
+                accounts.map((acc, idx) => {
+                  const isSelected = selectedIds.includes(acc.id);
+                  return (
+                    <tr 
+                      key={acc.id} 
+                      className={`transition-colors ${
+                        isSelected ? "bg-red-50/40 hover:bg-red-50/60" : "hover:bg-gray-50/50"
+                      }`}
+                    >
+                      <td className="px-4 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => handleToggleSelect(acc.id)}
+                          className="w-4 h-4 text-main-blue rounded border-gray-300 focus:ring-main-blue cursor-pointer"
+                        />
+                      </td>
+                      <td className="px-4 py-4 text-sm font-bold text-gray-400 text-center">{idx + 1}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-soft-black">{acc.username}</span>
+                          <span className="text-[10px] text-gray-400 font-mono italic">Pass: {acc.password}</span>
                         </div>
-                        <span className="text-[10px] text-gray-400">NIP: {acc.nip || "-"}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-soft-black">{acc.institution || "-"}</span>
-                        <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">{acc.position || "Tamu"}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => setSelectedPrintAccount(acc)} 
-                          className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                          title="Cetak Kartu Login"
-                        >
-                          <Printer className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleEdit(acc)} className="p-2 text-main-blue hover:bg-main-blue/10 rounded-lg transition-colors">
-                          <PenTool className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDelete(acc.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-soft-black">{acc.name}</span>
+                          <div className="flex items-center gap-2">
+                             <span className="text-[10px] text-main-blue font-bold px-2 py-0.5 bg-main-blue/10 rounded-full">{acc.peran || "Tamu"}</span>
+                             <span className="text-[10px] text-gray-500 font-bold">{acc.pangkat_golongan || "-"}</span>
+                          </div>
+                          <span className="text-[10px] text-gray-400">NIP: {acc.nip || "-"}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-soft-black">{acc.institution || "-"}</span>
+                          <span className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">{acc.position || "Tamu"}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => setSelectedPrintAccount(acc)} 
+                            className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title="Cetak Kartu Login"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleEdit(acc)} className="p-2 text-main-blue hover:bg-main-blue/10 rounded-lg transition-colors">
+                            <PenTool className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDelete(acc.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
