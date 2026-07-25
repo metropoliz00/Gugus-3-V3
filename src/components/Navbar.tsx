@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { Menu, X, User, LogIn, ChevronDown, Home, School, Newspaper, LayoutDashboard } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useSiteContent } from "../contexts/SiteContext";
-import VisitorCounter from "./VisitorCounter";
 
 export default function Navbar({ onLoginClick, user }: { onLoginClick: () => void; user?: any }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -142,9 +141,8 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
             ))}
           </nav>
 
-          {/* Visitor Counter & Login Buttons */}
+          {/* Login Buttons */}
           <div className="flex items-center gap-2.5">
-            <VisitorCounter variant="navbar" />
             {user ? (
               <Link 
                 to="/dashboard"
@@ -235,10 +233,7 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="font-heading font-bold text-xl text-dark-gray">Menu Utama</div>
-                  <VisitorCounter variant="navbar" />
-                </div>
+                <div className="font-heading font-bold text-xl text-dark-gray">Menu Utama</div>
                 <button onClick={() => setMobileMenuOpen(false)} className="p-2 bg-light-gray rounded-full">
                   <X className="w-6 h-6" />
                 </button>

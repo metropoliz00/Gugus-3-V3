@@ -177,7 +177,7 @@ export default function VisitorCounter({ className = "", variant = "navbar" }: V
   if (variant === 'badge') {
     return (
       <div className={`relative ${className}`}>
-        <div className="bg-white/90 backdrop-blur-md border border-main-blue/30 p-2 px-3.5 rounded-2xl shadow-lg shadow-main-blue/10 flex items-center gap-2.5">
+        <div className="bg-white/95 backdrop-blur-md border border-gray-200/90 px-4 py-2 rounded-full shadow-lg shadow-main-blue/10 flex items-center gap-2.5">
           <div className="relative flex items-center justify-center shrink-0">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -185,13 +185,12 @@ export default function VisitorCounter({ className = "", variant = "navbar" }: V
             </span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <Eye className="w-3.5 h-3.5 text-main-blue shrink-0" />
-            <span className="text-xs font-bold text-gray-700">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-black uppercase tracking-wider text-gray-700">
               Visitor:
             </span>
             {isLoading ? (
-              <div className="h-5 w-10 bg-gray-200 animate-pulse rounded" />
+              <div className="h-6 w-12 bg-gray-200 animate-pulse rounded" />
             ) : (
               <RollingNumberDisplay targetValue={visitorCount} />
             )}
