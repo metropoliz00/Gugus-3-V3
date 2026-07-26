@@ -31,11 +31,21 @@ const getDirectDownloadUrl = (url: string | null | undefined): string => {
   return trimmed;
 };
 
+const getInitialOrgKkg = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_org_kkg');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function KkgPage() {
   const [activeProgramGroup, setActiveProgramGroup] = useState('tahunan');
   const [openProgramIdx, setOpenProgramIdx] = useState<number | null>(0);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [struktur, setStruktur] = useState<any[]>([]);
+  const [struktur, setStruktur] = useState<any[]>(getInitialOrgKkg);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -45,7 +55,12 @@ export default function KkgPage() {
   const loadStruktur = async () => {
     if (!supabase) return;
     const { data } = await supabase.from('org_kkg').select('*').order('created_at', { ascending: true });
-    setStruktur(data || []);
+    if (data) {
+      setStruktur(data);
+      try {
+        localStorage.setItem('cached_org_kkg', JSON.stringify(data));
+      } catch (e) {}
+    }
   };
 
   const { content } = useSiteContent();
@@ -178,13 +193,13 @@ export default function KkgPage() {
             </div>
           </div>
 
-          {/* Bottom Row: 4 Cards in a Row */}
+          {/* Bottom Row: Dynamic Cards from Database */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 pt-8 border-t border-gray-100">
             {/* Card 1: Tahun Berdedikasi */}
             <div className="bg-gradient-to-br from-leaf-green to-dark-green p-6 rounded-3xl text-white shadow-lg shadow-leaf-green/15 flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300">
               <div className="flex items-center justify-between">
                 <span className="text-3xl md:text-4xl font-black font-heading block">
-                  {kkg.tahunDedikasi || "10+"}
+                  {kkg.tahunDedikasi || "5+"}
                 </span>
                 <div className="p-2.5 bg-white/10 backdrop-blur-sm rounded-2xl">
                   <Award className="w-6 h-6 text-white" />
@@ -195,40 +210,28 @@ export default function KkgPage() {
               </span>
             </div>
 
-            {/* Card 2: Anggota Aktif */}
-            <div className="bg-gradient-to-br from-main-blue to-dark-blue p-6 rounded-3xl text-white shadow-lg shadow-main-blue/15 flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <span className="text-3xl md:text-4xl font-black font-heading block">
-                  {kkg.anggotaAktif || "120+"}
-                </span>
-                <div className="p-2.5 bg-white/10 backdrop-blur-sm rounded-2xl">
-                  <Users className="w-6 h-6 text-white" />
+            {/* Render statistikKkg items from database */}
+            {(kkg.statistikKkg || []).map((stat: any, idx: number) => {
+              const isDark = idx === 0;
+              return (
+                <div 
+                  key={idx}
+                  className={`${isDark ? 'bg-gradient-to-br from-main-blue to-dark-blue text-white shadow-lg shadow-main-blue/15' : 'bg-white border-2 border-gray-100 text-soft-black shadow-lg shadow-gray-200/40 hover:border-main-blue/40'} p-6 rounded-3xl flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={`text-3xl md:text-4xl font-black font-heading block ${isDark ? 'text-white' : 'text-main-blue'}`}>
+                      {stat.value}{stat.suffix || ""}
+                    </span>
+                    <div className={`p-2.5 ${isDark ? 'bg-white/15 text-white' : 'bg-main-blue/10 text-main-blue'} backdrop-blur-sm rounded-2xl`}>
+                      <Users className="w-6 h-6" />
+                    </div>
+                  </div>
+                  <span className={`text-xs font-bold uppercase tracking-wider mt-4 ${isDark ? 'opacity-90' : 'text-gray-700'}`}>
+                    {stat.label}
+                  </span>
                 </div>
-              </div>
-              <span className="text-xs font-bold opacity-90 uppercase tracking-wider mt-4">
-                Anggota Aktif
-              </span>
-            </div>
-
-            {/* Card 3: Program Diselesaikan */}
-            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/40 hover:shadow-main-blue/10 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center min-h-[130px] group">
-              <span className="text-3xl md:text-4xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
-                {kkg.programDiselesaikan || 13}
-              </span>
-              <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
-                Program Diselesaikan
-              </span>
-            </div>
-
-            {/* Card 4: Workshop */}
-            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/40 hover:shadow-main-blue/10 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center min-h-[130px] group">
-              <span className="text-3xl md:text-4xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
-                {kkg.totalWorkshop || 5}
-              </span>
-              <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
-                Workshop
-              </span>
-            </div>
+              );
+            })}
           </div>
         </motion.div>
       </section>

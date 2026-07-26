@@ -91,10 +91,10 @@ export default function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Always start the timer for splash screen effect
+    // Quick smooth transition for splash screen effect
     const timer = setTimeout(() => {
       setIsAppReady(true);
-    }, 3000);
+    }, 300);
 
     let authSubscription: any = null;
 

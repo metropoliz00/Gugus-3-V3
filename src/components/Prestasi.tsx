@@ -3,15 +3,28 @@ import { Trophy, Medal, Star, Image as ImageIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
+const getInitialAchievements = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_awards');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function Prestasi() {
-  const [achievements, setAchievements] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<any[]>(getInitialAchievements);
 
   useEffect(() => {
     async function load() {
       if (supabase) {
         const { data } = await supabase.from('awards').select('*').order('created_at', { ascending: false });
-        if (data && data.length > 0) {
+        if (data) {
           setAchievements(data);
+          try {
+            localStorage.setItem('cached_awards', JSON.stringify(data));
+          } catch (e) {}
         }
       }
     }

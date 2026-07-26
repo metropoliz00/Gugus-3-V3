@@ -43,11 +43,21 @@ interface Slide {
   items: any[];
 }
 
+const getInitialGallery = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_gallery');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function Gallery() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>(getInitialGallery);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => items.length === 0);
 
   useEffect(() => {
     async function fetchGallery() {
@@ -55,7 +65,12 @@ export default function Gallery() {
       try {
         const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
         if (error) throw error;
-        setItems(data || []);
+        if (data) {
+          setItems(data);
+          try {
+            localStorage.setItem('cached_gallery', JSON.stringify(data));
+          } catch (e) {}
+        }
       } catch (err) {
         console.error("Gagal memuat galeri:", err);
       } finally {

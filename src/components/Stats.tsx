@@ -29,10 +29,20 @@ function Counter({ end, suffix = "", duration = 2 }: { end: number, suffix?: str
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
+const getInitialDynamicStats = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_dynamic_stats');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function Stats() {
   const { content } = useSiteContent();
-  const [dynamicStats, setDynamicStats] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dynamicStats, setDynamicStats] = useState<any[]>(getInitialDynamicStats);
+  const [isLoading, setIsLoading] = useState<boolean>(() => dynamicStats.length === 0);
 
   useEffect(() => {
     async function fetchDynamicStats() {
@@ -46,7 +56,7 @@ export default function Stats() {
           supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('role', 'guru').throwOnError()
         ]);
 
-        if (!schoolsData) return; // If null, skip setting dynamic stats, fallback will trigger
+        if (!schoolsData) return;
 
         const totalStudents = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.student_count) || 0), 0);
         const schoolIntiCount = schoolsData.filter((s: any) => s.jenis_sekolah === 'Sekolah Inti').length;
@@ -54,12 +64,17 @@ export default function Stats() {
         
         const totalTeachers = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.teacher_count) || 0), 0);
 
-        setDynamicStats([
+        const newStats = [
           { label: 'Sekolah Inti', value: schoolIntiCount, suffix: "", color: 'text-main-blue' },
           { label: 'Sekolah Imbas', value: schoolImbasCount, suffix: "", color: 'text-dark-green' },
           { label: 'Total Guru', value: totalTeachers, suffix: "+", color: 'text-leaf-green' },
           { label: 'Total Murid', value: totalStudents, suffix: "+", color: 'text-accent-orange' },
-        ]);
+        ];
+
+        setDynamicStats(newStats);
+        try {
+          localStorage.setItem('cached_dynamic_stats', JSON.stringify(newStats));
+        } catch (e) {}
       } catch (err) {
         console.error("Error fetching dynamic stats:", err);
       } finally {
@@ -69,8 +84,8 @@ export default function Stats() {
     fetchDynamicStats();
   }, []);
 
-  // Fallback to content.stats if dynamic fails or loading
-  const stats = (!isLoading && dynamicStats.length > 0) ? dynamicStats : content.stats;
+  // Use dynamicStats if available, otherwise fallback to content.stats
+  const stats = dynamicStats.length > 0 ? dynamicStats : content.stats;
 
   return (
     <section className="py-12 bg-light-gray relative z-20">

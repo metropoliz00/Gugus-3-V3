@@ -280,6 +280,61 @@ export const defaultContent = {
 
 export type SiteContent = typeof defaultContent;
 
+const recursivelyReplaceGugus3 = (obj: any): any => {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') {
+    return obj.replace(/Gugus 3(?!\d)/gi, (match) => {
+      if (match.toUpperCase() === match) return 'GUGUS 03';
+      if (match.toLowerCase() === match) return 'gugus 03';
+      return 'Gugus 03';
+    });
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => recursivelyReplaceGugus3(item));
+  }
+  if (typeof obj === 'object') {
+    const newObj: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        newObj[key] = recursivelyReplaceGugus3(obj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+};
+
+const mergeContent = (base: any, incomingRaw: any) => {
+  if (!incomingRaw) return base;
+  const incoming = recursivelyReplaceGugus3(incomingRaw);
+  return {
+    ...base,
+    ...incoming,
+    hero: base.hero && incoming.hero ? { ...base.hero, ...incoming.hero } : (incoming.hero || base.hero),
+    profil: base.profil && incoming.profil ? { ...base.profil, ...incoming.profil } : (incoming.profil || base.profil),
+    footer: base.footer && incoming.footer ? { ...base.footer, ...incoming.footer } : (incoming.footer || base.footer),
+    kkg: base.kkg && incoming.kkg ? { ...base.kkg, ...incoming.kkg } : (incoming.kkg || base.kkg),
+    gugus: base.gugus && incoming.gugus ? { ...base.gugus, ...incoming.gugus } : (incoming.gugus || base.gugus),
+    announcement: base.announcement && incoming.announcement ? { ...base.announcement, ...incoming.announcement } : (incoming.announcement || base.announcement),
+    activeMenus: base.activeMenus && incoming.activeMenus ? { ...base.activeMenus, ...incoming.activeMenus } : (incoming.activeMenus || base.activeMenus),
+  };
+};
+
+const getInitialContent = (): SiteContent => {
+  if (typeof window !== 'undefined') {
+    try {
+      const local = localStorage.getItem('siteContent');
+      if (local) {
+        const parsed = JSON.parse(local);
+        return mergeContent(defaultContent, parsed);
+      }
+    } catch (e) {
+      console.warn("Failed to load initial site content from localStorage:", e);
+    }
+  }
+  return defaultContent;
+};
+
 interface SiteContextType {
   content: SiteContent;
   updateContent: (newContent: Partial<SiteContent>) => Promise<void>;
@@ -297,63 +352,15 @@ const SiteContext = createContext<SiteContextType>({
 export const useSiteContent = () => useContext(SiteContext);
 
 export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
-  const [content, setContent] = useState<SiteContent>(defaultContent);
-  const [isLoading, setIsLoading] = useState(true);
+  const [content, setContent] = useState<SiteContent>(getInitialContent);
+  const [isLoading, setIsLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadContent();
   }, []);
 
-  const recursivelyReplaceGugus3 = (obj: any): any => {
-    if (obj === null || obj === undefined) return obj;
-    if (typeof obj === 'string') {
-      return obj.replace(/Gugus 3(?!\d)/gi, (match) => {
-        if (match.toUpperCase() === match) return 'GUGUS 03';
-        if (match.toLowerCase() === match) return 'gugus 03';
-        return 'Gugus 03';
-      });
-    }
-    if (Array.isArray(obj)) {
-      return obj.map(item => recursivelyReplaceGugus3(item));
-    }
-    if (typeof obj === 'object') {
-      const newObj: any = {};
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          newObj[key] = recursivelyReplaceGugus3(obj[key]);
-        }
-      }
-      return newObj;
-    }
-    return obj;
-  };
-
-  const mergeContent = (base: any, incomingRaw: any) => {
-    if (!incomingRaw) return base;
-    const incoming = recursivelyReplaceGugus3(incomingRaw);
-    return {
-      ...base,
-      ...incoming,
-      hero: base.hero && incoming.hero ? { ...base.hero, ...incoming.hero } : (incoming.hero || base.hero),
-      profil: base.profil && incoming.profil ? { ...base.profil, ...incoming.profil } : (incoming.profil || base.profil),
-      footer: base.footer && incoming.footer ? { ...base.footer, ...incoming.footer } : (incoming.footer || base.footer),
-      kkg: base.kkg && incoming.kkg ? { ...base.kkg, ...incoming.kkg } : (incoming.kkg || base.kkg),
-      gugus: base.gugus && incoming.gugus ? { ...base.gugus, ...incoming.gugus } : (incoming.gugus || base.gugus),
-      announcement: base.announcement && incoming.announcement ? { ...base.announcement, ...incoming.announcement } : (incoming.announcement || base.announcement),
-      activeMenus: base.activeMenus && incoming.activeMenus ? { ...base.activeMenus, ...incoming.activeMenus } : (incoming.activeMenus || base.activeMenus),
-    };
-  };
-
   const loadContent = async () => {
-    setIsLoading(true);
-    const local = localStorage.getItem('siteContent');
-    if (local) {
-      try {
-        setContent(mergeContent(defaultContent, JSON.parse(local)));
-      } catch(e) {}
-    }
-
     try {
       if (supabase) {
         const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
@@ -369,9 +376,9 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (e) {
       console.error("Backend load error:", e);
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const updateContent = async (newContent: Partial<SiteContent>) => {
@@ -405,7 +412,6 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
       setSaveMessage(null);
     }, 3000);
   };
-
 
   return (
     <SiteContext.Provider value={{ content, updateContent, isLoading, saveMessage }}>

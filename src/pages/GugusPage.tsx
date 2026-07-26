@@ -17,10 +17,20 @@ import { supabase } from '../lib/supabase';
 import MapGugus from '../components/MapGugus';
 import { getAutomatedProgramStatus } from '../utils/statusHelper';
 
+const getInitialOrgGugus = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_org_gugus');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function GugusPage() {
   const { content } = useSiteContent();
   const [activeTab, setActiveTab] = useState<'sejarah' | 'visi' | 'struktur' | 'program'>('sejarah');
-  const [struktur, setStruktur] = useState<any[]>([]);
+  const [struktur, setStruktur] = useState<any[]>(getInitialOrgGugus);
   
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -30,7 +40,12 @@ export default function GugusPage() {
   const loadStruktur = async () => {
     if (!supabase) return;
     const { data } = await supabase.from('org_gugus').select('*').order('created_at', { ascending: true });
-    setStruktur(data || []);
+    if (data) {
+      setStruktur(data);
+      try {
+        localStorage.setItem('cached_org_gugus', JSON.stringify(data));
+      } catch (e) {}
+    }
   };
   
   const data = content.gugus;

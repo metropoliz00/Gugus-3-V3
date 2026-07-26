@@ -3,9 +3,19 @@ import { ArrowRight, Calendar, User, FileText, Bell, X } from "lucide-react";
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 
+const getInitialNews = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_posts');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function MediaInformasi() {
-  const [news, setNews] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [news, setNews] = useState<any[]>(getInitialNews);
+  const [isLoading, setIsLoading] = useState<boolean>(() => news.length === 0);
   const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
   // Helper to strip HTML tags for preview highlight
@@ -18,11 +28,15 @@ export default function MediaInformasi() {
   React.useEffect(() => {
     async function fetchPosts() {
       if (!supabase) return;
-      setIsLoading(true);
       try {
         const { data, error } = await supabase.from('posts').select(`*, author:author_id(nama)`).order('published_at', { ascending: false }).limit(6);
         if (error) throw error;
-        setNews(data || []);
+        if (data) {
+          setNews(data);
+          try {
+            localStorage.setItem('cached_posts', JSON.stringify(data));
+          } catch (e) {}
+        }
       } catch (err) {
         console.error("Gagal memuat berita:", err);
       } finally {
