@@ -91,8 +91,12 @@ interface VisitorCounterProps {
 }
 
 export default function VisitorCounter({ className = "", variant = "navbar" }: VisitorCounterProps) {
-  const [visitorCount, setVisitorCount] = useState<number>(1);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const STORAGE_KEY = 'gugus03_visitor_local_count';
+  const [visitorCount, setVisitorCount] = useState<number>(() => {
+    const cached = parseInt(localStorage.getItem(STORAGE_KEY) || '0', 10);
+    return cached > 0 ? cached : 1245;
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
