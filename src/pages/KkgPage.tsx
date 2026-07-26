@@ -196,73 +196,240 @@ export default function KkgPage() {
           {/* Bottom Row: Dynamic Cards from Database */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 pt-8 border-t border-gray-100">
             {/* Card 1: Tahun Berdedikasi */}
-            <div className="bg-gradient-to-br from-leaf-green to-dark-green p-6 rounded-3xl text-white shadow-lg shadow-leaf-green/15 flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <span className="text-3xl md:text-4xl font-black font-heading block">
-                  {kkg.tahunDedikasi || "5+"}
-                </span>
-                <div className="p-2.5 bg-white/10 backdrop-blur-sm rounded-2xl">
-                  <Award className="w-6 h-6 text-white" />
+            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl shadow-lg shadow-gray-200/40 hover:border-leaf-green/50 hover:shadow-leaf-green/10 flex flex-col justify-between min-h-[220px] group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-leaf-green/20 via-leaf-green/5 to-transparent rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
+              <div>
+                <div className="flex items-center justify-between relative z-10">
+                  <span className="text-3xl md:text-4xl font-black font-heading text-dark-green block">
+                    {kkg.tahunDedikasi || "5+"}
+                  </span>
+                  <div className="p-3 bg-leaf-green/10 text-leaf-green backdrop-blur-sm rounded-2xl group-hover:rotate-12 transition-transform">
+                    <Award className="w-6 h-6" />
+                  </div>
                 </div>
+                <div className="relative z-10 mt-3 pb-3 border-b border-gray-100 flex items-center justify-between text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <span>Tahun Berdedikasi</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-leaf-green/10 text-leaf-green font-extrabold">Aktif</span>
+                </div>
+                
+                {/* Harmonious List */}
+                <ul className="mt-3.5 space-y-2 text-xs text-gray-500 font-medium relative z-10">
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-leaf-green shrink-0 mt-1.5" />
+                    <span>Konsisten & Teruji sejak awal</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-leaf-green shrink-0 mt-1.5" />
+                    <span>Wadah resmi pendidik Gugus 03</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-leaf-green shrink-0 mt-1.5" />
+                    <span>Inovasi keprofesian berkala</span>
+                  </li>
+                </ul>
               </div>
-              <span className="text-xs font-bold opacity-90 uppercase tracking-wider mt-4">
-                Tahun Berdedikasi
-              </span>
             </div>
 
             {/* Card 2: Partisipasi Guru */}
-            <div className="bg-gradient-to-br from-main-blue to-dark-blue p-6 rounded-3xl text-white shadow-lg shadow-main-blue/15 flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300">
-              <div className="flex items-center justify-between">
-                <span className="text-3xl md:text-4xl font-black font-heading block">
-                  {kkg.partisipasiGuru || 98}%
-                </span>
-                <div className="p-2.5 bg-white/10 backdrop-blur-sm rounded-2xl">
-                  <Users className="w-6 h-6 text-white" />
+            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl shadow-lg shadow-gray-200/40 hover:border-main-blue/50 hover:shadow-main-blue/10 flex flex-col justify-between min-h-[220px] group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-main-blue/20 via-main-blue/5 to-transparent rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
+              <div>
+                <div className="flex items-center justify-between relative z-10">
+                  <span className="text-3xl md:text-4xl font-black font-heading text-main-blue block">
+                    {kkg.partisipasiGuru || 98}%
+                  </span>
+                  <div className="p-3 bg-main-blue/10 text-main-blue backdrop-blur-sm rounded-2xl group-hover:rotate-12 transition-transform">
+                    <Users className="w-6 h-6" />
+                  </div>
                 </div>
+                <div className="relative z-10 mt-3 pb-3 border-b border-gray-100 flex items-center justify-between text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <span>Partisipasi Guru</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-main-blue/10 text-main-blue font-extrabold">Tinggi</span>
+                </div>
+
+                {/* Harmonious List */}
+                <ul className="mt-3.5 space-y-2 text-xs text-gray-500 font-medium relative z-10">
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                    <span>Kehadiran aktif dalam forum</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                    <span>Koordinasi antar sekolah erat</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                    <span>Keterlibatan penuh program</span>
+                  </li>
+                </ul>
               </div>
-              <span className="text-xs font-bold opacity-90 uppercase tracking-wider mt-4">
-                Partisipasi Guru Aktif
-              </span>
             </div>
 
             {/* Card 3: Realisasi Program */}
-            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/40 hover:shadow-main-blue/10 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center min-h-[130px] group">
-              <span className="text-3xl md:text-4xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
-                {kkg.realisasiProgram || 100}%
-              </span>
-              <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
-                Realisasi Program
-              </span>
+            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl shadow-lg shadow-gray-200/40 hover:border-amber-500/50 hover:shadow-amber-500/10 flex flex-col justify-between min-h-[220px] group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-500/20 via-amber-500/5 to-transparent rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
+              <div>
+                <div className="flex items-center justify-between relative z-10">
+                  <span className="text-3xl md:text-4xl font-black font-heading text-amber-700 block">
+                    {kkg.realisasiProgram || 100}%
+                  </span>
+                  <div className="p-3 bg-amber-500/10 text-amber-600 backdrop-blur-sm rounded-2xl group-hover:rotate-12 transition-transform">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                </div>
+                <div className="relative z-10 mt-3 pb-3 border-b border-gray-100 flex items-center justify-between text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <span>Realisasi Program</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 font-extrabold">Tuntas</span>
+                </div>
+
+                {/* Harmonious List */}
+                <ul className="mt-3.5 space-y-2 text-xs text-gray-500 font-medium relative z-10">
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5" />
+                    <span>Sesuai target program kerja</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5" />
+                    <span>Evaluasi berkala berkualifikasi</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 mt-1.5" />
+                    <span>Pelaporan kegiatan teratur</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Card 4: Kolaborasi Antar Sekolah */}
-            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/40 hover:shadow-main-blue/10 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center min-h-[130px] group">
-              <span className="text-3xl md:text-4xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
-                {kkg.persentaseKolaborasi || "100%"}
-              </span>
-              <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
-                Kolaborasi Sekolah
-              </span>
+            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl shadow-lg shadow-gray-200/40 hover:border-purple-500/50 hover:shadow-purple-500/10 flex flex-col justify-between min-h-[220px] group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/20 via-purple-500/5 to-transparent rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
+              <div>
+                <div className="flex items-center justify-between relative z-10">
+                  <span className="text-3xl md:text-4xl font-black font-heading text-purple-700 block">
+                    {kkg.persentaseKolaborasi || "100%"}
+                  </span>
+                  <div className="p-3 bg-purple-500/10 text-purple-600 backdrop-blur-sm rounded-2xl group-hover:rotate-12 transition-transform">
+                    <Target className="w-6 h-6" />
+                  </div>
+                </div>
+                <div className="relative z-10 mt-3 pb-3 border-b border-gray-100 flex items-center justify-between text-xs font-bold text-gray-700 uppercase tracking-wider">
+                  <span>Kolaborasi Sekolah</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-700 font-extrabold">Sinergi</span>
+                </div>
+
+                {/* Harmonious List */}
+                <ul className="mt-3.5 space-y-2 text-xs text-gray-500 font-medium relative z-10">
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0 mt-1.5" />
+                    <span>Sinergi erat antar 8 lembaga</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0 mt-1.5" />
+                    <span>Berbagi perangkat & metode</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0 mt-1.5" />
+                    <span>Kegiatan bersama siswa-guru</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Render statistikKkg items from database */}
             {(kkg.statistikKkg || []).map((stat: any, idx: number) => {
+              const labelLower = (stat.label || '').toLowerCase();
+              let isAnggota = labelLower.includes('anggota');
+              let isProgram = labelLower.includes('program');
+              let isWorkshop = labelLower.includes('workshop');
+
               return (
                 <div 
                   key={idx}
-                  className="bg-white border-2 border-gray-100 text-soft-black shadow-lg shadow-gray-200/40 hover:border-main-blue/40 p-6 rounded-3xl flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300"
+                  className="bg-white border-2 border-gray-100 text-soft-black shadow-lg shadow-gray-200/40 hover:border-main-blue/40 p-6 rounded-3xl flex flex-col justify-between min-h-[220px] group hover:-translate-y-1 transition-all duration-300 relative overflow-hidden"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl md:text-4xl font-black font-heading block text-main-blue">
-                      {stat.value}{stat.suffix || ""}
-                    </span>
-                    <div className="p-2.5 bg-main-blue/10 text-main-blue backdrop-blur-sm rounded-2xl">
-                      <BarChart3 className="w-6 h-6" />
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-main-blue/15 via-main-blue/5 to-transparent rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
+                  <div>
+                    <div className="flex items-center justify-between relative z-10">
+                      <span className="text-3xl md:text-4xl font-black font-heading block text-main-blue">
+                        {stat.value}{stat.suffix || ""}
+                      </span>
+                      <div className="p-3 bg-main-blue/10 text-main-blue backdrop-blur-sm rounded-2xl group-hover:rotate-12 transition-transform">
+                        <BarChart3 className="w-6 h-6" />
+                      </div>
                     </div>
+                    <div className="relative z-10 mt-3 pb-3 border-b border-gray-100 flex items-center justify-between text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      <span>{stat.label}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-main-blue/10 text-main-blue font-extrabold">Data</span>
+                    </div>
+
+                    {/* Harmonious List */}
+                    <ul className="mt-3.5 space-y-2 text-xs text-gray-500 font-medium relative z-10">
+                      {isAnggota && (
+                        <>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Pendidik aktif bersertifikasi</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Tersebar di seluruh gugus</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Koordinasi berkala rutin</span>
+                          </li>
+                        </>
+                      )}
+                      {isProgram && (
+                        <>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Program kerja terealisasi</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Arsip dokumen terdokumentasi</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Dampak pembelajaran nyata</span>
+                          </li>
+                        </>
+                      )}
+                      {isWorkshop && (
+                        <>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Peningkatan mutu pendidik</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Narasumber ahli berkompeten</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Sertifikat resmi terdaftar</span>
+                          </li>
+                        </>
+                      )}
+                      {!isAnggota && !isProgram && !isWorkshop && (
+                        <>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Pembaruan berkala rutin</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Data terverifikasi pengurus</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-main-blue shrink-0 mt-1.5" />
+                            <span>Dukungan penuh tim ahli</span>
+                          </li>
+                        </>
+                      )}
+                    </ul>
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-wider mt-4 text-gray-700">
-                    {stat.label}
-                  </span>
                 </div>
               );
             })}
