@@ -210,23 +210,57 @@ export default function KkgPage() {
               </span>
             </div>
 
+            {/* Card 2: Partisipasi Guru */}
+            <div className="bg-gradient-to-br from-main-blue to-dark-blue p-6 rounded-3xl text-white shadow-lg shadow-main-blue/15 flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl md:text-4xl font-black font-heading block">
+                  {kkg.partisipasiGuru || 98}%
+                </span>
+                <div className="p-2.5 bg-white/10 backdrop-blur-sm rounded-2xl">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <span className="text-xs font-bold opacity-90 uppercase tracking-wider mt-4">
+                Partisipasi Guru Aktif
+              </span>
+            </div>
+
+            {/* Card 3: Realisasi Program */}
+            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/40 hover:shadow-main-blue/10 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center min-h-[130px] group">
+              <span className="text-3xl md:text-4xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
+                {kkg.realisasiProgram || 100}%
+              </span>
+              <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
+                Realisasi Program
+              </span>
+            </div>
+
+            {/* Card 4: Kolaborasi Antar Sekolah */}
+            <div className="bg-white border-2 border-gray-100 p-6 rounded-3xl text-center shadow-lg shadow-gray-200/40 hover:border-main-blue/40 hover:shadow-main-blue/10 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center justify-center min-h-[130px] group">
+              <span className="text-3xl md:text-4xl font-black font-heading text-main-blue group-hover:scale-105 transition-transform">
+                {kkg.persentaseKolaborasi || "100%"}
+              </span>
+              <span className="text-xs md:text-sm font-extrabold text-gray-700 uppercase tracking-wider mt-2">
+                Kolaborasi Sekolah
+              </span>
+            </div>
+
             {/* Render statistikKkg items from database */}
             {(kkg.statistikKkg || []).map((stat: any, idx: number) => {
-              const isDark = idx === 0;
               return (
                 <div 
                   key={idx}
-                  className={`${isDark ? 'bg-gradient-to-br from-main-blue to-dark-blue text-white shadow-lg shadow-main-blue/15' : 'bg-white border-2 border-gray-100 text-soft-black shadow-lg shadow-gray-200/40 hover:border-main-blue/40'} p-6 rounded-3xl flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300`}
+                  className="bg-white border-2 border-gray-100 text-soft-black shadow-lg shadow-gray-200/40 hover:border-main-blue/40 p-6 rounded-3xl flex flex-col justify-between min-h-[130px] group hover:-translate-y-1 transition-all duration-300"
                 >
                   <div className="flex items-center justify-between">
-                    <span className={`text-3xl md:text-4xl font-black font-heading block ${isDark ? 'text-white' : 'text-main-blue'}`}>
+                    <span className="text-3xl md:text-4xl font-black font-heading block text-main-blue">
                       {stat.value}{stat.suffix || ""}
                     </span>
-                    <div className={`p-2.5 ${isDark ? 'bg-white/15 text-white' : 'bg-main-blue/10 text-main-blue'} backdrop-blur-sm rounded-2xl`}>
-                      <Users className="w-6 h-6" />
+                    <div className="p-2.5 bg-main-blue/10 text-main-blue backdrop-blur-sm rounded-2xl">
+                      <BarChart3 className="w-6 h-6" />
                     </div>
                   </div>
-                  <span className={`text-xs font-bold uppercase tracking-wider mt-4 ${isDark ? 'opacity-90' : 'text-gray-700'}`}>
+                  <span className="text-xs font-bold uppercase tracking-wider mt-4 text-gray-700">
                     {stat.label}
                   </span>
                 </div>
