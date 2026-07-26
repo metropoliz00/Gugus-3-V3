@@ -353,7 +353,7 @@ export const useSiteContent = () => useContext(SiteContext);
 
 export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
   const [content, setContent] = useState<SiteContent>(getInitialContent);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   useEffect(() => {
