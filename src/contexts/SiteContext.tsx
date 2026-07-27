@@ -408,6 +408,10 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
     let channelSite: any = null;
     let channelKkg: any = null;
     let channelGugus: any = null;
+    let channelKkgDoc: any = null;
+    let channelKkgProg: any = null;
+    let channelGugusDoc: any = null;
+    let channelGugusProg: any = null;
     if (supabase) {
       channelSite = supabase
         .channel('realtime_site_settings')
@@ -447,6 +451,58 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
           }
         )
         .subscribe();
+
+      channelKkgDoc = supabase
+        .channel('realtime_kkg_documents')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'kkg_documents', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelKkgProg = supabase
+        .channel('realtime_kkg_programs')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'kkg_programs', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelGugusDoc = supabase
+        .channel('realtime_gugus_documents')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'gugus_documents', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelGugusProg = supabase
+        .channel('realtime_gugus_programs')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'gugus_programs', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
     }
 
     const handleFocusOrOnline = () => {
@@ -460,6 +516,10 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
       if (channelSite && supabase) supabase.removeChannel(channelSite);
       if (channelKkg && supabase) supabase.removeChannel(channelKkg);
       if (channelGugus && supabase) supabase.removeChannel(channelGugus);
+      if (channelKkgDoc && supabase) supabase.removeChannel(channelKkgDoc);
+      if (channelKkgProg && supabase) supabase.removeChannel(channelKkgProg);
+      if (channelGugusDoc && supabase) supabase.removeChannel(channelGugusDoc);
+      if (channelGugusProg && supabase) supabase.removeChannel(channelGugusProg);
       window.removeEventListener('focus', handleFocusOrOnline);
       window.removeEventListener('online', handleFocusOrOnline);
     };
