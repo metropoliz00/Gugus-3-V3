@@ -152,63 +152,27 @@ export const defaultContent = {
     }
   ],
   kkg: {
-    sejarah: "Kelompok Kerja Guru (KKG) Gugus 03 Melati Kecamatan Jenu didirikan sebagai wadah pengembangan keprofesian berkelanjutan bagi para pendidik di wilayah Kecamatan Jenu. Sejak berdirinya, KKG ini telah menjadi pusat inovasi dan kolaborasi antar sekolah anggota untuk meningkatkan kualitas pembelajaran.",
-    gambarProfil: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop",
-    persentaseKolaborasi: "100%",
-    tahunDedikasi: "10+",
-    anggotaAktif: "120+",
-    programDiselesaikan: 13,
-    totalWorkshop: 5,
-    realisasiProgram: 65,
-    partisipasiGuru: 88,
-    statistikKkg: [
-      { label: "Anggota Aktif", value: 120, suffix: "+" },
-      { label: "Program Diselesaikan", value: 13, suffix: "" },
-      { label: "Workshop", value: 5, suffix: "" }
-    ],
-    visi: "Terwujudnya Guru Profesional, Kreatif, and Inovatif dalam Menyelenggarakan Pembelajaran yang Berpusat pada Peserta Didik.",
-    misi: [
-      "Meningkatkan kompetensi pedagogik dan profesional guru.",
-      "Mengembangkan media dan sumber belajar interaktif.",
-      "Memfasilitasi pertukaran informasi dan praktik baik antar guru."
-    ],
-    tujuan: [
-      "Menciptakan iklim pembelajaran yang kondusif.",
-      "Standarisasi perangkat dan evaluasi pembelajaran.",
-      "Memberdayakan guru dalam penelitian tindakan kelas (PTK)."
-    ],
+    sejarah: "",
+    gambarProfil: "",
+    persentaseKolaborasi: "",
+    tahunDedikasi: "",
+    anggotaAktif: "",
+    programDiselesaikan: 0,
+    totalWorkshop: 0,
+    realisasiProgram: 0,
+    partisipasiGuru: 0,
+    statistikKkg: [],
+    visi: "",
+    misi: [],
+    tujuan: [],
     dokumen: [],
     pengumuman: {
-      title: "Pengumuman Penting KKG Gugus 03",
-      desc: "Seluruh anggota KKG diharapkan hadir dalam rapat koordinasi bulanan yang akan dilaksanakan pada hari Jumat mendatang.",
-      isActive: true
+      title: "",
+      desc: "",
+      isActive: false
     },
-    struktur: [
-      { role: "Pembina", name: "Drs. H. Abdullah, M.Pd", school: "Dinas Pendidikan" },
-      { role: "Ketua KKG", name: "Drs. Budi Santoso, M.Pd", school: "SDN Jenu 1" },
-      { role: "Sekretaris", name: "Ahmad Fauzi, S.Pd", school: "SDN Jenu 3" },
-      { role: "Bendahara", name: "Rina Kusuma, S.Pd", school: "SDN Jenu 1" },
-      { role: "Pemandu Kelas", name: "Siti Rahmawati, S.Pd", school: "SDN Jenu 2" },
-      { role: "Pemandu Mapel", name: "Andi Wijaya, S.Pd", school: "SDN Jenu 2" }
-    ],
-    programs: {
-      tahunan: [
-        { title: "Penyusunan Perangkat Pembelajaran Terpadu", desc: "Kolaborasi antara guru kelas untuk menyusun RPP, Silabus, dan Modul Ajar yang adaptif terhadap Kurikulum Merdeka.", date: "Juli 2024", status: "Selesai" },
-        { title: "Evaluasi Hasil Belajar Gugus", desc: "Pertemuan rutin untuk mengevaluasi hasil capaian belajar siswa antar sekolah di Gugus 03 Melati Kecamatan Jenu.", date: "Desember 2024", status: "Berjalan" }
-      ],
-      workshop: [
-        { title: "Workshop Pemanfaatan AI dalam Kelas", desc: "Implementasi teknologi AI untuk pembuatan media ajar dan otomatisasi penilaian.", date: "Agustus 2024", status: "Selesai" },
-        { title: "Pelatihan Pedagogik Modern", desc: "Meningkatkan kemampuan problem solving dan critical thinking guru.", date: "Oktober 2024", status: "Berjalan" }
-      ],
-      supervisi: [
-        { title: "Kunjungan Kelas Silang", desc: "Supervisi akademik dengan meninjau cara mengajar guru di sekolah lain dalam satu gugus.", date: "November 2024", status: "Terjadwal" },
-        { title: "Review Instrumen Penilaian", desc: "Standarisasi instrumen per-mata pelajaran.", date: "Februari 2025", status: "Terjadwal" }
-      ],
-      media: [
-        { title: "Lomba Pembuatan Video Pembelajaran", desc: "Kompetisi internal guru gugus untuk memproduksi video ajar terbaik.", date: "Maret 2025", status: "Menunggu" },
-        { title: "Bimtek Alat Peraga Edukatif (APE)", desc: "Pembuatan APE dari bahan daur ulang dan aplikasinya.", date: "Mei 2025", status: "Menunggu" }
-      ]
-    }
+    struktur: [],
+    programs: {}
   },
   news: [
     { title: "Penerapan Kurikulum Merdeka di Jenu", date: "12 Mar 2024", author: "Humas Gugus", img: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop", cat: "Berita" },
@@ -223,31 +187,15 @@ export const defaultContent = {
     { type: 'image', size: 'medium', url: 'https://images.unsplash.com/photo-1427504494785-3b9ca2044fcc?q=80&w=2000&auto=format&fit=crop' },
   ],
   gugus: {
-    sejarah: "Gugus 03 Melati Kecamatan Jenu didirikan sebagai pusat koordinasi administratif dan pengembangan kualitas antara sekolah-sekolah dasar di wilayah Jenu utara. Organisasi ini telah menjadi pilar penggerak dalam menyelaraskan kebijakan pendidikan pusat dengan implementasi di tingkat sekolah.",
-    visi: "Terwujudnya Sinergi Antar Sekolah dalam Menciptakan Lingkungan Belajar yang Berkualitas dan Mandiri.",
-    misi: [
-      "Mengordinasi pelaksanaan program pendidikan di tingkat gugus.",
-      "Membangun manajemen sekolah yang transparan dan akuntabel.",
-      "Meningkatkan pemberdayaan sumber daya sekolah anggota."
-    ],
-    tujuan: [
-      "Mewujudkan pemerataan kualitas pendidikan antar sekolah anggota.",
-      "Optimalisasi sarana dan prasarana penunjang kegiatan belajar.",
-      "Meningkatkan peran serta masyarakat dalam pendanaan pendidikan."
-    ],
-    tahunBerdiri: "2010",
-    sekolahInti: "UPT SDN Mentoso",
-    wilayahKerja: "Kec. Jenu Utara",
-    struktur: [
-      { role: "Ketua Gugus", name: "Sulastri, S.Pd", school: "UPT SDN Mentoso" },
-      { role: "Sekretaris Gugus", name: "Sunarsih, S.Pd", school: "UPT SDN Remen 1" },
-      { role: "Bendahara Gugus", name: "Nurhariadji, S.Pd", school: "UPT SDN Remen 2" }
-    ],
-    programs: [
-      { title: "Rapat Koordinasi Kepala Sekolah Gugus", desc: "Pertemuan bulanan kepala sekolah untuk sinkronisasi kebijakan.", date: "Setiap Awal Bulan" },
-      { title: "Monitoring dan Evaluasi Kinerja Sekolah", desc: "Pelaporan dan penjaminan mutu rutin.", date: "Tiap Semester" },
-      { title: "Pembinaan Manajerial", desc: "Pelatihan administrasi sekolah bagi staf dan pimpinan.", date: "Agustus 2024" }
-    ],
+    sejarah: "",
+    visi: "",
+    misi: [],
+    tujuan: [],
+    tahunBerdiri: "",
+    sekolahInti: "",
+    wilayahKerja: "",
+    struktur: [],
+    programs: [],
     dokumen: []
   },
   agenda: [
