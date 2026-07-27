@@ -23,7 +23,7 @@ import { useAlert } from "../contexts/AlertContext";
 import ImageUpload from "./ImageUpload";
 
 export default function AdminSekolahForm({ user }: { user: any }) {
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
   const [schools, setSchools] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -115,7 +115,7 @@ export default function AdminSekolahForm({ user }: { user: any }) {
   const handleDelete = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (!supabase) return;
-    if (window.confirm("Hapus sekolah ini? Data yang dihapus tidak dapat dikembalikan.")) {
+    if (await confirm("Hapus sekolah ini? Data yang dihapus tidak dapat dikembalikan.", "Konfirmasi Hapus")) {
       const { error } = await supabase.from("schools").delete().eq("id", id);
       if (!error) {
         logActivity(user, "delete_sekolah", `Menghapus sekolah ID: ${id}`);

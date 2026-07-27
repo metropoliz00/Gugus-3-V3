@@ -10,14 +10,9 @@ const AlertContext = createContext<AlertContextType | undefined>(undefined);
 
 export function AlertProvider({ children }: { children: ReactNode }) {
   const [modalProps, setModalProps] = useState<AlertModalProps | null>(null);
-  
-  // Use refs or something else to store the resolver for promises in confirm
-  const [resolveConfirm, setResolveConfirm] = useState({ resolve: (value: boolean) => {} });
-  const [resolveAlert, setResolveAlert] = useState({ resolve: () => {} });
 
   const alert = (message: string, title?: string, type: 'info' | 'success' | 'error' = 'info') => {
     return new Promise<void>((resolve) => {
-      setResolveAlert({ resolve });
       setModalProps({
         isOpen: true,
         message,
@@ -33,7 +28,6 @@ export function AlertProvider({ children }: { children: ReactNode }) {
 
   const confirm = (message: string, title?: string) => {
     return new Promise<boolean>((resolve) => {
-      setResolveConfirm({ resolve });
       setModalProps({
         isOpen: true,
         message,
@@ -44,6 +38,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
           resolve(false);
         },
         onConfirm: () => {
+          setModalProps(null);
           resolve(true);
         }
       });

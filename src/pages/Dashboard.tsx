@@ -5315,7 +5315,7 @@ function AdminAgendaForm({ user }: { user: any }) {
 
 function AdminSekolahForm({ user }: { user: any }) {
   return <AdminSekolahFormModule user={user} />;
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
   const [schools, setSchools] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -5412,7 +5412,7 @@ function AdminSekolahForm({ user }: { user: any }) {
 
   const handleDelete = async (id: string) => {
     if (!supabase) return;
-    if (window.confirm("Hapus sekolah ini?")) {
+    if (await confirm("Hapus sekolah ini?", "Konfirmasi Hapus")) {
       const { error } = await supabase.from("schools").delete().eq("id", id);
       if (!error) {
         logActivity(user, "delete_sekolah", `Menghapus sekolah ID: ${id}`);
@@ -8085,7 +8085,7 @@ function AdminPengumumanForm({ user }: { user: any }) {
 }
 
 function AdminLandmarkForm() {
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
   const [landmarks, setLandmarks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -8209,7 +8209,7 @@ function AdminLandmarkForm() {
 
   const handleDelete = async (id: string) => {
     if (!supabase) return;
-    if (window.confirm("Yakin ingin menghapus landmark ini?")) {
+    if (await confirm("Yakin ingin menghapus landmark ini?", "Konfirmasi Hapus")) {
       await supabase.from("landmarks").delete().eq("id", id);
       await alert("Landmark berhasil dihapus");
       loadLandmarks();
