@@ -365,10 +365,29 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
         if (kkgDocData && kkgDocData.content) {
           kkgParsed.dokumen = kkgDocData.content;
         }
-        const { data: kkgProgData } = await supabase.from('kkg_programs').select('content').eq('id', 1).single();
-        if (kkgProgData && kkgProgData.content) {
-          kkgParsed.programs = kkgProgData.content;
+        const { data: kkgProgRows } = await supabase.from('kkg_programs').select('*');
+        const kkgProgramsMapped: any = {
+          tahunan: [],
+          workshop: [],
+          supervisi: [],
+          media: []
+        };
+        if (kkgProgRows) {
+          kkgProgRows.forEach((row: any) => {
+            const cat = row.category_id || 'tahunan';
+            if (!kkgProgramsMapped[cat]) {
+              kkgProgramsMapped[cat] = [];
+            }
+            kkgProgramsMapped[cat].push({
+              id: row.id,
+              title: row.title || '',
+              desc: row.desc_text || '',
+              date: row.execution_date || '',
+              status: row.status || 'rencana'
+            });
+          });
         }
+        kkgParsed.programs = kkgProgramsMapped;
         rawContent.kkg = kkgParsed;
 
         const { data: gugusData } = await supabase.from('gugus_settings').select('content').eq('id', 1).single();
@@ -377,10 +396,20 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
         if (gugusDocData && gugusDocData.content) {
           gugusParsed.dokumen = gugusDocData.content;
         }
-        const { data: gugusProgData } = await supabase.from('gugus_programs').select('content').eq('id', 1).single();
-        if (gugusProgData && gugusProgData.content) {
-          gugusParsed.programs = gugusProgData.content;
+        const { data: gugusProgRows } = await supabase.from('gugus_programs').select('*').order('created_at', { ascending: true });
+        const gugusProgramsMapped: any[] = [];
+        if (gugusProgRows) {
+          gugusProgRows.forEach((row: any) => {
+            gugusProgramsMapped.push({
+              id: row.id,
+              title: row.title || '',
+              desc: row.desc_text || '',
+              date: row.execution_date || '',
+              status: row.status || 'rencana'
+            });
+          });
         }
+        gugusParsed.programs = gugusProgramsMapped;
         rawContent.gugus = gugusParsed;
 
         const merged = mergeContent(defaultContent, rawContent);
@@ -469,11 +498,9 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
         .channel('realtime_kkg_programs')
         .on(
           'postgres_changes',
-          { event: '*', schema: 'public', table: 'kkg_programs', filter: 'id=eq.1' },
-          (payload) => {
-            if (payload.new && (payload.new as any).content) {
-              loadContent();
-            }
+          { event: '*', schema: 'public', table: 'kkg_programs' },
+          () => {
+            loadContent();
           }
         )
         .subscribe();
@@ -495,11 +522,9 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
         .channel('realtime_gugus_programs')
         .on(
           'postgres_changes',
-          { event: '*', schema: 'public', table: 'gugus_programs', filter: 'id=eq.1' },
-          (payload) => {
-            if (payload.new && (payload.new as any).content) {
-              loadContent();
-            }
+          { event: '*', schema: 'public', table: 'gugus_programs' },
+          () => {
+            loadContent();
           }
         )
         .subscribe();
@@ -552,8 +577,31 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
           const { error: kkgDocErr } = await supabase.from('kkg_documents').upsert({ id: 1, content: kkgDokumen });
           if (kkgDocErr) console.error("Error saving kkg_documents:", kkgDocErr);
 
-          const { error: kkgProgErr } = await supabase.from('kkg_programs').upsert({ id: 1, content: kkgPrograms });
-          if (kkgProgErr) console.error("Error saving kkg_programs:", kkgProgErr);
+          const kkgProgRows: any[] = [];
+          Object.keys(kkgPrograms).forEach((catId) => {
+            const list = kkgPrograms[catId] || [];
+            list.forEach((item: any) => {
+              const row: any = {
+                category_id: catId,
+                title: item.title || '',
+                desc_text: item.desc || '',
+                execution_date: item.date || '',
+                status: item.status || 'rencana'
+              };
+              if (item.id) {
+                row.id = item.id;
+              }
+              kkgProgRows.push(row);
+            });
+          });
+
+          const { error: kkgDelErr } = await supabase.from('kkg_programs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          if (kkgDelErr) console.error("Error deleting old kkg_programs:", kkgDelErr);
+          
+          if (kkgProgRows.length > 0) {
+            const { error: kkgInsErr } = await supabase.from('kkg_programs').insert(kkgProgRows);
+            if (kkgInsErr) console.error("Error inserting kkg_programs:", kkgInsErr);
+          }
         }
 
         if (newContent.gugus) {
@@ -569,8 +617,28 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
           const { error: gugusDocErr } = await supabase.from('gugus_documents').upsert({ id: 1, content: gugusDokumen });
           if (gugusDocErr) console.error("Error saving gugus_documents:", gugusDocErr);
 
-          const { error: gugusProgErr } = await supabase.from('gugus_programs').upsert({ id: 1, content: gugusPrograms });
-          if (gugusProgErr) console.error("Error saving gugus_programs:", gugusProgErr);
+          const gugusProgRows: any[] = [];
+          const list = gugusPrograms || [];
+          list.forEach((item: any) => {
+            const row: any = {
+              title: item.title || '',
+              desc_text: item.desc || '',
+              execution_date: item.date || '',
+              status: item.status || 'rencana'
+            };
+            if (item.id) {
+              row.id = item.id;
+            }
+            gugusProgRows.push(row);
+          });
+
+          const { error: gugusDelErr } = await supabase.from('gugus_programs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          if (gugusDelErr) console.error("Error deleting old gugus_programs:", gugusDelErr);
+          
+          if (gugusProgRows.length > 0) {
+            const { error: gugusInsErr } = await supabase.from('gugus_programs').insert(gugusProgRows);
+            if (gugusInsErr) console.error("Error inserting gugus_programs:", gugusInsErr);
+          }
         }
 
         const sitePayload = { ...cleanPayload };
