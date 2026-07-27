@@ -1110,16 +1110,18 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
                 label="Halaman Depan (PNG/JPG)"
                 value={templateUrl}
                 onChange={(val) => setTemplateUrl(val)}
-                maxWidth={2000}
-                maxHeight={2000}
+                maxWidth={1200}
+                maxHeight={1200}
+                quality={0.6}
               />
 
               <ImageUpload
                 label="Halaman Belakang (PNG/JPG)"
                 value={templateUrl2}
                 onChange={(val) => setTemplateUrl2(val)}
-                maxWidth={2000}
-                maxHeight={2000}
+                maxWidth={1200}
+                maxHeight={1200}
+                quality={0.6}
               />
             </div>
           </div>

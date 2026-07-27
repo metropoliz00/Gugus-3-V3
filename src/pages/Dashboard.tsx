@@ -3410,6 +3410,8 @@ function AdminSettingsForm() {
   const [isCompressingPoster, setIsCompressingPoster] = useState(false);
 
   const handlePosterFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -3686,9 +3688,7 @@ function AdminSettingsForm() {
                 )}
               </div>
 
-              <p className="text-xs text-gray-500 leading-relaxed">
-                Pilih foto dari galeri atau perangkat Anda. Gambar akan otomatis dikompres ke format <strong>Base64 berkualitas tinggi</strong> sehingga poster tetap sangat jernih namun berukuran ringan dan dapat dimuat secara instan.
-              </p>
+
 
               {announcementForm.imageUrl ? (
                 <div className="p-4 bg-white rounded-2xl border border-gray-200 max-w-md shadow-sm space-y-3">

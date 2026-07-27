@@ -260,9 +260,7 @@ const sanitizeSiteContent = (raw: any): any => {
   if (!raw || typeof raw !== 'object') return raw;
   const copy = JSON.parse(JSON.stringify(raw));
 
-  // 1. Remove certificate configs (migrated to training_certificates table)
-  delete copy.certificate_configs;
-  delete copy.certificate_config;
+  // Removed deletion of certificate_configs so they act as a reliable fallback
 
   // 2. Strip heavy arrays that belong in separate SQL tables
   delete copy.schools;
@@ -354,8 +352,6 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
       if (supabase) {
         const { data: siteData, error: siteError } = await supabase.from('site_settings').select('content').eq('id', 1).single();
         let rawContent = siteData?.content ? { ...siteData.content } : {};
-        delete rawContent.certificate_configs;
-        delete rawContent.certificate_config;
         delete rawContent.kkg;
         delete rawContent.gugus;
 
@@ -530,12 +526,11 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
         .subscribe();
     }
 
-    const handleFocusOrOnline = () => {
+    const handleOnline = () => {
       loadContent();
     };
 
-    window.addEventListener('focus', handleFocusOrOnline);
-    window.addEventListener('online', handleFocusOrOnline);
+    window.addEventListener('online', handleOnline);
 
     return () => {
       if (channelSite && supabase) supabase.removeChannel(channelSite);
@@ -545,8 +540,7 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
       if (channelKkgProg && supabase) supabase.removeChannel(channelKkgProg);
       if (channelGugusDoc && supabase) supabase.removeChannel(channelGugusDoc);
       if (channelGugusProg && supabase) supabase.removeChannel(channelGugusProg);
-      window.removeEventListener('focus', handleFocusOrOnline);
-      window.removeEventListener('online', handleFocusOrOnline);
+      window.removeEventListener('online', handleOnline);
     };
   }, []);
 

@@ -83,9 +83,12 @@ export default function ImageUpload({
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height);
           
-          // Default to webp for better compression and smaller base64 size
-          const outputType = 'image/webp';
-          const dataUrl = canvas.toDataURL(outputType, quality);
+          let dataUrl = '';
+          try {
+            dataUrl = canvas.toDataURL('image/webp', quality);
+          } catch (err) {
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
           onChange(dataUrl);
         }
         setIsLoading(false);
@@ -141,7 +144,11 @@ export default function ImageUpload({
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          fileInputRef.current?.click();
+        }}
       >
         <input 
           type="file" 
@@ -149,6 +156,8 @@ export default function ImageUpload({
           className="hidden" 
           accept="image/*"
           onChange={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (e.target.files && e.target.files[0]) {
               processFile(e.target.files[0]);
             }
