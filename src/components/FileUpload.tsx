@@ -47,8 +47,8 @@ export default function FileUpload({
   }, [value]);
 
   const processFile = async (file: File) => {
-    // Limit file size to 2 MB to prevent database bloat
-    const MAX_SIZE_MB = 2.0;
+    // Limit file size to 15 MB since it is uploaded to Supabase Storage
+    const MAX_SIZE_MB = 15.0;
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
       if (customAlert) {
          await customAlert(
@@ -74,10 +74,54 @@ export default function FileUpload({
     setFileSize((file.size / 1024).toFixed(1) + ' KB');
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const dataUrl = e.target?.result as string;
-      onChange(dataUrl, file.name);
-      setIsLoading(false);
+      
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            fileData: dataUrl,
+            fileName: file.name,
+            fileType: file.type
+          })
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          let parsedErr = "Gagal upload";
+          try {
+            const parsed = JSON.parse(errText);
+            parsedErr = parsed.error || parsedErr;
+          } catch {
+            parsedErr = errText || parsedErr;
+          }
+          throw new Error(parsedErr);
+        }
+
+        const resData = await response.json();
+        // Return the REAL persistent public URL!
+        onChange(resData.url, file.name);
+      } catch (uploadError: any) {
+        console.error("Storage upload error:", uploadError);
+        if (customAlert) {
+          await customAlert(
+            "Gagal mengunggah file ke cloud storage: " + uploadError.message,
+            "Upload Gagal",
+            "error"
+          );
+        }
+        // Rollback local states on error
+        setBlobUrl(null);
+        setFileName('');
+        setFileSize('');
+        onChange('');
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     reader.onerror = () => {

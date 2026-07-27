@@ -554,6 +554,11 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
     const updated = mergeContent(content, newContent);
     const cleanPayload = sanitizeSiteContent(updated);
 
+    const isValidUUID = (str: string) => {
+      if (!str) return false;
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+    };
+
     setContent(updated);
     try {
       localStorage.setItem('siteContent', JSON.stringify(cleanPayload));
@@ -572,10 +577,16 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
           delete kkgObj.programs;
           const cleanKkg = sanitizeSiteContent(kkgObj);
           const { error: kkgErr } = await supabase.from('kkg_settings').upsert({ id: 1, content: cleanKkg });
-          if (kkgErr) console.error("Error saving kkg_settings:", kkgErr);
+          if (kkgErr) {
+            console.error("Error saving kkg_settings:", kkgErr);
+            throw new Error("Gagal menyimpan kkg_settings: " + kkgErr.message);
+          }
 
           const { error: kkgDocErr } = await supabase.from('kkg_documents').upsert({ id: 1, content: kkgDokumen });
-          if (kkgDocErr) console.error("Error saving kkg_documents:", kkgDocErr);
+          if (kkgDocErr) {
+            console.error("Error saving kkg_documents:", kkgDocErr);
+            throw new Error("Gagal menyimpan kkg_documents: " + kkgDocErr.message);
+          }
 
           const kkgProgRows: any[] = [];
           Object.keys(kkgPrograms).forEach((catId) => {
@@ -588,7 +599,7 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
                 execution_date: item.date || '',
                 status: item.status || 'rencana'
               };
-              if (item.id) {
+              if (item.id && isValidUUID(item.id)) {
                 row.id = item.id;
               }
               kkgProgRows.push(row);
@@ -596,11 +607,17 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
           });
 
           const { error: kkgDelErr } = await supabase.from('kkg_programs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-          if (kkgDelErr) console.error("Error deleting old kkg_programs:", kkgDelErr);
+          if (kkgDelErr) {
+            console.error("Error deleting old kkg_programs:", kkgDelErr);
+            throw new Error("Gagal mengosongkan tabel kkg_programs: " + kkgDelErr.message);
+          }
           
           if (kkgProgRows.length > 0) {
             const { error: kkgInsErr } = await supabase.from('kkg_programs').insert(kkgProgRows);
-            if (kkgInsErr) console.error("Error inserting kkg_programs:", kkgInsErr);
+            if (kkgInsErr) {
+              console.error("Error inserting kkg_programs:", kkgInsErr);
+              throw new Error("Gagal memasukkan data program KKG baru: " + kkgInsErr.message);
+            }
           }
         }
 
@@ -612,10 +629,16 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
           delete gugusObj.programs;
           const cleanGugus = sanitizeSiteContent(gugusObj);
           const { error: gugusErr } = await supabase.from('gugus_settings').upsert({ id: 1, content: cleanGugus });
-          if (gugusErr) console.error("Error saving gugus_settings:", gugusErr);
+          if (gugusErr) {
+            console.error("Error saving gugus_settings:", gugusErr);
+            throw new Error("Gagal menyimpan gugus_settings: " + gugusErr.message);
+          }
 
           const { error: gugusDocErr } = await supabase.from('gugus_documents').upsert({ id: 1, content: gugusDokumen });
-          if (gugusDocErr) console.error("Error saving gugus_documents:", gugusDocErr);
+          if (gugusDocErr) {
+            console.error("Error saving gugus_documents:", gugusDocErr);
+            throw new Error("Gagal menyimpan gugus_documents: " + gugusDocErr.message);
+          }
 
           const gugusProgRows: any[] = [];
           const list = gugusPrograms || [];
@@ -626,18 +649,24 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
               execution_date: item.date || '',
               status: item.status || 'rencana'
             };
-            if (item.id) {
+            if (item.id && isValidUUID(item.id)) {
               row.id = item.id;
             }
             gugusProgRows.push(row);
           });
 
           const { error: gugusDelErr } = await supabase.from('gugus_programs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-          if (gugusDelErr) console.error("Error deleting old gugus_programs:", gugusDelErr);
+          if (gugusDelErr) {
+            console.error("Error deleting old gugus_programs:", gugusDelErr);
+            throw new Error("Gagal mengosongkan tabel gugus_programs: " + gugusDelErr.message);
+          }
           
           if (gugusProgRows.length > 0) {
             const { error: gugusInsErr } = await supabase.from('gugus_programs').insert(gugusProgRows);
-            if (gugusInsErr) console.error("Error inserting gugus_programs:", gugusInsErr);
+            if (gugusInsErr) {
+              console.error("Error inserting gugus_programs:", gugusInsErr);
+              throw new Error("Gagal memasukkan data program Gugus baru: " + gugusInsErr.message);
+            }
           }
         }
 
