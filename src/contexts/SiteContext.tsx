@@ -404,24 +404,37 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
   const loadContent = async (retryCount = 0) => {
     try {
       if (supabase) {
-        const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
-        if (data && data.content) {
-          const rawContent = { ...data.content };
-          delete rawContent.certificate_configs;
-          delete rawContent.certificate_config;
-          const merged = mergeContent(defaultContent, rawContent);
-          setContent(merged);
+        const { data: siteData, error: siteError } = await supabase.from('site_settings').select('content').eq('id', 1).single();
+        let rawContent = siteData?.content ? { ...siteData.content } : {};
+        delete rawContent.certificate_configs;
+        delete rawContent.certificate_config;
+        delete rawContent.kkg;
+        delete rawContent.gugus;
+
+        const { data: kkgData } = await supabase.from('kkg_settings').select('content').eq('id', 1).single();
+        if (kkgData && kkgData.content) {
+          rawContent.kkg = kkgData.content;
+        } else {
           try {
-            localStorage.setItem('siteContent', JSON.stringify(merged));
-          } catch (storageError) {
-            console.warn("Failed to store siteContent in localStorage (quota exceeded):", storageError);
-          }
-        } else if (error && error.code === 'PGRST116') {
-          // Row 1 missing, seed default content
-          await supabase.from('site_settings').insert([{ id: 1, content: defaultContent }]);
-        } else if (error && retryCount < 3) {
-          setTimeout(() => loadContent(retryCount + 1), 800 * (retryCount + 1));
-          return;
+            await supabase.from('kkg_settings').upsert([{ id: 1, content: defaultContent.kkg }]);
+          } catch (e) {}
+        }
+
+        const { data: gugusData } = await supabase.from('gugus_settings').select('content').eq('id', 1).single();
+        if (gugusData && gugusData.content) {
+          rawContent.gugus = gugusData.content;
+        } else {
+          try {
+            await supabase.from('gugus_settings').upsert([{ id: 1, content: defaultContent.gugus }]);
+          } catch (e) {}
+        }
+
+        const merged = mergeContent(defaultContent, rawContent);
+        setContent(merged);
+        try {
+          localStorage.setItem('siteContent', JSON.stringify(merged));
+        } catch (storageError) {
+          console.warn("Failed to store siteContent in localStorage:", storageError);
         }
       }
     } catch (e) {
@@ -438,24 +451,44 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     loadContent();
 
-    // Supabase Realtime channel to listen for site_settings live changes
-    let channel: any = null;
+    let channelSite: any = null;
+    let channelKkg: any = null;
+    let channelGugus: any = null;
     if (supabase) {
-      channel = supabase
+      channelSite = supabase
         .channel('realtime_site_settings')
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'site_settings', filter: 'id=eq.1' },
           (payload) => {
             if (payload.new && (payload.new as any).content) {
-              const rawContent = { ...(payload.new as any).content };
-              delete rawContent.certificate_configs;
-              delete rawContent.certificate_config;
-              const merged = mergeContent(defaultContent, rawContent);
-              setContent(merged);
-              try {
-                localStorage.setItem('siteContent', JSON.stringify(merged));
-              } catch (e) {}
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelKkg = supabase
+        .channel('realtime_kkg_settings')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'kkg_settings', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelGugus = supabase
+        .channel('realtime_gugus_settings')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'gugus_settings', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
             }
           }
         )
@@ -470,9 +503,9 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
     window.addEventListener('online', handleFocusOrOnline);
 
     return () => {
-      if (channel && supabase) {
-        supabase.removeChannel(channel);
-      }
+      if (channelSite && supabase) supabase.removeChannel(channelSite);
+      if (channelKkg && supabase) supabase.removeChannel(channelKkg);
+      if (channelGugus && supabase) supabase.removeChannel(channelGugus);
       window.removeEventListener('focus', handleFocusOrOnline);
       window.removeEventListener('online', handleFocusOrOnline);
     };
@@ -486,13 +519,29 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       localStorage.setItem('siteContent', JSON.stringify(cleanPayload));
     } catch (storageError) {
-      console.warn("Failed to store siteContent in localStorage (quota exceeded):", storageError);
+      console.warn("Failed to store siteContent in localStorage:", storageError);
     }
     setSaveMessage("Menyimpan...");
     
     try {
       if (supabase) {
-        const { error } = await supabase.from('site_settings').upsert({ id: 1, content: cleanPayload });
+        if (newContent.kkg) {
+          const cleanKkg = sanitizeSiteContent(updated.kkg);
+          const { error: kkgErr } = await supabase.from('kkg_settings').upsert({ id: 1, content: cleanKkg });
+          if (kkgErr) console.error("Error saving kkg_settings:", kkgErr);
+        }
+
+        if (newContent.gugus) {
+          const cleanGugus = sanitizeSiteContent(updated.gugus);
+          const { error: gugusErr } = await supabase.from('gugus_settings').upsert({ id: 1, content: cleanGugus });
+          if (gugusErr) console.error("Error saving gugus_settings:", gugusErr);
+        }
+
+        const sitePayload = { ...cleanPayload };
+        delete sitePayload.kkg;
+        delete sitePayload.gugus;
+
+        const { error } = await supabase.from('site_settings').upsert({ id: 1, content: sitePayload });
         if (!error) {
           setSaveMessage("Berhasil tersimpan!");
         } else {
