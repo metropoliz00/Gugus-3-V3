@@ -308,6 +308,35 @@ const recursivelyReplaceGugus3 = (obj: any): any => {
   return obj;
 };
 
+const sanitizeSiteContent = (raw: any): any => {
+  if (!raw || typeof raw !== 'object') return raw;
+  const copy = JSON.parse(JSON.stringify(raw));
+
+  // 1. Remove certificate configs (migrated to training_certificates table)
+  delete copy.certificate_configs;
+  delete copy.certificate_config;
+
+  // 2. Strip heavy arrays that belong in separate SQL tables
+  delete copy.schools;
+  delete copy.news;
+  delete copy.gallery;
+
+  // 3. Clean up oversized Base64 strings (>250KB) anywhere inside JSON
+  const cleanOversizedBase64 = (obj: any) => {
+    if (!obj || typeof obj !== 'object') return;
+    for (const key of Object.keys(obj)) {
+      if (typeof obj[key] === 'string' && obj[key].startsWith('data:') && obj[key].length > 350000) {
+        obj[key] = '';
+      } else if (typeof obj[key] === 'object') {
+        cleanOversizedBase64(obj[key]);
+      }
+    }
+  };
+  cleanOversizedBase64(copy);
+
+  return copy;
+};
+
 const mergeContent = (base: any, incomingRaw: any) => {
   if (!incomingRaw) return base;
   const incoming = recursivelyReplaceGugus3(incomingRaw);
@@ -377,7 +406,10 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
       if (supabase) {
         const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
         if (data && data.content) {
-          const merged = mergeContent(defaultContent, data.content);
+          const rawContent = { ...data.content };
+          delete rawContent.certificate_configs;
+          delete rawContent.certificate_config;
+          const merged = mergeContent(defaultContent, rawContent);
           setContent(merged);
           try {
             localStorage.setItem('siteContent', JSON.stringify(merged));
@@ -416,7 +448,10 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
           { event: '*', schema: 'public', table: 'site_settings', filter: 'id=eq.1' },
           (payload) => {
             if (payload.new && (payload.new as any).content) {
-              const merged = mergeContent(defaultContent, (payload.new as any).content);
+              const rawContent = { ...(payload.new as any).content };
+              delete rawContent.certificate_configs;
+              delete rawContent.certificate_config;
+              const merged = mergeContent(defaultContent, rawContent);
               setContent(merged);
               try {
                 localStorage.setItem('siteContent', JSON.stringify(merged));
@@ -445,9 +480,11 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
 
   const updateContent = async (newContent: Partial<SiteContent>) => {
     const updated = mergeContent(content, newContent);
+    const cleanPayload = sanitizeSiteContent(updated);
+
     setContent(updated);
     try {
-      localStorage.setItem('siteContent', JSON.stringify(updated));
+      localStorage.setItem('siteContent', JSON.stringify(cleanPayload));
     } catch (storageError) {
       console.warn("Failed to store siteContent in localStorage (quota exceeded):", storageError);
     }
@@ -455,7 +492,7 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
     
     try {
       if (supabase) {
-        const { error } = await supabase.from('site_settings').upsert({ id: 1, content: updated });
+        const { error } = await supabase.from('site_settings').upsert({ id: 1, content: cleanPayload });
         if (!error) {
           setSaveMessage("Berhasil tersimpan!");
         } else {

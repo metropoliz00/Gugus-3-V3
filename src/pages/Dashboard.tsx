@@ -102,6 +102,7 @@ import { logActivity, ActivityLog } from "../lib/activity";
 import AdminCertificateEditor, {
   useCertificateGenerator,
   ensureCertificatesExist,
+  fetchCertificateConfigsMap,
 } from "../components/AdminCertificateEditor";
 import { SharingPractices } from "../components/SharingPractices";
 import MainCalendar from "../components/MainCalendar";
@@ -11026,13 +11027,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
     if (!supabase) return;
     try {
       // 1. Get the certificate configs
-      const { data: sData } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .single();
-      
-      const configs = sData?.content?.certificate_configs || {};
+      const configs = await fetchCertificateConfigsMap();
       const actId = item.training_id;
       const config = configs[actId] || configs["default"];
       if (!config) {
@@ -11075,7 +11070,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
       const { data: res, error } = await query;
       if (error) throw error;
       
-      let fetchedData = res || [];
+      let fetchedData = (res || []).filter((d: any) => d.certificate_number !== "TEMPLATE_CONFIG");
       
       if (table === "training_certificates") {
         // Build keys to fetch relation details for certificates
@@ -11577,7 +11572,8 @@ function DataViewList({
         }
         const { data: res, error } = await query;
         if (error) throw error;
-        setData(res || []);
+        const filteredRes = (res || []).filter((d: any) => d.certificate_number !== "TEMPLATE_CONFIG");
+        setData(filteredRes);
       } catch (err: any) {
         console.error(err);
       } finally {
@@ -12721,15 +12717,8 @@ function TeacherJadwalCards({ user }: { user?: any }) {
       }
 
       // Fetch Certificate Config
-      const { data: sData } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .single();
-
-      if (sData?.content?.certificate_configs) {
-        setCertConfig(sData.content.certificate_configs);
-      }
+      const certConfigsMap = await fetchCertificateConfigsMap();
+      setCertConfig(certConfigsMap);
     } catch (err) {
       console.error(err);
     } finally {
@@ -13196,15 +13185,8 @@ function TeacherTrainingCards({ user }: { user: any }) {
       setCertRecords(certMap);
 
       // Fetch Certificate Config
-      const { data: sData } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .single();
-
-      if (sData?.content?.certificate_configs) {
-        setCertConfig(sData.content.certificate_configs);
-      }
+      const certConfigsMap = await fetchCertificateConfigsMap();
+      setCertConfig(certConfigsMap);
     } catch (err) {
       console.error(err);
     } finally {

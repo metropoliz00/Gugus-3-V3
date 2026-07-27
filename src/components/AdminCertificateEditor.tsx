@@ -380,6 +380,89 @@ function DraggableField({
   );
 }
 
+export async function migrateCertificateConfigToTable(key: string, configObj: any) {
+  if (!supabase || !configObj) return;
+  try {
+    const { data: existingRow } = await supabase
+      .from("training_certificates")
+      .select("id")
+      .eq("certificate_number", "TEMPLATE_CONFIG")
+      .eq("training_id", key)
+      .maybeSingle();
+
+    const payload: any = {
+      training_id: key,
+      certificate_number: "TEMPLATE_CONFIG",
+      certificate_url: JSON.stringify(configObj),
+      certificate_config: configObj,
+      updated_at: new Date().toISOString()
+    };
+
+    if (existingRow?.id) {
+      await supabase.from("training_certificates").update(payload).eq("id", existingRow.id);
+    } else {
+      await supabase.from("training_certificates").insert([payload]);
+    }
+  } catch (e) {
+    console.warn("Migration to training_certificates skipped:", e);
+  }
+}
+
+export async function fetchCertificateConfigsMap(): Promise<Record<string, any>> {
+  const configsMap: Record<string, any> = {};
+
+  if (supabase) {
+    // 1. Fetch from training_certificates table
+    try {
+      const { data: dbRows } = await supabase
+        .from("training_certificates")
+        .select("*")
+        .eq("certificate_number", "TEMPLATE_CONFIG");
+
+      if (dbRows && dbRows.length > 0) {
+        dbRows.forEach((row: any) => {
+          let parsed: any = null;
+          if (row.certificate_config && typeof row.certificate_config === "object") {
+            parsed = row.certificate_config;
+          } else if (row.certificate_url && row.certificate_url.startsWith("{")) {
+            try {
+              parsed = JSON.parse(row.certificate_url);
+            } catch (e) {}
+          }
+          if (parsed && row.training_id) {
+            configsMap[row.training_id] = parsed;
+          }
+        });
+      }
+    } catch (e) {
+      console.warn("Failed fetching configs from training_certificates table:", e);
+    }
+
+    // 2. Fallback & migrate from site_settings
+    try {
+      const { data: sData } = await supabase
+        .from("site_settings")
+        .select("content")
+        .eq("id", 1)
+        .maybeSingle();
+
+      const siteConfigs = sData?.content?.certificate_configs || {};
+      Object.keys(siteConfigs).forEach((k) => {
+        if (!configsMap[k]) {
+          configsMap[k] = siteConfigs[k];
+          migrateCertificateConfigToTable(k, siteConfigs[k]);
+        }
+      });
+      if (sData?.content?.certificate_config && !configsMap["default"]) {
+        configsMap["default"] = sData.content.certificate_config;
+        migrateCertificateConfigToTable("default", sData.content.certificate_config);
+      }
+    } catch (e) {}
+  }
+
+  return configsMap;
+}
+
 export default function AdminCertificateEditor({ trainingId }: { trainingId?: string }) {
   const { alert } = useAlert();
   const stageRef = useRef<any>(null);
@@ -459,16 +542,8 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
     }
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      // Access per-training config if trainingId is provided, else use global/default
-      const allConfigs = data?.content?.certificate_configs || {};
+      const allConfigs = await fetchCertificateConfigsMap();
+      const activeKey = trainingId || "default";
       const hasCustom = trainingId ? !!allConfigs[trainingId] : false;
       setIsCustomConfig(hasCustom);
 
@@ -479,16 +554,11 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         config = allConfigs["default"];
       }
 
-      // Fallback 2: load legacy certificate_config key
-      if (!config) {
-        config = data?.content?.certificate_config as CertificateConfig;
-      }
-
       if (config) {
         if (config.templateUrl) setTemplateUrl(config.templateUrl);
         if (config.templateUrl2) setTemplateUrl2(config.templateUrl2);
         if (config.fields)
-          setFields(config.fields.map((f) => ({ ...f, page: f.page || 1 })));
+          setFields(config.fields.map((f: any) => ({ ...f, page: f.page || 1 })));
         if (config.placeholders) setAvailablePlaceholders(config.placeholders);
         setDownloadEnabled(config.downloadEnabled !== false);
       } else {
@@ -584,17 +654,13 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         downloadEnabled: downloadEnabled,
       };
 
-      const newContent = {
-        ...(current?.content || {}),
-        certificate_configs: {
-          ...(current?.content?.certificate_configs || {}),
-          [activeKey]: configPayload,
-        },
-      };
+      // Save to training_certificates table
+      await migrateCertificateConfigToTable(activeKey, configPayload);
 
-      if (!trainingId || trainingId === "default") {
-        newContent.certificate_config = configPayload;
-      }
+      // Clean site_settings content by stripping legacy certificate_configs bloat
+      const newContent = { ...(current?.content || {}) };
+      delete newContent.certificate_configs;
+      delete newContent.certificate_config;
 
       const { error } = await supabase.from("site_settings").upsert({
         id: 1,
@@ -1366,14 +1432,8 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
 export async function ensureCertificatesExist(userId?: string) {
   if (!supabase) return;
   try {
-    // 1. Fetch certificate configurations
-    const { data: sData } = await supabase
-      .from("site_settings")
-      .select("content")
-      .eq("id", 1)
-      .single();
-
-    const configs = sData?.content?.certificate_configs || {};
+    // 1. Fetch certificate configurations map from database/table
+    const configs = await fetchCertificateConfigsMap();
     const actIds = Object.keys(configs); // These are the IDs of trainings/events with templates
 
     if (actIds.length === 0) return;
