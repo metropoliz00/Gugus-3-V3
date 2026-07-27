@@ -63,6 +63,11 @@ import {
   LayoutList,
   Check,
   Pencil,
+  LayoutGrid,
+  List,
+  Edit3,
+  Eye,
+  SlidersHorizontal,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -102,6 +107,7 @@ import PrintDaftarHadir from "../components/PrintDaftarHadir";
 import PrintLaporanKeuangan from "../components/PrintLaporanKeuangan";
 import PrintKartuTamu from "../components/PrintKartuTamu";
 import { getAutomatedStatus, getEnglishStatus, getIndonesianStatusLabel } from "../utils/statusHelper";
+import AdminSekolahFormModule from "../components/AdminSekolahForm";
 
 import * as XLSX from "xlsx";
 import Webcam from "react-webcam";
@@ -5308,6 +5314,7 @@ function AdminAgendaForm({ user }: { user: any }) {
 }
 
 function AdminSekolahForm({ user }: { user: any }) {
+  return <AdminSekolahFormModule user={user} />;
   const { alert } = useAlert();
   const [schools, setSchools] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
