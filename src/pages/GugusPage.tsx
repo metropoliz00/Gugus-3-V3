@@ -36,11 +36,15 @@ export default function GugusPage() {
     if (!supabase) return;
     try {
       const { data, error } = await supabase.from('org_gugus').select('*').order('created_at', { ascending: true });
-      if (data && data.length > 0) {
-        setStruktur(data);
-        try {
-          localStorage.setItem('cached_org_gugus', JSON.stringify(data));
-        } catch (e) {}
+      if (data && Array.isArray(data)) {
+        if (data.length > 0) {
+          setStruktur(data);
+          try {
+            localStorage.setItem('cached_org_gugus', JSON.stringify(data));
+          } catch (e) {}
+        } else {
+          setStruktur([]);
+        }
       } else if (error && retry < 3) {
         setTimeout(() => loadStruktur(retry + 1), 800 * (retry + 1));
       }
@@ -191,7 +195,7 @@ export default function GugusPage() {
                       <h2 className="text-3xl font-heading font-black text-soft-black">Visi Gugus</h2>
                     </div>
                     <p className="text-xl text-gray-600 leading-relaxed font-light italic border-l-4 border-leaf-green pl-6 py-2">
-                       "{data.visi}"
+                       "{data?.visi || 'Visi belum diatur.'}"
                     </p>
                   </div>
 
@@ -203,7 +207,7 @@ export default function GugusPage() {
                       <h2 className="text-3xl font-heading font-black text-soft-black">Misi Kami</h2>
                     </div>
                     <ul className="space-y-4">
-                      {data.misi.map((misi, idx) => (
+                      {(data?.misi || []).map((misi: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-main-blue/30 transition-colors">
                           <span className="w-8 h-8 rounded-lg bg-main-blue/10 text-main-blue flex items-center justify-center font-bold shrink-0">{idx + 1}</span>
                           <span className="text-gray-600">{misi}</span>
@@ -221,7 +225,7 @@ export default function GugusPage() {
                     Tujuan Strategis
                   </h3>
                   <div className="space-y-4">
-                    {data.tujuan.map((tujuan, idx) => (
+                    {(data?.tujuan || []).map((tujuan: string, idx: number) => (
                       <div key={idx} className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200 group">
                         <div className="w-10 h-10 shrink-0 bg-gray-100 text-gray-500 font-bold rounded-full flex items-center justify-center group-hover:bg-main-blue group-hover:text-white transition-colors">
                           {idx + 1}
@@ -245,7 +249,7 @@ export default function GugusPage() {
                 </div>
                 
                 <div className="bg-white/50 rounded-3xl p-6 border border-gray-100 overflow-x-auto min-h-[400px]">
-                  <OrgChart members={struktur} />
+                  <OrgChart members={struktur && struktur.length > 0 ? struktur : (data?.struktur || [])} />
                 </div>
               </div>
             )}
@@ -263,7 +267,7 @@ export default function GugusPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {data.programs.map((program, idx) => {
+                  {(data?.programs || []).map((program: any, idx: number) => {
                     const autoStatus = getAutomatedProgramStatus(program);
                     return (
                       <div key={idx} className="group p-8 rounded-3xl bg-white border border-gray-100 hover:border-main-blue transition-all hover:shadow-xl shadow-soft-black/5 relative overflow-hidden">

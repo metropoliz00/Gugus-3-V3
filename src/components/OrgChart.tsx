@@ -90,9 +90,10 @@ export default function OrgChart({ members = [], onEdit, onDelete }: { members: 
             )}
             {chunks.map((chunk, chunkIndex) => (
               <div key={`${i}-${chunkIndex}`} className="flex flex-row flex-nowrap justify-center gap-6 relative z-10 w-full max-w-7xl my-2">
-                {chunk.map(member => (
-                  <Card key={member.id} member={member} memberKey={member.id} />
-                ))}
+                {chunk.map((member, mIdx) => {
+                  const itemKey = member.id || `${member.name || 'member'}-${member.role || 'role'}-${mIdx}`;
+                  return <Card key={itemKey} member={member} memberKey={itemKey} />;
+                })}
               </div>
             ))}
           </React.Fragment>

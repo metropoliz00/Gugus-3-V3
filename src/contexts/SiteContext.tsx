@@ -317,8 +317,20 @@ const mergeContent = (base: any, incomingRaw: any) => {
     hero: base.hero && incoming.hero ? { ...base.hero, ...incoming.hero } : (incoming.hero || base.hero),
     profil: base.profil && incoming.profil ? { ...base.profil, ...incoming.profil } : (incoming.profil || base.profil),
     footer: base.footer && incoming.footer ? { ...base.footer, ...incoming.footer } : (incoming.footer || base.footer),
-    kkg: base.kkg && incoming.kkg ? { ...base.kkg, ...incoming.kkg } : (incoming.kkg || base.kkg),
-    gugus: base.gugus && incoming.gugus ? { ...base.gugus, ...incoming.gugus } : (incoming.gugus || base.gugus),
+    kkg: base.kkg && incoming.kkg ? {
+      ...base.kkg,
+      ...incoming.kkg,
+      programs: incoming.kkg.programs || base.kkg.programs,
+      programCategories: incoming.kkg.programCategories || base.kkg.programCategories,
+      statistikKkg: incoming.kkg.statistikKkg || base.kkg.statistikKkg,
+      dokumen: incoming.kkg.dokumen || base.kkg.dokumen,
+    } : (incoming.kkg || base.kkg),
+    gugus: base.gugus && incoming.gugus ? {
+      ...base.gugus,
+      ...incoming.gugus,
+      programs: incoming.gugus.programs || base.gugus.programs,
+      dokumen: incoming.gugus.dokumen || base.gugus.dokumen,
+    } : (incoming.gugus || base.gugus),
     announcement: base.announcement && incoming.announcement ? { ...base.announcement, ...incoming.announcement } : (incoming.announcement || base.announcement),
     activeMenus: base.activeMenus && incoming.activeMenus ? { ...base.activeMenus, ...incoming.activeMenus } : (incoming.activeMenus || base.activeMenus),
   };
@@ -432,7 +444,7 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const updateContent = async (newContent: Partial<SiteContent>) => {
-    const updated = { ...content, ...newContent };
+    const updated = mergeContent(content, newContent);
     setContent(updated);
     try {
       localStorage.setItem('siteContent', JSON.stringify(updated));

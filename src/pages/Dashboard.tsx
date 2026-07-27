@@ -10598,21 +10598,21 @@ function AdminStrukturManager() {
 function AdminKKGFormWrapper() {
   const { content, updateContent } = useSiteContent() as any;
   const { alert } = useAlert();
-  const [localKkg, setLocalKkg] = useState<any>(null);
+  const [localKkg, setLocalKkg] = useState<any>(content?.kkg);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync state with content when context loads
+  // Sync state with content whenever context updates from Supabase
   useEffect(() => {
-    if (content && content.kkg && !localKkg) {
+    if (content?.kkg) {
       setLocalKkg(content.kkg);
     }
-  }, [content]);
+  }, [content?.kkg]);
 
-  const kkgForm = localKkg || content.kkg || { struktur: [], programs: {} };
+  const kkgForm = localKkg || content?.kkg || { struktur: [], programs: {} };
 
   const setKkgForm = (updater: any) => {
     setLocalKkg((prev: any) => {
-      const currentState = prev || content.kkg || { struktur: [], programs: {} };
+      const currentState = prev || content?.kkg || { struktur: [], programs: {} };
       const newState = typeof updater === "function" ? updater(currentState) : updater;
       return newState;
     });
@@ -10655,21 +10655,21 @@ function AdminKKGFormWrapper() {
 function AdminGugusFormWrapper() {
   const { content, updateContent } = useSiteContent() as any;
   const { alert } = useAlert();
-  const [localGugus, setLocalGugus] = useState<any>(null);
+  const [localGugus, setLocalGugus] = useState<any>(content?.gugus);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync state with content when context loads
+  // Sync state with content whenever context updates from Supabase
   useEffect(() => {
-    if (content && content.gugus && !localGugus) {
+    if (content?.gugus) {
       setLocalGugus(content.gugus);
     }
-  }, [content]);
+  }, [content?.gugus]);
 
-  const gugusForm = localGugus || content.gugus || { struktur: [], programs: [] };
+  const gugusForm = localGugus || content?.gugus || { struktur: [], programs: [] };
 
   const setGugusForm = (updater: any) => {
     setLocalGugus((prev: any) => {
-      const currentState = prev || content.gugus || { struktur: [], programs: [] };
+      const currentState = prev || content?.gugus || { struktur: [], programs: [] };
       const newState = typeof updater === "function" ? updater(currentState) : updater;
       return newState;
     });

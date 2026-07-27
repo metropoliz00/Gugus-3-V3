@@ -51,11 +51,16 @@ export default function KkgPage() {
     if (!supabase) return;
     try {
       const { data, error } = await supabase.from('org_kkg').select('*').order('created_at', { ascending: true });
-      if (data && data.length > 0) {
-        setStruktur(data);
-        try {
-          localStorage.setItem('cached_org_kkg', JSON.stringify(data));
-        } catch (e) {}
+      if (data && Array.isArray(data)) {
+        if (data.length > 0) {
+          setStruktur(data);
+          try {
+            localStorage.setItem('cached_org_kkg', JSON.stringify(data));
+          } catch (e) {}
+        } else {
+          // If empty in DB, use structure from site_settings or default
+          setStruktur([]);
+        }
       } else if (error && retry < 3) {
         setTimeout(() => loadStruktur(retry + 1), 800 * (retry + 1));
       }
@@ -529,7 +534,7 @@ export default function KkgPage() {
           )}
           <p className="text-gray-500 max-w-2xl mx-auto">Sinergi antara para profesional di lingkungan Gugus 03 Melati Kecamatan Jenu untuk mewujudkan visi bersama.</p>
         </div>
-        <OrgChart members={struktur} />
+        <OrgChart members={struktur && struktur.length > 0 ? struktur : (kkg.struktur || [])} />
       </section>
 
       {/* Program Kerja Accordion & Stats */}
