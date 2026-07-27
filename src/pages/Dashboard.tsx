@@ -7415,6 +7415,13 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
           >
             Program
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("dokumen")}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === "dokumen" ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-orange-600"}`}
+          >
+            Dokumen
+          </button>
         </div>
       </div>
 
@@ -7838,6 +7845,79 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "dokumen" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h4 className="font-bold text-soft-black">Daftar Dokumen Gugus</h4>
+              <button
+                type="button"
+                onClick={() =>
+                  setGugusForm({
+                    ...form,
+                    dokumen: [...(form.dokumen || []), { title: "", url: "" }],
+                  })
+                }
+                className="px-4 py-2 bg-orange-500 text-white flex items-center gap-2 font-bold rounded-lg hover:bg-orange-600 transition-all text-xs"
+              >
+                + Tambah Dokumen
+              </button>
+            </div>
+            <div className="space-y-4">
+              {(form.dokumen || []).map(
+                (doc: { title: string; url: string }, i: number) => (
+                  <div
+                    key={i}
+                    className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
+                  >
+                    <div className="flex-1 space-y-2">
+                      <input
+                        className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-orange-500 outline-none bg-white"
+                        value={doc.title}
+                        onChange={(e) => {
+                          const newDokumen = [...(form.dokumen || [])];
+                          newDokumen[i].title = e.target.value;
+                          setGugusForm({ ...form, dokumen: newDokumen });
+                        }}
+                        placeholder="Judul Dokumen"
+                      />
+                      <FileUpload
+                        label=""
+                        compact={true}
+                        value={doc.url}
+                        accept=".pdf,.doc,.docx,.xls,.xlsx"
+                        onChange={(base64, filename) => {
+                          const newDokumen = [...(form.dokumen || [])];
+                          newDokumen[i].url = base64;
+                          if (filename && !newDokumen[i].title) {
+                            newDokumen[i].title = filename;
+                          }
+                          setGugusForm({ ...form, dokumen: newDokumen });
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newDokumen = [...(form.dokumen || [])];
+                        newDokumen.splice(i, 1);
+                        setGugusForm({ ...form, dokumen: newDokumen });
+                      }}
+                      className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                ),
+              )}
+              {(form.dokumen || []).length === 0 && (
+                <p className="text-sm text-gray-400 italic text-center py-8">
+                  Belum ada dokumen Gugus.
+                </p>
+              )}
             </div>
           </div>
         )}

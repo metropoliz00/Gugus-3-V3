@@ -9,7 +9,9 @@ import {
   BookOpen,
   Award,
   Calendar,
-  CheckCircle2
+  CheckCircle2,
+  FileText,
+  Download
 } from 'lucide-react';
 import { useSiteContent } from '../contexts/SiteContext';
 import OrgChart from '../components/OrgChart';
@@ -75,6 +77,7 @@ export default function GugusPage() {
     { id: 'visi', label: 'Visi & Misi', icon: Target },
     { id: 'struktur', label: 'Struktur Organisasi', icon: Users },
     { id: 'program', label: 'Program Kerja', icon: Briefcase },
+    { id: 'dokumen', label: 'Dokumen', icon: FileText },
   ];
 
   return (
@@ -299,6 +302,55 @@ export default function GugusPage() {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'dokumen' && (
+              <div className="space-y-8">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="p-3 bg-orange-50 rounded-2xl">
+                    <FileText className="w-8 h-8 text-accent-orange" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-heading font-black text-soft-black">Dokumen & Berkas Gugus</h2>
+                    <p className="text-sm text-accent-orange font-bold uppercase tracking-wider">Arsip Resmi Gugus 03 Melati</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(data?.dokumen || []).map((doc: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-main-blue hover:shadow-md transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 text-main-blue flex items-center justify-center shrink-0 font-bold">
+                          <FileText className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-soft-black text-base line-clamp-1">{doc.title || 'Dokumen Tanpa Judul'}</h4>
+                          <p className="text-xs text-gray-400 mt-0.5">Berkas Resmi Gugus 03</p>
+                        </div>
+                      </div>
+                      {doc.url ? (
+                        <a
+                          href={doc.url}
+                          download={doc.title || 'dokumen'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 bg-main-blue/10 hover:bg-main-blue text-main-blue hover:text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-2 shrink-0"
+                        >
+                          <Download className="w-4 h-4" /> Unduh
+                        </a>
+                      ) : (
+                        <span className="text-xs text-gray-300 italic">Belum ada file</span>
+                      )}
+                    </div>
+                  ))}
+                  {(!data?.dokumen || data.dokumen.length === 0) && (
+                    <div className="col-span-1 md:col-span-2 text-center py-12 bg-white rounded-2xl border border-gray-100">
+                      <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-400 font-medium">Belum ada dokumen Gugus yang diunggah.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
