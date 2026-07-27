@@ -86,7 +86,7 @@ export default function AnnouncementPopup({ isReady = true }: { isReady?: boolea
                     <ImageIcon className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="font-heading text-2xl font-bold mb-2">Poster Informasi</h3>
-                  <p className="text-white/80 text-sm max-w-md mx-auto">Atur URL gambar flyer/poster pada menu Pengaturan Admin.</p>
+                  <p className="text-white/80 text-sm max-w-md mx-auto">Upload foto flyer/poster pada menu Pengaturan Admin.</p>
                 </div>
               )}
             </div>

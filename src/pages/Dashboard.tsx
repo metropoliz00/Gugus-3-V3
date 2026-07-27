@@ -3403,6 +3403,67 @@ function AdminSettingsForm() {
   const [activeMenusForm, setActiveMenusForm] = useState(
     (content as any).activeMenus || {},
   );
+  const [isCompressingPoster, setIsCompressingPoster] = useState(false);
+
+  const handlePosterFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Harap pilih file gambar (JPG, PNG, WEBP)", "Format File Salah", "warning");
+      return;
+    }
+
+    setIsCompressingPoster(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // High quality compression: Max 1200x1600px maintaining aspect ratio
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          if (width / height > MAX_WIDTH / MAX_HEIGHT) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          } else {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Quality 0.82 balances crisp graphic detail with optimized lightweight Base64
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.82);
+
+          setAnnouncementForm((prev) => ({
+            ...prev,
+            imageUrl: compressedBase64,
+          }));
+        }
+        setIsCompressingPoster(false);
+      };
+      img.onerror = () => {
+        setIsCompressingPoster(false);
+        alert("Gagal memproses gambar. Harap gunakan file gambar lain.", "Error", "error");
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   React.useEffect(() => {
     if (!isLoading) {
@@ -3572,36 +3633,84 @@ function AdminSettingsForm() {
           </div>
 
           <div className="p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
-            {/* Poster URL */}
-            <div className="space-y-3">
+            {/* Poster Upload & Base64 Compression */}
+            <div className="space-y-4">
               <label className="block text-sm font-semibold text-gray-700">
-                URL Gambar Flyer / Poster Informasi
+                Upload Foto Flyer / Poster Informasi
               </label>
-              <div className="flex flex-col sm:flex-row gap-3">
+
+              <div className="flex flex-wrap items-center gap-3">
                 <input
-                  type="text"
-                  placeholder="https://... (URL gambar flyer / poster)"
-                  className="flex-1 border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all text-sm bg-white"
-                  value={announcementForm.imageUrl || ""}
-                  onChange={(e) =>
-                    setAnnouncementForm({
-                      ...announcementForm,
-                      imageUrl: e.target.value,
-                    })
-                  }
+                  type="file"
+                  id="poster_file_upload"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePosterFileUpload}
                 />
+                <label
+                  htmlFor="poster_file_upload"
+                  className={`cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-3 bg-main-blue hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-main-blue/20 ${
+                    isCompressingPoster ? "opacity-60 pointer-events-none" : ""
+                  }`}
+                >
+                  {isCompressingPoster ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Memproses & Mengompres Gambar...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      Pilih Foto / Gambar Poster
+                    </>
+                  )}
+                </label>
+
+                {announcementForm.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAnnouncementForm((prev) => ({
+                        ...prev,
+                        imageUrl: "",
+                      }))
+                    }
+                    className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 font-semibold rounded-xl text-sm transition-all border border-red-200"
+                  >
+                    <Trash2 className="w-4 h-4" /> Hapus Foto
+                  </button>
+                )}
               </div>
-              {announcementForm.imageUrl && (
-                <div className="p-3 bg-white rounded-xl border border-gray-200 max-w-sm">
-                  <span className="text-xs text-gray-400 block mb-2 font-medium">Pratinjau Flyer/Poster:</span>
-                  <img
-                    src={announcementForm.imageUrl}
-                    alt="Preview Poster"
-                    className="w-full h-auto max-h-56 object-contain rounded-lg bg-slate-900"
-                    onError={(e) => {
-                      (e.target as HTMLElement).style.display = 'none';
-                    }}
-                  />
+
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Pilih foto dari galeri atau perangkat Anda. Gambar akan otomatis dikompres ke format <strong>Base64 berkualitas tinggi</strong> sehingga poster tetap sangat jernih namun berukuran ringan dan dapat dimuat secara instan.
+              </p>
+
+              {announcementForm.imageUrl ? (
+                <div className="p-4 bg-white rounded-2xl border border-gray-200 max-w-md shadow-sm space-y-3">
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-gray-500">Pratinjau Flyer / Poster:</span>
+                    <span className="text-emerald-600 flex items-center gap-1 font-bold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                      <CheckCircle className="w-3.5 h-3.5" /> Foto Siap Digunakan
+                    </span>
+                  </div>
+                  <div className="overflow-hidden rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center min-h-[160px] p-2">
+                    <img
+                      src={announcementForm.imageUrl}
+                      alt="Preview Poster"
+                      className="w-full h-auto max-h-72 object-contain rounded"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 bg-white rounded-2xl border-2 border-dashed border-gray-200 text-center max-w-md">
+                  <UploadCloud className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-500 font-medium">
+                    Belum ada foto flyer / poster yang diupload.
+                  </p>
                 </div>
               )}
             </div>
