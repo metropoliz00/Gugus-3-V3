@@ -25,32 +25,53 @@ export default function KaryaPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchWorks() {
-      const { data, error } = await supabase
-        .from("teacher_works")
-        .select("*");
+    async function fetchWorks(retry = 0) {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase
+          .from("teacher_works")
+          .select("*");
 
-      if (data) {
-        const userIds = [...new Set(data.map((w: any) => w.user_id).filter(Boolean))];
-        let profilesData: any[] = [];
-        
-        if (userIds.length > 0) {
-          const { data: pData } = await supabase
-             .from("user_profiles")
-             .select("id, nama")
-             .in("id", userIds);
-          if (pData) profilesData = pData;
+        if (data) {
+          const userIds = [...new Set(data.map((w: any) => w.user_id).filter(Boolean))];
+          let profilesData: any[] = [];
+          
+          if (userIds.length > 0) {
+            const { data: pData } = await supabase
+               .from("user_profiles")
+               .select("id, nama")
+               .in("id", userIds);
+            if (pData) profilesData = pData;
+          }
+
+          const worksWithProfiles = data.map((work: any) => ({
+            ...work,
+            profiles: profilesData.find(p => p.id === work.user_id) || null
+          }));
+          setWorks(worksWithProfiles);
+        } else if (error && retry < 3) {
+          setTimeout(() => fetchWorks(retry + 1), 800 * (retry + 1));
+          return;
         }
-
-        const worksWithProfiles = data.map((work: any) => ({
-          ...work,
-          profiles: profilesData.find(p => p.id === work.user_id) || null
-        }));
-        setWorks(worksWithProfiles);
+      } catch (err) {
+        if (retry < 3) {
+          setTimeout(() => fetchWorks(retry + 1), 800 * (retry + 1));
+          return;
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     }
+
     fetchWorks();
+
+    const handleSync = () => fetchWorks();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   return (

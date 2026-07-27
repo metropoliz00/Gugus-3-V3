@@ -26,24 +26,40 @@ export default function MediaInformasi() {
   };
 
   React.useEffect(() => {
-    async function fetchPosts() {
+    async function fetchPosts(retry = 0) {
       if (!supabase) return;
       try {
         const { data, error } = await supabase.from('posts').select(`*, author:author_id(nama)`).order('published_at', { ascending: false }).limit(6);
         if (error) throw error;
-        if (data) {
+        if (data && data.length > 0) {
           setNews(data);
           try {
             localStorage.setItem('cached_posts', JSON.stringify(data));
           } catch (e) {}
+        } else if (retry < 3) {
+          setTimeout(() => fetchPosts(retry + 1), 800 * (retry + 1));
+          return;
         }
       } catch (err) {
         console.error("Gagal memuat berita:", err);
+        if (retry < 3) {
+          setTimeout(() => fetchPosts(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } finally {
         setIsLoading(false);
       }
     }
+
     fetchPosts();
+
+    const handleSync = () => fetchPosts();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   return (

@@ -60,25 +60,38 @@ export default function Gallery() {
   const [isLoading, setIsLoading] = useState<boolean>(() => items.length === 0);
 
   useEffect(() => {
-    async function fetchGallery() {
+    async function fetchGallery(retry = 0) {
       if (!supabase) return;
       try {
         const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
-        if (error) {
-          console.warn("Informasi galeri:", error.message);
-        } else if (data && data.length > 0) {
+        if (data && data.length > 0) {
           setItems(data);
           try {
             localStorage.setItem('cached_gallery', JSON.stringify(data));
           } catch (e) {}
+        } else if ((error || !data) && retry < 3) {
+          setTimeout(() => fetchGallery(retry + 1), 800 * (retry + 1));
+          return;
         }
       } catch (err) {
-        console.warn("Catatan galeri:", err);
+        if (retry < 3) {
+          setTimeout(() => fetchGallery(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } finally {
         setIsLoading(false);
       }
     }
+
     fetchGallery();
+
+    const handleSync = () => fetchGallery();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   const slides: Slide[] = useMemo(() => {

@@ -21,25 +21,38 @@ export default function Schools() {
   const [filter, setFilter] = useState<'Semua' | 'Sekolah Inti' | 'Sekolah Imbas'>('Semua');
 
   useEffect(() => {
-    async function fetchSchools() {
+    async function fetchSchools(retry = 0) {
       if (!supabase) return;
       try {
         const { data, error } = await supabase.from('schools').select('*').order('name', { ascending: true });
-        if (error) {
-          console.warn("Informasi sekolah:", error.message);
-        } else if (data && data.length > 0) {
+        if (data && data.length > 0) {
           setSchools(data);
           try {
             localStorage.setItem('cached_schools', JSON.stringify(data));
           } catch (e) {}
+        } else if ((error || !data) && retry < 3) {
+          setTimeout(() => fetchSchools(retry + 1), 800 * (retry + 1));
+          return;
         }
       } catch (err) {
-        console.warn("Catatan sekolah:", err);
+        if (retry < 3) {
+          setTimeout(() => fetchSchools(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } finally {
         setIsLoading(false);
       }
     }
+
     fetchSchools();
+
+    const handleSync = () => fetchSchools();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   useEffect(() => {

@@ -91,29 +91,45 @@ export default function HomeAgenda() {
   const [viewType, setViewType] = useState<'timeline' | 'calendar'>('timeline');
 
   useEffect(() => {
-    async function fetchEvents() {
-        if (!supabase) return;
-        try {
-          const { data, error } = await supabase
-            .from("events")
-            .select("*")
-            .order("date_start", { ascending: false })
-            .limit(5);
-          
-          if (error) throw error;
-          if (data) {
-            setEvents(data);
-            try {
-              localStorage.setItem('cached_home_events', JSON.stringify(data));
-            } catch (e) {}
-          }
-        } catch (err) {
-          console.error("Error fetching events:", err);
-        } finally {
-          setLoading(false);
+    async function fetchEvents(retry = 0) {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select("*")
+          .order("date_start", { ascending: false })
+          .limit(5);
+        
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setEvents(data);
+          try {
+            localStorage.setItem('cached_home_events', JSON.stringify(data));
+          } catch (e) {}
+        } else if (retry < 3) {
+          setTimeout(() => fetchEvents(retry + 1), 800 * (retry + 1));
+          return;
         }
+      } catch (err) {
+        console.error("Error fetching events:", err);
+        if (retry < 3) {
+          setTimeout(() => fetchEvents(retry + 1), 800 * (retry + 1));
+          return;
+        }
+      } finally {
+        setLoading(false);
+      }
     }
+
     fetchEvents();
+
+    const handleSync = () => fetchEvents();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   return (

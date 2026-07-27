@@ -360,11 +360,7 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadContent();
-  }, []);
-
-  const loadContent = async () => {
+  const loadContent = async (retryCount = 0) => {
     try {
       if (supabase) {
         const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
@@ -376,14 +372,64 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
           } catch (storageError) {
             console.warn("Failed to store siteContent in localStorage (quota exceeded):", storageError);
           }
+        } else if (error && error.code === 'PGRST116') {
+          // Row 1 missing, seed default content
+          await supabase.from('site_settings').insert([{ id: 1, content: defaultContent }]);
+        } else if (error && retryCount < 3) {
+          setTimeout(() => loadContent(retryCount + 1), 800 * (retryCount + 1));
+          return;
         }
       }
     } catch (e) {
       console.error("Backend load error:", e);
+      if (retryCount < 3) {
+        setTimeout(() => loadContent(retryCount + 1), 800 * (retryCount + 1));
+        return;
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadContent();
+
+    // Supabase Realtime channel to listen for site_settings live changes
+    let channel: any = null;
+    if (supabase) {
+      channel = supabase
+        .channel('realtime_site_settings')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'site_settings', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              const merged = mergeContent(defaultContent, (payload.new as any).content);
+              setContent(merged);
+              try {
+                localStorage.setItem('siteContent', JSON.stringify(merged));
+              } catch (e) {}
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    const handleFocusOrOnline = () => {
+      loadContent();
+    };
+
+    window.addEventListener('focus', handleFocusOrOnline);
+    window.addEventListener('online', handleFocusOrOnline);
+
+    return () => {
+      if (channel && supabase) {
+        supabase.removeChannel(channel);
+      }
+      window.removeEventListener('focus', handleFocusOrOnline);
+      window.removeEventListener('online', handleFocusOrOnline);
+    };
+  }, []);
 
   const updateContent = async (newContent: Partial<SiteContent>) => {
     const updated = { ...content, ...newContent };

@@ -47,21 +47,37 @@ export default function KkgPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [struktur, setStruktur] = useState<any[]>(getInitialOrgKkg);
 
+  const loadStruktur = async (retry = 0) => {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase.from('org_kkg').select('*').order('created_at', { ascending: true });
+      if (data && data.length > 0) {
+        setStruktur(data);
+        try {
+          localStorage.setItem('cached_org_kkg', JSON.stringify(data));
+        } catch (e) {}
+      } else if (error && retry < 3) {
+        setTimeout(() => loadStruktur(retry + 1), 800 * (retry + 1));
+      }
+    } catch (err) {
+      if (retry < 3) {
+        setTimeout(() => loadStruktur(retry + 1), 800 * (retry + 1));
+      }
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
     loadStruktur();
-  }, []);
 
-  const loadStruktur = async () => {
-    if (!supabase) return;
-    const { data } = await supabase.from('org_kkg').select('*').order('created_at', { ascending: true });
-    if (data) {
-      setStruktur(data);
-      try {
-        localStorage.setItem('cached_org_kkg', JSON.stringify(data));
-      } catch (e) {}
-    }
-  };
+    const handleSync = () => loadStruktur();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
+  }, []);
 
   const { content } = useSiteContent();
   const kkg = {

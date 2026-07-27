@@ -11,7 +11,8 @@ export default function AnggotaGugusPage() {
   const [schools, setSchools] = useState<any[]>([]);
 
   useEffect(() => {
-    async function loadData() {
+    async function loadData(retry = 0) {
+      if (!supabase) return;
       try {
         const [gurusRes, schoolsRes] = await Promise.all([
           supabase.from('user_profiles').select('*').eq('role', 'guru'),
@@ -24,7 +25,6 @@ export default function AnggotaGugusPage() {
         setSchools(schoolsRes.data || []);
         
         const sortedData = (gurusRes.data || []).sort((a, b) => {
-          // ... (keep same sorting logic as before) ...
           const schoolA = (a.sekolah || "").toLowerCase();
           const schoolB = (b.sekolah || "").toLowerCase();
           if (schoolA < schoolB) return -1;
@@ -75,11 +75,24 @@ export default function AnggotaGugusPage() {
 
       } catch (err) {
         console.error("Error fetching data:", err);
+        if (retry < 3) {
+          setTimeout(() => loadData(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } finally {
         setIsLoading(false);
       }
     }
+
     loadData();
+
+    const handleSync = () => loadData();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   return (
