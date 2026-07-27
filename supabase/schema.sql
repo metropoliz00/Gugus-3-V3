@@ -514,8 +514,13 @@ CREATE TABLE IF NOT EXISTS public.training_certificates (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   training_id UUID REFERENCES public.trainings(id),
   user_id UUID REFERENCES public.user_profiles(id),
-  certificate_url TEXT NOT NULL,
-  issued_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+  guest_account_id UUID REFERENCES public.guest_accounts(id) ON DELETE SET NULL,
+  certificate_url TEXT,
+  certificate_number TEXT,
+  certificate_config JSONB,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  issued_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
 CREATE TABLE IF NOT EXISTS public.forum_posts (
@@ -572,7 +577,8 @@ DO $$ BEGIN
   CREATE POLICY "Public read forum_comments" ON public.forum_comments FOR SELECT USING (true);
   CREATE POLICY "Public read best_practices" ON public.best_practices FOR SELECT USING (true);
   CREATE POLICY "Public read teacher_works" ON public.teacher_works FOR SELECT USING (true);
-  CREATE POLICY "Users view own certificates" ON public.training_certificates FOR SELECT USING (auth.uid() = user_id);
+  CREATE POLICY "Enable read access for everyone on training_certificates" ON public.training_certificates FOR SELECT USING (true);
+  CREATE POLICY "Enable all access for everyone on training_certificates" ON public.training_certificates FOR ALL TO public USING (true) WITH CHECK (true);
   
   -- Simple allow all for authenticated for other ops in dev
   CREATE POLICY "Auth all kkg_materials" ON public.kkg_materials FOR ALL TO authenticated USING (true);

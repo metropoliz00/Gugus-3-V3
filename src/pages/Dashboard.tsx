@@ -12717,7 +12717,20 @@ function TeacherJadwalCards({ user }: { user?: any }) {
           
         const certMap: Record<string, any> = {};
         certData?.forEach((cert) => {
-          certMap[cert.training_id] = cert;
+          let number = cert.certificate_number;
+          let url = cert.certificate_url;
+          if (!number && url && url.startsWith("{")) {
+            try {
+              const parsed = JSON.parse(url);
+              number = parsed.certificate_number;
+              url = parsed.url;
+            } catch (e) {}
+          }
+          certMap[cert.training_id] = {
+            ...cert,
+            certificate_number: number || cert.certificate_number,
+            certificate_url: url || cert.certificate_url
+          };
         });
         setCertRecords(certMap);
       }
@@ -12749,7 +12762,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
       try {
         const certQuery = supabase
           .from("training_certificates")
-          .select("certificate_number")
+          .select("*")
           .eq("training_id", item.id);
         
         if (user?.is_guest) {
@@ -12760,9 +12773,18 @@ function TeacherJadwalCards({ user }: { user?: any }) {
 
         const { data: existingCert } = await certQuery.maybeSingle();
 
-        if (existingCert?.certificate_number) {
-          certNumber = existingCert.certificate_number;
-        } else {
+        if (existingCert) {
+          if (existingCert.certificate_number) {
+            certNumber = existingCert.certificate_number;
+          } else if (existingCert.certificate_url && existingCert.certificate_url.startsWith("{")) {
+            try {
+              const parsed = JSON.parse(existingCert.certificate_url);
+              certNumber = parsed.certificate_number;
+            } catch (e) {}
+          }
+        }
+
+        if (!certNumber) {
           const now = new Date();
           const year = now.getFullYear();
           const month = now.getMonth() + 1;
@@ -12784,9 +12806,34 @@ function TeacherJadwalCards({ user }: { user?: any }) {
             certPayload.user_id = user.id;
           }
 
-          const { data: newCert } = await supabase.from("training_certificates").insert(certPayload).select().single();
+          let newCert = null;
+          try {
+            const { data, error } = await supabase.from("training_certificates").insert(certPayload).select().single();
+            if (error) throw error;
+            newCert = data;
+          } catch (err) {
+            // Fallback: store as JSON in certificate_url
+            const fallbackPayload: any = {
+              training_id: item.id,
+              certificate_url: JSON.stringify({ certificate_number: certNumber, url: "Generated Individually" }),
+            };
+            if (user?.is_guest) {
+              fallbackPayload.guest_account_id = user.id;
+            } else {
+              fallbackPayload.user_id = user.id;
+            }
+            const { data, error } = await supabase.from("training_certificates").insert(fallbackPayload).select().single();
+            if (!error) newCert = data;
+          }
 
-          if (newCert) setCertRecords((prev) => ({ ...prev, [item.id]: newCert }));
+          if (newCert) {
+            const finalCert = {
+              ...newCert,
+              certificate_number: certNumber,
+              certificate_url: "Generated Individually"
+            };
+            setCertRecords((prev) => ({ ...prev, [item.id]: finalCert }));
+          }
 
           logActivity(
             user,
@@ -13186,7 +13233,20 @@ function TeacherTrainingCards({ user }: { user: any }) {
         
       const certMap: Record<string, any> = {};
       certData?.forEach((cert) => {
-        certMap[cert.training_id] = cert;
+        let number = cert.certificate_number;
+        let url = cert.certificate_url;
+        if (!number && url && url.startsWith("{")) {
+          try {
+            const parsed = JSON.parse(url);
+            number = parsed.certificate_number;
+            url = parsed.url;
+          } catch (e) {}
+        }
+        certMap[cert.training_id] = {
+          ...cert,
+          certificate_number: number || cert.certificate_number,
+          certificate_url: url || cert.certificate_url
+        };
       });
       setCertRecords(certMap);
 
@@ -13279,7 +13339,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
         // Check if certificate record already exists
         const certQuery = supabase
           .from("training_certificates")
-          .select("certificate_number")
+          .select("*")
           .eq("training_id", training.id);
         
         if ((user as any).is_guest) {
@@ -13290,26 +13350,24 @@ function TeacherTrainingCards({ user }: { user: any }) {
 
         const { data: existingCert } = await certQuery.maybeSingle();
 
-        if (existingCert?.certificate_number) {
-          certNumber = existingCert.certificate_number;
-        } else {
+        if (existingCert) {
+          if (existingCert.certificate_number) {
+            certNumber = existingCert.certificate_number;
+          } else if (existingCert.certificate_url && existingCert.certificate_url.startsWith("{")) {
+            try {
+              const parsed = JSON.parse(existingCert.certificate_url);
+              certNumber = parsed.certificate_number;
+            } catch (e) {}
+          }
+        }
+
+        if (!certNumber) {
           // Generate an automatic certificate number: [Nomer]/CERT-KKG/[Bulan Romawi]/[Tahun]
           const now = new Date();
           const year = now.getFullYear();
           const month = now.getMonth() + 1;
           const romanMonths = [
-            "I",
-            "II",
-            "III",
-            "IV",
-            "V",
-            "VI",
-            "VII",
-            "VIII",
-            "IX",
-            "X",
-            "XI",
-            "XII",
+            "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
           ];
           const randomPart = Math.floor(1000 + Math.random() * 9000);
           certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
@@ -13326,9 +13384,34 @@ function TeacherTrainingCards({ user }: { user: any }) {
             certPayload.user_id = user.id;
           }
 
-          const { data: newCert } = await supabase.from("training_certificates").insert(certPayload).select().single();
+          let newCert = null;
+          try {
+            const { data, error } = await supabase.from("training_certificates").insert(certPayload).select().single();
+            if (error) throw error;
+            newCert = data;
+          } catch (err) {
+            // Fallback: store as JSON inside certificate_url text field
+            const fallbackPayload: any = {
+              training_id: training.id,
+              certificate_url: JSON.stringify({ certificate_number: certNumber, url: "Generated Individually" }),
+            };
+            if ((user as any).is_guest) {
+              fallbackPayload.guest_account_id = user.id;
+            } else {
+              fallbackPayload.user_id = user.id;
+            }
+            const { data, error } = await supabase.from("training_certificates").insert(fallbackPayload).select().single();
+            if (!error) newCert = data;
+          }
 
-          if (newCert) setCertRecords((prev) => ({ ...prev, [training.id]: newCert }));
+          if (newCert) {
+            const finalCert = {
+              ...newCert,
+              certificate_number: certNumber,
+              certificate_url: "Generated Individually"
+            };
+            setCertRecords((prev) => ({ ...prev, [training.id]: finalCert }));
+          }
 
           logActivity(
             user,
