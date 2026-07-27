@@ -10869,59 +10869,71 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      // Clean formData to remove virtual/relation fields and other system columns that don't exist in DB or are immutable
-      const payload = { ...formData };
-      delete payload.profiles;
-      delete payload.guru;
-      delete payload.id;
-      delete payload.created_at;
-      delete payload.updated_at;
+    const payload = { ...formData };
+    delete payload.profiles;
+    delete payload.guru;
+    delete payload.id;
+    delete payload.created_at;
+    delete payload.updated_at;
 
-      if (editId) {
+    const currentEditId = editId;
+    setShowForm(false);
+    setEditId(null);
+    setFormData({});
+
+    try {
+      if (currentEditId) {
+        setData((prev: any[]) => prev.map((item: any) => item.id === currentEditId ? { ...item, ...payload } : item));
         const { error } = await supabase
           .from(table)
           .update(payload)
-          .eq("id", editId);
-        if (error) throw error;
+          .eq("id", currentEditId);
+        if (error) {
+          fetchData();
+          throw error;
+        }
         logActivity(user, `update_${table}`, `Memperbarui data di ${title}`);
-        await alert("Data Berhasil Diperbarui");
+        alert("Data Berhasil Diperbarui", "Sukses", "success");
       } else {
         const insertData = { ...payload };
-        console.log("Saving insertData:", insertData);
         if (user?.id && !insertData.user_id) {
           insertData.user_id = user.id;
         }
-        const { data, error } = await supabase.from(table).insert([insertData]).select();
+        const { data: newRows, error } = await supabase.from(table).insert([insertData]).select();
         if (error) {
           console.error("Supabase insert error:", error);
+          fetchData();
           throw error;
         }
+        if (newRows && newRows.length > 0) {
+          setData((prev: any[]) => [newRows[0], ...prev]);
+        } else {
+          fetchData();
+        }
         logActivity(user, `create_${table}`, `Menambah data baru di ${title}`);
-        await alert("Data Berhasil Ditambahkan");
+        alert("Data Berhasil Ditambahkan", "Sukses", "success");
       }
-      setShowForm(false);
-      setEditId(null);
-      setFormData({});
-      fetchData();
     } catch (err: any) {
-      alert(err.message, "Error", "error");
+      alert(err.message || "Gagal menyimpan", "Error", "error");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (await confirm("Yakin ingin menghapus data ini?")) {
+    if (await confirm("Yakin ingin menghapus data ini?", "Konfirmasi Hapus")) {
+      setData((prev: any[]) => prev.filter((item: any) => item.id !== id));
       try {
         const { error } = await supabase.from(table).delete().eq("id", id);
-        if (error) throw error;
+        if (error) {
+          fetchData();
+          throw error;
+        }
         logActivity(
           user,
           `delete_${table}`,
           `Menghapus data di ${title} ID: ${id}`,
         );
-        fetchData();
       } catch (err: any) {
-        alert(err.message, "Error", "error");
+        alert(err.message || "Gagal menghapus", "Error", "error");
       }
     }
   };

@@ -109,7 +109,7 @@ export default function AdminSekolahForm({ user }: { user: any }) {
         logActivity(user, "update_sekolah", `Memperbarui data sekolah ID: ${id}`);
       }
       setSavingId(null);
-    }, 600);
+    }, 300);
   };
 
   const handleDelete = async (id: string, e?: React.MouseEvent) => {

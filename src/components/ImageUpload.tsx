@@ -17,8 +17,8 @@ export default function ImageUpload({
   label = "Upload Foto", 
   value, 
   onChange, 
-  maxWidth = 500, 
-  maxHeight = 500,
+  maxWidth = 600, 
+  maxHeight = 600,
   quality = 0.5,
   className = "",
   compact = false
