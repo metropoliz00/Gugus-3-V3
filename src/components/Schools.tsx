@@ -25,15 +25,16 @@ export default function Schools() {
       if (!supabase) return;
       try {
         const { data, error } = await supabase.from('schools').select('*').order('name', { ascending: true });
-        if (error) throw error;
-        if (data) {
+        if (error) {
+          console.warn("Informasi sekolah:", error.message);
+        } else if (data && data.length > 0) {
           setSchools(data);
           try {
             localStorage.setItem('cached_schools', JSON.stringify(data));
           } catch (e) {}
         }
       } catch (err) {
-        console.error("Error fetching schools:", err);
+        console.warn("Catatan sekolah:", err);
       } finally {
         setIsLoading(false);
       }

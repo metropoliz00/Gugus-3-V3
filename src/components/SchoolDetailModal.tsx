@@ -170,7 +170,7 @@ export default function SchoolDetailModal({ school, onClose }: SchoolDetailModal
                         <h4 className="text-xl font-bold font-heading">Prestasi Sekolah</h4>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-2">
-                        {school.prestasi_images.slice(0, 2).map((item: any, idx: number) => {
+                        {school.prestasi_images.map((item: any, idx: number) => {
                           const img = typeof item === 'string' ? item : item.image;
                           const desc = typeof item === 'object' ? item.description : "";
                           if (!img) return null;

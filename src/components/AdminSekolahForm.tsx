@@ -3,6 +3,7 @@ import {
   School,
   Search,
   PlusCircle,
+  Plus,
   LayoutGrid,
   List,
   Pencil,
@@ -48,7 +49,7 @@ export default function AdminSekolahForm({ user }: { user: any }) {
           .order("name", { ascending: true });
         setSchools(data || []);
       } catch (err) {
-        console.error("Error fetching schools:", err);
+        console.warn("Informasi sekolah:", err);
       } finally {
         setIsLoading(false);
       }
@@ -764,44 +765,97 @@ export default function AdminSekolahForm({ user }: { user: any }) {
                     </div>
 
                     <div className="pt-4 border-t border-gray-100">
-                      <label className="block text-xs font-bold text-gray-600 mb-3">
-                        Foto Prestasi Sekolah (Max 2)
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {[0, 1].map((idx) => {
-                          const prestasi = (editingSchool.prestasi_images || [])[idx] || { image: "", description: "" };
-                          return (
-                            <div key={idx} className="space-y-2 border border-gray-100 rounded-2xl p-3 bg-gray-50">
-                              <ImageUpload
-                                label={`Foto Prestasi ${idx + 1}`}
-                                value={typeof prestasi === "string" ? prestasi : prestasi.image || ""}
-                                onChange={(base64) => {
-                                  const curr = [...(editingSchool.prestasi_images || [])];
-                                  const item = typeof curr[idx] === "object" ? { ...curr[idx] } : { description: "" };
-                                  item.image = base64;
-                                  curr[idx] = item;
-                                  handleUpdate(editingSchool.id, { prestasi_images: curr.slice(0, 2) });
-                                }}
-                                maxWidth={800}
-                                maxHeight={450}
-                              />
-                              <textarea
-                                className="w-full text-xs p-2 border border-gray-200 rounded-xl bg-white resize-none outline-none"
-                                placeholder="Deskripsi prestasi..."
-                                rows={2}
-                                value={prestasi.description || ""}
-                                onChange={(e) => {
-                                  const curr = [...(editingSchool.prestasi_images || [])];
-                                  const item = typeof curr[idx] === "object" ? { ...curr[idx] } : { image: "" };
-                                  item.description = e.target.value;
-                                  curr[idx] = item;
-                                  handleUpdate(editingSchool.id, { prestasi_images: curr.slice(0, 2) });
-                                }}
-                              />
-                            </div>
-                          );
-                        })}
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700">
+                            Foto Prestasi Sekolah ({ (editingSchool.prestasi_images || []).length } Foto)
+                          </label>
+                          <p className="text-[11px] text-gray-400">
+                            Tambahkan foto beserta deskripsi prestasi yang telah diraih oleh sekolah.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const curr = [...(editingSchool.prestasi_images || [])];
+                            curr.push({ image: "", description: "" });
+                            handleUpdate(editingSchool.id, { prestasi_images: curr });
+                          }}
+                          className="px-3.5 py-1.5 bg-leaf-green text-white rounded-xl text-xs font-bold hover:bg-leaf-green/90 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" /> Tambah Foto Prestasi
+                        </button>
                       </div>
+
+                      {(editingSchool.prestasi_images || []).length === 0 ? (
+                        <div className="border border-dashed border-gray-200 rounded-2xl p-6 text-center bg-gray-50/50">
+                          <p className="text-xs text-gray-400 mb-3">Belum ada foto prestasi yang ditambahkan.</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleUpdate(editingSchool.id, { prestasi_images: [{ image: "", description: "" }] });
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-leaf-green/10 text-leaf-green hover:bg-leaf-green hover:text-white transition-all text-xs font-bold rounded-xl cursor-pointer"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Tambah Foto Prestasi Pertama
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {(editingSchool.prestasi_images || []).map((item: any, idx: number) => {
+                            const prestasi = typeof item === "string" ? { image: item, description: "" } : item || { image: "", description: "" };
+                            return (
+                              <div key={idx} className="space-y-2 border border-gray-100 rounded-2xl p-3.5 bg-gray-50/80 relative group">
+                                <div className="flex items-center justify-between pb-1">
+                                  <span className="text-[11px] font-bold text-gray-600">
+                                    Foto Prestasi #{idx + 1}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const curr = [...(editingSchool.prestasi_images || [])];
+                                      curr.splice(idx, 1);
+                                      handleUpdate(editingSchool.id, { prestasi_images: curr });
+                                    }}
+                                    title="Hapus foto prestasi ini"
+                                    className="p-1 rounded-lg text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+
+                                <ImageUpload
+                                  label={`Unggah Foto ${idx + 1}`}
+                                  value={prestasi.image || ""}
+                                  onChange={(base64) => {
+                                    const curr = [...(editingSchool.prestasi_images || [])];
+                                    const currObj = typeof curr[idx] === "object" ? { ...curr[idx] } : { description: "" };
+                                    currObj.image = base64;
+                                    curr[idx] = currObj;
+                                    handleUpdate(editingSchool.id, { prestasi_images: curr });
+                                  }}
+                                  maxWidth={800}
+                                  maxHeight={450}
+                                />
+
+                                <textarea
+                                  className="w-full text-xs p-2.5 border border-gray-200 rounded-xl bg-white resize-none outline-none focus:ring-2 focus:ring-leaf-green/20"
+                                  placeholder="Tuliskan deskripsi prestasi (contoh: Juara 1 Lomba OSN Tingkat Kabupaten 2025)..."
+                                  rows={2}
+                                  value={prestasi.description || ""}
+                                  onChange={(e) => {
+                                    const curr = [...(editingSchool.prestasi_images || [])];
+                                    const currObj = typeof curr[idx] === "object" ? { ...curr[idx] } : { image: "" };
+                                    currObj.description = e.target.value;
+                                    curr[idx] = currObj;
+                                    handleUpdate(editingSchool.id, { prestasi_images: curr });
+                                  }}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

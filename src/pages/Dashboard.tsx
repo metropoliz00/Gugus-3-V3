@@ -5331,7 +5331,7 @@ function AdminSekolahForm({ user }: { user: any }) {
           .order("name", { ascending: true });
         setSchools(data || []);
       } catch (err) {
-        console.error("Error fetching schools:", err);
+        console.warn("Informasi sekolah:", err);
       } finally {
         setIsLoading(false);
       }

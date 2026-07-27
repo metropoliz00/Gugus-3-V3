@@ -64,15 +64,16 @@ export default function Gallery() {
       if (!supabase) return;
       try {
         const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-        if (data) {
+        if (error) {
+          console.warn("Informasi galeri:", error.message);
+        } else if (data && data.length > 0) {
           setItems(data);
           try {
             localStorage.setItem('cached_gallery', JSON.stringify(data));
           } catch (e) {}
         }
       } catch (err) {
-        console.error("Gagal memuat galeri:", err);
+        console.warn("Catatan galeri:", err);
       } finally {
         setIsLoading(false);
       }
