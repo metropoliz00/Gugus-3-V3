@@ -6970,6 +6970,15 @@ function AdminKKGForm({
                             if (await confirm(confirmMsg, "Konfirmasi Hapus Kategori")) {
                               const newCategories = programCategories.filter((c: any) => c.id !== cat.id);
                               const newPrograms = { ...(form.programs || {}) };
+                              
+                              const programsToDelete = newPrograms[key] || [];
+                              const idsToDelete = programsToDelete.filter((p: any) => p.id).map((p: any) => p.id);
+                              if (idsToDelete.length > 0) {
+                                supabase.from('kkg_programs').delete().in('id', idsToDelete).then(({ error }) => {
+                                  if (error) console.error("Error deleting category programs from DB:", error);
+                                });
+                              }
+                              
                               delete newPrograms[key];
                               setKkgForm({
                                 ...form,
@@ -7092,6 +7101,14 @@ function AdminKKGForm({
                                 onClick={async () => {
                                   if (await confirm("Apakah Anda yakin ingin menghapus program kerja ini?", "Hapus Program")) {
                                     const newPrograms = { ...form.programs };
+                                    const deletedProgram = newPrograms[key][i];
+                                    
+                                    if (deletedProgram.id) {
+                                      supabase.from('kkg_programs').delete().eq('id', deletedProgram.id).then(({ error }) => {
+                                        if (error) console.error("Error deleting KKG program from DB:", error);
+                                      });
+                                    }
+                                    
                                     newPrograms[key].splice(i, 1);
                                     setKkgForm({ ...form, programs: newPrograms });
                                   }
@@ -7836,6 +7853,14 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                       onClick={async () => {
                         if (await confirm(`Apakah Anda yakin ingin menghapus program "${p.title || 'ini'}"?`, "Hapus Program Kerja")) {
                           const next = [...programs];
+                          const deletedProgram = next[i];
+                          
+                          if (deletedProgram.id) {
+                            supabase.from('gugus_programs').delete().eq('id', deletedProgram.id).then(({ error }) => {
+                              if (error) console.error("Error deleting Gugus program from DB:", error);
+                            });
+                          }
+                          
                           next.splice(i, 1);
                           setGugusForm({ ...form, programs: next });
                         }

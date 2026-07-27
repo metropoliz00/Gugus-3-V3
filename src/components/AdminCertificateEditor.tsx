@@ -383,11 +383,14 @@ function DraggableField({
 export async function migrateCertificateConfigToTable(key: string, configObj: any) {
   if (!supabase || !configObj) return;
   try {
-    // Fetch all certificates safely to search for existing configs without hitting column filter errors
-    const { data: dbRows } = await supabase
-      .from("training_certificates")
-      .select("*")
-      .eq("training_id", key);
+    // Fetch certificates safely to search for existing configs without hitting column filter errors
+    const query = supabase.from("training_certificates").select("*");
+    if (key === "default" || !key) {
+      query.is("training_id", null);
+    } else {
+      query.eq("training_id", key);
+    }
+    const { data: dbRows } = await query;
 
     const existingRow = dbRows?.find((row: any) => 
       row.certificate_number === "TEMPLATE_CONFIG" || 
@@ -395,7 +398,7 @@ export async function migrateCertificateConfigToTable(key: string, configObj: an
     );
 
     const payload: any = {
-      training_id: key,
+      training_id: (key === "default" || !key) ? null : key,
       certificate_url: JSON.stringify(configObj),
     };
 
@@ -452,8 +455,9 @@ export async function fetchCertificateConfigsMap(): Promise<Record<string, any>>
                 parsed = JSON.parse(row.certificate_url);
               } catch (e) {}
             }
-            if (parsed && row.training_id) {
-              configsMap[row.training_id] = parsed;
+            if (parsed) {
+              const mappedKey = row.training_id || "default";
+              configsMap[mappedKey] = parsed;
             }
           }
         });
