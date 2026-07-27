@@ -447,15 +447,17 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
         if (!error) {
           setSaveMessage("Berhasil tersimpan!");
         } else {
-          console.error(error);
-          setSaveMessage("Disimpan ke browser (Backend error).");
+          console.error("Supabase site_settings error:", error);
+          setSaveMessage("Gagal menyimpan ke server.");
+          throw new Error("Gagal menyimpan ke server database: " + (error.message || "Unknown error"));
         }
       } else {
-        setSaveMessage("Disimpan ke browser (Cek koneksi).");
+        setSaveMessage("Disimpan ke browser.");
       }
-    } catch (e) {
-      console.error(e);
-      setSaveMessage("Disimpan ke browser (Cek koneksi).");
+    } catch (e: any) {
+      console.error("Error in updateContent:", e);
+      setSaveMessage("Gagal menyimpan.");
+      throw e;
     }
 
     setTimeout(() => {

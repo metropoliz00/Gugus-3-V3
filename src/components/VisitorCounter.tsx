@@ -130,42 +130,25 @@ export default function VisitorCounter({ className = "", variant = "navbar" }: V
             remoteCount = count;
           }
 
-          // 3. Sync or fallback with site_settings table in Supabase
-          try {
-            const { data: settingsData } = await supabase
-              .from('site_settings')
-              .select('content')
-              .eq('id', 1)
-              .single();
-
-            if (settingsData && settingsData.content) {
-              const currentContent = settingsData.content || {};
-              const currentDbCount = Number(currentContent.visitor_count || 0);
-
-              if (remoteCount > 0) {
-                // Keep site_settings in sync with site_visitors count
-                if (currentDbCount !== remoteCount) {
-                  await supabase
-                    .from('site_settings')
-                    .upsert({ id: 1, content: { ...currentContent, visitor_count: remoteCount } });
-                }
-              } else {
-                // If site_visitors count is 0 or unavailable, increment site_settings visitor_count in database
-                const newDbCount = currentDbCount + 1;
-                remoteCount = newDbCount;
-                await supabase
-                  .from('site_settings')
-                  .upsert({ id: 1, content: { ...currentContent, visitor_count: newDbCount } });
-              }
-            } else if (remoteCount === 0) {
-              // Initialize site_settings row in database
-              remoteCount = 1;
-              await supabase
+          // 3. Fallback read from site_settings table if site_visitors count unavailable
+          if (remoteCount === 0) {
+            try {
+              const { data: settingsData } = await supabase
                 .from('site_settings')
-                .upsert({ id: 1, content: { visitor_count: 1 } });
+                .select('content')
+                .eq('id', 1)
+                .single();
+
+              if (settingsData && settingsData.content) {
+                const currentContent = settingsData.content || {};
+                const currentDbCount = Number(currentContent.visitor_count || 0);
+                if (currentDbCount > 0) {
+                  remoteCount = currentDbCount;
+                }
+              }
+            } catch (e) {
+              // ignore
             }
-          } catch (e) {
-            // ignore
           }
         }
 

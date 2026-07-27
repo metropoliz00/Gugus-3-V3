@@ -95,6 +95,7 @@ import { supabase } from "../lib/supabase";
 import OrgChart from "../components/OrgChart";
 import ImageUpload from "../components/ImageUpload";
 import FileUpload from "../components/FileUpload";
+import IndonesianDateInput, { formatToIndoDate } from "../components/IndonesianDateInput";
 import { useAlert } from "../contexts/AlertContext";
 import { FinanceTransaction } from "../types";
 import { logActivity, ActivityLog } from "../lib/activity";
@@ -3419,9 +3420,9 @@ function AdminSettingsForm() {
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        // High quality compression: Max 1200x1600px maintaining aspect ratio
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1600;
+        // High quality compression: Max 1000x1330px maintaining aspect ratio
+        const MAX_WIDTH = 1000;
+        const MAX_HEIGHT = 1330;
         let width = img.width;
         let height = img.height;
 
@@ -3445,8 +3446,8 @@ function AdminSettingsForm() {
           ctx.imageSmoothingQuality = "high";
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Quality 0.82 balances crisp graphic detail with optimized lightweight Base64
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.82);
+          // Quality 0.80 produces a sharp poster (~120-180KB Base64) that saves instantly
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.80);
 
           setAnnouncementForm((prev) => ({
             ...prev,
@@ -4147,13 +4148,12 @@ function AdminBeritaForm({ user }: { user: any }) {
                         Set Hari Ini
                       </button>
                     </div>
-                    <input
-                      type="date"
-                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                    <IndonesianDateInput
                       value={item.published_at ? item.published_at.split('T')[0] : ''}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { published_at: new Date(e.target.value).toISOString() })
+                      onChange={(val) =>
+                        handleUpdate(item.id, { published_at: val ? new Date(val).toISOString() : '' })
                       }
+                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
                     />
                   </div>
                   <div>
@@ -8280,13 +8280,12 @@ function AdminPengumumanForm({ user }: { user: any }) {
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
                       Tanggal Pengumuman
                     </label>
-                    <input
-                      type="date"
-                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                    <IndonesianDateInput
                       value={item.published_at ? item.published_at.split('T')[0] : ''}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { published_at: new Date(e.target.value).toISOString() })
+                      onChange={(val) =>
+                        handleUpdate(item.id, { published_at: val ? new Date(val).toISOString() : '' })
                       }
+                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
                     />
                   </div>
                   <div>
@@ -9318,12 +9317,10 @@ function AdminFinanceManagement({ user }: { user: any }) {
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 Tanggal
               </label>
-              <input
-                type="date"
-                className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-main-blue transition-colors"
+              <IndonesianDateInput
                 value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
+                onChange={(val) =>
+                  setFormData({ ...formData, date: val })
                 }
               />
             </div>
@@ -9658,11 +9655,16 @@ function AdminFinanceManagement({ user }: { user: any }) {
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] uppercase tracking-wider font-extrabold text-gray-400 block">Tanggal Dokumen</label>
-                    <input 
-                      type="text"
-                      className="w-full bg-white border border-gray-200 hover:border-gray-300 px-4 py-2.5 rounded-xl outline-none focus:border-main-blue text-sm transition-colors"
+                    <IndonesianDateInput 
                       value={tanggalLaporan}
-                      onChange={(e) => setTanggalLaporan(e.target.value)}
+                      onChange={(val) => {
+                        if (val) {
+                          setTanggalLaporan(formatToIndoDate(val));
+                        } else {
+                          setTanggalLaporan("");
+                        }
+                      }}
+                      placeholder="dd - mm - yyyy"
                     />
                   </div>
                 </div>
@@ -11284,6 +11286,13 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                        />
                        <span className="text-sm text-gray-700">{f.label}</span>
                     </label>
+                  ) : f.type === "date" ? (
+                    <IndonesianDateInput
+                      value={formData[f.name] || ""}
+                      onChange={(val) =>
+                        setFormData({ ...formData, [f.name]: val })
+                      }
+                    />
                   ) : (
                     <input
                       type={f.type || "text"}
@@ -11364,7 +11373,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                         {f.render
                           ? f.render(item, handleAdminDownloadCert)
                           : f.type === "date"
-                          ? new Date(item[f.name]).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })
+                          ? formatToIndoDate(item[f.name])
                           : f.type === "datetime-local"
                             ? new Date(item[f.name]).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) + " WIB"
                           : f.type === "select"
