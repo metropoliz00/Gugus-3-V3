@@ -521,8 +521,9 @@ export default function Dashboard({
   );
 
   // Sync with context if it changes (e.g. initial load)
+  const [formsInitialized, setFormsInitialized] = React.useState(false);
   React.useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !formsInitialized && content) {
       setHeroForm(content.hero);
       setProfilForm(content.profil);
       setFooterForm(content.footer);
@@ -535,8 +536,9 @@ export default function Dashboard({
       setAgendaForm(content.agenda);
       setAnnouncementForm(content.announcement);
       setActiveMenusForm((content as any).activeMenus || {});
+      setFormsInitialized(true);
     }
-  }, [content, isLoading]);
+  }, [content, isLoading, formsInitialized]);
 
   const handleSaveContent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -10682,12 +10684,14 @@ function AdminKKGFormWrapper() {
   const [localKkg, setLocalKkg] = useState<any>(content?.kkg);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync state with content whenever context updates from Supabase
+  // Sync state with content only once on initial load to prevent resetting while typing
+  const [kkgInitialized, setKkgInitialized] = useState(false);
   useEffect(() => {
-    if (content?.kkg) {
+    if (content?.kkg && !kkgInitialized) {
       setLocalKkg(content.kkg);
+      setKkgInitialized(true);
     }
-  }, [content?.kkg]);
+  }, [content?.kkg, kkgInitialized]);
 
   const kkgForm = localKkg || content?.kkg || { struktur: [], programs: {} };
 
@@ -10739,12 +10743,14 @@ function AdminGugusFormWrapper() {
   const [localGugus, setLocalGugus] = useState<any>(content?.gugus);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync state with content whenever context updates from Supabase
+  // Sync state with content only once on initial load to prevent resetting while typing
+  const [gugusInitialized, setGugusInitialized] = useState(false);
   useEffect(() => {
-    if (content?.gugus) {
+    if (content?.gugus && !gugusInitialized) {
       setLocalGugus(content.gugus);
+      setGugusInitialized(true);
     }
-  }, [content?.gugus]);
+  }, [content?.gugus, gugusInitialized]);
 
   const gugusForm = localGugus || content?.gugus || { struktur: [], programs: [] };
 

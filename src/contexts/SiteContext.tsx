@@ -273,7 +273,7 @@ const sanitizeSiteContent = (raw: any): any => {
   const cleanOversizedBase64 = (obj: any) => {
     if (!obj || typeof obj !== 'object') return;
     for (const key of Object.keys(obj)) {
-      if (typeof obj[key] === 'string' && obj[key].startsWith('data:') && obj[key].length > 350000) {
+      if (typeof obj[key] === 'string' && obj[key].startsWith('data:') && obj[key].length > 2500000) {
         obj[key] = '';
       } else if (typeof obj[key] === 'object') {
         cleanOversizedBase64(obj[key]);
@@ -360,22 +360,28 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
         delete rawContent.gugus;
 
         const { data: kkgData } = await supabase.from('kkg_settings').select('content').eq('id', 1).single();
-        if (kkgData && kkgData.content) {
-          rawContent.kkg = kkgData.content;
-        } else {
-          try {
-            await supabase.from('kkg_settings').upsert([{ id: 1, content: defaultContent.kkg }]);
-          } catch (e) {}
+        let kkgParsed = kkgData?.content ? { ...kkgData.content } : {};
+        const { data: kkgDocData } = await supabase.from('kkg_documents').select('content').eq('id', 1).single();
+        if (kkgDocData && kkgDocData.content) {
+          kkgParsed.dokumen = kkgDocData.content;
         }
+        const { data: kkgProgData } = await supabase.from('kkg_programs').select('content').eq('id', 1).single();
+        if (kkgProgData && kkgProgData.content) {
+          kkgParsed.programs = kkgProgData.content;
+        }
+        rawContent.kkg = kkgParsed;
 
         const { data: gugusData } = await supabase.from('gugus_settings').select('content').eq('id', 1).single();
-        if (gugusData && gugusData.content) {
-          rawContent.gugus = gugusData.content;
-        } else {
-          try {
-            await supabase.from('gugus_settings').upsert([{ id: 1, content: defaultContent.gugus }]);
-          } catch (e) {}
+        let gugusParsed = gugusData?.content ? { ...gugusData.content } : {};
+        const { data: gugusDocData } = await supabase.from('gugus_documents').select('content').eq('id', 1).single();
+        if (gugusDocData && gugusDocData.content) {
+          gugusParsed.dokumen = gugusDocData.content;
         }
+        const { data: gugusProgData } = await supabase.from('gugus_programs').select('content').eq('id', 1).single();
+        if (gugusProgData && gugusProgData.content) {
+          gugusParsed.programs = gugusProgData.content;
+        }
+        rawContent.gugus = gugusParsed;
 
         const merged = mergeContent(defaultContent, rawContent);
         setContent(merged);
@@ -474,15 +480,37 @@ export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       if (supabase) {
         if (newContent.kkg) {
-          const cleanKkg = sanitizeSiteContent(updated.kkg);
+          const kkgObj = { ...updated.kkg };
+          const kkgDokumen = kkgObj.dokumen || [];
+          const kkgPrograms = kkgObj.programs || {};
+          delete kkgObj.dokumen;
+          delete kkgObj.programs;
+          const cleanKkg = sanitizeSiteContent(kkgObj);
           const { error: kkgErr } = await supabase.from('kkg_settings').upsert({ id: 1, content: cleanKkg });
           if (kkgErr) console.error("Error saving kkg_settings:", kkgErr);
+
+          const { error: kkgDocErr } = await supabase.from('kkg_documents').upsert({ id: 1, content: kkgDokumen });
+          if (kkgDocErr) console.error("Error saving kkg_documents:", kkgDocErr);
+
+          const { error: kkgProgErr } = await supabase.from('kkg_programs').upsert({ id: 1, content: kkgPrograms });
+          if (kkgProgErr) console.error("Error saving kkg_programs:", kkgProgErr);
         }
 
         if (newContent.gugus) {
-          const cleanGugus = sanitizeSiteContent(updated.gugus);
+          const gugusObj = { ...updated.gugus };
+          const gugusDokumen = gugusObj.dokumen || [];
+          const gugusPrograms = gugusObj.programs || [];
+          delete gugusObj.dokumen;
+          delete gugusObj.programs;
+          const cleanGugus = sanitizeSiteContent(gugusObj);
           const { error: gugusErr } = await supabase.from('gugus_settings').upsert({ id: 1, content: cleanGugus });
           if (gugusErr) console.error("Error saving gugus_settings:", gugusErr);
+
+          const { error: gugusDocErr } = await supabase.from('gugus_documents').upsert({ id: 1, content: gugusDokumen });
+          if (gugusDocErr) console.error("Error saving gugus_documents:", gugusDocErr);
+
+          const { error: gugusProgErr } = await supabase.from('gugus_programs').upsert({ id: 1, content: gugusPrograms });
+          if (gugusProgErr) console.error("Error saving gugus_programs:", gugusProgErr);
         }
 
         const sitePayload = { ...cleanPayload };
