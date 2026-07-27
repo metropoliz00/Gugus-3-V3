@@ -256,9 +256,13 @@ export const defaultContent = {
     { title: 'Batas Upload Nilai Akhir', time: 'Senin Depan', location: 'Daring (Sistem)' },
   ],
   announcement: {
-    title: "Pengumuman Penting",
-    subtitle: "Pendaftaran Peserta Didik Baru Telah Dibuka!",
-    desc: "Mari daftarkan putra/putri Anda di sekolah-sekolah unggulan Gugus 03 Melati Kecamatan Jenu. Kuota terbatas!"
+    active: true,
+    title: "Pengumuman & Informasi",
+    subtitle: "Gugus 03 Melati Kecamatan Jenu",
+    desc: "Mari ikuti berbagai kegiatan dan program unggulan komunitas pendidik Gugus 03 Melati Kecamatan Jenu.",
+    imageUrl: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=1200",
+    linkUrl: "",
+    buttonText: "Lihat Selengkapnya"
   },
   activeMenus: {
     overview: true,

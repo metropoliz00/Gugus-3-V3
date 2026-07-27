@@ -3398,7 +3398,7 @@ function AdminSettingsForm() {
   const [profilForm, setProfilForm] = useState(content.profil);
   const [footerForm, setFooterForm] = useState(content.footer);
   const [announcementForm, setAnnouncementForm] = useState(
-    content.announcement || { title: "", subtitle: "", desc: "" },
+    content.announcement || { active: true, title: "", subtitle: "", desc: "", imageUrl: "", linkUrl: "", buttonText: "Lihat Selengkapnya" },
   );
   const [activeMenusForm, setActiveMenusForm] = useState(
     (content as any).activeMenus || {},
@@ -3410,7 +3410,7 @@ function AdminSettingsForm() {
       setProfilForm(content.profil);
       setFooterForm(content.footer);
       setAnnouncementForm(
-        content.announcement || { title: "", subtitle: "", desc: "" },
+        content.announcement || { active: true, title: "", subtitle: "", desc: "", imageUrl: "", linkUrl: "", buttonText: "Lihat Selengkapnya" },
       );
       setActiveMenusForm((content as any).activeMenus || {});
     }
@@ -3542,57 +3542,68 @@ function AdminSettingsForm() {
           </div>
         </div>
 
-        {/* Announcement Section */}
+        {/* Announcement / Flyer Section */}
         <div className="space-y-6">
-          <h3 className="text-lg font-bold flex items-center gap-2 text-main-blue">
-            <Megaphone className="w-5 h-5" /> Popup Pengumuman
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Popup Title
-              </label>
-              <input
-                className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all"
-                value={announcementForm.title}
-                onChange={(e) =>
-                  setAnnouncementForm({
-                    ...announcementForm,
-                    title: e.target.value,
-                  })
-                }
-              />
+              <h3 className="text-lg font-bold flex items-center gap-2 text-main-blue">
+                <Megaphone className="w-5 h-5" /> Popup Flyer / Poster Informasi
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Popup akan otomatis muncul di halaman depan situs web setelah loading screen selesai.
+              </p>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Popup Subtitle
-              </label>
+            <label className="flex items-center gap-3 p-3 bg-blue-50/70 rounded-xl border border-blue-100 cursor-pointer self-start sm:self-auto hover:bg-blue-50 transition-all">
               <input
-                className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all"
-                value={announcementForm.subtitle}
+                type="checkbox"
+                className="w-5 h-5 rounded accent-main-blue"
+                checked={announcementForm.active !== false}
                 onChange={(e) =>
                   setAnnouncementForm({
                     ...announcementForm,
-                    subtitle: e.target.value,
+                    active: e.target.checked,
                   })
                 }
               />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Popup Description
+              <span className="text-sm font-bold text-main-blue">
+                {announcementForm.active !== false ? "Popup Aktif" : "Popup Nonaktif"}
+              </span>
+            </label>
+          </div>
+
+          <div className="p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
+            {/* Poster URL */}
+            <div className="space-y-3">
+              <label className="block text-sm font-semibold text-gray-700">
+                URL Gambar Flyer / Poster Informasi
               </label>
-              <textarea
-                className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all"
-                rows={3}
-                value={announcementForm.desc}
-                onChange={(e) =>
-                  setAnnouncementForm({
-                    ...announcementForm,
-                    desc: e.target.value,
-                  })
-                }
-              />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  placeholder="https://... (URL gambar flyer / poster)"
+                  className="flex-1 border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all text-sm bg-white"
+                  value={announcementForm.imageUrl || ""}
+                  onChange={(e) =>
+                    setAnnouncementForm({
+                      ...announcementForm,
+                      imageUrl: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              {announcementForm.imageUrl && (
+                <div className="p-3 bg-white rounded-xl border border-gray-200 max-w-sm">
+                  <span className="text-xs text-gray-400 block mb-2 font-medium">Pratinjau Flyer/Poster:</span>
+                  <img
+                    src={announcementForm.imageUrl}
+                    alt="Preview Poster"
+                    className="w-full h-auto max-h-56 object-contain rounded-lg bg-slate-900"
+                    onError={(e) => {
+                      (e.target as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
