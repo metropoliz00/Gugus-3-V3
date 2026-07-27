@@ -44,6 +44,7 @@ import {
   ArrowLeft,
   Send,
   ChevronDown,
+  ChevronUp,
   Type,
   RefreshCw,
   Printer,
@@ -3508,6 +3509,39 @@ function AdminSettingsForm() {
           </div>
         </div>
 
+        {/* Public Nav Menu / Laporan Keuangan Toggle */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-bold flex items-center gap-2 text-main-blue">
+            <Globe className="w-5 h-5" /> Tampilan Menu Website Publik (Navbar)
+          </h3>
+          <p className="text-xs text-gray-500 -mt-4">
+            Berikan tombol tampil/tidak pada menu laporan keuangan di dalam navigasi website.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
+            <label className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 cursor-pointer hover:border-main-blue/30 transition-all shadow-sm">
+              <input
+                type="checkbox"
+                className="w-5 h-5 rounded accent-main-blue"
+                checked={activeMenusForm.keuangan !== false}
+                onChange={(e) =>
+                  setActiveMenusForm({
+                    ...activeMenusForm,
+                    keuangan: e.target.checked,
+                  })
+                }
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-gray-700">
+                  Tampilkan Menu Laporan Keuangan
+                </span>
+                <span className="text-xs text-gray-400">
+                  Aktifkan atau nonaktifkan menu Keuangan pada navbar situs publik.
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
         {/* Announcement Section */}
         <div className="space-y-6">
           <h3 className="text-lg font-bold flex items-center gap-2 text-main-blue">
@@ -4292,6 +4326,24 @@ function AdminGaleriForm({
         logActivity(user, "delete_galeri", `Menghapus aset galeri ID: ${id}`);
         setGallery(gallery.filter((g: any) => g.id !== id));
       }
+    }
+  };
+
+  const handleMoveGalleryItem = async (itemId: string, direction: 'up' | 'down') => {
+    const currentIndex = gallery.findIndex((g: any) => g.id === itemId);
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= gallery.length) return;
+    const newGallery = [...gallery];
+    const temp = newGallery[currentIndex];
+    newGallery[currentIndex] = newGallery[targetIndex];
+    newGallery[targetIndex] = temp;
+    setGallery(newGallery);
+
+    if (supabase && temp.id && newGallery[currentIndex].id) {
+      const timeA = temp.created_at || new Date().toISOString();
+      const timeB = newGallery[currentIndex].created_at || new Date().toISOString();
+      await supabase.from('gallery').update({ created_at: timeB }).eq('id', temp.id);
+      await supabase.from('gallery').update({ created_at: timeA }).eq('id', newGallery[currentIndex].id);
     }
   };
 
@@ -6066,6 +6118,19 @@ function AdminKKGForm({
     );
   };
 
+  const handleMoveKkgProgram = (categoryKey: string, index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const currentList = form.programs[categoryKey] || [];
+    if (targetIndex < 0 || targetIndex >= currentList.length) return;
+    const newPrograms = { ...form.programs };
+    const list = [...newPrograms[categoryKey]];
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+    newPrograms[categoryKey] = list;
+    setKkgForm({ ...form, programs: newPrograms });
+  };
+
   const loadStruktur = async () => {
     if (!supabase) return;
     try {
@@ -6880,20 +6945,40 @@ function AdminKKGForm({
                                 />
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (await confirm("Apakah Anda yakin ingin menghapus program kerja ini?", "Hapus Program")) {
-                                  const newPrograms = { ...form.programs };
-                                  newPrograms[key].splice(i, 1);
-                                  setKkgForm({ ...form, programs: newPrograms });
-                                }
-                              }}
-                              className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all absolute top-2 right-2 shrink-0 border border-transparent hover:border-red-100"
-                              title="Hapus Program Kerja"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                            <div className="absolute top-2 right-2 flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleMoveKkgProgram(key, i, 'up')}
+                                disabled={i === 0}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30"
+                                title="Geser ke Atas"
+                              >
+                                <ChevronUp className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveKkgProgram(key, i, 'down')}
+                                disabled={i === ((form.programs && form.programs[key]) || []).length - 1}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30"
+                                title="Geser ke Bawah"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (await confirm("Apakah Anda yakin ingin menghapus program kerja ini?", "Hapus Program")) {
+                                    const newPrograms = { ...form.programs };
+                                    newPrograms[key].splice(i, 1);
+                                    setKkgForm({ ...form, programs: newPrograms });
+                                  }
+                                }}
+                                className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all"
+                                title="Hapus Program Kerja"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ),
                       )}
@@ -7076,6 +7161,16 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
     setDbStruktur((prev) =>
       prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     );
+  };
+
+  const handleMoveGugusProgram = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= programs.length) return;
+    const next = [...programs];
+    const temp = next[index];
+    next[index] = next[targetIndex];
+    next[targetIndex] = temp;
+    setGugusForm({ ...form, programs: next });
   };
 
   const loadStruktur = async () => {
@@ -7587,20 +7682,40 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                       }}
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (await confirm(`Apakah Anda yakin ingin menghapus program "${p.title || 'ini'}"?`, "Hapus Program Kerja")) {
-                        const next = [...programs];
-                        next.splice(i, 1);
-                        setGugusForm({ ...form, programs: next });
-                      }
-                    }}
-                    className="absolute top-2 right-2 text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all"
-                    title="Hapus Program Kerja"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="absolute top-2 right-2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveGugusProgram(i, 'up')}
+                      disabled={i === 0}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30"
+                      title="Geser ke Atas"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveGugusProgram(i, 'down')}
+                      disabled={i === programs.length - 1}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30"
+                      title="Geser ke Bawah"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (await confirm(`Apakah Anda yakin ingin menghapus program "${p.title || 'ini'}"?`, "Hapus Program Kerja")) {
+                          const next = [...programs];
+                          next.splice(i, 1);
+                          setGugusForm({ ...form, programs: next });
+                        }
+                      }}
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      title="Hapus Program Kerja"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
