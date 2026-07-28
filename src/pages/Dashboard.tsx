@@ -10564,13 +10564,13 @@ function AdminCertificateManager({ user }: { user: any }) {
 
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <select
-          className="w-full p-4 rounded-xl border border-gray-200"
+          className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-main-blue font-medium text-sm bg-white shadow-sm"
           value={selectedTrainingId}
           onChange={(e) => setSelectedTrainingId(e.target.value)}
         >
-          <option value="">Pilih Kegiatan / Pelatihan (Default/Global)</option>
+          <option value="">-- Pilih Kegiatan atau Pelatihan --</option>
           <optgroup label="Program Pelatihan Mandiri">
             {trainings.map((t) => (
               <option key={t.id} value={t.id}>
@@ -10586,7 +10586,10 @@ function AdminCertificateManager({ user }: { user: any }) {
             ))}
           </optgroup>
         </select>
-        <AdminCertificateEditor trainingId={selectedTrainingId} />
+
+        {selectedTrainingId && (
+          <AdminCertificateEditor trainingId={selectedTrainingId} />
+        )}
       </div>
     </div>
   );
