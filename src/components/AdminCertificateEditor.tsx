@@ -682,26 +682,20 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         downloadEnabled: downloadEnabled,
       };
 
-      // Save to training_certificates table
+      // 1. Save certificate config directly to training_certificates table (1 JSON design per row)
       await migrateCertificateConfigToTable(activeKey, configPayload);
 
-      // Save inside site_settings content as a reliable backup
-      const newContent = { ...(current?.content || {}) };
-      if (!newContent.certificate_configs) {
-        newContent.certificate_configs = {};
+      // 2. Clean up heavy certificate_configs from site_settings content to keep site_settings light
+      if (current?.content && (current.content.certificate_configs || current.content.certificate_config)) {
+        const cleanContent = { ...current.content };
+        delete cleanContent.certificate_configs;
+        delete cleanContent.certificate_config;
+        await supabase.from("site_settings").upsert({
+          id: 1,
+          content: cleanContent,
+          updated_at: new Date().toISOString(),
+        });
       }
-      newContent.certificate_configs[activeKey] = configPayload;
-      if (activeKey === "default") {
-        newContent.certificate_config = configPayload;
-      }
-
-      const { error } = await supabase.from("site_settings").upsert({
-        id: 1,
-        content: newContent,
-        updated_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
 
       // Auto generate certificates for participants who have 'attended' this activity
       try {

@@ -260,7 +260,9 @@ const sanitizeSiteContent = (raw: any): any => {
   if (!raw || typeof raw !== 'object') return raw;
   const copy = JSON.parse(JSON.stringify(raw));
 
-  // Removed deletion of certificate_configs so they act as a reliable fallback
+  // 1. Strip heavy certificate configs from site_settings so each config is stored separately in SQL table
+  delete copy.certificate_configs;
+  delete copy.certificate_config;
 
   // 2. Strip heavy arrays that belong in separate SQL tables
   delete copy.schools;
