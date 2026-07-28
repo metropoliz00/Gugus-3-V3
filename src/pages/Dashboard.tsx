@@ -10562,15 +10562,10 @@ function AdminCertificateManager({ user }: { user: any }) {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <label className="flex items-center gap-2 cursor-pointer bg-amber-50 px-4 py-2.5 rounded-xl text-amber-700 text-xs font-bold border border-amber-100 shadow-sm">
-            <input
-              type="checkbox"
-              className="w-4 h-4 accent-amber-600 rounded"
-              checked={isDownloadEnabled}
-              onChange={handleToggleDownload}
-            />
-            Tombol Unduh Guru
-          </label>
+          <div className="flex items-center gap-2 bg-amber-50 px-4 py-2.5 rounded-xl text-amber-800 text-xs font-bold border border-amber-200 shadow-sm">
+            <CheckCircle className="w-4 h-4 text-amber-600" />
+            <span>Pengaturan Unduh: Mengikuti Status Per-Sertifikat</span>
+          </div>
         </div>
       </div>
 
@@ -12775,10 +12770,9 @@ function TeacherJadwalCards({ user }: { user?: any }) {
   }, []);
 
   const isCertDownloadAllowed = (itemId: string) => {
-    if (!isDownloadEnabled) return false;
     if (certConfig) {
-      if (certConfig[itemId] && certConfig[itemId].downloadEnabled === false) return false;
-      if (!certConfig[itemId] && certConfig["default"] && certConfig["default"].downloadEnabled === false) return false;
+      if (certConfig[itemId]) return certConfig[itemId].downloadEnabled !== false;
+      if (certConfig["default"]) return certConfig["default"].downloadEnabled !== false;
     }
     return true;
   };
@@ -13363,10 +13357,9 @@ function TeacherTrainingCards({ user }: { user: any }) {
   };
 
   const isCertDownloadAllowed = (itemId: string) => {
-    if (!isDownloadEnabled) return false;
     if (certConfig) {
-      if (certConfig[itemId] && certConfig[itemId].downloadEnabled === false) return false;
-      if (!certConfig[itemId] && certConfig["default"] && certConfig["default"].downloadEnabled === false) return false;
+      if (certConfig[itemId]) return certConfig[itemId].downloadEnabled !== false;
+      if (certConfig["default"]) return certConfig["default"].downloadEnabled !== false;
     }
     return true;
   };
