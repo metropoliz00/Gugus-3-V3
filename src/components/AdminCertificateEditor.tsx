@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   UserCheck,
   Search,
+  ChevronDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageUpload from "./ImageUpload";
@@ -645,6 +646,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
   const [customParticipantRole, setCustomParticipantRole] = useState("");
   const [savingRole, setSavingRole] = useState(false);
   const [participantSearch, setParticipantSearch] = useState("");
+  const [isParticipantsCollapsed, setIsParticipantsCollapsed] = useState(true);
   const [showSqlNotice, setShowSqlNotice] = useState(false);
   const [copiedSql, setCopiedSql] = useState(false);
 
@@ -1036,169 +1038,30 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
 
   async function generatePDF() {
     try {
-      const pdfDoc = await PDFDocument.create();
-      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-      const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-      // Helper to embed image safely and with compression (target size 200-300 KB)
-      const embedImage = async (url: string) => {
-        try {
-          const jpegDataUrl = await new Promise<string>((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = () => {
-              const canvas = document.createElement("canvas");
-              
-              const maxWidth = 2400;
-              let width = img.width;
-              let height = img.height;
-              if (width > maxWidth) {
-                const ratio = maxWidth / width;
-                width = maxWidth;
-                height = img.height * ratio;
-              }
-              
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext("2d");
-              if (!ctx) return reject("Canvas context error");
-              
-              // Draw white background in case source image has transparency
-              ctx.fillStyle = "#FFFFFF";
-              ctx.fillRect(0, 0, width, height);
-              ctx.drawImage(img, 0, 0, width, height);
-              
-              // Compress to JPEG with 0.92 quality for crisp original text & graphics
-              resolve(canvas.toDataURL("image/jpeg", 0.92));
-            };
-            img.onerror = () => reject("Image load error");
-            img.src = url;
-          });
-          
-          const res = await fetch(jpegDataUrl);
-          const buffer = await res.arrayBuffer();
-          return await pdfDoc.embedJpg(buffer);
-        } catch (err) {
-          console.error("Embed error, attempting fallback:", err);
-          try {
-            const res = await fetch(url);
-            const contentType = res.headers.get("content-type");
-            const buffer = await res.arrayBuffer();
-            const isPng = contentType?.includes("png") || url.toLowerCase().includes(".png") || url.startsWith("data:image/png");
-            if (isPng) {
-              return await pdfDoc.embedPng(buffer);
-            }
-            return await pdfDoc.embedJpg(buffer);
-          } catch (fallbackErr) {
-            console.error("Fallback embed error:", fallbackErr);
-            return null;
-          }
-        }
+      const dummyTeacher = {
+        nama: "Dedy Saputra, S.Pd.",
+        nip: "198801012010011001",
+        sekolah: "SDN 01 Contoh Nusantara",
+        peran: "PESERTA",
+        jabatan: "Guru Kelas"
       };
+      const dummyTraining = {
+        title: "Pelatihan Peningkatan Kompetensi Guru KKG Gugus 03",
+        date_start: new Date().toISOString()
+      };
+      const dummyConfig = {
+        templateUrl,
+        templateUrl2,
+        fields,
+        canvasWidth: CANVAS_WIDTH,
+        canvasHeight: CANVAS_HEIGHT,
+        placeholders: availablePlaceholders
+      };
+      const dummyCertNumber = "7482/CERT-KKG-GUGUS-03/VII/2026";
 
-      // --- PAGE 1 ---
-      const page1 = pdfDoc.addPage([CANVAS_WIDTH, CANVAS_HEIGHT]);
-      if (templateUrl) {
-        const image = await embedImage(templateUrl);
-        if (image) {
-          page1.drawImage(image, {
-            x: 0,
-            y: 0,
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
-          });
-        } else {
-          alert("Gagal memuat background halaman 1. Pastikan file valid.");
-        }
-      }
-
-      fields
-        .filter((f) => (f.page || 1) === 1)
-        .forEach((field) => {
-          const hex = field.color || "#000000";
-          const r = parseInt(hex.slice(1, 3), 16) / 255;
-          const g = parseInt(hex.slice(3, 5), 16) / 255;
-          const b = parseInt(hex.slice(5, 7), 16) / 255;
-
-          const fontToUse =
-            field.fontWeight === "bold" ? fontBold : fontRegular;
-          const textToDraw = field.text;
-          const textWidth = fontToUse.widthOfTextAtSize(
-            textToDraw,
-            field.fontSize,
-          );
-
-          let finalX = field.x;
-          if (field.align === "center") {
-            finalX = field.x - textWidth / 2;
-          } else if (field.align === "right") {
-            finalX = field.x - textWidth;
-          }
-
-          page1.drawText(textToDraw, {
-            x: finalX,
-            y: CANVAS_HEIGHT - field.y - field.fontSize * 0.8,
-            size: field.fontSize,
-            font: fontToUse,
-            color: rgb(r, g, b),
-          });
-        });
-
-      // --- PAGE 2 ---
-      const page2 = pdfDoc.addPage([CANVAS_WIDTH, CANVAS_HEIGHT]);
-      if (templateUrl2) {
-        const image = await embedImage(templateUrl2);
-        if (image) {
-          page2.drawImage(image, {
-            x: 0,
-            y: 0,
-            width: CANVAS_WIDTH,
-            height: CANVAS_HEIGHT,
-          });
-        } else {
-          alert("Gagal memuat background halaman 2. Pastikan file valid.");
-        }
-      }
-
-      fields
-        .filter((f) => f.page === 2)
-        .forEach((field) => {
-          const hex = field.color || "#000000";
-          const r = parseInt(hex.slice(1, 3), 16) / 255;
-          const g = parseInt(hex.slice(3, 5), 16) / 255;
-          const b = parseInt(hex.slice(5, 7), 16) / 255;
-
-          const fontToUse =
-            field.fontWeight === "bold" ? fontBold : fontRegular;
-          const textToDraw = field.text;
-          const textWidth = fontToUse.widthOfTextAtSize(
-            textToDraw,
-            field.fontSize,
-          );
-
-          let finalX = field.x;
-          if (field.align === "center") {
-            finalX = field.x - textWidth / 2;
-          } else if (field.align === "right") {
-            finalX = field.x - textWidth;
-          }
-
-          page2.drawText(textToDraw, {
-            x: finalX,
-            y: CANVAS_HEIGHT - field.y - field.fontSize * 0.8,
-            size: field.fontSize,
-            font: fontToUse,
-            color: rgb(r, g, b),
-          });
-        });
-
-      const pdfBytes = await pdfDoc.save();
-      saveAs(
-        new Blob([pdfBytes], { type: "application/pdf" }),
-        "preview-sertifikat.pdf",
-      );
+      await generateTeacherPDF(dummyTeacher, dummyTraining, dummyConfig, dummyCertNumber);
     } catch (err: any) {
-      alert("Gagal generate PDF: " + err.message, "Error", "error");
+      alert("Gagal generate PDF preview: " + err.message, "Error", "error");
     }
   }
 
@@ -1388,127 +1251,134 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
                 Admin dapat mengubah peran peserta (Peserta, Narasumber, Panitia, Pemateri, dll) untuk kegiatan sedang berjalan maupun selesai. Sertifikat yang diunduh otomatis menggunakan peran versi terbaru.
               </p>
             </div>
-            <button
-              onClick={loadParticipants}
-              disabled={loadingParticipants}
-              className="px-4 py-2.5 bg-main-blue/10 text-main-blue hover:bg-main-blue hover:text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0"
-            >
-              <RefreshCw className={`w-4 h-4 ${loadingParticipants ? "animate-spin" : ""}`} />
-              Refresh Data
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={loadParticipants}
+                disabled={loadingParticipants}
+                className="px-4 py-2.5 bg-main-blue/10 text-main-blue hover:bg-main-blue hover:text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all"
+              >
+                <RefreshCw className={`w-4 h-4 ${loadingParticipants ? "animate-spin" : ""}`} />
+                Refresh Data
+              </button>
+              <button
+                onClick={() => setIsParticipantsCollapsed(!isParticipantsCollapsed)}
+                className="px-4 py-2.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold flex items-center gap-2 transition-all"
+              >
+                {isParticipantsCollapsed ? "Tampilkan Daftar" : "Sembunyikan"}
+                <ChevronDown className={`w-4 h-4 transition-transform ${isParticipantsCollapsed ? "" : "rotate-180"}`} />
+              </button>
+            </div>
           </div>
 
+          {!isParticipantsCollapsed && (
+            <>
+              {/* Filter / Search Bar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="relative w-full sm:w-80">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Cari nama, NIP, atau sekolah..."
+                    value={participantSearch}
+                    onChange={(e) => setParticipantSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-main-blue transition-all"
+                  />
+                </div>
+                <span className="text-xs font-bold text-gray-400">
+                  Total: {participantsList.length} Peserta Hadir
+                </span>
+              </div>
 
-
-          {/* Filter / Search Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Cari nama, NIP, atau sekolah..."
-                value={participantSearch}
-                onChange={(e) => setParticipantSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-main-blue transition-all"
-              />
-            </div>
-            <span className="text-xs font-bold text-gray-400">
-              Total: {participantsList.length} Peserta Registered/Attended
-            </span>
-          </div>
-
-          {/* Participants Table / Cards */}
-          {loadingParticipants ? (
-            <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
-              <RefreshCw className="w-8 h-8 text-main-blue animate-spin" />
-              <p className="text-xs font-bold text-gray-400">Memuat Daftar Peserta...</p>
-            </div>
-          ) : participantsList.length === 0 ? (
-            <div className="py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 text-center space-y-2">
-              <UserCheck className="w-10 h-10 text-gray-300 mx-auto" />
-              <p className="text-xs font-bold text-gray-400">Belum ada peserta terdaftar untuk kegiatan ini.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto modern-scrollbar">
-              <table className="w-full text-left border-collapse min-w-[700px]">
-                <thead>
-                  <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                    <th className="py-3 px-4">Peserta / NIP</th>
-                    <th className="py-3 px-4">Instansi / Sekolah</th>
-                    <th className="py-3 px-4">Status Absensi</th>
-                    <th className="py-3 px-4">Peran Saat Ini</th>
-                    <th className="py-3 px-4 text-right">Aksi Admin</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 text-xs">
-                  {participantsList
-                    .filter((p) => {
-                      if (!participantSearch.trim()) return true;
-                      const q = participantSearch.toLowerCase();
-                      return (
-                        (p.participant_name || "").toLowerCase().includes(q) ||
-                        (p.participant_nip || "").toLowerCase().includes(q) ||
-                        (p.participant_school || "").toLowerCase().includes(q)
-                      );
-                    })
-                    .map((p) => (
-                      <tr key={p.id} className="hover:bg-blue-50/30 transition-all">
-                        <td className="py-3 px-4">
-                          <div className="font-bold text-gray-800">{p.participant_name}</div>
-                          <div className="text-[10px] text-gray-400 font-mono">NIP: {p.participant_nip}</div>
-                        </td>
-                        <td className="py-3 px-4 text-gray-600 font-medium">
-                          {p.participant_school}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            p.status === "attended" 
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
-                              : "bg-blue-50 text-blue-700 border border-blue-200"
-                          }`}>
-                            <CheckCircle2 className="w-3 h-3" />
-                            {p.status === "attended" ? "Hadir" : "Terdaftar"}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-sm shadow-amber-500/20">
-                            {p.current_peran}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingParticipant(p);
-                                const knownRoles = ["PESERTA", "NARASUMBER", "PANITIA", "MODERATOR", "PEMATERI", "FASILITATOR"];
-                                if (knownRoles.includes(p.current_peran)) {
-                                  setNewParticipantRole(p.current_peran);
-                                  setCustomParticipantRole("");
-                                } else {
-                                  setNewParticipantRole("LAINNYA");
-                                  setCustomParticipantRole(p.current_peran);
-                                }
-                              }}
-                              className="px-3 py-1.5 bg-main-blue/10 text-main-blue hover:bg-main-blue hover:text-white rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-sm"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                              Ubah Peran
-                            </button>
-                            <button
-                              onClick={() => handleDownloadUpdatedCertificate(p)}
-                              className="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-sm shadow-emerald-600/20"
-                              title="Unduh sertifikat peserta versi terbaru dengan peran yang sudah diperbarui"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                              Unduh Sertifikat Terbaru
-                            </button>
-                          </div>
-                        </td>
+              {/* Participants Table / Cards */}
+              {loadingParticipants ? (
+                <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
+                  <RefreshCw className="w-8 h-8 text-main-blue animate-spin" />
+                  <p className="text-xs font-bold text-gray-400">Memuat Daftar Peserta...</p>
+                </div>
+              ) : participantsList.length === 0 ? (
+                <div className="py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 text-center space-y-2">
+                  <UserCheck className="w-10 h-10 text-gray-300 mx-auto" />
+                  <p className="text-xs font-bold text-gray-400">Belum ada peserta yang hadir untuk kegiatan ini.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto modern-scrollbar">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
+                    <thead>
+                      <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                        <th className="py-3 px-4">Peserta / NIP</th>
+                        <th className="py-3 px-4">Instansi / Sekolah</th>
+                        <th className="py-3 px-4">Status Absensi</th>
+                        <th className="py-3 px-4">Peran Saat Ini</th>
+                        <th className="py-3 px-4 text-right">Aksi Admin</th>
                       </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 text-xs">
+                      {participantsList
+                        .filter((p) => {
+                          if (!participantSearch.trim()) return true;
+                          const q = participantSearch.toLowerCase();
+                          return (
+                            (p.participant_name || "").toLowerCase().includes(q) ||
+                            (p.participant_nip || "").toLowerCase().includes(q) ||
+                            (p.participant_school || "").toLowerCase().includes(q)
+                          );
+                        })
+                        .map((p) => (
+                          <tr key={p.id} className="hover:bg-blue-50/30 transition-all">
+                            <td className="py-3 px-4">
+                              <div className="font-bold text-gray-800">{p.participant_name}</div>
+                              <div className="text-[10px] text-gray-400 font-mono">NIP: {p.participant_nip}</div>
+                            </td>
+                            <td className="py-3 px-4 text-gray-600 font-medium">
+                              {p.participant_school}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                <CheckCircle2 className="w-3 h-3" />
+                                Hadir
+                              </span>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-sm shadow-amber-500/20">
+                                {p.current_peran}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingParticipant(p);
+                                    const knownRoles = ["PESERTA", "NARASUMBER", "PANITIA", "MODERATOR", "PEMATERI", "FASILITATOR"];
+                                    if (knownRoles.includes(p.current_peran)) {
+                                      setNewParticipantRole(p.current_peran);
+                                      setCustomParticipantRole("");
+                                    } else {
+                                      setNewParticipantRole("LAINNYA");
+                                      setCustomParticipantRole(p.current_peran);
+                                    }
+                                  }}
+                                  className="px-3 py-1.5 bg-main-blue/10 text-main-blue hover:bg-main-blue hover:text-white rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-sm"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  Ubah Peran
+                                </button>
+                                <button
+                                  onClick={() => handleDownloadUpdatedCertificate(p)}
+                                  className="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-sm shadow-emerald-600/20"
+                                  title="Unduh sertifikat peserta versi terbaru dengan peran yang sudah diperbarui"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                  Unduh Sertifikat Terbaru
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           )}
 
           {/* Modal Ubah Peran Peserta */}
