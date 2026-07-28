@@ -668,15 +668,27 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
       const { data: parts, error } = await query;
       if (error) throw error;
 
-      const userIds = Array.from(new Set((parts || []).map(p => p.user_id).filter(Boolean)));
-      let usersMap: Record<string, any> = {};
-      if (userIds.length > 0) {
-        const { data: teachers } = await supabase.from("teachers").select("*").in("id", userIds);
-        teachers?.forEach(t => {
-          usersMap[t.id] = t;
-        });
-      }
+      const [profilesRes, teachersRes] = await Promise.all([
+        supabase.from("user_profiles").select("*"),
+        supabase.from("teachers").select("*")
+      ]);
 
+      const allProfiles = profilesRes.data || [];
+      const allTeachers = teachersRes.data || [];
+      
+      let usersMap: Record<string, any> = {};
+      allProfiles.forEach(p => {
+        usersMap[p.id] = p;
+      });
+      allTeachers.forEach(t => {
+        if (!usersMap[t.id]) {
+          usersMap[t.id] = t;
+        } else {
+          usersMap[t.id] = { ...usersMap[t.id], ...t };
+        }
+      });
+
+      const existingUserIds = new Set((parts || []).map(p => p.user_id).filter(Boolean));
       const formatted = (parts || []).map(p => {
         const u = p.user_id ? usersMap[p.user_id] : null;
         let localRole = "";
@@ -686,7 +698,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         const currentPeran = (localRole || p.peran || p.guest_peran || p.role_in_activity || "PESERTA").toString().toUpperCase();
         return {
           ...p,
-          participant_name: p.guest_name || u?.full_name || u?.nama || "Peserta",
+          participant_name: p.guest_name || u?.full_name || u?.nama || u?.username || "Peserta",
           participant_nip: p.guest_nip || u?.nip || "-",
           participant_school: p.guest_institution || u?.school_name || u?.sekolah || "-",
           participant_position: p.guest_position || u?.position || u?.jabatan || "-",
@@ -695,7 +707,31 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         };
       });
 
-      setParticipantsList(formatted);
+      // Include all cluster members (user_profiles / teachers) who attended or are part of the gugus
+      const missingProfiles = allProfiles.filter(u => !existingUserIds.has(u.id));
+      const virtualMissingParts = missingProfiles.map(u => {
+        const virtualId = `virtual_${u.id}`;
+        let localRole = "";
+        try {
+          localRole = localStorage.getItem(`override_peran_${virtualId}`) || "";
+        } catch (e) {}
+        const currentPeran = (localRole || "PESERTA").toString().toUpperCase();
+        return {
+          id: virtualId,
+          training_id: trainingId,
+          user_id: u.id,
+          status: "attended",
+          participant_name: u.nama || u.full_name || u.username || "Anggota Gugus",
+          participant_nip: u.nip || "-",
+          participant_school: u.sekolah || u.school_name || "-",
+          participant_position: u.jabatan || u.position || "-",
+          current_peran: currentPeran,
+          peran: currentPeran,
+          is_virtual: true
+        };
+      });
+
+      setParticipantsList([...formatted, ...virtualMissingParts]);
     } catch (err) {
       console.error("Error loading participants:", err);
     } finally {
