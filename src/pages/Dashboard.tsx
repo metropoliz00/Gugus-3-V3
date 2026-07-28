@@ -13427,7 +13427,11 @@ function TeacherTrainingCards({ user }: { user: any }) {
     try {
       const regRecord = registrations[trainingId];
       if (regRecord) {
-        // Update existing registration role
+        // Always store local override so user gets updated role in certificates
+        try {
+          localStorage.setItem(`override_peran_${regRecord.id}`, upperRole);
+        } catch (e) {}
+
         let { error } = await supabase
           .from("training_participants")
           .update({
@@ -13436,13 +13440,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
           .eq("id", regRecord.id);
 
         if (error && (error.message?.includes("column") || error.code === "PGRST204")) {
-          const { error: err2 } = await supabase
-            .from("training_participants")
-            .update({
-              role_in_activity: upperRole,
-            })
-            .eq("id", regRecord.id);
-          if (err2) throw err2;
+          console.warn("Kolom 'peran' belum ada di database training_participants, tersimpan di lokal override:", error.message);
         } else if (error) {
           throw error;
         }
@@ -13467,8 +13465,14 @@ function TeacherTrainingCards({ user }: { user: any }) {
           payload.user_id = user.id;
         }
 
-        const { error } = await supabase.from("training_participants").insert(payload);
-        if (error) throw error;
+        let { error } = await supabase.from("training_participants").insert(payload);
+        if (error && (error.message?.includes("column") || error.code === "PGRST204")) {
+          delete payload.peran;
+          const { error: err2 } = await supabase.from("training_participants").insert(payload);
+          if (err2) throw err2;
+        } else if (error) {
+          throw error;
+        }
         alert(`Pendaftaran berhasil sebagai ${role}!`, "Sukses", "success");
       }
       fetchData();
