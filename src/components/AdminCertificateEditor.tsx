@@ -21,6 +21,11 @@ import {
   RefreshCw,
   Image as ImageIcon,
   Database,
+  Users,
+  Edit3,
+  CheckCircle2,
+  UserCheck,
+  Search,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImageUpload from "./ImageUpload";
@@ -568,6 +573,7 @@ export async function fetchCertificateConfigsMap(): Promise<Record<string, any>>
 
 export default function AdminCertificateEditor({ trainingId }: { trainingId?: string }) {
   const { alert } = useAlert();
+  const { generateTeacherPDF } = useCertificateGenerator();
   const stageRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -631,13 +637,161 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
   });
   const [downloadEnabled, setDownloadEnabled] = useState<boolean>(true);
 
+  // PARTICIPANT ROLE MANAGEMENT
+  const [participantsList, setParticipantsList] = useState<any[]>([]);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
+  const [editingParticipant, setEditingParticipant] = useState<any | null>(null);
+  const [newParticipantRole, setNewParticipantRole] = useState("PESERTA");
+  const [customParticipantRole, setCustomParticipantRole] = useState("");
+  const [savingRole, setSavingRole] = useState(false);
+  const [participantSearch, setParticipantSearch] = useState("");
+
   // =================================
   // LOAD CONFIG FROM DB
   // =================================
 
   useEffect(() => {
     loadConfig();
+    loadParticipants();
   }, [trainingId]);
+
+  async function loadParticipants() {
+    if (!supabase) return;
+    setLoadingParticipants(true);
+    try {
+      let query = supabase.from("training_participants").select("*").order("id", { ascending: false });
+      if (trainingId) {
+        query = query.or(`training_id.eq.${trainingId},event_id.eq.${trainingId}`);
+      }
+      const { data: parts, error } = await query;
+      if (error) throw error;
+
+      const userIds = Array.from(new Set((parts || []).map(p => p.user_id).filter(Boolean)));
+      let usersMap: Record<string, any> = {};
+      if (userIds.length > 0) {
+        const { data: teachers } = await supabase.from("teachers").select("*").in("id", userIds);
+        teachers?.forEach(t => {
+          usersMap[t.id] = t;
+        });
+      }
+
+      const formatted = (parts || []).map(p => {
+        const u = p.user_id ? usersMap[p.user_id] : null;
+        const currentPeran = (p.peran || p.guest_peran || p.role_in_activity || "PESERTA").toString().toUpperCase();
+        return {
+          ...p,
+          participant_name: p.guest_name || u?.full_name || u?.nama || "Peserta",
+          participant_nip: p.guest_nip || u?.nip || "-",
+          participant_school: p.guest_institution || u?.school_name || u?.sekolah || "-",
+          participant_position: p.guest_position || u?.position || u?.jabatan || "-",
+          current_peran: currentPeran
+        };
+      });
+
+      setParticipantsList(formatted);
+    } catch (err) {
+      console.error("Error loading participants:", err);
+    } finally {
+      setLoadingParticipants(false);
+    }
+  }
+
+  async function handleUpdateRole() {
+    if (!editingParticipant || !supabase) return;
+    setSavingRole(true);
+    try {
+      const rawRole = newParticipantRole === "LAINNYA" ? (customParticipantRole.trim() || "PESERTA") : newParticipantRole;
+      const finalRole = rawRole.toUpperCase();
+
+      const { error: partErr } = await supabase
+        .from("training_participants")
+        .update({
+          peran: finalRole,
+          guest_peran: finalRole,
+        })
+        .eq("id", editingParticipant.id);
+
+      if (partErr) throw partErr;
+
+      // Update training_certificates stored json if exists
+      const pId = editingParticipant.user_id || editingParticipant.guest_account_id;
+      const actId = editingParticipant.training_id || editingParticipant.event_id || trainingId;
+      if (pId && actId) {
+        const { data: certs } = await supabase
+          .from("training_certificates")
+          .select("*")
+          .or(`user_id.eq.${pId},guest_account_id.eq.${pId}`);
+
+        if (certs && certs.length > 0) {
+          for (const c of certs) {
+            try {
+              let certObj = typeof c.certificate_url === "string" && c.certificate_url.startsWith("{") 
+                ? JSON.parse(c.certificate_url) 
+                : {};
+              certObj.peran = finalRole;
+              await supabase
+                .from("training_certificates")
+                .update({ certificate_url: JSON.stringify(certObj) })
+                .eq("id", c.id);
+            } catch (e) {
+              console.warn("Notice updating certificate JSON:", e);
+            }
+          }
+        }
+      }
+
+      await alert(`Peran ${editingParticipant.participant_name} berhasil diperbarui menjadi ${finalRole}!`, "Sukses", "success");
+      setEditingParticipant(null);
+      setCustomParticipantRole("");
+      await loadParticipants();
+    } catch (err: any) {
+      await alert("Gagal memperbarui peran: " + err.message, "Gagal", "error");
+    } finally {
+      setSavingRole(false);
+    }
+  }
+
+  async function handleDownloadUpdatedCertificate(p: any) {
+    try {
+      const actId = p.training_id || p.event_id || trainingId;
+      let actObj: any = null;
+      if (actId) {
+        const { data: tr } = await supabase.from("trainings").select("*").eq("id", actId).maybeSingle();
+        if (tr) actObj = tr;
+        else {
+          const { data: ev } = await supabase.from("events").select("*").eq("id", actId).maybeSingle();
+          if (ev) actObj = ev;
+        }
+      }
+      if (!actObj) {
+        actObj = { title: "Kegiatan Pelatihan / Agenda", date_start: new Date().toISOString() };
+      }
+
+      const allConfigs = await fetchCertificateConfigsMap();
+      const config = (actId ? allConfigs[actId] : null) || allConfigs["default"] || {
+        templateUrl,
+        templateUrl2,
+        fields,
+        placeholders: availablePlaceholders
+      };
+
+      const currentPeran = (p.peran || p.guest_peran || p.current_peran || "PESERTA").toString().toUpperCase();
+      const teacherPayload = {
+        nama: p.participant_name,
+        nip: p.participant_nip,
+        sekolah: p.participant_school,
+        jabatan: p.participant_position,
+        peran: currentPeran,
+        guest_peran: currentPeran
+      };
+
+      const certNumber = `${Math.floor(1000 + Math.random() * 9000)}/CERT-KKG/${new Date().getFullYear()}`;
+
+      await generateTeacherPDF(teacherPayload, actObj, config, certNumber);
+    } catch (err: any) {
+      await alert("Gagal mengunduh sertifikat: " + err.message, "Gagal", "error");
+    }
+  }
 
   async function loadConfig() {
     if (!supabase) {
@@ -1541,6 +1695,234 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
             </div>
           </div>
         </div>
+      </div>
+
+      {/* KELOLA PERAN & SERTIFIKAT PESERTA KEGIATAN */}
+      <div className="w-full col-span-full mt-10 bg-white p-8 rounded-[2rem] border border-gray-100 shadow-xl space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-6">
+          <div>
+            <h3 className="text-xl font-bold font-heading text-soft-black flex items-center gap-2">
+              <Users className="w-6 h-6 text-main-blue" />
+              Kelola Peran & Sertifikat Peserta Kegiatan
+            </h3>
+            <p className="text-xs text-gray-500 mt-1">
+              Admin dapat mengubah peran peserta (Peserta, Narasumber, Panitia, Pemateri, dll) untuk kegiatan sedang berjalan maupun selesai. Sertifikat yang diunduh otomatis menggunakan peran versi terbaru.
+            </p>
+          </div>
+          <button
+            onClick={loadParticipants}
+            disabled={loadingParticipants}
+            className="px-4 py-2.5 bg-main-blue/10 text-main-blue hover:bg-main-blue hover:text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0"
+          >
+            <RefreshCw className={`w-4 h-4 ${loadingParticipants ? "animate-spin" : ""}`} />
+            Refresh Data
+          </button>
+        </div>
+
+        {/* Filter / Search Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Cari nama, NIP, atau sekolah..."
+              value={participantSearch}
+              onChange={(e) => setParticipantSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-main-blue transition-all"
+            />
+          </div>
+          <span className="text-xs font-bold text-gray-400">
+            Total: {participantsList.length} Peserta Registered/Attended
+          </span>
+        </div>
+
+        {/* Participants Table / Cards */}
+        {loadingParticipants ? (
+          <div className="py-12 flex flex-col items-center justify-center text-center space-y-3">
+            <RefreshCw className="w-8 h-8 text-main-blue animate-spin" />
+            <p className="text-xs font-bold text-gray-400">Memuat Daftar Peserta...</p>
+          </div>
+        ) : participantsList.length === 0 ? (
+          <div className="py-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 text-center space-y-2">
+            <UserCheck className="w-10 h-10 text-gray-300 mx-auto" />
+            <p className="text-xs font-bold text-gray-400">Belum ada peserta terdaftar untuk kegiatan ini.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto modern-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[700px]">
+              <thead>
+                <tr className="border-b border-gray-100 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="py-3 px-4">Peserta / NIP</th>
+                  <th className="py-3 px-4">Instansi / Sekolah</th>
+                  <th className="py-3 px-4">Status Absensi</th>
+                  <th className="py-3 px-4">Peran Saat Ini</th>
+                  <th className="py-3 px-4 text-right">Aksi Admin</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 text-xs">
+                {participantsList
+                  .filter((p) => {
+                    if (!participantSearch.trim()) return true;
+                    const q = participantSearch.toLowerCase();
+                    return (
+                      (p.participant_name || "").toLowerCase().includes(q) ||
+                      (p.participant_nip || "").toLowerCase().includes(q) ||
+                      (p.participant_school || "").toLowerCase().includes(q)
+                    );
+                  })
+                  .map((p) => (
+                    <tr key={p.id} className="hover:bg-blue-50/30 transition-all">
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-gray-800">{p.participant_name}</div>
+                        <div className="text-[10px] text-gray-400 font-mono">NIP: {p.participant_nip}</div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 font-medium">
+                        {p.participant_school}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          p.status === "attended" 
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                            : "bg-blue-50 text-blue-700 border border-blue-200"
+                        }`}>
+                          <CheckCircle2 className="w-3 h-3" />
+                          {p.status === "attended" ? "Hadir" : "Terdaftar"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-500 text-white shadow-sm shadow-amber-500/20">
+                          {p.current_peran}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingParticipant(p);
+                              const knownRoles = ["PESERTA", "NARASUMBER", "PANITIA", "MODERATOR", "PEMATERI", "FASILITATOR"];
+                              if (knownRoles.includes(p.current_peran)) {
+                                setNewParticipantRole(p.current_peran);
+                                setCustomParticipantRole("");
+                              } else {
+                                setNewParticipantRole("LAINNYA");
+                                setCustomParticipantRole(p.current_peran);
+                              }
+                            }}
+                            className="px-3 py-1.5 bg-main-blue/10 text-main-blue hover:bg-main-blue hover:text-white rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-sm"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            Ubah Peran
+                          </button>
+                          <button
+                            onClick={() => handleDownloadUpdatedCertificate(p)}
+                            className="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl font-bold text-[11px] flex items-center gap-1.5 transition-all shadow-sm shadow-emerald-600/20"
+                            title="Unduh sertifikat peserta versi terbaru dengan peran yang sudah diperbarui"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            Unduh Sertifikat Terbaru
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Modal Ubah Peran Peserta */}
+        <AnimatePresence>
+          {editingParticipant && (
+            <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+              <div
+                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                onClick={() => setEditingParticipant(null)}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative bg-white rounded-[2rem] p-8 w-full max-w-md shadow-2xl space-y-6 z-10"
+              >
+                <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                  <div>
+                    <h4 className="text-lg font-bold font-heading text-soft-black">
+                      Atur Peran Peserta (Admin)
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      Ubah peran peserta pada sertifikat kegiatan ini.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setEditingParticipant(null)}
+                    className="p-2 text-gray-400 hover:text-gray-600 rounded-full"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-xs space-y-1">
+                    <p className="font-bold text-gray-800">{editingParticipant.participant_name}</p>
+                    <p className="text-gray-500 font-mono">NIP: {editingParticipant.participant_nip}</p>
+                    <p className="text-gray-500">{editingParticipant.participant_school}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">
+                      Pilih Peran Baru dalam Kegiatan:
+                    </label>
+                    <select
+                      value={newParticipantRole}
+                      onChange={(e) => setNewParticipantRole(e.target.value)}
+                      className="w-full bg-white border border-gray-200 p-3 rounded-xl text-xs font-bold focus:border-main-blue outline-none"
+                    >
+                      <option value="PESERTA">PESERTA</option>
+                      <option value="NARASUMBER">NARASUMBER</option>
+                      <option value="PANITIA">PANITIA</option>
+                      <option value="MODERATOR">MODERATOR</option>
+                      <option value="PEMATERI">PEMATERI</option>
+                      <option value="FASILITATOR">FASILITATOR</option>
+                      <option value="LAINNYA">Lainnya (Ketik Manual)...</option>
+                    </select>
+                  </div>
+
+                  {newParticipantRole === "LAINNYA" && (
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 block">
+                        Ketik Peran Khusus:
+                      </label>
+                      <input
+                        type="text"
+                        value={customParticipantRole}
+                        onChange={(e) => setCustomParticipantRole(e.target.value.toUpperCase())}
+                        placeholder="Contoh: PANITIA PELAKSANA"
+                        className="w-full bg-white border border-gray-200 p-3 rounded-xl text-xs font-bold uppercase focus:border-main-blue outline-none"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    onClick={() => setEditingParticipant(null)}
+                    className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-200 transition-all"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={handleUpdateRole}
+                    disabled={savingRole}
+                    className="flex-1 py-3 bg-main-blue text-white rounded-xl font-bold text-xs hover:bg-blue-700 transition-all shadow-lg shadow-main-blue/20 flex items-center justify-center gap-2"
+                  >
+                    {savingRole ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                    {savingRole ? "Menyimpan..." : "Simpan Peran Terbaru"}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
