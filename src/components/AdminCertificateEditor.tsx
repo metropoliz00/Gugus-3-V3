@@ -109,6 +109,11 @@ export function useCertificateGenerator() {
             dbField: "title",
           },
           {
+            label: "Peran Dalam Kegiatan",
+            placeholder: "[peran]",
+            dbField: "peran",
+          },
+          {
             label: "Nomor Sertifikat",
             placeholder: "[certificate_number]",
             dbField: "certificate_number",
@@ -138,6 +143,9 @@ export function useCertificateGenerator() {
                 })
               : "-";
             result = result.replace(regex, val);
+          } else if (p.dbField === "peran" || p.dbField === "role" || p.placeholder === "[peran]") {
+            const val = teacher?.peran || teacher?.role_in_activity || teacher?.guest_peran || training?.peran || "Peserta";
+            result = result.replace(regex, val.toString());
           } else {
             // Check teacher first then training
             const val = (teacher && teacher[p.dbField] != null) 
@@ -590,6 +598,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
   >([
     { label: "Nama Lengkap", placeholder: "[nama]", dbField: "nama" },
     { label: "NIP", placeholder: "[nip]", dbField: "nip" },
+    { label: "Peran Dalam Kegiatan", placeholder: "[peran]", dbField: "peran" },
     { label: "Pangkat/Gol", placeholder: "[pangkat]", dbField: "pangkat" },
     { label: "Satuan Kerja", placeholder: "[sekolah]", dbField: "sekolah" },
     { label: "Jabatan", placeholder: "[jabatan]", dbField: "jabatan" },
@@ -674,6 +683,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         setAvailablePlaceholders([
           { label: "Nama Lengkap", placeholder: "[nama]", dbField: "nama" },
           { label: "NIP", placeholder: "[nip]", dbField: "nip" },
+          { label: "Peran Dalam Kegiatan", placeholder: "[peran]", dbField: "peran" },
           { label: "Pangkat/Gol", placeholder: "[pangkat]", dbField: "pangkat" },
           { label: "Satuan Kerja", placeholder: "[sekolah]", dbField: "sekolah" },
           { label: "Jabatan", placeholder: "[jabatan]", dbField: "jabatan" },
@@ -1596,10 +1606,12 @@ export async function ensureCertificatesExist(userId?: string) {
           const randomPart = Math.floor(1000 + Math.random() * 9000);
           const certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
 
+          const participantPeran = p.peran || p.guest_peran || p.role_in_activity || "Peserta";
+
           const certPayload: any = {
             training_id: actId,
             certificate_number: certNumber,
-            certificate_url: "Generated Individually",
+            certificate_url: JSON.stringify({ activity_id: actId, certificate_number: certNumber, peran: participantPeran, url: "Generated Individually" }),
             created_at: new Date().toISOString()
           };
 

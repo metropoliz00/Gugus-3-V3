@@ -12879,7 +12879,14 @@ function TeacherJadwalCards({ user }: { user?: any }) {
       }
     }
 
-    await generateTeacherPDF(user, item, config, certNumber);
+    const regRecord = attendances[item.id];
+    let userPeran = "Peserta";
+    if (typeof regRecord === "object" && regRecord) {
+      userPeran = regRecord.peran || regRecord.guest_peran || regRecord.role_in_activity || "Peserta";
+    }
+    const userWithPeran = { ...user, peran: userPeran };
+
+    await generateTeacherPDF(userWithPeran, item, config, certNumber);
   };
 
   const handleAbsenClick = (id: string) => {
@@ -13188,6 +13195,118 @@ function TeacherJadwalCards({ user }: { user?: any }) {
   );
 }
 
+function RoleSelectionModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = "Pilih Peran Dalam Kegiatan",
+  defaultRole = "Peserta"
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (role: string) => void;
+  title?: string;
+  defaultRole?: string;
+}) {
+  const [selectedRole, setSelectedRole] = useState(defaultRole || "Peserta");
+  const [customRole, setCustomRole] = useState("");
+
+  useEffect(() => {
+    if (defaultRole && ["Peserta", "Narasumber", "Panitia"].includes(defaultRole)) {
+      setSelectedRole(defaultRole);
+      setCustomRole("");
+    } else if (defaultRole) {
+      setSelectedRole("Lainnya");
+      setCustomRole(defaultRole);
+    } else {
+      setSelectedRole("Peserta");
+      setCustomRole("");
+    }
+  }, [isOpen, defaultRole]);
+
+  if (!isOpen) return null;
+
+  const handleSave = () => {
+    const finalRole = selectedRole === "Lainnya" ? (customRole.trim() || "Peserta") : selectedRole;
+    onConfirm(finalRole);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-gray-100 shadow-2xl space-y-5">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <h3 className="text-base font-heading font-bold text-gray-800 flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-main-blue"></span>
+            {title}
+          </h3>
+          <button 
+            type="button" 
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 flex items-center justify-center text-xs font-bold transition-all"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p className="text-xs text-gray-500 leading-relaxed">
+          Pilih peran Anda dalam agenda / pelatihan ini. Peran yang dipilih akan otomatis tercetak pada sertifikat kegiatan Anda:
+        </p>
+        
+        <div className="grid grid-cols-2 gap-2.5">
+          {["Peserta", "Narasumber", "Panitia", "Lainnya"].map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setSelectedRole(r)}
+              className={`p-3 rounded-2xl border text-xs font-bold transition-all text-left flex items-center justify-between ${
+                selectedRole === r
+                  ? "border-main-blue bg-main-blue/10 text-main-blue shadow-sm"
+                  : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              <span>{r}</span>
+              {selectedRole === r && <div className="w-2.5 h-2.5 rounded-full bg-main-blue" />}
+            </button>
+          ))}
+        </div>
+
+        {selectedRole === "Lainnya" && (
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-gray-600 block">
+              Ketik Peran Khusus:
+            </label>
+            <input
+              type="text"
+              value={customRole}
+              onChange={(e) => setCustomRole(e.target.value)}
+              placeholder="Contoh: Moderator / Fasilitator / Penguji"
+              className="w-full border border-gray-200 rounded-2xl p-3 text-xs outline-none focus:border-main-blue focus:ring-2 focus:ring-main-blue/10"
+            />
+          </div>
+        )}
+
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-2xl text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="px-5 py-2.5 rounded-2xl text-xs font-bold bg-main-blue text-white shadow-lg shadow-main-blue/20 hover:bg-blue-700 transition-all"
+          >
+            Simpan Peran & Lanjutkan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TeacherTrainingCards({ user }: { user: any }) {
   const { alert } = useAlert();
   const { content } = useSiteContent() as any;
@@ -13203,6 +13322,8 @@ function TeacherTrainingCards({ user }: { user: any }) {
   >("daftar");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null);
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [selectedTrainingForRole, setSelectedTrainingForRole] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -13293,33 +13414,59 @@ function TeacherTrainingCards({ user }: { user: any }) {
     }
   };
 
-  const handleRegister = async (trainingId: string) => {
-    if (!supabase || !user) return;
+  const triggerRoleModal = (item: any) => {
+    setSelectedTrainingForRole(item);
+    setRoleModalOpen(true);
+  };
+
+  const handleConfirmRole = async (role: string) => {
+    if (!selectedTrainingForRole || !supabase || !user) return;
+    const trainingId = selectedTrainingForRole.id;
     try {
-      const payload: any = {
-        training_id: trainingId,
-        status: "registered",
-        registered_at: new Date().toISOString(),
-      };
+      const regRecord = registrations[trainingId];
+      if (regRecord) {
+        // Update existing registration role
+        const query = supabase
+          .from("training_participants")
+          .update({
+            peran: role,
+            guest_peran: role,
+          })
+          .eq("id", regRecord.id);
 
-      if ((user as any).is_guest) {
-        payload.is_guest = true;
-        payload.guest_account_id = user.id;
-        payload.guest_name = user.nama;
-        payload.guest_institution = user.sekolah;
-        payload.guest_nip = user.nip;
-        payload.guest_position = user.jabatan;
+        const { error } = await query;
+        if (error) throw error;
+        alert(`Peran berhasil diperbarui menjadi ${role}!`, "Sukses", "success");
       } else {
-        payload.user_id = user.id;
+        // New registration with role
+        const payload: any = {
+          training_id: trainingId,
+          status: "registered",
+          peran: role,
+          guest_peran: role,
+          registered_at: new Date().toISOString(),
+        };
+
+        if ((user as any).is_guest) {
+          payload.is_guest = true;
+          payload.guest_account_id = user.id;
+          payload.guest_name = user.nama;
+          payload.guest_institution = user.sekolah;
+          payload.guest_nip = user.nip;
+          payload.guest_position = user.jabatan;
+        } else {
+          payload.user_id = user.id;
+        }
+
+        const { error } = await supabase.from("training_participants").insert(payload);
+        if (error) throw error;
+        alert(`Pendaftaran berhasil sebagai ${role}!`, "Sukses", "success");
       }
-
-      const { error } = await supabase.from("training_participants").insert(payload);
-
-      if (error) throw error;
-      alert("Pendaftaran berhasil!", "Sukses", "success");
       fetchData();
     } catch (err: any) {
-      alert(err.message, "Gagal Daftar", "error");
+      alert(err.message, "Gagal Simpan", "error");
+    } finally {
+      setSelectedTrainingForRole(null);
     }
   };
 
@@ -13436,10 +13583,12 @@ function TeacherTrainingCards({ user }: { user: any }) {
             newCert = data;
           } catch (err) {
             // Fallback: store as JSON inside certificate_url text field with nullable training_id
+            const regRecord = registrations[training.id];
+            const currentPeran = regRecord?.peran || regRecord?.guest_peran || regRecord?.role_in_activity || "Peserta";
             const fallbackPayload: any = {
               training_id: null,
               certificate_number: certNumber,
-              certificate_url: JSON.stringify({ activity_id: training.id, certificate_number: certNumber, url: "Generated Individually" }),
+              certificate_url: JSON.stringify({ activity_id: training.id, certificate_number: certNumber, peran: currentPeran, url: "Generated Individually" }),
             };
             if ((user as any).is_guest) {
               fallbackPayload.guest_account_id = user.id;
@@ -13470,8 +13619,15 @@ function TeacherTrainingCards({ user }: { user: any }) {
       }
     }
 
-    // Generate PDF with the number
-    await generateTeacherPDF(user, training, config, certNumber);
+    const regRecord = registrations[training.id];
+    const userPeran = regRecord?.peran || regRecord?.guest_peran || regRecord?.role_in_activity || "Peserta";
+    const userWithPeran = {
+      ...user,
+      peran: userPeran
+    };
+
+    // Generate PDF with the number & user role
+    await generateTeacherPDF(userWithPeran, training, config, certNumber);
   };
 
   const getStatusColor = (status: string) => {
@@ -13687,9 +13843,20 @@ function TeacherTrainingCards({ user }: { user: any }) {
                       <div className="p-4 bg-gradient-to-r from-gray-50/50 to-white border-t border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div className="flex flex-col gap-2">
                            {isRegistered ? (
-                             <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-2 rounded-xl border border-green-100 self-start">
-                               <CheckCircle className="w-4 h-4 text-green-500" />
-                               <span className="text-[10px] font-black text-green-600 uppercase tracking-wider">Terdaftar</span>
+                             <div className="flex flex-wrap items-center gap-2">
+                               <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-1.5 rounded-xl border border-green-100">
+                                 <CheckCircle className="w-4 h-4 text-green-500" />
+                                 <span className="text-[10px] font-black text-green-600 uppercase tracking-wider">Terdaftar</span>
+                               </div>
+                               <button
+                                 type="button"
+                                 onClick={() => triggerRoleModal(item)}
+                                 className="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-main-blue px-3 py-1.5 rounded-xl border border-blue-100 text-[10px] font-bold transition-all"
+                                 title="Ubah peran Anda"
+                               >
+                                 <UserIcon className="w-3 h-3" />
+                                 <span>Peran: {reg?.peran || reg?.guest_peran || "Peserta"}</span>
+                               </button>
                              </div>
                            ) : (
                              <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest pl-2">
@@ -13725,7 +13892,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                         <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">
                           {!isRegistered ? (
                             <button
-                              onClick={() => handleRegister(item.id)}
+                              onClick={() => triggerRoleModal(item)}
                               disabled={!canRegister}
                               className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-[10px] font-black transition-all flex justify-center items-center gap-2 shadow-lg shrink-0 ${
                                 !canRegister
@@ -13923,11 +14090,19 @@ function TeacherTrainingCards({ user }: { user: any }) {
                             <h4 className="font-black text-soft-black text-lg leading-tight mb-1">
                               {training?.title}
                             </h4>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
                                <div className={`w-2 h-2 rounded-full animate-pulse ${isDownloaded ? 'bg-green-500' : 'bg-amber-500'}`} />
                                <span className={`text-[11px] font-bold ${isDownloaded ? 'text-green-600' : 'text-amber-600'}`}>
                                  {isDownloaded ? "Sertifikat Terverifikasi" : "Siap Diunduh"}
                                </span>
+                               <span className="text-gray-300">•</span>
+                               <button
+                                 type="button"
+                                 onClick={() => triggerRoleModal(training)}
+                                 className="text-[10px] font-bold text-main-blue hover:underline bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-100"
+                               >
+                                 Peran: {reg?.peran || reg?.guest_peran || "Peserta"} (Ubah)
+                               </button>
                             </div>
                           </div>
                         </div>
@@ -13962,6 +14137,14 @@ function TeacherTrainingCards({ user }: { user: any }) {
         isOpen={isScannerOpen} 
         onClose={() => setIsScannerOpen(false)} 
         onSuccess={handleScanSuccess}
+      />
+
+      <RoleSelectionModal
+        isOpen={roleModalOpen}
+        onClose={() => setRoleModalOpen(false)}
+        onConfirm={handleConfirmRole}
+        defaultRole={selectedTrainingForRole ? (registrations[selectedTrainingForRole.id]?.peran || registrations[selectedTrainingForRole.id]?.guest_peran || "Peserta") : "Peserta"}
+        title={selectedTrainingForRole ? `Peran Dalam ${selectedTrainingForRole.title}` : "Pilih Peran Dalam Kegiatan"}
       />
     </div>
   );
