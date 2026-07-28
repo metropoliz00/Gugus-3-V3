@@ -6700,11 +6700,11 @@ function AdminKKGForm({
                 (doc: { title: string; url: string }, i: number) => (
                   <div
                     key={i}
-                    className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
+                    className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 min-w-0 overflow-hidden"
                   >
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-2 min-w-0">
                       <input
-                        className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-main-blue outline-none bg-white"
+                        className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-main-blue outline-none bg-white font-medium"
                         value={doc.title}
                         onChange={(e) => {
                           const newDokumen = [...(form.dokumen || [])];
@@ -6735,7 +6735,7 @@ function AdminKKGForm({
                         newDokumen.splice(i, 1);
                         setKkgForm({ ...form, dokumen: newDokumen });
                       }}
-                      className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                      className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-colors shrink-0 self-start"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -7721,7 +7721,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                         }}
                       />
                     </div>
-                    <div className="relative">
+                    <div className="relative z-50">
                       {isSavingOrg === item.id && (
                         <div className="absolute top-0 right-0">
                           <div className="w-4 h-4 border-2 border-main-blue border-t-transparent animate-spin rounded-full"></div>
@@ -7899,11 +7899,11 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                 (doc: { title: string; url: string }, i: number) => (
                   <div
                     key={i}
-                    className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
+                    className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 min-w-0 overflow-hidden"
                   >
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-2 min-w-0">
                       <input
-                        className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-orange-500 outline-none bg-white"
+                        className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-orange-500 outline-none bg-white font-medium"
                         value={doc.title}
                         onChange={(e) => {
                           const newDokumen = [...(form.dokumen || [])];
@@ -7934,7 +7934,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                         newDokumen.splice(i, 1);
                         setGugusForm({ ...form, dokumen: newDokumen });
                       }}
-                      className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                      className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-colors shrink-0 self-start"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -12774,7 +12774,20 @@ function TeacherJadwalCards({ user }: { user?: any }) {
     fetchAgendas();
   }, []);
 
+  const isCertDownloadAllowed = (itemId: string) => {
+    if (!isDownloadEnabled) return false;
+    if (certConfig) {
+      if (certConfig[itemId] && certConfig[itemId].downloadEnabled === false) return false;
+      if (!certConfig[itemId] && certConfig["default"] && certConfig["default"].downloadEnabled === false) return false;
+    }
+    return true;
+  };
+
   const handleDownload = async (item: any) => {
+    if (!isCertDownloadAllowed(item.id)) {
+      alert("Tombol unduh sertifikat saat ini dinonaktifkan oleh administrator.", "Info", "info");
+      return;
+    }
     const config = certConfig ? (certConfig[item.id] || certConfig["default"]) : null;
     if (!config) {
       alert("Template sertifikat belum diatur oleh admin.", "Info", "info");
@@ -13135,7 +13148,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                               <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-600 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-green-100 w-full md:w-auto justify-center">
                                 <CheckCircle className="w-4 h-4" /> Hadir
                               </div>
-                              {(certConfig && certConfig[item.id] ? certConfig[item.id].downloadEnabled !== false : isDownloadEnabled) ? (
+                              {isCertDownloadAllowed(item.id) ? (
                                 <button
                                   onClick={() => handleDownload(item)}
                                   className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-white rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto justify-center"
@@ -13349,7 +13362,20 @@ function TeacherTrainingCards({ user }: { user: any }) {
     }
   };
 
+  const isCertDownloadAllowed = (itemId: string) => {
+    if (!isDownloadEnabled) return false;
+    if (certConfig) {
+      if (certConfig[itemId] && certConfig[itemId].downloadEnabled === false) return false;
+      if (!certConfig[itemId] && certConfig["default"] && certConfig["default"].downloadEnabled === false) return false;
+    }
+    return true;
+  };
+
   const handleDownload = async (training: any) => {
+    if (!isCertDownloadAllowed(training.id)) {
+      alert("Tombol unduh sertifikat saat ini dinonaktifkan oleh administrator.", "Info", "info");
+      return;
+    }
     const config = certConfig ? (certConfig[training.id] || certConfig["default"]) : null;
     if (!config) {
       alert("Template sertifikat belum diatur oleh admin.", "Info", "info");
@@ -13732,7 +13758,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                               <div className="w-full sm:w-auto px-5 py-2.5 bg-white text-emerald-600 rounded-xl text-[10px] font-black border border-emerald-100 shadow-sm flex justify-center items-center gap-2 shrink-0">
                                  <CheckCircle className="w-4 h-4 text-emerald-500" /> <span className="truncate">Selesai</span>
                               </div>
-                              {(certConfig && certConfig[item.id] ? certConfig[item.id].downloadEnabled !== false : isDownloadEnabled) ? (
+                              {isCertDownloadAllowed(item.id) ? (
                                 <button
                                   onClick={() => handleDownload(item)}
                                   className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-black hover:bg-amber-600 shadow-lg shadow-amber-500/25 transition-all flex justify-center items-center gap-2 shrink-0 hover:scale-[1.03] active:scale-95 text-center"
@@ -13911,7 +13937,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                           </div>
                         </div>
 
-                        {(certConfig && certConfig[training.id] ? certConfig[training.id].downloadEnabled !== false : isDownloadEnabled) ? (
+                        {isCertDownloadAllowed(training.id) ? (
                           <button
                             onClick={() => handleDownload(training)}
                             className={`px-8 py-4 text-white rounded-2xl transition-all shadow-2xl relative z-10 flex items-center gap-3 font-black text-xs active:scale-90 ${

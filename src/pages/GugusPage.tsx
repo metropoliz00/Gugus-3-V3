@@ -320,13 +320,13 @@ export default function GugusPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {(data?.dokumen || []).map((doc: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-main-blue hover:shadow-md transition-all">
-                      <div className="flex items-center gap-4">
+                    <div key={i} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-main-blue hover:shadow-md transition-all min-w-0 overflow-hidden gap-3">
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
                         <div className="w-12 h-12 rounded-xl bg-blue-50 text-main-blue flex items-center justify-center shrink-0 font-bold">
                           <FileText className="w-6 h-6" />
                         </div>
-                        <div>
-                          <h4 className="font-bold text-soft-black text-base line-clamp-1">{doc.title || 'Dokumen Tanpa Judul'}</h4>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-soft-black text-base break-words break-all leading-snug">{doc.title || 'Dokumen Tanpa Judul'}</h4>
                           <p className="text-xs text-gray-400 mt-0.5">Berkas Resmi Gugus 03</p>
                         </div>
                       </div>

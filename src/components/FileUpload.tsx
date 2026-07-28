@@ -205,16 +205,16 @@ export default function FileUpload({
     return (
       <div className={`space-y-1 ${className}`}>
         {value ? (
-          <div className="flex items-center gap-1.5 p-1.5 bg-blue-50/80 border border-blue-200 rounded-lg text-xs">
+          <div className="flex items-center gap-1.5 p-1.5 bg-blue-50/80 border border-blue-200 rounded-lg text-xs min-w-0">
             <FileText className="w-4 h-4 text-main-blue shrink-0" />
-            <span className="truncate flex-1 font-medium text-gray-700">
+            <span className="break-words break-all leading-snug flex-1 font-medium text-gray-700 min-w-0">
               {fileName || (value.startsWith('data:') ? 'Dokumen Terlampir' : 'Link Dokumen')}
             </span>
             <button
               type="button"
               onClick={handleOpenLink}
               title="Buka / Preview Link Blob"
-              className="p-1 hover:bg-blue-100 rounded text-main-blue transition-colors"
+              className="p-1 hover:bg-blue-100 rounded text-main-blue transition-colors shrink-0"
             >
               <ExternalLink className="w-3.5 h-3.5" />
             </button>
@@ -222,7 +222,7 @@ export default function FileUpload({
               type="button"
               onClick={handleClear}
               title="Hapus file"
-              className="p-1 hover:bg-red-100 rounded text-red-500 transition-colors"
+              className="p-1 hover:bg-red-100 rounded text-red-500 transition-colors shrink-0"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
@@ -285,18 +285,18 @@ export default function FileUpload({
       )}
 
       {value ? (
-        <div className="p-3.5 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 border border-blue-200/80 rounded-xl space-y-3">
-          <div className="flex items-center gap-3">
+        <div className="p-3.5 bg-gradient-to-r from-blue-50/80 to-indigo-50/50 border border-blue-200/80 rounded-xl space-y-3 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-main-blue text-white flex items-center justify-center shrink-0 shadow-sm">
               <FileIcon className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-800 truncate">
+              <p className="text-sm font-bold text-gray-800 break-words break-all leading-snug">
                 {fileName || (value.startsWith('data:') ? 'Dokumen Terupload' : 'Link File / Tautan Dokumen')}
               </p>
-              <p className="text-xs text-gray-500 truncate flex items-center gap-1.5">
+              <p className="text-xs text-gray-500 flex items-center gap-1.5 flex-wrap mt-0.5 min-w-0">
                 {fileSize && <span>{fileSize} •</span>}
-                <span className="font-mono text-[10px] text-blue-600">
+                <span className="font-mono text-[10px] text-blue-600 break-words break-all">
                   {value.startsWith('data:') ? 'Format Data/Blob Terkonversi' : 'Tautan Web External'}
                 </span>
               </p>

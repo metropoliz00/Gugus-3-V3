@@ -116,7 +116,16 @@ export default function App() {
         }
       };
 
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        if (error) {
+          console.error('Session error:', error.message);
+          supabase.auth.signOut().catch(() => {});
+          localStorage.removeItem("guest_session");
+          setUser(null);
+          setIsInitialAuthLoading(false);
+          return;
+        }
+        
         if (session?.user) {
           fetchUserProfile(session.user.id);
         } else {
