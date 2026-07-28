@@ -81,13 +81,21 @@ export function useCertificateGenerator() {
     certNumber?: string,
   ) => {
     try {
+      if (!config) {
+        alert("Konfigurasi/Template sertifikat belum diatur.", "Info", "info");
+        return;
+      }
+
       const pdfDoc = await PDFDocument.create();
       const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
+      const fieldsList = Array.isArray(config?.fields) ? config.fields : [];
+
       const replacePlaceholders = (text: string) => {
+        if (!text) return "";
         let result = text;
-        const placeholders = config.placeholders || [
+        const placeholders = config?.placeholders || [
           { label: "Nama Lengkap", placeholder: "[nama]", dbField: "nama" },
           { label: "NIP", placeholder: "[nip]", dbField: "nip" },
           {
@@ -113,6 +121,7 @@ export function useCertificateGenerator() {
         ];
 
         placeholders.forEach((p) => {
+          if (!p || !p.placeholder) return;
           const regex = new RegExp(
             p.placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
             "g",
@@ -121,7 +130,7 @@ export function useCertificateGenerator() {
           if (p.dbField === "certificate_number") {
             result = result.replace(regex, certNumber || "-");
           } else if (p.dbField === "date_start") {
-            const val = training.date_start
+            const val = training?.date_start
               ? new Date(training.date_start).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta", 
                   day: "numeric",
                   month: "long",
@@ -131,7 +140,9 @@ export function useCertificateGenerator() {
             result = result.replace(regex, val);
           } else {
             // Check teacher first then training
-            const val = teacher[p.dbField] || training[p.dbField] || "-";
+            const val = (teacher && teacher[p.dbField] != null) 
+              ? teacher[p.dbField] 
+              : ((training && training[p.dbField] != null) ? training[p.dbField] : "-");
             result = result.replace(regex, val.toString());
           }
         });
@@ -195,74 +206,73 @@ export function useCertificateGenerator() {
       };
 
       // --- PAGE 1 ---
+      const page1Fields = fieldsList.filter((f) => (f.page || 1) === 1);
       const page1 = pdfDoc.addPage([
-        config.canvasWidth || 1000,
-        config.canvasHeight || 700,
+        config?.canvasWidth || 1000,
+        config?.canvasHeight || 700,
       ]);
-      if (config.templateUrl) {
+      if (config?.templateUrl) {
         const image = await embedImage(config.templateUrl);
         if (image) {
           page1.drawImage(image, {
             x: 0,
             y: 0,
-            width: config.canvasWidth || 1000,
-            height: config.canvasHeight || 700,
+            width: config?.canvasWidth || 1000,
+            height: config?.canvasHeight || 700,
           });
         }
       }
 
-      config.fields
-        .filter((f) => (f.page || 1) === 1)
-        .forEach((field) => {
-          const hex = field.color || "#000000";
-          const r = parseInt(hex.slice(1, 3), 16) / 255;
-          const g = parseInt(hex.slice(3, 5), 16) / 255;
-          const b = parseInt(hex.slice(5, 7), 16) / 255;
+      page1Fields.forEach((field) => {
+        const hex = field.color || "#000000";
+        const r = parseInt(hex.slice(1, 3), 16) / 255;
+        const g = parseInt(hex.slice(3, 5), 16) / 255;
+        const b = parseInt(hex.slice(5, 7), 16) / 255;
 
-          const fontToUse =
-            field.fontWeight === "bold" ? fontBold : fontRegular;
-          const textToDraw = replacePlaceholders(field.text);
-          const textWidth = fontToUse.widthOfTextAtSize(
-            textToDraw,
-            field.fontSize,
-          );
+        const fontToUse =
+          field.fontWeight === "bold" ? fontBold : fontRegular;
+        const textToDraw = replacePlaceholders(field.text || "");
+        const textWidth = fontToUse.widthOfTextAtSize(
+          textToDraw,
+          field.fontSize || 12,
+        );
 
-          let finalX = field.x;
-          if (field.align === "center") {
-            finalX = field.x - textWidth / 2;
-          } else if (field.align === "right") {
-            finalX = field.x - textWidth;
-          }
+        let finalX = field.x || 0;
+        if (field.align === "center") {
+          finalX = (field.x || 0) - textWidth / 2;
+        } else if (field.align === "right") {
+          finalX = (field.x || 0) - textWidth;
+        }
 
-          page1.drawText(textToDraw, {
-            x: finalX,
-            y: (config.canvasHeight || 700) - field.y - field.fontSize * 0.8,
-            size: field.fontSize,
-            font: fontToUse,
-            color: rgb(r, g, b),
-          });
+        page1.drawText(textToDraw, {
+          x: finalX,
+          y: (config?.canvasHeight || 700) - (field.y || 0) - (field.fontSize || 12) * 0.8,
+          size: field.fontSize || 12,
+          font: fontToUse,
+          color: rgb(r, g, b),
         });
+      });
 
       // --- PAGE 2 ---
-      const page2 = pdfDoc.addPage([
-        config.canvasWidth || 1000,
-        config.canvasHeight || 700,
-      ]);
-      if (config.templateUrl2) {
-        const image = await embedImage(config.templateUrl2);
-        if (image) {
-          page2.drawImage(image, {
-            x: 0,
-            y: 0,
-            width: config.canvasWidth || 1000,
-            height: config.canvasHeight || 700,
-          });
+      const page2Fields = fieldsList.filter((f) => f.page === 2);
+      if (config?.templateUrl2 || page2Fields.length > 0) {
+        const page2 = pdfDoc.addPage([
+          config?.canvasWidth || 1000,
+          config?.canvasHeight || 700,
+        ]);
+        if (config?.templateUrl2) {
+          const image = await embedImage(config.templateUrl2);
+          if (image) {
+            page2.drawImage(image, {
+              x: 0,
+              y: 0,
+              width: config?.canvasWidth || 1000,
+              height: config?.canvasHeight || 700,
+            });
+          }
         }
-      }
 
-      config.fields
-        .filter((f) => f.page === 2)
-        .forEach((field) => {
+        page2Fields.forEach((field) => {
           const hex = field.color || "#000000";
           const r = parseInt(hex.slice(1, 3), 16) / 255;
           const g = parseInt(hex.slice(3, 5), 16) / 255;
@@ -270,38 +280,39 @@ export function useCertificateGenerator() {
 
           const fontToUse =
             field.fontWeight === "bold" ? fontBold : fontRegular;
-          const textToDraw = replacePlaceholders(field.text);
+          const textToDraw = replacePlaceholders(field.text || "");
           const textWidth = fontToUse.widthOfTextAtSize(
             textToDraw,
-            field.fontSize,
+            field.fontSize || 12,
           );
 
-          let finalX = field.x;
+          let finalX = field.x || 0;
           if (field.align === "center") {
-            finalX = field.x - textWidth / 2;
+            finalX = (field.x || 0) - textWidth / 2;
           } else if (field.align === "right") {
-            finalX = field.x - textWidth;
+            finalX = (field.x || 0) - textWidth;
           }
 
           page2.drawText(textToDraw, {
             x: finalX,
-            y: (config.canvasHeight || 700) - field.y - field.fontSize * 0.8,
-            size: field.fontSize,
+            y: (config?.canvasHeight || 700) - (field.y || 0) - (field.fontSize || 12) * 0.8,
+            size: field.fontSize || 12,
             font: fontToUse,
             color: rgb(r, g, b),
           });
         });
+      }
 
       const pdfBytes = await pdfDoc.save();
       const namaLengkap =
-        teacher.nama || teacher.full_name || teacher.name || "Peserta";
+        teacher?.nama || teacher?.full_name || teacher?.name || "Peserta";
       
       const getExecutionYear = () => {
-        if (training.date_start) {
+        if (training?.date_start) {
           const d = new Date(training.date_start);
           if (!isNaN(d.getTime())) return d.getFullYear().toString();
         }
-        if (training.date) {
+        if (training?.date) {
           const match = training.date.match(/\b(20\d{2})\b/);
           if (match) return match[1];
         }
@@ -309,7 +320,7 @@ export function useCertificateGenerator() {
       };
 
       const executionYear = getExecutionYear();
-      const fileName = `${namaLengkap}_${training.title || "Kegiatan"}_${executionYear}.pdf`;
+      const fileName = `${namaLengkap}_${training?.title || "Kegiatan"}_${executionYear}.pdf`;
 
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
@@ -445,7 +456,8 @@ export async function fetchCertificateConfigsMap(): Promise<Record<string, any>>
         dbRows.forEach((row: any) => {
           let parsed: any = null;
           const isTemplate = row.certificate_number === "TEMPLATE_CONFIG" || 
-            (row.certificate_url && row.certificate_url.startsWith("{") && row.certificate_url.includes("templateUrl"));
+            (row.certificate_config && typeof row.certificate_config === "object") ||
+            (row.certificate_url && row.certificate_url.startsWith("{") && (row.certificate_url.includes("templateUrl") || row.certificate_url.includes("fields")));
             
           if (isTemplate) {
             if (row.certificate_config && typeof row.certificate_config === "object") {
@@ -455,7 +467,10 @@ export async function fetchCertificateConfigsMap(): Promise<Record<string, any>>
                 parsed = JSON.parse(row.certificate_url);
               } catch (e) {}
             }
-            if (parsed) {
+            if (parsed && typeof parsed === "object") {
+              if (!Array.isArray(parsed.fields)) {
+                parsed.fields = [];
+              }
               const mappedKey = row.training_id || "default";
               configsMap[mappedKey] = parsed;
             }
@@ -476,14 +491,18 @@ export async function fetchCertificateConfigsMap(): Promise<Record<string, any>>
 
       const siteConfigs = sData?.content?.certificate_configs || {};
       Object.keys(siteConfigs).forEach((k) => {
-        if (!configsMap[k]) {
-          configsMap[k] = siteConfigs[k];
-          migrateCertificateConfigToTable(k, siteConfigs[k]);
+        if (!configsMap[k] && siteConfigs[k]) {
+          const cfg = { ...siteConfigs[k] };
+          if (!Array.isArray(cfg.fields)) cfg.fields = [];
+          configsMap[k] = cfg;
+          migrateCertificateConfigToTable(k, cfg);
         }
       });
       if (sData?.content?.certificate_config && !configsMap["default"]) {
-        configsMap["default"] = sData.content.certificate_config;
-        migrateCertificateConfigToTable("default", sData.content.certificate_config);
+        const defaultConfig = { ...sData.content.certificate_config };
+        if (!Array.isArray(defaultConfig.fields)) defaultConfig.fields = [];
+        configsMap["default"] = defaultConfig;
+        migrateCertificateConfigToTable("default", defaultConfig);
       }
     } catch (e) {}
   }
