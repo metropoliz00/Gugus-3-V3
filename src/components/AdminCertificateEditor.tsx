@@ -688,8 +688,13 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         }
       });
 
-      const existingUserIds = new Set((parts || []).map(p => p.user_id).filter(Boolean));
-      const formatted = (parts || []).map(p => {
+      // Filter strictly for participants who have status "attended" or "hadir" for this specific training
+      const attendedParts = (parts || []).filter(p => {
+        const s = (p.status || "").toLowerCase();
+        return s === "attended" || s === "hadir" || s === "sukses" || s === "hadir_absen";
+      });
+
+      const formatted = attendedParts.map(p => {
         const u = p.user_id ? usersMap[p.user_id] : null;
         let localRole = "";
         try {
@@ -707,31 +712,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         };
       });
 
-      // Include all cluster members (user_profiles / teachers) who attended or are part of the gugus
-      const missingProfiles = allProfiles.filter(u => !existingUserIds.has(u.id));
-      const virtualMissingParts = missingProfiles.map(u => {
-        const virtualId = `virtual_${u.id}`;
-        let localRole = "";
-        try {
-          localRole = localStorage.getItem(`override_peran_${virtualId}`) || "";
-        } catch (e) {}
-        const currentPeran = (localRole || "PESERTA").toString().toUpperCase();
-        return {
-          id: virtualId,
-          training_id: trainingId,
-          user_id: u.id,
-          status: "attended",
-          participant_name: u.nama || u.full_name || u.username || "Anggota Gugus",
-          participant_nip: u.nip || "-",
-          participant_school: u.sekolah || u.school_name || "-",
-          participant_position: u.jabatan || u.position || "-",
-          current_peran: currentPeran,
-          peran: currentPeran,
-          is_virtual: true
-        };
-      });
-
-      setParticipantsList([...formatted, ...virtualMissingParts]);
+      setParticipantsList(formatted);
     } catch (err) {
       console.error("Error loading participants:", err);
     } finally {
