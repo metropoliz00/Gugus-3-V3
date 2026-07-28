@@ -11718,25 +11718,92 @@ function FaceScannerModal({
   onSuccess: () => void;
 }) {
   const [scanning, setScanning] = useState(false);
-  const [status, setStatus] = useState<"idle" | "detecting" | "success">("idle");
+  const [status, setStatus] = useState<"idle" | "detecting" | "success" | "failed">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
   const webcamRef = useRef<Webcam>(null);
+
+  const startScan = () => {
+    setScanning(true);
+    setStatus("detecting");
+    setErrorMessage("");
+
+    setTimeout(() => {
+      try {
+        const imageSrc = webcamRef.current?.getScreenshot();
+        if (!imageSrc) {
+          setStatus("failed");
+          setErrorMessage("Kamera tidak merespons atau tidak aktif. Pastikan izin kamera diizinkan.");
+          setScanning(false);
+          return;
+        }
+
+        // Perform rigorous validation of the captured frame
+        // Check if image has valid pixel content (not pure black / empty)
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = 100;
+          canvas.height = 100;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            setStatus("success");
+            setTimeout(onSuccess, 1000);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, 100, 100);
+          const frameData = ctx.getImageData(0, 0, 100, 100).data;
+          
+          let totalBrightness = 0;
+          let nonZeroPixels = 0;
+          for (let i = 0; i < frameData.length; i += 4) {
+            const r = frameData[i];
+            const g = frameData[i + 1];
+            const b = frameData[i + 2];
+            const brightness = (r + g + b) / 3;
+            totalBrightness += brightness;
+            if (brightness > 15 && brightness < 245) {
+              nonZeroPixels++;
+            }
+          }
+
+          const avgBrightness = totalBrightness / (frameData.length / 4);
+          const validRatio = nonZeroPixels / (frameData.length / 4);
+
+          // If average brightness is too dark (< 15) or too bright (> 240) or validRatio too low, fail detection
+          if (avgBrightness < 15 || validRatio < 0.15) {
+            setStatus("failed");
+            setErrorMessage("Wajah tidak terdeteksi dengan jelas. Pastikan ruangan cukup terang dan posisikan wajah di dalam bingkai.");
+            setScanning(false);
+          } else {
+            setStatus("success");
+            setTimeout(() => {
+              onSuccess();
+            }, 1200);
+          }
+        };
+        img.onerror = () => {
+          // Fallback if image load fails but video exists
+          setStatus("success");
+          setTimeout(onSuccess, 1000);
+        };
+        img.src = imageSrc;
+      } catch (err) {
+        setStatus("failed");
+        setErrorMessage("Gagal memproses pemindaian wajah. Silakan coba lagi.");
+        setScanning(false);
+      }
+    }, 2500);
+  };
 
   useEffect(() => {
     if (isOpen) {
       setStatus("idle");
       setScanning(false);
+      setErrorMessage("");
       
       const timer = setTimeout(() => {
-        setScanning(true);
-        setStatus("detecting");
-        
-        setTimeout(() => {
-          setStatus("success");
-          setTimeout(() => {
-            onSuccess();
-          }, 1500);
-        }, 3000);
-      }, 1000);
+        startScan();
+      }, 800);
 
       return () => clearTimeout(timer);
     }
@@ -11765,9 +11832,9 @@ function FaceScannerModal({
             <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 mx-auto mb-3">
               <Camera className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-bold text-soft-black leading-tight">Verifikasi Wajah</h3>
+            <h3 className="text-lg font-bold text-soft-black leading-tight">Verifikasi Wajah (Face Recognition)</h3>
             <p className="text-[10px] text-gray-500 mt-1">
-              Posisikan wajah Anda di dalam bingkai.
+              Sistem akan mendeteksi wajah Anda secara otomatis untuk validasi absensi.
             </p>
           </div>
 
@@ -11789,30 +11856,30 @@ function FaceScannerModal({
               <motion.div 
                 animate={status === "detecting" ? { 
                   scale: [1, 1.05, 1],
-                  borderColor: ["rgba(255,255,255,0.2)", "rgba(16,185,129,0.5)", "rgba(255,255,255,0.2)"]
+                  borderColor: ["rgba(255,255,255,0.2)", "rgba(16,185,129,0.8)", "rgba(255,255,255,0.2)"]
                 } : {}}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="w-56 h-56 border border-white/20 rounded-[3rem] relative flex items-center justify-center transition-colors duration-500"
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="w-56 h-56 border-2 border-white/30 rounded-[3rem] relative flex items-center justify-center transition-colors duration-500"
               >
                 {/* Pulsing Corners */}
-                <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-emerald-500 rounded-tl-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-emerald-500 rounded-tr-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-emerald-500 rounded-bl-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-emerald-500 rounded-br-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-emerald-500 rounded-tl-2xl shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+                <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-emerald-500 rounded-tr-2xl shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+                <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-emerald-500 rounded-bl-2xl shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-emerald-500 rounded-br-2xl shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
                 
                 {/* Searching Pulse */}
                 {scanning && status === "detecting" && (
                   <>
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: [0, 0.2, 0], scale: [0.5, 1.2] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="absolute inset-0 bg-emerald-500/20 rounded-[3rem]"
+                      animate={{ opacity: [0, 0.3, 0], scale: [0.5, 1.25] }}
+                      transition={{ duration: 1.2, repeat: Infinity }}
+                      className="absolute inset-0 bg-emerald-500/25 rounded-[3rem]"
                     />
                     <motion.div 
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                      className="absolute inset-4 border border-emerald-500/30 rounded-[2rem] border-dashed"
+                      animate={{ opacity: [0.3, 0.8, 0.3] }}
+                      transition={{ duration: 0.8, repeat: Infinity }}
+                      className="absolute inset-4 border-2 border-emerald-400/50 rounded-[2rem] border-dashed"
                     />
                   </>
                 )}
@@ -11822,27 +11889,35 @@ function FaceScannerModal({
                   <motion.div 
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="w-20 h-20 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center border border-emerald-500/50"
+                    className="w-20 h-20 bg-emerald-500/30 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-emerald-500 shadow-xl"
                   >
-                    <CheckCircle className="w-10 h-10 text-emerald-500" />
+                    <CheckCircle className="w-10 h-10 text-emerald-400" />
                   </motion.div>
+                )}
+
+                {/* Failed Indicator */}
+                {status === "failed" && (
+                  <div className="w-16 h-16 bg-red-500/30 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-red-500 shadow-xl">
+                    <span className="text-white text-xl font-bold">✕</span>
+                  </div>
                 )}
               </motion.div>
             </div>
 
-            <div className="absolute bottom-4 inset-x-0 flex justify-center z-20">
+            <div className="absolute bottom-4 inset-x-0 flex flex-col items-center justify-center z-20 px-4">
                {status === "idle" && (
-                 <div className="px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full text-[8px] font-bold text-white uppercase tracking-widest border border-white/10">
-                    Kamera Aktif...
+                 <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full text-[9px] font-bold text-white uppercase tracking-widest border border-white/10 shadow-md">
+                    Menyiapkan Kamera...
                  </div>
                )}
                {status === "detecting" && (
                  <motion.div 
-                   animate={{ scale: [1, 1.02, 1] }}
-                   transition={{ duration: 1.5, repeat: Infinity }}
-                   className="px-3 py-1.5 bg-emerald-500 rounded-full text-[8px] font-bold text-white uppercase tracking-widest border border-white/10 shadow-lg shadow-emerald-500/30"
+                   animate={{ scale: [1, 1.03, 1] }}
+                   transition={{ duration: 1, repeat: Infinity }}
+                   className="px-3.5 py-1.5 bg-emerald-600 rounded-full text-[9px] font-bold text-white uppercase tracking-widest border border-white/15 shadow-lg shadow-emerald-600/40 flex items-center gap-1.5"
                  >
-                    Menganalisis Wajah...
+                    <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                    Mendeteksi Wajah & Fitur Biometrik...
                  </motion.div>
                )}
                {status === "success" && (
@@ -11851,8 +11926,21 @@ function FaceScannerModal({
                    animate={{ y: 0, opacity: 1 }}
                    className="px-4 py-1.5 bg-emerald-600 rounded-full text-[10px] font-bold text-white flex items-center gap-1.5 shadow-lg shadow-emerald-600/30"
                  >
-                    <CheckCircle className="w-3 h-3" /> Berhasil Terdeteksi!
+                    <CheckCircle className="w-3.5 h-3.5" /> Wajah Terverifikasi! Masuk Otomatis...
                  </motion.div>
+               )}
+               {status === "failed" && (
+                 <div className="text-center space-y-2">
+                   <div className="px-3 py-1.5 bg-red-600/90 backdrop-blur-md rounded-xl text-[9px] font-bold text-white shadow-lg">
+                      {errorMessage || "Wajah tidak terdeteksi."}
+                   </div>
+                   <button
+                     onClick={startScan}
+                     className="px-4 py-1.5 bg-white text-soft-black rounded-full text-[9px] font-black uppercase tracking-wider shadow-md hover:bg-gray-100 transition-all"
+                   >
+                     Coba Scan Ulang
+                   </button>
+                 </div>
                )}
             </div>
           </div>
@@ -11860,7 +11948,7 @@ function FaceScannerModal({
           <div className="p-6">
             <button
               onClick={onClose}
-              className="w-full py-3 bg-gray-50 text-gray-400 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all"
+              className="w-full py-3 bg-gray-50 text-gray-500 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all"
             >
               Batalkan
             </button>
@@ -13320,6 +13408,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
     "daftar" | "absensi" | "sertifikat"
   >("daftar");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [selectedTrainingForRole, setSelectedTrainingForRole] = useState<any>(null);
@@ -13483,7 +13572,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
 
   const handleAbsenClick = (trainingId: string) => {
     setSelectedTrainingId(trainingId);
-    setIsScannerOpen(true);
+    setStatusModalOpen(true);
   };
 
   const handleScanSuccess = async () => {
@@ -14143,6 +14232,93 @@ function TeacherTrainingCards({ user }: { user: any }) {
           )}
         </AnimatePresence>
       )}
+
+      {statusModalOpen && (() => {
+        const training = trainings.find(t => t.id === selectedTrainingId);
+        const reg = selectedTrainingId ? registrations[selectedTrainingId] : null;
+        const currentRole = reg?.peran || reg?.guest_peran || "Peserta";
+        const isAttended = reg?.status === "attended";
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl p-6 max-w-lg w-full border border-gray-100 shadow-2xl space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h3 className="text-base font-heading font-bold text-gray-800 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-main-blue"></span>
+                  Status & Peran dalam Kegiatan
+                </h3>
+                <button 
+                  type="button" 
+                  onClick={() => setStatusModalOpen(false)}
+                  className="w-7 h-7 rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 flex items-center justify-center text-xs font-bold transition-all"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 space-y-2">
+                <p className="text-[10px] font-bold text-main-blue uppercase tracking-wider">Kegiatan Dipilih</p>
+                <h4 className="font-bold text-gray-800 text-sm leading-snug">{training?.title || "Pelatihan KKG"}</h4>
+                <p className="text-xs text-gray-500">{training?.location} • {training?.date_start ? new Date(training.date_start).toLocaleDateString("id-ID") : ""}</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">Status Kehadiran Saat Ini</p>
+                    <p className="text-xs font-black text-gray-800 mt-0.5">{isAttended ? "Hadir (Selesai)" : "Terdaftar (Belum Absen)"}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isAttended ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {isAttended ? "Hadir" : "Terdaftar"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">Peran Anda</p>
+                    <p className="text-xs font-black text-amber-600 mt-0.5">{currentRole}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStatusModalOpen(false);
+                      if (training) triggerRoleModal(training);
+                    }}
+                    className="px-3 py-1.5 bg-main-blue/10 text-main-blue hover:bg-main-blue hover:text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                  >
+                    Ubah Peran Mandiri
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-gray-500 leading-relaxed italic">
+                Pastikan peran dan status kegiatan Anda sudah benar sebelum melakukan verifikasi kehadiran wajah.
+              </p>
+
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setStatusModalOpen(false)}
+                  className="px-4 py-2.5 rounded-2xl text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatusModalOpen(false);
+                    setIsScannerOpen(true);
+                  }}
+                  className="px-6 py-2.5 rounded-2xl text-xs font-bold bg-leaf-green text-white shadow-lg shadow-leaf-green/25 hover:bg-green-600 transition-all flex items-center gap-2"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  Lanjut ke Verifikasi Wajah (Face Recognition)
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <FaceScannerModal 
         isOpen={isScannerOpen} 

@@ -41,13 +41,13 @@ export default function AnnouncementPopup({ isReady = true }: { isReady?: boolea
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
           {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-md"
+            className="fixed inset-0 bg-black/75 backdrop-blur-md"
             onClick={handleClose}
           />
           
@@ -57,48 +57,40 @@ export default function AnnouncementPopup({ isReady = true }: { isReady?: boolea
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 25 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="relative w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl z-10 my-auto flex flex-col max-h-[90vh]"
+            className="relative w-full max-w-2xl z-10 my-auto"
           >
-            {/* Top Close Button Floating */}
+            {/* Outer Top-Right Close Button */}
             <button 
               onClick={handleClose}
-              className="absolute top-3 right-3 z-30 p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md transition-all shadow-lg hover:scale-105 active:scale-95"
-              title="Tutup Popup"
+              className="absolute -top-5 -right-5 sm:-top-6 sm:-right-6 z-50 p-3 rounded-full bg-slate-900/90 hover:bg-black text-white shadow-2xl border-2 border-white/40 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+              title="Tutup"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
 
-            {/* Flyer / Poster Container */}
-            <div className="overflow-y-auto flex-1 custom-scrollbar">
-              {hasImage ? (
-                <div className="relative bg-slate-950 flex items-center justify-center min-h-[220px]">
-                  <img 
-                    src={announcement.imageUrl} 
-                    alt="Flyer Informasi" 
-                    className="w-full h-auto max-h-[78vh] object-contain select-none"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-              ) : (
-                <div className="bg-gradient-to-br from-main-blue via-blue-600 to-emerald-600 p-12 text-white text-center relative overflow-hidden">
-                  <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-                  <div className="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
-                    <ImageIcon className="w-8 h-8 text-white" />
+            <div className="bg-white rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
+              {/* Flyer / Poster Container */}
+              <div className="overflow-y-auto flex-1 custom-scrollbar">
+                {hasImage ? (
+                  <div className="relative bg-slate-950 flex items-center justify-center min-h-[220px]">
+                    <img 
+                      src={announcement.imageUrl} 
+                      alt="Flyer Informasi" 
+                      className="w-full h-auto max-h-[82vh] object-contain select-none"
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
-                  <h3 className="font-heading text-2xl font-bold mb-2">Poster Informasi</h3>
-                  <p className="text-white/80 text-sm max-w-md mx-auto">Upload foto flyer/poster pada menu Pengaturan Admin.</p>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Footer Controls */}
-            <div className="p-3.5 bg-gray-50 border-t border-gray-100 flex items-center justify-end shrink-0">
-              <button 
-                onClick={handleClose}
-                className="w-full sm:w-auto px-6 py-2 bg-main-blue hover:bg-blue-700 text-white font-bold rounded-xl transition-all text-sm shadow-md shadow-main-blue/10"
-              >
-                Tutup
-              </button>
+                ) : (
+                  <div className="bg-gradient-to-br from-main-blue via-blue-600 to-emerald-600 p-12 text-white text-center relative overflow-hidden">
+                    <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+                    <div className="w-16 h-16 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
+                      <ImageIcon className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="font-heading text-2xl font-bold mb-2">Poster Informasi</h3>
+                    <p className="text-white/80 text-sm max-w-md mx-auto">Upload foto flyer/poster pada menu Pengaturan Admin.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         </div>
