@@ -12819,7 +12819,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
             "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
           ];
           const randomPart = Math.floor(1000 + Math.random() * 9000);
-          certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
+          certNumber = `${randomPart}/CERT-KKG-GUGUS-03/${romanMonths[month - 1]}/${year}`;
 
           const certPayload: any = {
             training_id: item.id,
@@ -13570,7 +13570,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
             "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
           ];
           const randomPart = Math.floor(1000 + Math.random() * 9000);
-          certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
+          certNumber = `${randomPart}/CERT-KKG-GUGUS-03/${romanMonths[month - 1]}/${year}`;
 
           const certPayload: any = {
             training_id: training.id,

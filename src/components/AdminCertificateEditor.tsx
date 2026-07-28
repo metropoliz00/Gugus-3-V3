@@ -848,7 +848,11 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         guest_peran: currentPeran
       };
 
-      const certNumber = `${Math.floor(1000 + Math.random() * 9000)}/CERT-KKG/${new Date().getFullYear()}`;
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const romanMonths = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"];
+      const certNumber = `${Math.floor(1000 + Math.random() * 9000)}/CERT-KKG-GUGUS-03/${romanMonths[month - 1]}/${year}`;
 
       await generateTeacherPDF(teacherPayload, actObj, config, certNumber);
     } catch (err: any) {
@@ -2055,7 +2059,7 @@ export async function ensureCertificatesExist(userId?: string) {
 
           // Unique combo user_activity is missing, let's create a certificate
           const randomPart = Math.floor(1000 + Math.random() * 9000);
-          const certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
+          const certNumber = `${randomPart}/CERT-KKG-GUGUS-03/${romanMonths[month - 1]}/${year}`;
 
           const participantPeran = (p.peran || p.guest_peran || p.role_in_activity || "PESERTA").toString().toUpperCase();
 
