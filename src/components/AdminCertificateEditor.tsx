@@ -394,82 +394,95 @@ function DraggableField({
 export async function migrateCertificateConfigToTable(key: string, configObj: any) {
   if (!supabase || !configObj) return;
 
-  const activeKey = (key === "default" || !key) ? null : key;
+  const rawKey = (key === "default" || !key) ? null : key;
+  let activeKey: string | null = null;
+
+  if (rawKey) {
+    try {
+      const { data: tr } = await supabase
+        .from("trainings")
+        .select("id")
+        .eq("id", rawKey)
+        .maybeSingle();
+
+      if (tr?.id) {
+        activeKey = tr.id;
+      } else {
+        // Key is not in trainings table (e.g., event ID or custom activity ID).
+        // Skip inserting into training_certificates to prevent foreign key violation.
+        return;
+      }
+    } catch (e) {
+      return;
+    }
+  }
+
   const jsonString = JSON.stringify(configObj);
 
-  // 1. Search for existing template config row for this training_id
-  const query = supabase.from("training_certificates").select("*");
-  if (!activeKey) {
-    query.is("training_id", null);
-  } else {
-    query.eq("training_id", activeKey);
-  }
+  try {
+    // 1. Search for existing template config row for this training_id
+    const query = supabase.from("training_certificates").select("*");
+    if (!activeKey) {
+      query.is("training_id", null);
+    } else {
+      query.eq("training_id", activeKey);
+    }
 
-  const { data: dbRows, error: selectErr } = await query;
-  if (selectErr) {
-    console.warn("Notice checking training_certificates table:", selectErr);
-  }
+    const { data: dbRows, error: selectErr } = await query;
+    if (selectErr) {
+      console.warn("Notice checking training_certificates table:", selectErr);
+    }
 
-  const existingRow = dbRows?.find((row: any) => 
-    row.certificate_number === "TEMPLATE_CONFIG" || 
-    (row.certificate_url && row.certificate_url.startsWith("{") && (row.certificate_url.includes("templateUrl") || row.certificate_url.includes("fields")))
-  );
+    const existingRow = dbRows?.find((row: any) => 
+      row.certificate_number === "TEMPLATE_CONFIG" || 
+      (row.certificate_url && row.certificate_url.startsWith("{") && (row.certificate_url.includes("templateUrl") || row.certificate_url.includes("fields")))
+    );
 
-  const fullPayload: any = {
-    training_id: activeKey,
-    certificate_number: "TEMPLATE_CONFIG",
-    certificate_url: jsonString,
-    certificate_config: configObj,
-    updated_at: new Date().toISOString()
-  };
+    const fullPayload: any = {
+      training_id: activeKey,
+      certificate_number: "TEMPLATE_CONFIG",
+      certificate_url: jsonString,
+      certificate_config: configObj,
+      updated_at: new Date().toISOString()
+    };
 
-  let saveError: any = null;
-
-  if (existingRow?.id) {
-    const { error: updateErr } = await supabase
-      .from("training_certificates")
-      .update(fullPayload)
-      .eq("id", existingRow.id);
-    
-    if (updateErr) {
-      // Fallback without certificate_config column in case schema hasn't added column yet
-      const fallbackPayload = {
-        training_id: activeKey,
-        certificate_number: "TEMPLATE_CONFIG",
-        certificate_url: jsonString,
-        updated_at: new Date().toISOString()
-      };
-      const { error: fbErr } = await supabase
+    if (existingRow?.id) {
+      const { error: updateErr } = await supabase
         .from("training_certificates")
-        .update(fallbackPayload)
+        .update(fullPayload)
         .eq("id", existingRow.id);
       
-      if (fbErr) saveError = fbErr;
-    }
-  } else {
-    const { error: insertErr } = await supabase
-      .from("training_certificates")
-      .insert([fullPayload]);
-    
-    if (insertErr) {
-      // Fallback without certificate_config column
-      const fallbackPayload = {
-        training_id: activeKey,
-        certificate_number: "TEMPLATE_CONFIG",
-        certificate_url: jsonString,
-        updated_at: new Date().toISOString()
-      };
-      const { error: fbErr } = await supabase
+      if (updateErr) {
+        const fallbackPayload = {
+          training_id: activeKey,
+          certificate_number: "TEMPLATE_CONFIG",
+          certificate_url: jsonString,
+          updated_at: new Date().toISOString()
+        };
+        await supabase
+          .from("training_certificates")
+          .update(fallbackPayload)
+          .eq("id", existingRow.id);
+      }
+    } else {
+      const { error: insertErr } = await supabase
         .from("training_certificates")
-        .insert([fallbackPayload]);
+        .insert([fullPayload]);
       
-      if (fbErr) saveError = fbErr;
+      if (insertErr) {
+        const fallbackPayload = {
+          training_id: activeKey,
+          certificate_number: "TEMPLATE_CONFIG",
+          certificate_url: jsonString,
+          updated_at: new Date().toISOString()
+        };
+        await supabase
+          .from("training_certificates")
+          .insert([fallbackPayload]);
+      }
     }
-  }
-
-  if (saveError) {
-    console.error("Failed saving to training_certificates table:", saveError);
-    throw new Error("Gagal menyimpan ke tabel training_certificates: " + (saveError.message || JSON.stringify(saveError)));
+  } catch (err) {
+    console.warn("Notice updating training_certificates template config:", err);
   }
 }
 
@@ -725,25 +738,37 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         downloadEnabled: downloadEnabled,
       };
 
-      // 1. Save certificate config directly to dedicated training_certificates SQL table
-      await migrateCertificateConfigToTable(activeKey, configPayload);
-
-      // 2. Clean up heavy certificate_configs from site_settings content to keep site_settings light
+      // 1. Save certificate config to site_settings content as guaranteed persistent store
       const { data: siteData } = await supabase
         .from("site_settings")
         .select("content")
         .eq("id", 1)
         .maybeSingle();
 
-      if (siteData?.content && (siteData.content.certificate_configs || siteData.content.certificate_config)) {
-        const cleanContent = { ...siteData.content };
-        delete cleanContent.certificate_configs;
-        delete cleanContent.certificate_config;
-        await supabase.from("site_settings").upsert({
-          id: 1,
-          content: cleanContent,
-          updated_at: new Date().toISOString(),
-        });
+      const newContent = { ...(siteData?.content || {}) };
+      if (!newContent.certificate_configs) {
+        newContent.certificate_configs = {};
+      }
+      newContent.certificate_configs[activeKey] = configPayload;
+      if (activeKey === "default") {
+        newContent.certificate_config = configPayload;
+      }
+
+      const { error: siteErr } = await supabase.from("site_settings").upsert({
+        id: 1,
+        content: newContent,
+        updated_at: new Date().toISOString(),
+      });
+
+      if (siteErr) {
+        throw new Error("Gagal menyimpan ke site_settings: " + (siteErr.message || JSON.stringify(siteErr)));
+      }
+
+      // 2. Sync to training_certificates SQL table if key is a valid training
+      try {
+        await migrateCertificateConfigToTable(activeKey, configPayload);
+      } catch (migErr) {
+        console.warn("Notice syncing to training_certificates table:", migErr);
       }
 
       // Auto generate certificates for participants who have 'attended' this activity
@@ -764,7 +789,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
       );
     } catch (err: any) {
       console.error(err);
-      alert(err.message, "Gagal menyimpan", "error");
+      alert(err.message || "Gagal menyimpan konfigurasi sertifikat", "Gagal menyimpan", "error");
     } finally {
       setSaving(false);
     }
@@ -1588,10 +1613,12 @@ export async function ensureCertificatesExist(userId?: string) {
             const { error } = await supabase.from("training_certificates").insert(certPayload);
             if (error) throw error;
           } catch (insertErr) {
-            // Fallback: store certificate_number inside certificate_url JSON text field
+            // Fallback: store activity_id and certificate_number inside certificate_url JSON text field with nullable training_id
             const fallbackPayload: any = {
-              training_id: actId,
-              certificate_url: JSON.stringify({ certificate_number: certNumber, url: "Generated Individually" }),
+              training_id: null,
+              certificate_number: certNumber,
+              certificate_url: JSON.stringify({ activity_id: actId, certificate_number: certNumber, url: "Generated Individually" }),
+              created_at: new Date().toISOString()
             };
             if (p.is_guest) {
               fallbackPayload.guest_account_id = p.guest_account_id;

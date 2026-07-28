@@ -12844,10 +12844,11 @@ function TeacherJadwalCards({ user }: { user?: any }) {
             if (error) throw error;
             newCert = data;
           } catch (err) {
-            // Fallback: store as JSON in certificate_url
+            // Fallback: store as JSON in certificate_url with nullable training_id
             const fallbackPayload: any = {
-              training_id: item.id,
-              certificate_url: JSON.stringify({ certificate_number: certNumber, url: "Generated Individually" }),
+              training_id: null,
+              certificate_number: certNumber,
+              certificate_url: JSON.stringify({ activity_id: item.id, certificate_number: certNumber, url: "Generated Individually" }),
             };
             if (user?.is_guest) {
               fallbackPayload.guest_account_id = user.id;
@@ -13434,10 +13435,11 @@ function TeacherTrainingCards({ user }: { user: any }) {
             if (error) throw error;
             newCert = data;
           } catch (err) {
-            // Fallback: store as JSON inside certificate_url text field
+            // Fallback: store as JSON inside certificate_url text field with nullable training_id
             const fallbackPayload: any = {
-              training_id: training.id,
-              certificate_url: JSON.stringify({ certificate_number: certNumber, url: "Generated Individually" }),
+              training_id: null,
+              certificate_number: certNumber,
+              certificate_url: JSON.stringify({ activity_id: training.id, certificate_number: certNumber, url: "Generated Individually" }),
             };
             if ((user as any).is_guest) {
               fallbackPayload.guest_account_id = user.id;
