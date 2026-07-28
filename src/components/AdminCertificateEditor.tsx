@@ -393,52 +393,83 @@ function DraggableField({
 
 export async function migrateCertificateConfigToTable(key: string, configObj: any) {
   if (!supabase || !configObj) return;
-  try {
-    // Fetch certificates safely to search for existing configs without hitting column filter errors
-    const query = supabase.from("training_certificates").select("*");
-    if (key === "default" || !key) {
-      query.is("training_id", null);
-    } else {
-      query.eq("training_id", key);
-    }
-    const { data: dbRows } = await query;
 
-    const existingRow = dbRows?.find((row: any) => 
-      row.certificate_number === "TEMPLATE_CONFIG" || 
-      (row.certificate_url && row.certificate_url.startsWith("{") && row.certificate_url.includes("templateUrl"))
-    );
+  const activeKey = (key === "default" || !key) ? null : key;
+  const jsonString = JSON.stringify(configObj);
 
-    const payload: any = {
-      training_id: (key === "default" || !key) ? null : key,
-      certificate_url: JSON.stringify(configObj),
-    };
+  // 1. Search for existing template config row for this training_id
+  const query = supabase.from("training_certificates").select("*");
+  if (!activeKey) {
+    query.is("training_id", null);
+  } else {
+    query.eq("training_id", activeKey);
+  }
 
-    let success = false;
-    try {
-      const fullPayload = {
-        ...payload,
+  const { data: dbRows, error: selectErr } = await query;
+  if (selectErr) {
+    console.warn("Notice checking training_certificates table:", selectErr);
+  }
+
+  const existingRow = dbRows?.find((row: any) => 
+    row.certificate_number === "TEMPLATE_CONFIG" || 
+    (row.certificate_url && row.certificate_url.startsWith("{") && (row.certificate_url.includes("templateUrl") || row.certificate_url.includes("fields")))
+  );
+
+  const fullPayload: any = {
+    training_id: activeKey,
+    certificate_number: "TEMPLATE_CONFIG",
+    certificate_url: jsonString,
+    certificate_config: configObj,
+    updated_at: new Date().toISOString()
+  };
+
+  let saveError: any = null;
+
+  if (existingRow?.id) {
+    const { error: updateErr } = await supabase
+      .from("training_certificates")
+      .update(fullPayload)
+      .eq("id", existingRow.id);
+    
+    if (updateErr) {
+      // Fallback without certificate_config column in case schema hasn't added column yet
+      const fallbackPayload = {
+        training_id: activeKey,
         certificate_number: "TEMPLATE_CONFIG",
-        certificate_config: configObj,
+        certificate_url: jsonString,
         updated_at: new Date().toISOString()
       };
-      if (existingRow?.id) {
-        const { error } = await supabase.from("training_certificates").update(fullPayload).eq("id", existingRow.id);
-        if (!error) success = true;
-      } else {
-        const { error } = await supabase.from("training_certificates").insert([fullPayload]);
-        if (!error) success = true;
-      }
-    } catch (e) {}
-
-    if (!success) {
-      if (existingRow?.id) {
-        await supabase.from("training_certificates").update(payload).eq("id", existingRow.id);
-      } else {
-        await supabase.from("training_certificates").insert([payload]);
-      }
+      const { error: fbErr } = await supabase
+        .from("training_certificates")
+        .update(fallbackPayload)
+        .eq("id", existingRow.id);
+      
+      if (fbErr) saveError = fbErr;
     }
-  } catch (e) {
-    console.warn("Migration to training_certificates skipped:", e);
+  } else {
+    const { error: insertErr } = await supabase
+      .from("training_certificates")
+      .insert([fullPayload]);
+    
+    if (insertErr) {
+      // Fallback without certificate_config column
+      const fallbackPayload = {
+        training_id: activeKey,
+        certificate_number: "TEMPLATE_CONFIG",
+        certificate_url: jsonString,
+        updated_at: new Date().toISOString()
+      };
+      const { error: fbErr } = await supabase
+        .from("training_certificates")
+        .insert([fallbackPayload]);
+      
+      if (fbErr) saveError = fbErr;
+    }
+  }
+
+  if (saveError) {
+    console.error("Failed saving to training_certificates table:", saveError);
+    throw new Error("Gagal menyimpan ke tabel training_certificates: " + (saveError.message || JSON.stringify(saveError)));
   }
 }
 
@@ -683,13 +714,6 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
     }
     setSaving(true);
     try {
-      // Get current content first or default to empty object
-      const { data: current } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .maybeSingle();
-
       const activeKey = trainingId || "default";
       const configPayload = {
         templateUrl,
@@ -701,12 +725,18 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         downloadEnabled: downloadEnabled,
       };
 
-      // 1. Save certificate config directly to training_certificates table (1 JSON design per row)
+      // 1. Save certificate config directly to dedicated training_certificates SQL table
       await migrateCertificateConfigToTable(activeKey, configPayload);
 
       // 2. Clean up heavy certificate_configs from site_settings content to keep site_settings light
-      if (current?.content && (current.content.certificate_configs || current.content.certificate_config)) {
-        const cleanContent = { ...current.content };
+      const { data: siteData } = await supabase
+        .from("site_settings")
+        .select("content")
+        .eq("id", 1)
+        .maybeSingle();
+
+      if (siteData?.content && (siteData.content.certificate_configs || siteData.content.certificate_config)) {
+        const cleanContent = { ...siteData.content };
         delete cleanContent.certificate_configs;
         delete cleanContent.certificate_config;
         await supabase.from("site_settings").upsert({

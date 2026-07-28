@@ -260,7 +260,7 @@ const sanitizeSiteContent = (raw: any): any => {
   if (!raw || typeof raw !== 'object') return raw;
   const copy = JSON.parse(JSON.stringify(raw));
 
-  // 1. Strip heavy certificate configs from site_settings so each config is stored separately in SQL table
+  // 1. Strip heavy certificate configs from site_settings so each config is stored separately in training_certificates SQL table
   delete copy.certificate_configs;
   delete copy.certificate_config;
 
