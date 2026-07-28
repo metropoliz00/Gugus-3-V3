@@ -10561,12 +10561,7 @@ function AdminCertificateManager({ user }: { user: any }) {
             </p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex items-center gap-2 bg-amber-50 px-4 py-2.5 rounded-xl text-amber-800 text-xs font-bold border border-amber-200 shadow-sm">
-            <CheckCircle className="w-4 h-4 text-amber-600" />
-            <span>Pengaturan Unduh: Mengikuti Status Per-Sertifikat</span>
-          </div>
-        </div>
+
       </div>
 
       <div className="space-y-4">

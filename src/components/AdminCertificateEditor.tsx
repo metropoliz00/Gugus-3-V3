@@ -1377,33 +1377,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
             </button>
           </div>
 
-          {/* Banner/Notice SQL Database Schema */}
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-amber-900 space-y-3">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-center gap-2 font-bold text-xs uppercase tracking-wider text-amber-800">
-                <Database className="w-4 h-4 text-amber-600" />
-                Perintah SQL Supabase (Penting)
-              </div>
-              <button
-                onClick={() => {
-                  const sqlText = "ALTER TABLE training_participants ADD COLUMN IF NOT EXISTS peran TEXT DEFAULT 'PESERTA';";
-                  navigator.clipboard.writeText(sqlText);
-                  setCopiedSql(true);
-                  setTimeout(() => setCopiedSql(false), 3000);
-                }}
-                className="px-3 py-1.5 bg-amber-600 text-white hover:bg-amber-700 rounded-xl text-[11px] font-bold transition-all shadow-sm flex items-center gap-1.5 shrink-0"
-              >
-                {copiedSql ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Database className="w-3.5 h-3.5" />}
-                {copiedSql ? "Tersalin!" : "Salin Perintah SQL"}
-              </button>
-            </div>
-            <p className="text-xs leading-relaxed text-amber-800">
-              Aplikasi tetap dapat memperbarui peran &amp; mengunduh sertifikat versi terbaru secara langsung. Namun agar perubahan tersimpan permanen di database Supabase Anda, silakan buka <span className="font-bold">Supabase Dashboard &gt; SQL Editor</span> dan jalankan script ini:
-            </p>
-            <div className="bg-amber-950 text-amber-200 font-mono text-[11px] p-3 rounded-xl overflow-x-auto select-all">
-              ALTER TABLE training_participants ADD COLUMN IF NOT EXISTS peran TEXT DEFAULT 'PESERTA';
-            </div>
-          </div>
+
 
           {/* Filter / Search Bar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
