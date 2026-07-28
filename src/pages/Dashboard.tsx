@@ -13428,16 +13428,24 @@ function TeacherTrainingCards({ user }: { user: any }) {
       const regRecord = registrations[trainingId];
       if (regRecord) {
         // Update existing registration role
-        const query = supabase
+        let { error } = await supabase
           .from("training_participants")
           .update({
             peran: upperRole,
-            guest_peran: upperRole,
           })
           .eq("id", regRecord.id);
 
-        const { error } = await query;
-        if (error) throw error;
+        if (error && (error.message?.includes("column") || error.code === "PGRST204")) {
+          const { error: err2 } = await supabase
+            .from("training_participants")
+            .update({
+              role_in_activity: upperRole,
+            })
+            .eq("id", regRecord.id);
+          if (err2) throw err2;
+        } else if (error) {
+          throw error;
+        }
         alert(`Peran berhasil diperbarui menjadi ${upperRole}!`, "Sukses", "success");
       } else {
         // New registration with role
@@ -13445,7 +13453,6 @@ function TeacherTrainingCards({ user }: { user: any }) {
           training_id: trainingId,
           status: "registered",
           peran: upperRole,
-          guest_peran: upperRole,
           registered_at: new Date().toISOString(),
         };
 

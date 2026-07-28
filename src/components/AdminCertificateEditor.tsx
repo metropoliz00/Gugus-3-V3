@@ -703,15 +703,24 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
       const rawRole = newParticipantRole === "LAINNYA" ? (customParticipantRole.trim() || "PESERTA") : newParticipantRole;
       const finalRole = rawRole.toUpperCase();
 
-      const { error: partErr } = await supabase
+      let { error: partErr } = await supabase
         .from("training_participants")
         .update({
           peran: finalRole,
-          guest_peran: finalRole,
         })
         .eq("id", editingParticipant.id);
 
-      if (partErr) throw partErr;
+      if (partErr && (partErr.message?.includes("column") || partErr.code === "PGRST204")) {
+        const { error: err2 } = await supabase
+          .from("training_participants")
+          .update({
+            role_in_activity: finalRole,
+          })
+          .eq("id", editingParticipant.id);
+        if (err2) throw err2;
+      } else if (partErr) {
+        throw partErr;
+      }
 
       // Update training_certificates stored json if exists
       const pId = editingParticipant.user_id || editingParticipant.guest_account_id;
