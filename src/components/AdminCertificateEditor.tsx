@@ -144,14 +144,18 @@ export function useCertificateGenerator() {
               : "-";
             result = result.replace(regex, val);
           } else if (p.dbField === "peran" || p.dbField === "role" || p.placeholder === "[peran]") {
-            const val = teacher?.peran || teacher?.role_in_activity || teacher?.guest_peran || training?.peran || "Peserta";
-            result = result.replace(regex, val.toString());
+            const val = teacher?.peran || teacher?.role_in_activity || teacher?.guest_peran || training?.peran || "PESERTA";
+            result = result.replace(regex, val.toString().toUpperCase());
           } else {
             // Check teacher first then training
             const val = (teacher && teacher[p.dbField] != null) 
               ? teacher[p.dbField] 
               : ((training && training[p.dbField] != null) ? training[p.dbField] : "-");
-            result = result.replace(regex, val.toString());
+            let textToInsert = val.toString();
+            if (p.dbField === "peran" || p.placeholder === "[peran]") {
+              textToInsert = textToInsert.toUpperCase();
+            }
+            result = result.replace(regex, textToInsert);
           }
         });
         return result;
@@ -1606,7 +1610,7 @@ export async function ensureCertificatesExist(userId?: string) {
           const randomPart = Math.floor(1000 + Math.random() * 9000);
           const certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
 
-          const participantPeran = p.peran || p.guest_peran || p.role_in_activity || "Peserta";
+          const participantPeran = (p.peran || p.guest_peran || p.role_in_activity || "PESERTA").toString().toUpperCase();
 
           const certPayload: any = {
             training_id: actId,

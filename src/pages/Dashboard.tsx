@@ -13227,7 +13227,8 @@ function RoleSelectionModal({
   if (!isOpen) return null;
 
   const handleSave = () => {
-    const finalRole = selectedRole === "Lainnya" ? (customRole.trim() || "Peserta") : selectedRole;
+    const rawRole = selectedRole === "Lainnya" ? (customRole.trim() || "PESERTA") : selectedRole;
+    const finalRole = rawRole.toUpperCase();
     onConfirm(finalRole);
     onClose();
   };
@@ -13422,6 +13423,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
   const handleConfirmRole = async (role: string) => {
     if (!selectedTrainingForRole || !supabase || !user) return;
     const trainingId = selectedTrainingForRole.id;
+    const upperRole = role.trim().toUpperCase();
     try {
       const regRecord = registrations[trainingId];
       if (regRecord) {
@@ -13429,21 +13431,21 @@ function TeacherTrainingCards({ user }: { user: any }) {
         const query = supabase
           .from("training_participants")
           .update({
-            peran: role,
-            guest_peran: role,
+            peran: upperRole,
+            guest_peran: upperRole,
           })
           .eq("id", regRecord.id);
 
         const { error } = await query;
         if (error) throw error;
-        alert(`Peran berhasil diperbarui menjadi ${role}!`, "Sukses", "success");
+        alert(`Peran berhasil diperbarui menjadi ${upperRole}!`, "Sukses", "success");
       } else {
         // New registration with role
         const payload: any = {
           training_id: trainingId,
           status: "registered",
-          peran: role,
-          guest_peran: role,
+          peran: upperRole,
+          guest_peran: upperRole,
           registered_at: new Date().toISOString(),
         };
 
@@ -13584,7 +13586,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
           } catch (err) {
             // Fallback: store as JSON inside certificate_url text field with nullable training_id
             const regRecord = registrations[training.id];
-            const currentPeran = regRecord?.peran || regRecord?.guest_peran || regRecord?.role_in_activity || "Peserta";
+            const currentPeran = (regRecord?.peran || regRecord?.guest_peran || regRecord?.role_in_activity || "PESERTA").toString().toUpperCase();
             const fallbackPayload: any = {
               training_id: null,
               certificate_number: certNumber,
@@ -13620,7 +13622,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
     }
 
     const regRecord = registrations[training.id];
-    const userPeran = regRecord?.peran || regRecord?.guest_peran || regRecord?.role_in_activity || "Peserta";
+    const userPeran = (regRecord?.peran || regRecord?.guest_peran || regRecord?.role_in_activity || "PESERTA").toString().toUpperCase();
     const userWithPeran = {
       ...user,
       peran: userPeran
