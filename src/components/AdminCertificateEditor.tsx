@@ -175,7 +175,7 @@ export function useCertificateGenerator() {
             img.onload = () => {
               const canvas = document.createElement("canvas");
               
-              const maxWidth = 1400;
+              const maxWidth = 2400;
               let width = img.width;
               let height = img.height;
               if (width > maxWidth) {
@@ -194,8 +194,8 @@ export function useCertificateGenerator() {
               ctx.fillRect(0, 0, width, height);
               ctx.drawImage(img, 0, 0, width, height);
               
-              // Compress to JPEG with 0.70 quality
-              resolve(canvas.toDataURL("image/jpeg", 0.70));
+              // Compress to JPEG with 0.92 quality for crisp original text & graphics
+              resolve(canvas.toDataURL("image/jpeg", 0.92));
             };
             img.onerror = () => reject("Image load error");
             img.src = url;
@@ -1045,7 +1045,7 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
             img.onload = () => {
               const canvas = document.createElement("canvas");
               
-              const maxWidth = 1400;
+              const maxWidth = 2400;
               let width = img.width;
               let height = img.height;
               if (width > maxWidth) {
@@ -1064,8 +1064,8 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
               ctx.fillRect(0, 0, width, height);
               ctx.drawImage(img, 0, 0, width, height);
               
-              // Compress to JPEG with 0.70 quality
-              resolve(canvas.toDataURL("image/jpeg", 0.70));
+              // Compress to JPEG with 0.92 quality for crisp original text & graphics
+              resolve(canvas.toDataURL("image/jpeg", 0.92));
             };
             img.onerror = () => reject("Image load error");
             img.src = url;
@@ -1639,18 +1639,18 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
                 label="Halaman Depan (PNG/JPG)"
                 value={templateUrl}
                 onChange={(val) => setTemplateUrl(val)}
-                maxWidth={1200}
-                maxHeight={1200}
-                quality={0.6}
+                maxWidth={2400}
+                maxHeight={2400}
+                quality={0.92}
               />
 
               <ImageUpload
                 label="Halaman Belakang (PNG/JPG)"
                 value={templateUrl2}
                 onChange={(val) => setTemplateUrl2(val)}
-                maxWidth={1200}
-                maxHeight={1200}
-                quality={0.6}
+                maxWidth={2400}
+                maxHeight={2400}
+                quality={0.92}
               />
             </div>
           </div>
