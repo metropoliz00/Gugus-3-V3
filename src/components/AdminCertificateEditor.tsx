@@ -338,7 +338,8 @@ export function useCertificateGenerator() {
       };
 
       const executionYear = getExecutionYear();
-      const fileName = `${namaLengkap}_${training?.title || "Kegiatan"}_${executionYear}.pdf`;
+      const peran = teacher?.peran || teacher?.role_in_activity || teacher?.guest_peran || training?.peran || "Peserta";
+      const fileName = `${namaLengkap}_${peran}_${training?.title || "Kegiatan"}.pdf`;
 
       saveAs(
         new Blob([pdfBytes], { type: "application/pdf" }),
