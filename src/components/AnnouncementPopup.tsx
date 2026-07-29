@@ -10,12 +10,14 @@ export default function AnnouncementPopup({ isReady = true }: { isReady?: boolea
   const { announcement } = content || {};
   const location = useLocation();
 
+  const hasImage = Boolean(announcement?.imageUrl && announcement.imageUrl.trim() !== "");
+
   useEffect(() => {
     // Only show on main page or root
     if (location.pathname !== '/' && location.pathname !== '/halaman-utama') return;
     
-    // Do not show if explicitly disabled
-    if (announcement && announcement.active === false) return;
+    // Do not show if explicitly disabled or there is no image
+    if (!announcement || announcement.active === false || !hasImage) return;
       
     const hasBeenShown = sessionStorage.getItem('announcementShown');
     if (!hasBeenShown && isReady) {
@@ -25,18 +27,16 @@ export default function AnnouncementPopup({ isReady = true }: { isReady?: boolea
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isReady, location.pathname, announcement]);
+  }, [isReady, location.pathname, announcement, hasImage]);
 
   const handleClose = () => {
     setIsOpen(false);
     sessionStorage.setItem('announcementShown', 'true');
   };
 
-  if (!announcement || announcement.active === false) {
+  if (!announcement || announcement.active === false || !hasImage) {
     return null;
   }
-
-  const hasImage = Boolean(announcement.imageUrl && announcement.imageUrl.trim() !== "");
 
   return (
     <AnimatePresence>
