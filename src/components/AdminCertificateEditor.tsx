@@ -410,98 +410,22 @@ function DraggableField({
 }
 
 export async function migrateCertificateConfigToTable(key: string, configObj: any) {
-  if (!supabase || !configObj) return;
-
-  const rawKey = (key === "default" || !key) ? null : key;
-  let activeKey: string | null = null;
-
-  if (rawKey) {
-    try {
-      const { data: tr } = await supabase
-        .from("trainings")
-        .select("id")
-        .eq("id", rawKey)
-        .maybeSingle();
-
-      if (tr?.id) {
-        activeKey = tr.id;
-      } else {
-        // Key is not in trainings table (e.g., event ID or custom activity ID).
-        // Skip inserting into training_certificates to prevent foreign key violation.
-        return;
-      }
-    } catch (e) {
-      return;
-    }
+  if (!supabase || !configObj) {
+    throw new Error("Koneksi Supabase tidak tersedia atau objek konfigurasi kosong.");
   }
 
-  const jsonString = JSON.stringify(configObj);
+  const activeKey = (key === "default" || !key) ? "default" : key;
 
-  try {
-    // 1. Search for existing template config row for this training_id
-    const query = supabase.from("training_certificates").select("*");
-    if (!activeKey) {
-      query.is("training_id", null);
-    } else {
-      query.eq("training_id", activeKey);
-    }
-
-    const { data: dbRows, error: selectErr } = await query;
-    if (selectErr) {
-      console.warn("Notice checking training_certificates table:", selectErr);
-    }
-
-    const existingRow = dbRows?.find((row: any) => 
-      row.certificate_number === "TEMPLATE_CONFIG" || 
-      (row.certificate_url && row.certificate_url.startsWith("{") && (row.certificate_url.includes("templateUrl") || row.certificate_url.includes("fields")))
-    );
-
-    const fullPayload: any = {
+  const { error: upsertErr } = await supabase
+    .from("certificate_configurations")
+    .upsert({
       training_id: activeKey,
-      certificate_number: "TEMPLATE_CONFIG",
-      certificate_url: jsonString,
-      certificate_config: configObj,
+      config_json: configObj,
       updated_at: new Date().toISOString()
-    };
+    }, { onConflict: "training_id" });
 
-    if (existingRow?.id) {
-      const { error: updateErr } = await supabase
-        .from("training_certificates")
-        .update(fullPayload)
-        .eq("id", existingRow.id);
-      
-      if (updateErr) {
-        const fallbackPayload = {
-          training_id: activeKey,
-          certificate_number: "TEMPLATE_CONFIG",
-          certificate_url: jsonString,
-          updated_at: new Date().toISOString()
-        };
-        await supabase
-          .from("training_certificates")
-          .update(fallbackPayload)
-          .eq("id", existingRow.id);
-      }
-    } else {
-      const { error: insertErr } = await supabase
-        .from("training_certificates")
-        .insert([fullPayload]);
-      
-      if (insertErr) {
-        const fallbackPayload = {
-          training_id: activeKey,
-          certificate_number: "TEMPLATE_CONFIG",
-          certificate_url: jsonString,
-          updated_at: new Date().toISOString()
-        };
-        await supabase
-          .from("training_certificates")
-          .insert([fallbackPayload]);
-      }
-    }
-  } catch (err) {
-    console.warn("Notice updating training_certificates template config:", err);
-
+  if (upsertErr) {
+    throw new Error(`Gagal menyimpan konfigurasi ke tabel SQL 'certificate_configurations': ${upsertErr.message || JSON.stringify(upsertErr)}. Pastikan tabel 'certificate_configurations' sudah dibuat di database Supabase.`);
   }
 }
 
@@ -509,66 +433,26 @@ export async function fetchCertificateConfigsMap(): Promise<Record<string, any>>
   const configsMap: Record<string, any> = {};
 
   if (supabase) {
-    // 1. Fetch from training_certificates table
     try {
-      const { data: dbRows } = await supabase
-        .from("training_certificates")
+      const { data: dbRows, error } = await supabase
+        .from("certificate_configurations")
         .select("*");
 
-      if (dbRows && dbRows.length > 0) {
+      if (!error && dbRows && dbRows.length > 0) {
         dbRows.forEach((row: any) => {
-          let parsed: any = null;
-          const isTemplate = row.certificate_number === "TEMPLATE_CONFIG" || 
-            (row.certificate_config && typeof row.certificate_config === "object") ||
-            (row.certificate_url && row.certificate_url.startsWith("{") && (row.certificate_url.includes("templateUrl") || row.certificate_url.includes("fields")));
-            
-          if (isTemplate) {
-            if (row.certificate_config && typeof row.certificate_config === "object") {
-              parsed = row.certificate_config;
-            } else if (row.certificate_url && row.certificate_url.startsWith("{")) {
-              try {
-                parsed = JSON.parse(row.certificate_url);
-              } catch (e) {}
+          if (row.config_json && typeof row.config_json === "object") {
+            const parsed = row.config_json;
+            if (!Array.isArray(parsed.fields)) {
+              parsed.fields = [];
             }
-            if (parsed && typeof parsed === "object") {
-              if (!Array.isArray(parsed.fields)) {
-                parsed.fields = [];
-              }
-              const mappedKey = row.training_id || "default";
-              configsMap[mappedKey] = parsed;
-            }
-
+            const mappedKey = row.training_id || "default";
+            configsMap[mappedKey] = parsed;
           }
         });
       }
     } catch (e) {
-      console.warn("Failed fetching configs from training_certificates table:", e);
+      console.warn("Failed fetching configs from certificate_configurations table:", e);
     }
-
-    // 2. Fallback & migrate from site_settings
-    try {
-      const { data: sData } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .maybeSingle();
-
-      const siteConfigs = sData?.content?.certificate_configs || {};
-      Object.keys(siteConfigs).forEach((k) => {
-        if (!configsMap[k] && siteConfigs[k]) {
-          const cfg = { ...siteConfigs[k] };
-          if (!Array.isArray(cfg.fields)) cfg.fields = [];
-          configsMap[k] = cfg;
-          migrateCertificateConfigToTable(k, cfg);
-        }
-      });
-      if (sData?.content?.certificate_config && !configsMap["default"]) {
-        const defaultConfig = { ...sData.content.certificate_config };
-        if (!Array.isArray(defaultConfig.fields)) defaultConfig.fields = [];
-        configsMap["default"] = defaultConfig;
-        migrateCertificateConfigToTable("default", defaultConfig);
-      }
-    } catch (e) {}
   }
 
   return configsMap;
@@ -977,39 +861,8 @@ export default function AdminCertificateEditor({ trainingId }: { trainingId?: st
         downloadEnabled: downloadEnabled,
       };
 
-      // 1. Save certificate config to site_settings content as guaranteed persistent store
-      const { data: siteData } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .maybeSingle();
-
-      const newContent = { ...(siteData?.content || {}) };
-      if (!newContent.certificate_configs) {
-        newContent.certificate_configs = {};
-      }
-      newContent.certificate_configs[activeKey] = configPayload;
-      if (activeKey === "default") {
-        newContent.certificate_config = configPayload;
-      }
-
-      const { error: siteErr } = await supabase.from("site_settings").upsert({
-        id: 1,
-        content: newContent,
-        updated_at: new Date().toISOString(),
-      });
-
-      if (siteErr) {
-        throw new Error("Gagal menyimpan ke site_settings: " + (siteErr.message || JSON.stringify(siteErr)));
-      }
-
-      // 2. Sync to training_certificates SQL table if key is a valid training
-      try {
-        await migrateCertificateConfigToTable(activeKey, configPayload);
-      } catch (migErr) {
-        console.warn("Notice syncing to training_certificates table:", migErr);
-      }
-
+      // Save certificate config to dedicated certificate_configurations table
+      await migrateCertificateConfigToTable(activeKey, configPayload);
 
       // Auto generate certificates for participants who have 'attended' this activity
       try {
