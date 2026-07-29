@@ -81,14 +81,37 @@ export default function KegiatanPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    async function fetchEvents() {
-        if (!supabase) return;
-        const { data } = await supabase.from('events').select('*').order('date_start', { ascending: false });
-        setKegiatan(data || []);
+    async function fetchEvents(retry = 0) {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase.from('events').select('*').order('date_start', { ascending: false });
+        if (data && data.length > 0) {
+          setKegiatan(data);
+        } else if (error && retry < 3) {
+          setTimeout(() => fetchEvents(retry + 1), 800 * (retry + 1));
+          return;
+        } else {
+          setKegiatan(data || []);
+        }
+      } catch (e) {
+        if (retry < 3) {
+          setTimeout(() => fetchEvents(retry + 1), 800 * (retry + 1));
+          return;
+        }
+      } finally {
         setIsLoading(false);
+      }
     }
     
     fetchEvents();
+
+    const handleSync = () => fetchEvents();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
   
   return (

@@ -80,12 +80,7 @@ export default function KkgAgendaPage() {
   const [loading, setLoading] = useState(true);
   const [viewType, setViewType] = useState<'timeline' | 'calendar'>('timeline');
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  const fetchEvents = async (retry = 0) => {
     if (!supabase) return;
     setLoading(true);
     try {
@@ -98,10 +93,27 @@ export default function KkgAgendaPage() {
       setEvents(data || []);
     } catch (err) {
       console.error("Error fetching events:", err);
+      if (retry < 3) {
+        setTimeout(() => fetchEvents(retry + 1), 800 * (retry + 1));
+        return;
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    fetchEvents();
+
+    const handleSync = () => fetchEvents();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
+  }, []);
 
   return (
     <div className="pt-24 pb-20 bg-light-gray min-h-screen">

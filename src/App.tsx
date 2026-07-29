@@ -87,14 +87,15 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [isInitialAuthLoading, setIsInitialAuthLoading] = useState(true);
   const [isAppReady, setIsAppReady] = useState(false);
+  const { isLoading } = useSiteContent();
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Always start the timer for splash screen effect
+    // Quick smooth transition for splash screen effect
     const timer = setTimeout(() => {
       setIsAppReady(true);
-    }, 3000);
+    }, 300);
 
     let authSubscription: any = null;
 
@@ -115,7 +116,16 @@ export default function App() {
         }
       };
 
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(({ data: { session }, error }) => {
+        if (error) {
+          console.error('Session error:', error.message);
+          supabase.auth.signOut().catch(() => {});
+          localStorage.removeItem("guest_session");
+          setUser(null);
+          setIsInitialAuthLoading(false);
+          return;
+        }
+        
         if (session?.user) {
           fetchUserProfile(session.user.id);
         } else {
@@ -212,7 +222,7 @@ export default function App() {
   return (
     <AlertProvider>
       <AnimatePresence mode="wait">
-        {(!isAppReady || isInitialAuthLoading) && (
+        {(!isAppReady || isInitialAuthLoading || isLoading) && (
           <LoadingScreen key="loader" />
         )}
       </AnimatePresence>

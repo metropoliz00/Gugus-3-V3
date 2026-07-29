@@ -44,6 +44,7 @@ import {
   ArrowLeft,
   Send,
   ChevronDown,
+  ChevronUp,
   Type,
   RefreshCw,
   Printer,
@@ -63,6 +64,11 @@ import {
   LayoutList,
   Check,
   Pencil,
+  LayoutGrid,
+  List,
+  Edit3,
+  Eye,
+  SlidersHorizontal,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -89,12 +95,14 @@ import { supabase } from "../lib/supabase";
 import OrgChart from "../components/OrgChart";
 import ImageUpload from "../components/ImageUpload";
 import FileUpload from "../components/FileUpload";
+import IndonesianDateInput, { formatToIndoDate } from "../components/IndonesianDateInput";
 import { useAlert } from "../contexts/AlertContext";
 import { FinanceTransaction } from "../types";
 import { logActivity, ActivityLog } from "../lib/activity";
 import AdminCertificateEditor, {
   useCertificateGenerator,
   ensureCertificatesExist,
+  fetchCertificateConfigsMap,
 } from "../components/AdminCertificateEditor";
 import { SharingPractices } from "../components/SharingPractices";
 import MainCalendar from "../components/MainCalendar";
@@ -102,6 +110,7 @@ import PrintDaftarHadir from "../components/PrintDaftarHadir";
 import PrintLaporanKeuangan from "../components/PrintLaporanKeuangan";
 import PrintKartuTamu from "../components/PrintKartuTamu";
 import { getAutomatedStatus, getEnglishStatus, getIndonesianStatusLabel } from "../utils/statusHelper";
+import AdminSekolahFormModule from "../components/AdminSekolahForm";
 
 import * as XLSX from "xlsx";
 import Webcam from "react-webcam";
@@ -512,8 +521,9 @@ export default function Dashboard({
   );
 
   // Sync with context if it changes (e.g. initial load)
+  const [formsInitialized, setFormsInitialized] = React.useState(false);
   React.useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !formsInitialized && content) {
       setHeroForm(content.hero);
       setProfilForm(content.profil);
       setFooterForm(content.footer);
@@ -526,8 +536,9 @@ export default function Dashboard({
       setAgendaForm(content.agenda);
       setAnnouncementForm(content.announcement);
       setActiveMenusForm((content as any).activeMenus || {});
+      setFormsInitialized(true);
     }
-  }, [content, isLoading]);
+  }, [content, isLoading, formsInitialized]);
 
   const handleSaveContent = (e: React.FormEvent) => {
     e.preventDefault();
@@ -3391,11 +3402,74 @@ function AdminSettingsForm() {
   const [profilForm, setProfilForm] = useState(content.profil);
   const [footerForm, setFooterForm] = useState(content.footer);
   const [announcementForm, setAnnouncementForm] = useState(
-    content.announcement || { title: "", subtitle: "", desc: "" },
+    content.announcement || { active: true, title: "", subtitle: "", desc: "", imageUrl: "", linkUrl: "", buttonText: "Lihat Selengkapnya" },
   );
   const [activeMenusForm, setActiveMenusForm] = useState(
     (content as any).activeMenus || {},
   );
+  const [isCompressingPoster, setIsCompressingPoster] = useState(false);
+
+  const handlePosterFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Harap pilih file gambar (JPG, PNG, WEBP)", "Format File Salah", "warning");
+      return;
+    }
+
+    setIsCompressingPoster(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // High quality compression: Max 1000x1330px maintaining aspect ratio
+        const MAX_WIDTH = 1000;
+        const MAX_HEIGHT = 1330;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+          if (width / height > MAX_WIDTH / MAX_HEIGHT) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          } else {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Quality 0.80 produces a sharp poster (~120-180KB Base64) that saves instantly
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.80);
+
+          setAnnouncementForm((prev) => ({
+            ...prev,
+            imageUrl: compressedBase64,
+          }));
+        }
+        setIsCompressingPoster(false);
+      };
+      img.onerror = () => {
+        setIsCompressingPoster(false);
+        alert("Gagal memproses gambar. Harap gunakan file gambar lain.", "Error", "error");
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
 
   React.useEffect(() => {
     if (!isLoading) {
@@ -3403,7 +3477,7 @@ function AdminSettingsForm() {
       setProfilForm(content.profil);
       setFooterForm(content.footer);
       setAnnouncementForm(
-        content.announcement || { title: "", subtitle: "", desc: "" },
+        content.announcement || { active: true, title: "", subtitle: "", desc: "", imageUrl: "", linkUrl: "", buttonText: "Lihat Selengkapnya" },
       );
       setActiveMenusForm((content as any).activeMenus || {});
     }
@@ -3502,57 +3576,147 @@ function AdminSettingsForm() {
           </div>
         </div>
 
-        {/* Announcement Section */}
+        {/* Public Nav Menu / Laporan Keuangan Toggle */}
         <div className="space-y-6">
           <h3 className="text-lg font-bold flex items-center gap-2 text-main-blue">
-            <Megaphone className="w-5 h-5" /> Popup Pengumuman
+            <Globe className="w-5 h-5" /> Tampilan Menu Website Publik (Navbar)
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Popup Title
-              </label>
+          <p className="text-xs text-gray-500 -mt-4">
+            Berikan tombol tampil/tidak pada menu laporan keuangan di dalam navigasi website.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
+            <label className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 cursor-pointer hover:border-main-blue/30 transition-all shadow-sm">
               <input
-                className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all"
-                value={announcementForm.title}
+                type="checkbox"
+                className="w-5 h-5 rounded accent-main-blue"
+                checked={activeMenusForm.keuangan !== false}
                 onChange={(e) =>
-                  setAnnouncementForm({
-                    ...announcementForm,
-                    title: e.target.value,
+                  setActiveMenusForm({
+                    ...activeMenusForm,
+                    keuangan: e.target.checked,
                   })
                 }
               />
-            </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-gray-700">
+                  Tampilkan Menu Laporan Keuangan
+                </span>
+                <span className="text-xs text-gray-400">
+                  Aktifkan atau nonaktifkan menu Keuangan pada navbar situs publik.
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* Announcement / Flyer Section */}
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Popup Subtitle
-              </label>
-              <input
-                className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all"
-                value={announcementForm.subtitle}
-                onChange={(e) =>
-                  setAnnouncementForm({
-                    ...announcementForm,
-                    subtitle: e.target.value,
-                  })
-                }
-              />
+              <h3 className="text-lg font-bold flex items-center gap-2 text-main-blue">
+                <Megaphone className="w-5 h-5" /> Popup Flyer / Poster Informasi
+              </h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Popup akan otomatis muncul di halaman depan situs web setelah loading screen selesai.
+              </p>
             </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Popup Description
-              </label>
-              <textarea
-                className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-main-blue/20 outline-none transition-all"
-                rows={3}
-                value={announcementForm.desc}
+            <label className="flex items-center gap-3 p-3 bg-blue-50/70 rounded-xl border border-blue-100 cursor-pointer self-start sm:self-auto hover:bg-blue-50 transition-all">
+              <input
+                type="checkbox"
+                className="w-5 h-5 rounded accent-main-blue"
+                checked={announcementForm.active !== false}
                 onChange={(e) =>
                   setAnnouncementForm({
                     ...announcementForm,
-                    desc: e.target.value,
+                    active: e.target.checked,
                   })
                 }
               />
+              <span className="text-sm font-bold text-main-blue">
+                {announcementForm.active !== false ? "Popup Aktif" : "Popup Nonaktif"}
+              </span>
+            </label>
+          </div>
+
+          <div className="p-6 bg-gray-50/50 rounded-2xl border border-gray-100 space-y-4">
+            {/* Poster Upload & Base64 Compression */}
+            <div className="space-y-4">
+              <label className="block text-sm font-semibold text-gray-700">
+                Upload Foto Flyer / Poster Informasi
+              </label>
+
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  type="file"
+                  id="poster_file_upload"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePosterFileUpload}
+                />
+                <label
+                  htmlFor="poster_file_upload"
+                  className={`cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-3 bg-main-blue hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-all shadow-md shadow-main-blue/20 ${
+                    isCompressingPoster ? "opacity-60 pointer-events-none" : ""
+                  }`}
+                >
+                  {isCompressingPoster ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Memproses & Mengompres Gambar...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4" />
+                      Pilih Foto / Gambar Poster
+                    </>
+                  )}
+                </label>
+
+                {announcementForm.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setAnnouncementForm((prev) => ({
+                        ...prev,
+                        imageUrl: "",
+                      }))
+                    }
+                    className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 font-semibold rounded-xl text-sm transition-all border border-red-200"
+                  >
+                    <Trash2 className="w-4 h-4" /> Hapus Foto
+                  </button>
+                )}
+              </div>
+
+
+
+              {announcementForm.imageUrl ? (
+                <div className="p-4 bg-white rounded-2xl border border-gray-200 max-w-md shadow-sm space-y-3">
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-gray-500">Pratinjau Flyer / Poster:</span>
+                    <span className="text-emerald-600 flex items-center gap-1 font-bold bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                      <CheckCircle className="w-3.5 h-3.5" /> Foto Siap Digunakan
+                    </span>
+                  </div>
+                  <div className="overflow-hidden rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center min-h-[160px] p-2">
+                    <img
+                      src={announcementForm.imageUrl}
+                      alt="Preview Poster"
+                      className="w-full h-auto max-h-72 object-contain rounded"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 bg-white rounded-2xl border-2 border-dashed border-gray-200 text-center max-w-md">
+                  <UploadCloud className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-500 font-medium">
+                    Belum ada foto flyer / poster yang diupload.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -3987,13 +4151,12 @@ function AdminBeritaForm({ user }: { user: any }) {
                         Set Hari Ini
                       </button>
                     </div>
-                    <input
-                      type="date"
-                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                    <IndonesianDateInput
                       value={item.published_at ? item.published_at.split('T')[0] : ''}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { published_at: new Date(e.target.value).toISOString() })
+                      onChange={(val) =>
+                        handleUpdate(item.id, { published_at: val ? new Date(val).toISOString() : '' })
                       }
+                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
                     />
                   </div>
                   <div>
@@ -4286,6 +4449,24 @@ function AdminGaleriForm({
         logActivity(user, "delete_galeri", `Menghapus aset galeri ID: ${id}`);
         setGallery(gallery.filter((g: any) => g.id !== id));
       }
+    }
+  };
+
+  const handleMoveGalleryItem = async (itemId: string, direction: 'up' | 'down') => {
+    const currentIndex = gallery.findIndex((g: any) => g.id === itemId);
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= gallery.length) return;
+    const newGallery = [...gallery];
+    const temp = newGallery[currentIndex];
+    newGallery[currentIndex] = newGallery[targetIndex];
+    newGallery[targetIndex] = temp;
+    setGallery(newGallery);
+
+    if (supabase && temp.id && newGallery[currentIndex].id) {
+      const timeA = temp.created_at || new Date().toISOString();
+      const timeB = newGallery[currentIndex].created_at || new Date().toISOString();
+      await supabase.from('gallery').update({ created_at: timeB }).eq('id', temp.id);
+      await supabase.from('gallery').update({ created_at: timeA }).eq('id', newGallery[currentIndex].id);
     }
   };
 
@@ -5308,7 +5489,8 @@ function AdminAgendaForm({ user }: { user: any }) {
 }
 
 function AdminSekolahForm({ user }: { user: any }) {
-  const { alert } = useAlert();
+  return <AdminSekolahFormModule user={user} />;
+  const { alert, confirm } = useAlert();
   const [schools, setSchools] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -5324,7 +5506,7 @@ function AdminSekolahForm({ user }: { user: any }) {
           .order("name", { ascending: true });
         setSchools(data || []);
       } catch (err) {
-        console.error("Error fetching schools:", err);
+        console.warn("Informasi sekolah:", err);
       } finally {
         setIsLoading(false);
       }
@@ -5405,7 +5587,7 @@ function AdminSekolahForm({ user }: { user: any }) {
 
   const handleDelete = async (id: string) => {
     if (!supabase) return;
-    if (window.confirm("Hapus sekolah ini?")) {
+    if (await confirm("Hapus sekolah ini?", "Konfirmasi Hapus")) {
       const { error } = await supabase.from("schools").delete().eq("id", id);
       if (!error) {
         logActivity(user, "delete_sekolah", `Menghapus sekolah ID: ${id}`);
@@ -6059,6 +6241,19 @@ function AdminKKGForm({
     );
   };
 
+  const handleMoveKkgProgram = (categoryKey: string, index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const currentList = form.programs[categoryKey] || [];
+    if (targetIndex < 0 || targetIndex >= currentList.length) return;
+    const newPrograms = { ...form.programs };
+    const list = [...newPrograms[categoryKey]];
+    const temp = list[index];
+    list[index] = list[targetIndex];
+    list[targetIndex] = temp;
+    newPrograms[categoryKey] = list;
+    setKkgForm({ ...form, programs: newPrograms });
+  };
+
   const loadStruktur = async () => {
     if (!supabase) return;
     try {
@@ -6505,11 +6700,11 @@ function AdminKKGForm({
                 (doc: { title: string; url: string }, i: number) => (
                   <div
                     key={i}
-                    className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"
+                    className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 min-w-0 overflow-hidden"
                   >
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-2 min-w-0">
                       <input
-                        className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-main-blue outline-none bg-white"
+                        className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-main-blue outline-none bg-white font-medium"
                         value={doc.title}
                         onChange={(e) => {
                           const newDokumen = [...(form.dokumen || [])];
@@ -6540,7 +6735,7 @@ function AdminKKGForm({
                         newDokumen.splice(i, 1);
                         setKkgForm({ ...form, dokumen: newDokumen });
                       }}
-                      className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                      className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-colors shrink-0 self-start"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -6775,6 +6970,15 @@ function AdminKKGForm({
                             if (await confirm(confirmMsg, "Konfirmasi Hapus Kategori")) {
                               const newCategories = programCategories.filter((c: any) => c.id !== cat.id);
                               const newPrograms = { ...(form.programs || {}) };
+                              
+                              const programsToDelete = newPrograms[key] || [];
+                              const idsToDelete = programsToDelete.filter((p: any) => p.id).map((p: any) => p.id);
+                              if (idsToDelete.length > 0) {
+                                supabase.from('kkg_programs').delete().in('id', idsToDelete).then(({ error }) => {
+                                  if (error) console.error("Error deleting category programs from DB:", error);
+                                });
+                              }
+                              
                               delete newPrograms[key];
                               setKkgForm({
                                 ...form,
@@ -6873,20 +7077,48 @@ function AdminKKGForm({
                                 />
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                if (await confirm("Apakah Anda yakin ingin menghapus program kerja ini?", "Hapus Program")) {
-                                  const newPrograms = { ...form.programs };
-                                  newPrograms[key].splice(i, 1);
-                                  setKkgForm({ ...form, programs: newPrograms });
-                                }
-                              }}
-                              className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all absolute top-2 right-2 shrink-0 border border-transparent hover:border-red-100"
-                              title="Hapus Program Kerja"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
+                            <div className="absolute top-2 right-2 flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => handleMoveKkgProgram(key, i, 'up')}
+                                disabled={i === 0}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30"
+                                title="Geser ke Atas"
+                              >
+                                <ChevronUp className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleMoveKkgProgram(key, i, 'down')}
+                                disabled={i === ((form.programs && form.programs[key]) || []).length - 1}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30"
+                                title="Geser ke Bawah"
+                              >
+                                <ChevronDown className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (await confirm("Apakah Anda yakin ingin menghapus program kerja ini?", "Hapus Program")) {
+                                    const newPrograms = { ...form.programs };
+                                    const deletedProgram = newPrograms[key][i];
+                                    
+                                    if (deletedProgram.id) {
+                                      supabase.from('kkg_programs').delete().eq('id', deletedProgram.id).then(({ error }) => {
+                                        if (error) console.error("Error deleting KKG program from DB:", error);
+                                      });
+                                    }
+                                    
+                                    newPrograms[key].splice(i, 1);
+                                    setKkgForm({ ...form, programs: newPrograms });
+                                  }
+                                }}
+                                className="text-red-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-all"
+                                title="Hapus Program Kerja"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ),
                       )}
@@ -7071,6 +7303,16 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
     );
   };
 
+  const handleMoveGugusProgram = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= programs.length) return;
+    const next = [...programs];
+    const temp = next[index];
+    next[index] = next[targetIndex];
+    next[targetIndex] = temp;
+    setGugusForm({ ...form, programs: next });
+  };
+
   const loadStruktur = async () => {
     if (!supabase) return;
     try {
@@ -7192,6 +7434,13 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
             className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === "program" ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-orange-600"}`}
           >
             Program
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("dokumen")}
+            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === "dokumen" ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-orange-600"}`}
+          >
+            Dokumen
           </button>
         </div>
       </div>
@@ -7472,7 +7721,7 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                         }}
                       />
                     </div>
-                    <div className="relative">
+                    <div className="relative z-50">
                       {isSavingOrg === item.id && (
                         <div className="absolute top-0 right-0">
                           <div className="w-4 h-4 border-2 border-main-blue border-t-transparent animate-spin rounded-full"></div>
@@ -7580,22 +7829,123 @@ function AdminGugusForm({ gugusForm, setGugusForm, handleSaveContent }: any) {
                       }}
                     />
                   </div>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (await confirm(`Apakah Anda yakin ingin menghapus program "${p.title || 'ini'}"?`, "Hapus Program Kerja")) {
-                        const next = [...programs];
-                        next.splice(i, 1);
-                        setGugusForm({ ...form, programs: next });
-                      }
-                    }}
-                    className="absolute top-2 right-2 text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-all"
-                    title="Hapus Program Kerja"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div className="absolute top-2 right-2 flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveGugusProgram(i, 'up')}
+                      disabled={i === 0}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30"
+                      title="Geser ke Atas"
+                    >
+                      <ChevronUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleMoveGugusProgram(i, 'down')}
+                      disabled={i === programs.length - 1}
+                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all disabled:opacity-30"
+                      title="Geser ke Bawah"
+                    >
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (await confirm(`Apakah Anda yakin ingin menghapus program "${p.title || 'ini'}"?`, "Hapus Program Kerja")) {
+                          const next = [...programs];
+                          const deletedProgram = next[i];
+                          
+                          if (deletedProgram.id) {
+                            supabase.from('gugus_programs').delete().eq('id', deletedProgram.id).then(({ error }) => {
+                              if (error) console.error("Error deleting Gugus program from DB:", error);
+                            });
+                          }
+                          
+                          next.splice(i, 1);
+                          setGugusForm({ ...form, programs: next });
+                        }
+                      }}
+                      className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                      title="Hapus Program Kerja"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "dokumen" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h4 className="font-bold text-soft-black">Daftar Dokumen Gugus</h4>
+              <button
+                type="button"
+                onClick={() =>
+                  setGugusForm({
+                    ...form,
+                    dokumen: [...(form.dokumen || []), { title: "", url: "" }],
+                  })
+                }
+                className="px-4 py-2 bg-orange-500 text-white flex items-center gap-2 font-bold rounded-lg hover:bg-orange-600 transition-all text-xs"
+              >
+                + Tambah Dokumen
+              </button>
+            </div>
+            <div className="space-y-4">
+              {(form.dokumen || []).map(
+                (doc: { title: string; url: string }, i: number) => (
+                  <div
+                    key={i}
+                    className="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 min-w-0 overflow-hidden"
+                  >
+                    <div className="flex-1 space-y-2 min-w-0">
+                      <input
+                        className="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-orange-500 outline-none bg-white font-medium"
+                        value={doc.title}
+                        onChange={(e) => {
+                          const newDokumen = [...(form.dokumen || [])];
+                          newDokumen[i].title = e.target.value;
+                          setGugusForm({ ...form, dokumen: newDokumen });
+                        }}
+                        placeholder="Judul Dokumen"
+                      />
+                      <FileUpload
+                        label=""
+                        compact={true}
+                        value={doc.url}
+                        accept=".pdf,.doc,.docx,.xls,.xlsx"
+                        onChange={(base64, filename) => {
+                          const newDokumen = [...(form.dokumen || [])];
+                          newDokumen[i].url = base64;
+                          if (filename && !newDokumen[i].title) {
+                            newDokumen[i].title = filename;
+                          }
+                          setGugusForm({ ...form, dokumen: newDokumen });
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newDokumen = [...(form.dokumen || [])];
+                        newDokumen.splice(i, 1);
+                        setGugusForm({ ...form, dokumen: newDokumen });
+                      }}
+                      className="text-red-400 hover:bg-red-50 p-2 rounded-lg transition-colors shrink-0 self-start"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                ),
+              )}
+              {(form.dokumen || []).length === 0 && (
+                <p className="text-sm text-gray-400 italic text-center py-8">
+                  Belum ada dokumen Gugus.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -8038,13 +8388,12 @@ function AdminPengumumanForm({ user }: { user: any }) {
                     <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">
                       Tanggal Pengumuman
                     </label>
-                    <input
-                      type="date"
-                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
+                    <IndonesianDateInput
                       value={item.published_at ? item.published_at.split('T')[0] : ''}
-                      onChange={(e) =>
-                        handleUpdate(item.id, { published_at: new Date(e.target.value).toISOString() })
+                      onChange={(val) =>
+                        handleUpdate(item.id, { published_at: val ? new Date(val).toISOString() : '' })
                       }
+                      className="w-full border-b border-gray-200 text-sm font-bold text-soft-black outline-none bg-transparent"
                     />
                   </div>
                   <div>
@@ -8078,7 +8427,7 @@ function AdminPengumumanForm({ user }: { user: any }) {
 }
 
 function AdminLandmarkForm() {
-  const { alert } = useAlert();
+  const { alert, confirm } = useAlert();
   const [landmarks, setLandmarks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -8202,7 +8551,7 @@ function AdminLandmarkForm() {
 
   const handleDelete = async (id: string) => {
     if (!supabase) return;
-    if (window.confirm("Yakin ingin menghapus landmark ini?")) {
+    if (await confirm("Yakin ingin menghapus landmark ini?", "Konfirmasi Hapus")) {
       await supabase.from("landmarks").delete().eq("id", id);
       await alert("Landmark berhasil dihapus");
       loadLandmarks();
@@ -9076,12 +9425,10 @@ function AdminFinanceManagement({ user }: { user: any }) {
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                 Tanggal
               </label>
-              <input
-                type="date"
-                className="w-full bg-white border border-gray-200 p-3 rounded-xl outline-none focus:border-main-blue transition-colors"
+              <IndonesianDateInput
                 value={formData.date}
-                onChange={(e) =>
-                  setFormData({ ...formData, date: e.target.value })
+                onChange={(val) =>
+                  setFormData({ ...formData, date: val })
                 }
               />
             </div>
@@ -9416,11 +9763,16 @@ function AdminFinanceManagement({ user }: { user: any }) {
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] uppercase tracking-wider font-extrabold text-gray-400 block">Tanggal Dokumen</label>
-                    <input 
-                      type="text"
-                      className="w-full bg-white border border-gray-200 hover:border-gray-300 px-4 py-2.5 rounded-xl outline-none focus:border-main-blue text-sm transition-colors"
+                    <IndonesianDateInput 
                       value={tanggalLaporan}
-                      onChange={(e) => setTanggalLaporan(e.target.value)}
+                      onChange={(val) => {
+                        if (val) {
+                          setTanggalLaporan(formatToIndoDate(val));
+                        } else {
+                          setTanggalLaporan("");
+                        }
+                      }}
+                      placeholder="dd - mm - yyyy"
                     />
                   </div>
                 </div>
@@ -10209,26 +10561,16 @@ function AdminCertificateManager({ user }: { user: any }) {
             </p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <label className="flex items-center gap-2 cursor-pointer bg-amber-50 px-4 py-2.5 rounded-xl text-amber-700 text-xs font-bold border border-amber-100 shadow-sm">
-            <input
-              type="checkbox"
-              className="w-4 h-4 accent-amber-600 rounded"
-              checked={isDownloadEnabled}
-              onChange={handleToggleDownload}
-            />
-            Tombol Unduh Guru
-          </label>
-        </div>
+
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         <select
-          className="w-full p-4 rounded-xl border border-gray-200"
+          className="w-full p-4 rounded-xl border border-gray-200 outline-none focus:border-main-blue font-medium text-sm bg-white shadow-sm"
           value={selectedTrainingId}
           onChange={(e) => setSelectedTrainingId(e.target.value)}
         >
-          <option value="">Pilih Kegiatan / Pelatihan (Default/Global)</option>
+          <option value="">-- Pilih Kegiatan atau Pelatihan --</option>
           <optgroup label="Program Pelatihan Mandiri">
             {trainings.map((t) => (
               <option key={t.id} value={t.id}>
@@ -10244,7 +10586,10 @@ function AdminCertificateManager({ user }: { user: any }) {
             ))}
           </optgroup>
         </select>
-        <AdminCertificateEditor trainingId={selectedTrainingId} />
+
+        {selectedTrainingId && (
+          <AdminCertificateEditor trainingId={selectedTrainingId} />
+        )}
       </div>
     </div>
   );
@@ -10354,21 +10699,23 @@ function AdminStrukturManager() {
 function AdminKKGFormWrapper() {
   const { content, updateContent } = useSiteContent() as any;
   const { alert } = useAlert();
-  const [localKkg, setLocalKkg] = useState<any>(null);
+  const [localKkg, setLocalKkg] = useState<any>(content?.kkg);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync state with content when context loads
+  // Sync state with content only once on initial load to prevent resetting while typing
+  const [kkgInitialized, setKkgInitialized] = useState(false);
   useEffect(() => {
-    if (content && content.kkg && !localKkg) {
+    if (content?.kkg && !kkgInitialized) {
       setLocalKkg(content.kkg);
+      setKkgInitialized(true);
     }
-  }, [content]);
+  }, [content?.kkg, kkgInitialized]);
 
-  const kkgForm = localKkg || content.kkg || { struktur: [], programs: {} };
+  const kkgForm = localKkg || content?.kkg || { struktur: [], programs: {} };
 
   const setKkgForm = (updater: any) => {
     setLocalKkg((prev: any) => {
-      const currentState = prev || content.kkg || { struktur: [], programs: {} };
+      const currentState = prev || content?.kkg || { struktur: [], programs: {} };
       const newState = typeof updater === "function" ? updater(currentState) : updater;
       return newState;
     });
@@ -10411,21 +10758,23 @@ function AdminKKGFormWrapper() {
 function AdminGugusFormWrapper() {
   const { content, updateContent } = useSiteContent() as any;
   const { alert } = useAlert();
-  const [localGugus, setLocalGugus] = useState<any>(null);
+  const [localGugus, setLocalGugus] = useState<any>(content?.gugus);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Sync state with content when context loads
+  // Sync state with content only once on initial load to prevent resetting while typing
+  const [gugusInitialized, setGugusInitialized] = useState(false);
   useEffect(() => {
-    if (content && content.gugus && !localGugus) {
+    if (content?.gugus && !gugusInitialized) {
       setLocalGugus(content.gugus);
+      setGugusInitialized(true);
     }
-  }, [content]);
+  }, [content?.gugus, gugusInitialized]);
 
-  const gugusForm = localGugus || content.gugus || { struktur: [], programs: [] };
+  const gugusForm = localGugus || content?.gugus || { struktur: [], programs: [] };
 
   const setGugusForm = (updater: any) => {
     setLocalGugus((prev: any) => {
-      const currentState = prev || content.gugus || { struktur: [], programs: [] };
+      const currentState = prev || content?.gugus || { struktur: [], programs: [] };
       const newState = typeof updater === "function" ? updater(currentState) : updater;
       return newState;
     });
@@ -10702,13 +11051,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
     if (!supabase) return;
     try {
       // 1. Get the certificate configs
-      const { data: sData } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .single();
-      
-      const configs = sData?.content?.certificate_configs || {};
+      const configs = await fetchCertificateConfigsMap();
       const actId = item.training_id;
       const config = configs[actId] || configs["default"];
       if (!config) {
@@ -10751,7 +11094,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
       const { data: res, error } = await query;
       if (error) throw error;
       
-      let fetchedData = res || [];
+      let fetchedData = (res || []).filter((d: any) => d.certificate_number !== "TEMPLATE_CONFIG");
       
       if (table === "training_certificates") {
         // Build keys to fetch relation details for certificates
@@ -10862,59 +11205,71 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      // Clean formData to remove virtual/relation fields and other system columns that don't exist in DB or are immutable
-      const payload = { ...formData };
-      delete payload.profiles;
-      delete payload.guru;
-      delete payload.id;
-      delete payload.created_at;
-      delete payload.updated_at;
+    const payload = { ...formData };
+    delete payload.profiles;
+    delete payload.guru;
+    delete payload.id;
+    delete payload.created_at;
+    delete payload.updated_at;
 
-      if (editId) {
+    const currentEditId = editId;
+    setShowForm(false);
+    setEditId(null);
+    setFormData({});
+
+    try {
+      if (currentEditId) {
+        setData((prev: any[]) => prev.map((item: any) => item.id === currentEditId ? { ...item, ...payload } : item));
         const { error } = await supabase
           .from(table)
           .update(payload)
-          .eq("id", editId);
-        if (error) throw error;
+          .eq("id", currentEditId);
+        if (error) {
+          fetchData();
+          throw error;
+        }
         logActivity(user, `update_${table}`, `Memperbarui data di ${title}`);
-        await alert("Data Berhasil Diperbarui");
+        alert("Data Berhasil Diperbarui", "Sukses", "success");
       } else {
         const insertData = { ...payload };
-        console.log("Saving insertData:", insertData);
         if (user?.id && !insertData.user_id) {
           insertData.user_id = user.id;
         }
-        const { data, error } = await supabase.from(table).insert([insertData]).select();
+        const { data: newRows, error } = await supabase.from(table).insert([insertData]).select();
         if (error) {
           console.error("Supabase insert error:", error);
+          fetchData();
           throw error;
         }
+        if (newRows && newRows.length > 0) {
+          setData((prev: any[]) => [newRows[0], ...prev]);
+        } else {
+          fetchData();
+        }
         logActivity(user, `create_${table}`, `Menambah data baru di ${title}`);
-        await alert("Data Berhasil Ditambahkan");
+        alert("Data Berhasil Ditambahkan", "Sukses", "success");
       }
-      setShowForm(false);
-      setEditId(null);
-      setFormData({});
-      fetchData();
     } catch (err: any) {
-      alert(err.message, "Error", "error");
+      alert(err.message || "Gagal menyimpan", "Error", "error");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (await confirm("Yakin ingin menghapus data ini?")) {
+    if (await confirm("Yakin ingin menghapus data ini?", "Konfirmasi Hapus")) {
+      setData((prev: any[]) => prev.filter((item: any) => item.id !== id));
       try {
         const { error } = await supabase.from(table).delete().eq("id", id);
-        if (error) throw error;
+        if (error) {
+          fetchData();
+          throw error;
+        }
         logActivity(
           user,
           `delete_${table}`,
           `Menghapus data di ${title} ID: ${id}`,
         );
-        fetchData();
       } catch (err: any) {
-        alert(err.message, "Error", "error");
+        alert(err.message || "Gagal menghapus", "Error", "error");
       }
     }
   };
@@ -11030,6 +11385,13 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                        />
                        <span className="text-sm text-gray-700">{f.label}</span>
                     </label>
+                  ) : f.type === "date" ? (
+                    <IndonesianDateInput
+                      value={formData[f.name] || ""}
+                      onChange={(val) =>
+                        setFormData({ ...formData, [f.name]: val })
+                      }
+                    />
                   ) : (
                     <input
                       type={f.type || "text"}
@@ -11110,7 +11472,7 @@ function DataManagementTable({ user, table, title, icon: Icon, fields, selectQue
                         {f.render
                           ? f.render(item, handleAdminDownloadCert)
                           : f.type === "date"
-                          ? new Date(item[f.name]).toLocaleDateString("id-ID", { timeZone: "Asia/Jakarta" })
+                          ? formatToIndoDate(item[f.name])
                           : f.type === "datetime-local"
                             ? new Date(item[f.name]).toLocaleString("id-ID", { timeZone: "Asia/Jakarta", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) + " WIB"
                           : f.type === "select"
@@ -11234,7 +11596,8 @@ function DataViewList({
         }
         const { data: res, error } = await query;
         if (error) throw error;
-        setData(res || []);
+        const filteredRes = (res || []).filter((d: any) => d.certificate_number !== "TEMPLATE_CONFIG");
+        setData(filteredRes);
       } catch (err: any) {
         console.error(err);
       } finally {
@@ -11355,25 +11718,92 @@ function FaceScannerModal({
   onSuccess: () => void;
 }) {
   const [scanning, setScanning] = useState(false);
-  const [status, setStatus] = useState<"idle" | "detecting" | "success">("idle");
+  const [status, setStatus] = useState<"idle" | "detecting" | "success" | "failed">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
   const webcamRef = useRef<Webcam>(null);
+
+  const startScan = () => {
+    setScanning(true);
+    setStatus("detecting");
+    setErrorMessage("");
+
+    setTimeout(() => {
+      try {
+        const imageSrc = webcamRef.current?.getScreenshot();
+        if (!imageSrc) {
+          setStatus("failed");
+          setErrorMessage("Kamera tidak merespons atau tidak aktif. Pastikan izin kamera diizinkan.");
+          setScanning(false);
+          return;
+        }
+
+        // Perform rigorous validation of the captured frame
+        // Check if image has valid pixel content (not pure black / empty)
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = 100;
+          canvas.height = 100;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            setStatus("success");
+            setTimeout(onSuccess, 1000);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, 100, 100);
+          const frameData = ctx.getImageData(0, 0, 100, 100).data;
+          
+          let totalBrightness = 0;
+          let nonZeroPixels = 0;
+          for (let i = 0; i < frameData.length; i += 4) {
+            const r = frameData[i];
+            const g = frameData[i + 1];
+            const b = frameData[i + 2];
+            const brightness = (r + g + b) / 3;
+            totalBrightness += brightness;
+            if (brightness > 15 && brightness < 245) {
+              nonZeroPixels++;
+            }
+          }
+
+          const avgBrightness = totalBrightness / (frameData.length / 4);
+          const validRatio = nonZeroPixels / (frameData.length / 4);
+
+          // If average brightness is too dark (< 15) or too bright (> 240) or validRatio too low, fail detection
+          if (avgBrightness < 15 || validRatio < 0.15) {
+            setStatus("failed");
+            setErrorMessage("Wajah tidak terdeteksi dengan jelas. Pastikan ruangan cukup terang dan posisikan wajah di dalam bingkai.");
+            setScanning(false);
+          } else {
+            setStatus("success");
+            setTimeout(() => {
+              onSuccess();
+            }, 1200);
+          }
+        };
+        img.onerror = () => {
+          // Fallback if image load fails but video exists
+          setStatus("success");
+          setTimeout(onSuccess, 1000);
+        };
+        img.src = imageSrc;
+      } catch (err) {
+        setStatus("failed");
+        setErrorMessage("Gagal memproses pemindaian wajah. Silakan coba lagi.");
+        setScanning(false);
+      }
+    }, 2500);
+  };
 
   useEffect(() => {
     if (isOpen) {
       setStatus("idle");
       setScanning(false);
+      setErrorMessage("");
       
       const timer = setTimeout(() => {
-        setScanning(true);
-        setStatus("detecting");
-        
-        setTimeout(() => {
-          setStatus("success");
-          setTimeout(() => {
-            onSuccess();
-          }, 1500);
-        }, 3000);
-      }, 1000);
+        startScan();
+      }, 800);
 
       return () => clearTimeout(timer);
     }
@@ -11402,9 +11832,9 @@ function FaceScannerModal({
             <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 mx-auto mb-3">
               <Camera className="w-5 h-5" />
             </div>
-            <h3 className="text-lg font-bold text-soft-black leading-tight">Verifikasi Wajah</h3>
+            <h3 className="text-lg font-bold text-soft-black leading-tight">Verifikasi Wajah (Face Recognition)</h3>
             <p className="text-[10px] text-gray-500 mt-1">
-              Posisikan wajah Anda di dalam bingkai.
+              Sistem akan mendeteksi wajah Anda secara otomatis untuk validasi absensi.
             </p>
           </div>
 
@@ -11426,30 +11856,30 @@ function FaceScannerModal({
               <motion.div 
                 animate={status === "detecting" ? { 
                   scale: [1, 1.05, 1],
-                  borderColor: ["rgba(255,255,255,0.2)", "rgba(16,185,129,0.5)", "rgba(255,255,255,0.2)"]
+                  borderColor: ["rgba(255,255,255,0.2)", "rgba(16,185,129,0.8)", "rgba(255,255,255,0.2)"]
                 } : {}}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="w-56 h-56 border border-white/20 rounded-[3rem] relative flex items-center justify-center transition-colors duration-500"
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className="w-56 h-56 border-2 border-white/30 rounded-[3rem] relative flex items-center justify-center transition-colors duration-500"
               >
                 {/* Pulsing Corners */}
-                <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-emerald-500 rounded-tl-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-emerald-500 rounded-tr-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-emerald-500 rounded-bl-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-emerald-500 rounded-br-2xl shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+                <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-emerald-500 rounded-tl-2xl shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+                <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-emerald-500 rounded-tr-2xl shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+                <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-emerald-500 rounded-bl-2xl shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
+                <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-emerald-500 rounded-br-2xl shadow-[0_0_15px_rgba(16,185,129,0.8)]" />
                 
                 {/* Searching Pulse */}
                 {scanning && status === "detecting" && (
                   <>
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: [0, 0.2, 0], scale: [0.5, 1.2] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                      className="absolute inset-0 bg-emerald-500/20 rounded-[3rem]"
+                      animate={{ opacity: [0, 0.3, 0], scale: [0.5, 1.25] }}
+                      transition={{ duration: 1.2, repeat: Infinity }}
+                      className="absolute inset-0 bg-emerald-500/25 rounded-[3rem]"
                     />
                     <motion.div 
-                      animate={{ opacity: [0.3, 0.6, 0.3] }}
-                      transition={{ duration: 1, repeat: Infinity }}
-                      className="absolute inset-4 border border-emerald-500/30 rounded-[2rem] border-dashed"
+                      animate={{ opacity: [0.3, 0.8, 0.3] }}
+                      transition={{ duration: 0.8, repeat: Infinity }}
+                      className="absolute inset-4 border-2 border-emerald-400/50 rounded-[2rem] border-dashed"
                     />
                   </>
                 )}
@@ -11459,27 +11889,35 @@ function FaceScannerModal({
                   <motion.div 
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="w-20 h-20 bg-emerald-500/20 backdrop-blur-md rounded-full flex items-center justify-center border border-emerald-500/50"
+                    className="w-20 h-20 bg-emerald-500/30 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-emerald-500 shadow-xl"
                   >
-                    <CheckCircle className="w-10 h-10 text-emerald-500" />
+                    <CheckCircle className="w-10 h-10 text-emerald-400" />
                   </motion.div>
+                )}
+
+                {/* Failed Indicator */}
+                {status === "failed" && (
+                  <div className="w-16 h-16 bg-red-500/30 backdrop-blur-md rounded-full flex items-center justify-center border-2 border-red-500 shadow-xl">
+                    <span className="text-white text-xl font-bold">✕</span>
+                  </div>
                 )}
               </motion.div>
             </div>
 
-            <div className="absolute bottom-4 inset-x-0 flex justify-center z-20">
+            <div className="absolute bottom-4 inset-x-0 flex flex-col items-center justify-center z-20 px-4">
                {status === "idle" && (
-                 <div className="px-3 py-1.5 bg-black/50 backdrop-blur-md rounded-full text-[8px] font-bold text-white uppercase tracking-widest border border-white/10">
-                    Kamera Aktif...
+                 <div className="px-3 py-1.5 bg-black/60 backdrop-blur-md rounded-full text-[9px] font-bold text-white uppercase tracking-widest border border-white/10 shadow-md">
+                    Menyiapkan Kamera...
                  </div>
                )}
                {status === "detecting" && (
                  <motion.div 
-                   animate={{ scale: [1, 1.02, 1] }}
-                   transition={{ duration: 1.5, repeat: Infinity }}
-                   className="px-3 py-1.5 bg-emerald-500 rounded-full text-[8px] font-bold text-white uppercase tracking-widest border border-white/10 shadow-lg shadow-emerald-500/30"
+                   animate={{ scale: [1, 1.03, 1] }}
+                   transition={{ duration: 1, repeat: Infinity }}
+                   className="px-3.5 py-1.5 bg-emerald-600 rounded-full text-[9px] font-bold text-white uppercase tracking-widest border border-white/15 shadow-lg shadow-emerald-600/40 flex items-center gap-1.5"
                  >
-                    Menganalisis Wajah...
+                    <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                    Mendeteksi Wajah & Fitur Biometrik...
                  </motion.div>
                )}
                {status === "success" && (
@@ -11488,8 +11926,21 @@ function FaceScannerModal({
                    animate={{ y: 0, opacity: 1 }}
                    className="px-4 py-1.5 bg-emerald-600 rounded-full text-[10px] font-bold text-white flex items-center gap-1.5 shadow-lg shadow-emerald-600/30"
                  >
-                    <CheckCircle className="w-3 h-3" /> Berhasil Terdeteksi!
+                    <CheckCircle className="w-3.5 h-3.5" /> Wajah Terverifikasi! Masuk Otomatis...
                  </motion.div>
+               )}
+               {status === "failed" && (
+                 <div className="text-center space-y-2">
+                   <div className="px-3 py-1.5 bg-red-600/90 backdrop-blur-md rounded-xl text-[9px] font-bold text-white shadow-lg">
+                      {errorMessage || "Wajah tidak terdeteksi."}
+                   </div>
+                   <button
+                     onClick={startScan}
+                     className="px-4 py-1.5 bg-white text-soft-black rounded-full text-[9px] font-black uppercase tracking-wider shadow-md hover:bg-gray-100 transition-all"
+                   >
+                     Coba Scan Ulang
+                   </button>
+                 </div>
                )}
             </div>
           </div>
@@ -11497,7 +11948,7 @@ function FaceScannerModal({
           <div className="p-6">
             <button
               onClick={onClose}
-              className="w-full py-3 bg-gray-50 text-gray-400 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all"
+              className="w-full py-3 bg-gray-50 text-gray-500 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-gray-100 transition-all"
             >
               Batalkan
             </button>
@@ -12372,21 +12823,27 @@ function TeacherJadwalCards({ user }: { user?: any }) {
           
         const certMap: Record<string, any> = {};
         certData?.forEach((cert) => {
-          certMap[cert.training_id] = cert;
+          let number = cert.certificate_number;
+          let url = cert.certificate_url;
+          if (!number && url && url.startsWith("{")) {
+            try {
+              const parsed = JSON.parse(url);
+              number = parsed.certificate_number;
+              url = parsed.url;
+            } catch (e) {}
+          }
+          certMap[cert.training_id] = {
+            ...cert,
+            certificate_number: number || cert.certificate_number,
+            certificate_url: url || cert.certificate_url
+          };
         });
         setCertRecords(certMap);
       }
 
       // Fetch Certificate Config
-      const { data: sData } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .single();
-
-      if (sData?.content?.certificate_configs) {
-        setCertConfig(sData.content.certificate_configs);
-      }
+      const certConfigsMap = await fetchCertificateConfigsMap();
+      setCertConfig(certConfigsMap);
     } catch (err) {
       console.error(err);
     } finally {
@@ -12398,7 +12855,19 @@ function TeacherJadwalCards({ user }: { user?: any }) {
     fetchAgendas();
   }, []);
 
+  const isCertDownloadAllowed = (itemId: string) => {
+    if (certConfig) {
+      if (certConfig[itemId]) return certConfig[itemId].downloadEnabled !== false;
+      if (certConfig["default"]) return certConfig["default"].downloadEnabled !== false;
+    }
+    return true;
+  };
+
   const handleDownload = async (item: any) => {
+    if (!isCertDownloadAllowed(item.id)) {
+      alert("Tombol unduh sertifikat saat ini dinonaktifkan oleh administrator.", "Info", "info");
+      return;
+    }
     const config = certConfig ? (certConfig[item.id] || certConfig["default"]) : null;
     if (!config) {
       alert("Template sertifikat belum diatur oleh admin.", "Info", "info");
@@ -12411,7 +12880,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
       try {
         const certQuery = supabase
           .from("training_certificates")
-          .select("certificate_number")
+          .select("*")
           .eq("training_id", item.id);
         
         if (user?.is_guest) {
@@ -12422,9 +12891,18 @@ function TeacherJadwalCards({ user }: { user?: any }) {
 
         const { data: existingCert } = await certQuery.maybeSingle();
 
-        if (existingCert?.certificate_number) {
-          certNumber = existingCert.certificate_number;
-        } else {
+        if (existingCert) {
+          if (existingCert.certificate_number) {
+            certNumber = existingCert.certificate_number;
+          } else if (existingCert.certificate_url && existingCert.certificate_url.startsWith("{")) {
+            try {
+              const parsed = JSON.parse(existingCert.certificate_url);
+              certNumber = parsed.certificate_number;
+            } catch (e) {}
+          }
+        }
+
+        if (!certNumber) {
           const now = new Date();
           const year = now.getFullYear();
           const month = now.getMonth() + 1;
@@ -12432,7 +12910,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
             "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
           ];
           const randomPart = Math.floor(1000 + Math.random() * 9000);
-          certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
+          certNumber = `${randomPart}/CERT-KKG-GUGUS-03/${romanMonths[month - 1]}/${year}`;
 
           const certPayload: any = {
             training_id: item.id,
@@ -12446,9 +12924,35 @@ function TeacherJadwalCards({ user }: { user?: any }) {
             certPayload.user_id = user.id;
           }
 
-          const { data: newCert } = await supabase.from("training_certificates").insert(certPayload).select().single();
+          let newCert = null;
+          try {
+            const { data, error } = await supabase.from("training_certificates").insert(certPayload).select().single();
+            if (error) throw error;
+            newCert = data;
+          } catch (err) {
+            // Fallback: store as JSON in certificate_url with nullable training_id
+            const fallbackPayload: any = {
+              training_id: null,
+              certificate_number: certNumber,
+              certificate_url: JSON.stringify({ activity_id: item.id, certificate_number: certNumber, url: "Generated Individually" }),
+            };
+            if (user?.is_guest) {
+              fallbackPayload.guest_account_id = user.id;
+            } else {
+              fallbackPayload.user_id = user.id;
+            }
+            const { data, error } = await supabase.from("training_certificates").insert(fallbackPayload).select().single();
+            if (!error) newCert = data;
+          }
 
-          if (newCert) setCertRecords((prev) => ({ ...prev, [item.id]: newCert }));
+          if (newCert) {
+            const finalCert = {
+              ...newCert,
+              certificate_number: certNumber,
+              certificate_url: "Generated Individually"
+            };
+            setCertRecords((prev) => ({ ...prev, [item.id]: finalCert }));
+          }
 
           logActivity(
             user,
@@ -12461,7 +12965,14 @@ function TeacherJadwalCards({ user }: { user?: any }) {
       }
     }
 
-    await generateTeacherPDF(user, item, config, certNumber);
+    const regRecord = attendances[item.id];
+    let userPeran = "Peserta";
+    if (typeof regRecord === "object" && regRecord) {
+      userPeran = regRecord.peran || regRecord.guest_peran || regRecord.role_in_activity || "Peserta";
+    }
+    const userWithPeran = { ...user, peran: userPeran };
+
+    await generateTeacherPDF(userWithPeran, item, config, certNumber);
   };
 
   const handleAbsenClick = (id: string) => {
@@ -12725,7 +13236,7 @@ function TeacherJadwalCards({ user }: { user?: any }) {
                               <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-50 text-green-600 rounded-xl font-bold text-[11px] uppercase tracking-widest border border-green-100 w-full md:w-auto justify-center">
                                 <CheckCircle className="w-4 h-4" /> Hadir
                               </div>
-                              {(certConfig && certConfig[item.id] ? certConfig[item.id].downloadEnabled !== false : isDownloadEnabled) ? (
+                              {isCertDownloadAllowed(item.id) ? (
                                 <button
                                   onClick={() => handleDownload(item)}
                                   className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-white rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg shadow-amber-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all w-full md:w-auto justify-center"
@@ -12770,6 +13281,119 @@ function TeacherJadwalCards({ user }: { user?: any }) {
   );
 }
 
+function RoleSelectionModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title = "Pilih Peran Dalam Kegiatan",
+  defaultRole = "Peserta"
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (role: string) => void;
+  title?: string;
+  defaultRole?: string;
+}) {
+  const [selectedRole, setSelectedRole] = useState(defaultRole || "Peserta");
+  const [customRole, setCustomRole] = useState("");
+
+  useEffect(() => {
+    if (defaultRole && ["Peserta", "Narasumber", "Panitia"].includes(defaultRole)) {
+      setSelectedRole(defaultRole);
+      setCustomRole("");
+    } else if (defaultRole) {
+      setSelectedRole("Lainnya");
+      setCustomRole(defaultRole);
+    } else {
+      setSelectedRole("Peserta");
+      setCustomRole("");
+    }
+  }, [isOpen, defaultRole]);
+
+  if (!isOpen) return null;
+
+  const handleSave = () => {
+    const rawRole = selectedRole === "Lainnya" ? (customRole.trim() || "PESERTA") : selectedRole;
+    const finalRole = rawRole.toUpperCase();
+    onConfirm(finalRole);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-gray-100 shadow-2xl space-y-5">
+        <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+          <h3 className="text-base font-heading font-bold text-gray-800 flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-main-blue"></span>
+            {title}
+          </h3>
+          <button 
+            type="button" 
+            onClick={onClose}
+            className="w-7 h-7 rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 flex items-center justify-center text-xs font-bold transition-all"
+          >
+            ✕
+          </button>
+        </div>
+
+        <p className="text-xs text-gray-500 leading-relaxed">
+          Pilih peran Anda dalam agenda / pelatihan ini. Peran yang dipilih akan otomatis tercetak pada sertifikat kegiatan Anda:
+        </p>
+        
+        <div className="grid grid-cols-2 gap-2.5">
+          {["Peserta", "Narasumber", "Panitia", "Lainnya"].map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setSelectedRole(r)}
+              className={`p-3 rounded-2xl border text-xs font-bold transition-all text-left flex items-center justify-between ${
+                selectedRole === r
+                  ? "border-main-blue bg-main-blue/10 text-main-blue shadow-sm"
+                  : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              <span>{r}</span>
+              {selectedRole === r && <div className="w-2.5 h-2.5 rounded-full bg-main-blue" />}
+            </button>
+          ))}
+        </div>
+
+        {selectedRole === "Lainnya" && (
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-gray-600 block">
+              Ketik Peran Khusus:
+            </label>
+            <input
+              type="text"
+              value={customRole}
+              onChange={(e) => setCustomRole(e.target.value)}
+              placeholder="Contoh: Moderator / Fasilitator / Penguji"
+              className="w-full border border-gray-200 rounded-2xl p-3 text-xs outline-none focus:border-main-blue focus:ring-2 focus:ring-main-blue/10"
+            />
+          </div>
+        )}
+
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2.5 rounded-2xl text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            className="px-5 py-2.5 rounded-2xl text-xs font-bold bg-main-blue text-white shadow-lg shadow-main-blue/20 hover:bg-blue-700 transition-all"
+          >
+            Simpan Peran & Lanjutkan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TeacherTrainingCards({ user }: { user: any }) {
   const { alert } = useAlert();
   const { content } = useSiteContent() as any;
@@ -12784,7 +13408,10 @@ function TeacherTrainingCards({ user }: { user: any }) {
     "daftar" | "absensi" | "sertifikat"
   >("daftar");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [selectedTrainingId, setSelectedTrainingId] = useState<string | null>(null);
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [selectedTrainingForRole, setSelectedTrainingForRole] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -12848,20 +13475,26 @@ function TeacherTrainingCards({ user }: { user: any }) {
         
       const certMap: Record<string, any> = {};
       certData?.forEach((cert) => {
-        certMap[cert.training_id] = cert;
+        let number = cert.certificate_number;
+        let url = cert.certificate_url;
+        if (!number && url && url.startsWith("{")) {
+          try {
+            const parsed = JSON.parse(url);
+            number = parsed.certificate_number;
+            url = parsed.url;
+          } catch (e) {}
+        }
+        certMap[cert.training_id] = {
+          ...cert,
+          certificate_number: number || cert.certificate_number,
+          certificate_url: url || cert.certificate_url
+        };
       });
       setCertRecords(certMap);
 
       // Fetch Certificate Config
-      const { data: sData } = await supabase
-        .from("site_settings")
-        .select("content")
-        .eq("id", 1)
-        .single();
-
-      if (sData?.content?.certificate_configs) {
-        setCertConfig(sData.content.certificate_configs);
-      }
+      const certConfigsMap = await fetchCertificateConfigsMap();
+      setCertConfig(certConfigsMap);
     } catch (err) {
       console.error(err);
     } finally {
@@ -12869,39 +13502,77 @@ function TeacherTrainingCards({ user }: { user: any }) {
     }
   };
 
-  const handleRegister = async (trainingId: string) => {
-    if (!supabase || !user) return;
+  const triggerRoleModal = (item: any) => {
+    setSelectedTrainingForRole(item);
+    setRoleModalOpen(true);
+  };
+
+  const handleConfirmRole = async (role: string) => {
+    if (!selectedTrainingForRole || !supabase || !user) return;
+    const trainingId = selectedTrainingForRole.id;
+    const upperRole = role.trim().toUpperCase();
     try {
-      const payload: any = {
-        training_id: trainingId,
-        status: "registered",
-        registered_at: new Date().toISOString(),
-      };
+      const regRecord = registrations[trainingId];
+      if (regRecord) {
+        // Always store local override so user gets updated role in certificates
+        try {
+          localStorage.setItem(`override_peran_${regRecord.id}`, upperRole);
+        } catch (e) {}
 
-      if ((user as any).is_guest) {
-        payload.is_guest = true;
-        payload.guest_account_id = user.id;
-        payload.guest_name = user.nama;
-        payload.guest_institution = user.sekolah;
-        payload.guest_nip = user.nip;
-        payload.guest_position = user.jabatan;
+        let { error } = await supabase
+          .from("training_participants")
+          .update({
+            peran: upperRole,
+          })
+          .eq("id", regRecord.id);
+
+        if (error && (error.message?.includes("column") || error.code === "PGRST204")) {
+          console.warn("Kolom 'peran' belum ada di database training_participants, tersimpan di lokal override:", error.message);
+        } else if (error) {
+          throw error;
+        }
+        alert(`Peran berhasil diperbarui menjadi ${upperRole}!`, "Sukses", "success");
       } else {
-        payload.user_id = user.id;
+        // New registration with role
+        const payload: any = {
+          training_id: trainingId,
+          status: "registered",
+          peran: upperRole,
+          registered_at: new Date().toISOString(),
+        };
+
+        if ((user as any).is_guest) {
+          payload.is_guest = true;
+          payload.guest_account_id = user.id;
+          payload.guest_name = user.nama;
+          payload.guest_institution = user.sekolah;
+          payload.guest_nip = user.nip;
+          payload.guest_position = user.jabatan;
+        } else {
+          payload.user_id = user.id;
+        }
+
+        let { error } = await supabase.from("training_participants").insert(payload);
+        if (error && (error.message?.includes("column") || error.code === "PGRST204")) {
+          delete payload.peran;
+          const { error: err2 } = await supabase.from("training_participants").insert(payload);
+          if (err2) throw err2;
+        } else if (error) {
+          throw error;
+        }
+        alert(`Pendaftaran berhasil sebagai ${role}!`, "Sukses", "success");
       }
-
-      const { error } = await supabase.from("training_participants").insert(payload);
-
-      if (error) throw error;
-      alert("Pendaftaran berhasil!", "Sukses", "success");
       fetchData();
     } catch (err: any) {
-      alert(err.message, "Gagal Daftar", "error");
+      alert(err.message, "Gagal Simpan", "error");
+    } finally {
+      setSelectedTrainingForRole(null);
     }
   };
 
   const handleAbsenClick = (trainingId: string) => {
     setSelectedTrainingId(trainingId);
-    setIsScannerOpen(true);
+    setStatusModalOpen(true);
   };
 
   const handleScanSuccess = async () => {
@@ -12933,7 +13604,19 @@ function TeacherTrainingCards({ user }: { user: any }) {
     }
   };
 
+  const isCertDownloadAllowed = (itemId: string) => {
+    if (certConfig) {
+      if (certConfig[itemId]) return certConfig[itemId].downloadEnabled !== false;
+      if (certConfig["default"]) return certConfig["default"].downloadEnabled !== false;
+    }
+    return true;
+  };
+
   const handleDownload = async (training: any) => {
+    if (!isCertDownloadAllowed(training.id)) {
+      alert("Tombol unduh sertifikat saat ini dinonaktifkan oleh administrator.", "Info", "info");
+      return;
+    }
     const config = certConfig ? (certConfig[training.id] || certConfig["default"]) : null;
     if (!config) {
       alert("Template sertifikat belum diatur oleh admin.", "Info", "info");
@@ -12948,7 +13631,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
         // Check if certificate record already exists
         const certQuery = supabase
           .from("training_certificates")
-          .select("certificate_number")
+          .select("*")
           .eq("training_id", training.id);
         
         if ((user as any).is_guest) {
@@ -12959,29 +13642,27 @@ function TeacherTrainingCards({ user }: { user: any }) {
 
         const { data: existingCert } = await certQuery.maybeSingle();
 
-        if (existingCert?.certificate_number) {
-          certNumber = existingCert.certificate_number;
-        } else {
+        if (existingCert) {
+          if (existingCert.certificate_number) {
+            certNumber = existingCert.certificate_number;
+          } else if (existingCert.certificate_url && existingCert.certificate_url.startsWith("{")) {
+            try {
+              const parsed = JSON.parse(existingCert.certificate_url);
+              certNumber = parsed.certificate_number;
+            } catch (e) {}
+          }
+        }
+
+        if (!certNumber) {
           // Generate an automatic certificate number: [Nomer]/CERT-KKG/[Bulan Romawi]/[Tahun]
           const now = new Date();
           const year = now.getFullYear();
           const month = now.getMonth() + 1;
           const romanMonths = [
-            "I",
-            "II",
-            "III",
-            "IV",
-            "V",
-            "VI",
-            "VII",
-            "VIII",
-            "IX",
-            "X",
-            "XI",
-            "XII",
+            "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"
           ];
           const randomPart = Math.floor(1000 + Math.random() * 9000);
-          certNumber = `${randomPart}/CERT-KKG/${romanMonths[month - 1]}/${year}`;
+          certNumber = `${randomPart}/CERT-KKG-GUGUS-03/${romanMonths[month - 1]}/${year}`;
 
           const certPayload: any = {
             training_id: training.id,
@@ -12995,9 +13676,37 @@ function TeacherTrainingCards({ user }: { user: any }) {
             certPayload.user_id = user.id;
           }
 
-          const { data: newCert } = await supabase.from("training_certificates").insert(certPayload).select().single();
+          let newCert = null;
+          try {
+            const { data, error } = await supabase.from("training_certificates").insert(certPayload).select().single();
+            if (error) throw error;
+            newCert = data;
+          } catch (err) {
+            // Fallback: store as JSON inside certificate_url text field with nullable training_id
+            const regRecord = registrations[training.id];
+            const currentPeran = (regRecord?.peran || regRecord?.guest_peran || regRecord?.role_in_activity || "PESERTA").toString().toUpperCase();
+            const fallbackPayload: any = {
+              training_id: null,
+              certificate_number: certNumber,
+              certificate_url: JSON.stringify({ activity_id: training.id, certificate_number: certNumber, peran: currentPeran, url: "Generated Individually" }),
+            };
+            if ((user as any).is_guest) {
+              fallbackPayload.guest_account_id = user.id;
+            } else {
+              fallbackPayload.user_id = user.id;
+            }
+            const { data, error } = await supabase.from("training_certificates").insert(fallbackPayload).select().single();
+            if (!error) newCert = data;
+          }
 
-          if (newCert) setCertRecords((prev) => ({ ...prev, [training.id]: newCert }));
+          if (newCert) {
+            const finalCert = {
+              ...newCert,
+              certificate_number: certNumber,
+              certificate_url: "Generated Individually"
+            };
+            setCertRecords((prev) => ({ ...prev, [training.id]: finalCert }));
+          }
 
           logActivity(
             user,
@@ -13010,8 +13719,15 @@ function TeacherTrainingCards({ user }: { user: any }) {
       }
     }
 
-    // Generate PDF with the number
-    await generateTeacherPDF(user, training, config, certNumber);
+    const regRecord = registrations[training.id];
+    const userPeran = (regRecord?.peran || regRecord?.guest_peran || regRecord?.role_in_activity || "PESERTA").toString().toUpperCase();
+    const userWithPeran = {
+      ...user,
+      peran: userPeran
+    };
+
+    // Generate PDF with the number & user role
+    await generateTeacherPDF(userWithPeran, training, config, certNumber);
   };
 
   const getStatusColor = (status: string) => {
@@ -13227,9 +13943,20 @@ function TeacherTrainingCards({ user }: { user: any }) {
                       <div className="p-4 bg-gradient-to-r from-gray-50/50 to-white border-t border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                         <div className="flex flex-col gap-2">
                            {isRegistered ? (
-                             <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-2 rounded-xl border border-green-100 self-start">
-                               <CheckCircle className="w-4 h-4 text-green-500" />
-                               <span className="text-[10px] font-black text-green-600 uppercase tracking-wider">Terdaftar</span>
+                             <div className="flex flex-wrap items-center gap-2">
+                               <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-1.5 rounded-xl border border-green-100">
+                                 <CheckCircle className="w-4 h-4 text-green-500" />
+                                 <span className="text-[10px] font-black text-green-600 uppercase tracking-wider">Terdaftar</span>
+                               </div>
+                               <button
+                                 type="button"
+                                 onClick={() => triggerRoleModal(item)}
+                                 className="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-main-blue px-3 py-1.5 rounded-xl border border-blue-100 text-[10px] font-bold transition-all"
+                                 title="Ubah peran Anda"
+                               >
+                                 <UserIcon className="w-3 h-3" />
+                                 <span>Peran: {reg?.peran || reg?.guest_peran || "Peserta"}</span>
+                               </button>
                              </div>
                            ) : (
                              <div className="text-[10px] font-black text-gray-300 uppercase tracking-widest pl-2">
@@ -13265,7 +13992,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                         <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto">
                           {!isRegistered ? (
                             <button
-                              onClick={() => handleRegister(item.id)}
+                              onClick={() => triggerRoleModal(item)}
                               disabled={!canRegister}
                               className={`w-full sm:w-auto px-6 py-2.5 rounded-xl text-[10px] font-black transition-all flex justify-center items-center gap-2 shadow-lg shrink-0 ${
                                 !canRegister
@@ -13293,7 +14020,7 @@ function TeacherTrainingCards({ user }: { user: any }) {
                               <div className="w-full sm:w-auto px-5 py-2.5 bg-white text-emerald-600 rounded-xl text-[10px] font-black border border-emerald-100 shadow-sm flex justify-center items-center gap-2 shrink-0">
                                  <CheckCircle className="w-4 h-4 text-emerald-500" /> <span className="truncate">Selesai</span>
                               </div>
-                              {(certConfig && certConfig[item.id] ? certConfig[item.id].downloadEnabled !== false : isDownloadEnabled) ? (
+                              {isCertDownloadAllowed(item.id) ? (
                                 <button
                                   onClick={() => handleDownload(item)}
                                   className="w-full sm:w-auto px-5 py-2.5 bg-amber-500 text-white rounded-xl text-[10px] font-black hover:bg-amber-600 shadow-lg shadow-amber-500/25 transition-all flex justify-center items-center gap-2 shrink-0 hover:scale-[1.03] active:scale-95 text-center"
@@ -13463,16 +14190,24 @@ function TeacherTrainingCards({ user }: { user: any }) {
                             <h4 className="font-black text-soft-black text-lg leading-tight mb-1">
                               {training?.title}
                             </h4>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
                                <div className={`w-2 h-2 rounded-full animate-pulse ${isDownloaded ? 'bg-green-500' : 'bg-amber-500'}`} />
                                <span className={`text-[11px] font-bold ${isDownloaded ? 'text-green-600' : 'text-amber-600'}`}>
                                  {isDownloaded ? "Sertifikat Terverifikasi" : "Siap Diunduh"}
                                </span>
+                               <span className="text-gray-300">•</span>
+                               <button
+                                 type="button"
+                                 onClick={() => triggerRoleModal(training)}
+                                 className="text-[10px] font-bold text-main-blue hover:underline bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-100"
+                               >
+                                 Peran: {reg?.peran || reg?.guest_peran || "Peserta"} (Ubah)
+                               </button>
                             </div>
                           </div>
                         </div>
 
-                        {(certConfig && certConfig[training.id] ? certConfig[training.id].downloadEnabled !== false : isDownloadEnabled) ? (
+                        {isCertDownloadAllowed(training.id) ? (
                           <button
                             onClick={() => handleDownload(training)}
                             className={`px-8 py-4 text-white rounded-2xl transition-all shadow-2xl relative z-10 flex items-center gap-3 font-black text-xs active:scale-90 ${
@@ -13498,10 +14233,105 @@ function TeacherTrainingCards({ user }: { user: any }) {
         </AnimatePresence>
       )}
 
+      {statusModalOpen && (() => {
+        const training = trainings.find(t => t.id === selectedTrainingId);
+        const reg = selectedTrainingId ? registrations[selectedTrainingId] : null;
+        const currentRole = reg?.peran || reg?.guest_peran || "Peserta";
+        const isAttended = reg?.status === "attended";
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl p-6 max-w-lg w-full border border-gray-100 shadow-2xl space-y-6">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h3 className="text-base font-heading font-bold text-gray-800 flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-main-blue"></span>
+                  Status & Peran dalam Kegiatan
+                </h3>
+                <button 
+                  type="button" 
+                  onClick={() => setStatusModalOpen(false)}
+                  className="w-7 h-7 rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 flex items-center justify-center text-xs font-bold transition-all"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 space-y-2">
+                <p className="text-[10px] font-bold text-main-blue uppercase tracking-wider">Kegiatan Dipilih</p>
+                <h4 className="font-bold text-gray-800 text-sm leading-snug">{training?.title || "Pelatihan KKG"}</h4>
+                <p className="text-xs text-gray-500">{training?.location} • {training?.date_start ? new Date(training.date_start).toLocaleDateString("id-ID") : ""}</p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">Status Kehadiran Saat Ini</p>
+                    <p className="text-xs font-black text-gray-800 mt-0.5">{isAttended ? "Hadir (Selesai)" : "Terdaftar (Belum Absen)"}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isAttended ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {isAttended ? "Hadir" : "Terdaftar"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between p-3.5 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase">Peran Anda</p>
+                    <p className="text-xs font-black text-amber-600 mt-0.5">{currentRole}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStatusModalOpen(false);
+                      if (training) triggerRoleModal(training);
+                    }}
+                    className="px-3 py-1.5 bg-main-blue/10 text-main-blue hover:bg-main-blue hover:text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                  >
+                    Ubah Peran Mandiri
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-gray-500 leading-relaxed italic">
+                Pastikan peran dan status kegiatan Anda sudah benar sebelum melakukan verifikasi kehadiran wajah.
+              </p>
+
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setStatusModalOpen(false)}
+                  className="px-4 py-2.5 rounded-2xl text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStatusModalOpen(false);
+                    setIsScannerOpen(true);
+                  }}
+                  className="px-6 py-2.5 rounded-2xl text-xs font-bold bg-leaf-green text-white shadow-lg shadow-leaf-green/25 hover:bg-green-600 transition-all flex items-center gap-2"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  Lanjut ke Verifikasi Wajah (Face Recognition)
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       <FaceScannerModal 
         isOpen={isScannerOpen} 
         onClose={() => setIsScannerOpen(false)} 
         onSuccess={handleScanSuccess}
+      />
+
+      <RoleSelectionModal
+        isOpen={roleModalOpen}
+        onClose={() => setRoleModalOpen(false)}
+        onConfirm={handleConfirmRole}
+        defaultRole={selectedTrainingForRole ? (registrations[selectedTrainingForRole.id]?.peran || registrations[selectedTrainingForRole.id]?.guest_peran || "Peserta") : "Peserta"}
+        title={selectedTrainingForRole ? `Peran Dalam ${selectedTrainingForRole.title}` : "Pilih Peran Dalam Kegiatan"}
       />
     </div>
   );

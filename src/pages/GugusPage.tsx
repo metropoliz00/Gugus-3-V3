@@ -9,7 +9,9 @@ import {
   BookOpen,
   Award,
   Calendar,
-  CheckCircle2
+  CheckCircle2,
+  FileText,
+  Download
 } from 'lucide-react';
 import { useSiteContent } from '../contexts/SiteContext';
 import OrgChart from '../components/OrgChart';
@@ -17,21 +19,56 @@ import { supabase } from '../lib/supabase';
 import MapGugus from '../components/MapGugus';
 import { getAutomatedProgramStatus } from '../utils/statusHelper';
 
+const getInitialOrgGugus = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_org_gugus');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function GugusPage() {
   const { content } = useSiteContent();
   const [activeTab, setActiveTab] = useState<'sejarah' | 'visi' | 'struktur' | 'program'>('sejarah');
-  const [struktur, setStruktur] = useState<any[]>([]);
+  const [struktur, setStruktur] = useState<any[]>(getInitialOrgGugus);
   
+  const loadStruktur = async (retry = 0) => {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase.from('org_gugus').select('*').order('created_at', { ascending: true });
+      if (data && Array.isArray(data)) {
+        if (data.length > 0) {
+          setStruktur(data);
+          try {
+            localStorage.setItem('cached_org_gugus', JSON.stringify(data));
+          } catch (e) {}
+        } else {
+          setStruktur([]);
+        }
+      } else if (error && retry < 3) {
+        setTimeout(() => loadStruktur(retry + 1), 800 * (retry + 1));
+      }
+    } catch (err) {
+      if (retry < 3) {
+        setTimeout(() => loadStruktur(retry + 1), 800 * (retry + 1));
+      }
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
     loadStruktur();
-  }, []);
 
-  const loadStruktur = async () => {
-    if (!supabase) return;
-    const { data } = await supabase.from('org_gugus').select('*').order('created_at', { ascending: true });
-    setStruktur(data || []);
-  };
+    const handleSync = () => loadStruktur();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
+  }, []);
   
   const data = content.gugus;
 
@@ -40,6 +77,7 @@ export default function GugusPage() {
     { id: 'visi', label: 'Visi & Misi', icon: Target },
     { id: 'struktur', label: 'Struktur Organisasi', icon: Users },
     { id: 'program', label: 'Program Kerja', icon: Briefcase },
+    { id: 'dokumen', label: 'Dokumen', icon: FileText },
   ];
 
   return (
@@ -160,7 +198,7 @@ export default function GugusPage() {
                       <h2 className="text-3xl font-heading font-black text-soft-black">Visi Gugus</h2>
                     </div>
                     <p className="text-xl text-gray-600 leading-relaxed font-light italic border-l-4 border-leaf-green pl-6 py-2">
-                       "{data.visi}"
+                       "{data?.visi || 'Visi belum diatur.'}"
                     </p>
                   </div>
 
@@ -172,7 +210,7 @@ export default function GugusPage() {
                       <h2 className="text-3xl font-heading font-black text-soft-black">Misi Kami</h2>
                     </div>
                     <ul className="space-y-4">
-                      {data.misi.map((misi, idx) => (
+                      {(data?.misi || []).map((misi: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:border-main-blue/30 transition-colors">
                           <span className="w-8 h-8 rounded-lg bg-main-blue/10 text-main-blue flex items-center justify-center font-bold shrink-0">{idx + 1}</span>
                           <span className="text-gray-600">{misi}</span>
@@ -190,7 +228,7 @@ export default function GugusPage() {
                     Tujuan Strategis
                   </h3>
                   <div className="space-y-4">
-                    {data.tujuan.map((tujuan, idx) => (
+                    {(data?.tujuan || []).map((tujuan: string, idx: number) => (
                       <div key={idx} className="flex items-start gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-200 group">
                         <div className="w-10 h-10 shrink-0 bg-gray-100 text-gray-500 font-bold rounded-full flex items-center justify-center group-hover:bg-main-blue group-hover:text-white transition-colors">
                           {idx + 1}
@@ -214,7 +252,7 @@ export default function GugusPage() {
                 </div>
                 
                 <div className="bg-white/50 rounded-3xl p-6 border border-gray-100 overflow-x-auto min-h-[400px]">
-                  <OrgChart members={struktur} />
+                  <OrgChart members={struktur && struktur.length > 0 ? struktur : (data?.struktur || [])} />
                 </div>
               </div>
             )}
@@ -232,7 +270,7 @@ export default function GugusPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {data.programs.map((program, idx) => {
+                  {(data?.programs || []).map((program: any, idx: number) => {
                     const autoStatus = getAutomatedProgramStatus(program);
                     return (
                       <div key={idx} className="group p-8 rounded-3xl bg-white border border-gray-100 hover:border-main-blue transition-all hover:shadow-xl shadow-soft-black/5 relative overflow-hidden">
@@ -264,6 +302,55 @@ export default function GugusPage() {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'dokumen' && (
+              <div className="space-y-8">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="p-3 bg-orange-50 rounded-2xl">
+                    <FileText className="w-8 h-8 text-accent-orange" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-heading font-black text-soft-black">Dokumen & Berkas Gugus</h2>
+                    <p className="text-sm text-accent-orange font-bold uppercase tracking-wider">Arsip Resmi Gugus 03 Melati</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(data?.dokumen || []).map((doc: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-main-blue hover:shadow-md transition-all min-w-0 overflow-hidden gap-3">
+                      <div className="flex items-center gap-4 min-w-0 flex-1">
+                        <div className="w-12 h-12 rounded-xl bg-blue-50 text-main-blue flex items-center justify-center shrink-0 font-bold">
+                          <FileText className="w-6 h-6" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-soft-black text-base break-words break-all leading-snug">{doc.title || 'Dokumen Tanpa Judul'}</h4>
+                          <p className="text-xs text-gray-400 mt-0.5">Berkas Resmi Gugus 03</p>
+                        </div>
+                      </div>
+                      {doc.url ? (
+                        <a
+                          href={doc.url}
+                          download={doc.title || 'dokumen'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 bg-main-blue/10 hover:bg-main-blue text-main-blue hover:text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-2 shrink-0"
+                        >
+                          <Download className="w-4 h-4" /> Unduh
+                        </a>
+                      ) : (
+                        <span className="text-xs text-gray-300 italic">Belum ada file</span>
+                      )}
+                    </div>
+                  ))}
+                  {(!data?.dokumen || data.dokumen.length === 0) && (
+                    <div className="col-span-1 md:col-span-2 text-center py-12 bg-white rounded-2xl border border-gray-100">
+                      <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-400 font-medium">Belum ada dokumen Gugus yang diunggah.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

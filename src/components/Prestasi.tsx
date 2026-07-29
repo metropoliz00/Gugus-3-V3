@@ -3,19 +3,50 @@ import { Trophy, Medal, Star, Image as ImageIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
+const getInitialAchievements = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_awards');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function Prestasi() {
-  const [achievements, setAchievements] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<any[]>(getInitialAchievements);
 
   useEffect(() => {
-    async function load() {
-      if (supabase) {
-        const { data } = await supabase.from('awards').select('*').order('created_at', { ascending: false });
+    async function load(retry = 0) {
+      if (!supabase) return;
+      try {
+        const { data, error } = await supabase.from('awards').select('*').order('created_at', { ascending: false });
         if (data && data.length > 0) {
           setAchievements(data);
+          try {
+            localStorage.setItem('cached_awards', JSON.stringify(data));
+          } catch (e) {}
+        } else if (error && retry < 3) {
+          setTimeout(() => load(retry + 1), 800 * (retry + 1));
+          return;
+        }
+      } catch (e) {
+        if (retry < 3) {
+          setTimeout(() => load(retry + 1), 800 * (retry + 1));
+          return;
         }
       }
     }
+
     load();
+
+    const handleSync = () => load();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   const defaultAchievements = [

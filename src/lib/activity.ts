@@ -10,22 +10,24 @@ export interface ActivityLog {
   user_role: string;
 }
 
-export async function logActivity(user: any, action: string, description: string) {
+export function logActivity(user: any, action: string, description: string) {
   if (!supabase || !user) return;
 
-  try {
-    const { error } = await supabase.from('activity_logs').insert([{
-      user_id: user.id || user.uid,
-      user_name: user.nama || user.username || user.email || 'Anonymous',
-      user_role: user.role || 'user',
-      action,
-      description
-    }]);
-
-    if (error) {
-      console.error('Error logging activity:', error);
+  // Non-blocking fire-and-forget background execution
+  setTimeout(async () => {
+    try {
+      const { error } = await supabase.from('activity_logs').insert([{
+        user_id: user.id || user.uid,
+        user_name: user.nama || user.username || user.email || 'Anonymous',
+        user_role: user.role || 'user',
+        action,
+        description
+      }]);
+      if (error) {
+        console.warn('Activity log note:', error.message);
+      }
+    } catch (err: any) {
+      console.warn('Activity log exception:', err);
     }
-  } catch (err) {
-    console.error('Error logging activity exception:', err);
-  }
+  }, 0);
 }

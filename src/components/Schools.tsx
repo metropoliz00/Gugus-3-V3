@@ -4,26 +4,55 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import SchoolDetailModal, { AccreditationSeal } from "./SchoolDetailModal";
 
+const getInitialSchools = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_schools');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function Schools() {
-  const [schools, setSchools] = useState<any[]>([]);
+  const [schools, setSchools] = useState<any[]>(getInitialSchools);
   const [selectedSchool, setSelectedSchool] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => schools.length === 0);
   const [filter, setFilter] = useState<'Semua' | 'Sekolah Inti' | 'Sekolah Imbas'>('Semua');
 
   useEffect(() => {
-    async function fetchSchools() {
+    async function fetchSchools(retry = 0) {
       if (!supabase) return;
       try {
         const { data, error } = await supabase.from('schools').select('*').order('name', { ascending: true });
-        if (error) throw error;
-        setSchools(data || []);
+        if (data && data.length > 0) {
+          setSchools(data);
+          try {
+            localStorage.setItem('cached_schools', JSON.stringify(data));
+          } catch (e) {}
+        } else if ((error || !data) && retry < 3) {
+          setTimeout(() => fetchSchools(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } catch (err) {
-        console.error("Error fetching schools:", err);
+        if (retry < 3) {
+          setTimeout(() => fetchSchools(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } finally {
         setIsLoading(false);
       }
     }
+
     fetchSchools();
+
+    const handleSync = () => fetchSchools();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   useEffect(() => {

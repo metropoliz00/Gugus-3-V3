@@ -42,7 +42,7 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
     dropdown?: string[];
   }
 
-  const menuItems: NavItem[] = [
+  const menuItems: NavItem[] = ([
     { label: "Beranda", href: "/", type: 'nav' },
     { label: "Profil Gugus", href: "/profil-gugus", type: 'nav' },
     { label: "KKG", href: "/kkg", type: 'nav' },
@@ -55,7 +55,14 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
     { label: "Anggota Gugus", href: "/anggota-gugus", type: 'nav' },
     { label: "Hasil Karya", href: "/hasil-karya", type: 'nav' },
     { label: "Registrasi Tamu", href: "/registrasi-tamu", type: 'nav' },
-  ];
+  ] as NavItem[]).filter(item => {
+    if (item.label === "Keuangan") {
+      const activeMenus = (content as any)?.activeMenus;
+      if (!activeMenus || activeMenus.keuangan === undefined) return true;
+      return activeMenus.keuangan === true;
+    }
+    return true;
+  });
 
   const isKkgPage = location.pathname === '/kkg';
 

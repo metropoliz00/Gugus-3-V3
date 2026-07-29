@@ -65,8 +65,11 @@ export default function AlertModal({ isOpen, onClose, title, message, type = 'in
                 )}
                 <button 
                   onClick={() => {
-                    if (isConfirm && onConfirm) onConfirm();
-                    onClose();
+                    if (isConfirm && onConfirm) {
+                      onConfirm();
+                    } else {
+                      onClose();
+                    }
                   }}
                   className={`flex-1 py-3 px-4 text-white font-semibold rounded-xl transition-all shadow-lg ${buttonColor}`}
                 >

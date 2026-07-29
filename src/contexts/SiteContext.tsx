@@ -152,63 +152,27 @@ export const defaultContent = {
     }
   ],
   kkg: {
-    sejarah: "Kelompok Kerja Guru (KKG) Gugus 03 Melati Kecamatan Jenu didirikan sebagai wadah pengembangan keprofesian berkelanjutan bagi para pendidik di wilayah Kecamatan Jenu. Sejak berdirinya, KKG ini telah menjadi pusat inovasi dan kolaborasi antar sekolah anggota untuk meningkatkan kualitas pembelajaran.",
-    gambarProfil: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop",
-    persentaseKolaborasi: "100%",
-    tahunDedikasi: "10+",
-    anggotaAktif: "120+",
-    programDiselesaikan: 13,
-    totalWorkshop: 5,
-    realisasiProgram: 65,
-    partisipasiGuru: 88,
-    statistikKkg: [
-      { label: "Anggota Aktif", value: 120, suffix: "+" },
-      { label: "Program Diselesaikan", value: 13, suffix: "" },
-      { label: "Workshop", value: 5, suffix: "" }
-    ],
-    visi: "Terwujudnya Guru Profesional, Kreatif, and Inovatif dalam Menyelenggarakan Pembelajaran yang Berpusat pada Peserta Didik.",
-    misi: [
-      "Meningkatkan kompetensi pedagogik dan profesional guru.",
-      "Mengembangkan media dan sumber belajar interaktif.",
-      "Memfasilitasi pertukaran informasi dan praktik baik antar guru."
-    ],
-    tujuan: [
-      "Menciptakan iklim pembelajaran yang kondusif.",
-      "Standarisasi perangkat dan evaluasi pembelajaran.",
-      "Memberdayakan guru dalam penelitian tindakan kelas (PTK)."
-    ],
+    sejarah: "",
+    gambarProfil: "",
+    persentaseKolaborasi: "",
+    tahunDedikasi: "",
+    anggotaAktif: "",
+    programDiselesaikan: 0,
+    totalWorkshop: 0,
+    realisasiProgram: 0,
+    partisipasiGuru: 0,
+    statistikKkg: [],
+    visi: "",
+    misi: [],
+    tujuan: [],
     dokumen: [],
     pengumuman: {
-      title: "Pengumuman Penting KKG Gugus 03",
-      desc: "Seluruh anggota KKG diharapkan hadir dalam rapat koordinasi bulanan yang akan dilaksanakan pada hari Jumat mendatang.",
-      isActive: true
+      title: "",
+      desc: "",
+      isActive: false
     },
-    struktur: [
-      { role: "Pembina", name: "Drs. H. Abdullah, M.Pd", school: "Dinas Pendidikan" },
-      { role: "Ketua KKG", name: "Drs. Budi Santoso, M.Pd", school: "SDN Jenu 1" },
-      { role: "Sekretaris", name: "Ahmad Fauzi, S.Pd", school: "SDN Jenu 3" },
-      { role: "Bendahara", name: "Rina Kusuma, S.Pd", school: "SDN Jenu 1" },
-      { role: "Pemandu Kelas", name: "Siti Rahmawati, S.Pd", school: "SDN Jenu 2" },
-      { role: "Pemandu Mapel", name: "Andi Wijaya, S.Pd", school: "SDN Jenu 2" }
-    ],
-    programs: {
-      tahunan: [
-        { title: "Penyusunan Perangkat Pembelajaran Terpadu", desc: "Kolaborasi antara guru kelas untuk menyusun RPP, Silabus, dan Modul Ajar yang adaptif terhadap Kurikulum Merdeka.", date: "Juli 2024", status: "Selesai" },
-        { title: "Evaluasi Hasil Belajar Gugus", desc: "Pertemuan rutin untuk mengevaluasi hasil capaian belajar siswa antar sekolah di Gugus 03 Melati Kecamatan Jenu.", date: "Desember 2024", status: "Berjalan" }
-      ],
-      workshop: [
-        { title: "Workshop Pemanfaatan AI dalam Kelas", desc: "Implementasi teknologi AI untuk pembuatan media ajar dan otomatisasi penilaian.", date: "Agustus 2024", status: "Selesai" },
-        { title: "Pelatihan Pedagogik Modern", desc: "Meningkatkan kemampuan problem solving dan critical thinking guru.", date: "Oktober 2024", status: "Berjalan" }
-      ],
-      supervisi: [
-        { title: "Kunjungan Kelas Silang", desc: "Supervisi akademik dengan meninjau cara mengajar guru di sekolah lain dalam satu gugus.", date: "November 2024", status: "Terjadwal" },
-        { title: "Review Instrumen Penilaian", desc: "Standarisasi instrumen per-mata pelajaran.", date: "Februari 2025", status: "Terjadwal" }
-      ],
-      media: [
-        { title: "Lomba Pembuatan Video Pembelajaran", desc: "Kompetisi internal guru gugus untuk memproduksi video ajar terbaik.", date: "Maret 2025", status: "Menunggu" },
-        { title: "Bimtek Alat Peraga Edukatif (APE)", desc: "Pembuatan APE dari bahan daur ulang dan aplikasinya.", date: "Mei 2025", status: "Menunggu" }
-      ]
-    }
+    struktur: [],
+    programs: {}
   },
   news: [
     { title: "Penerapan Kurikulum Merdeka di Jenu", date: "12 Mar 2024", author: "Humas Gugus", img: "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=2070&auto=format&fit=crop", cat: "Berita" },
@@ -223,31 +187,15 @@ export const defaultContent = {
     { type: 'image', size: 'medium', url: 'https://images.unsplash.com/photo-1427504494785-3b9ca2044fcc?q=80&w=2000&auto=format&fit=crop' },
   ],
   gugus: {
-    sejarah: "Gugus 03 Melati Kecamatan Jenu didirikan sebagai pusat koordinasi administratif dan pengembangan kualitas antara sekolah-sekolah dasar di wilayah Jenu utara. Organisasi ini telah menjadi pilar penggerak dalam menyelaraskan kebijakan pendidikan pusat dengan implementasi di tingkat sekolah.",
-    visi: "Terwujudnya Sinergi Antar Sekolah dalam Menciptakan Lingkungan Belajar yang Berkualitas dan Mandiri.",
-    misi: [
-      "Mengordinasi pelaksanaan program pendidikan di tingkat gugus.",
-      "Membangun manajemen sekolah yang transparan dan akuntabel.",
-      "Meningkatkan pemberdayaan sumber daya sekolah anggota."
-    ],
-    tujuan: [
-      "Mewujudkan pemerataan kualitas pendidikan antar sekolah anggota.",
-      "Optimalisasi sarana dan prasarana penunjang kegiatan belajar.",
-      "Meningkatkan peran serta masyarakat dalam pendanaan pendidikan."
-    ],
-    tahunBerdiri: "2010",
-    sekolahInti: "UPT SDN Mentoso",
-    wilayahKerja: "Kec. Jenu Utara",
-    struktur: [
-      { role: "Ketua Gugus", name: "Sulastri, S.Pd", school: "UPT SDN Mentoso" },
-      { role: "Sekretaris Gugus", name: "Sunarsih, S.Pd", school: "UPT SDN Remen 1" },
-      { role: "Bendahara Gugus", name: "Nurhariadji, S.Pd", school: "UPT SDN Remen 2" }
-    ],
-    programs: [
-      { title: "Rapat Koordinasi Kepala Sekolah Gugus", desc: "Pertemuan bulanan kepala sekolah untuk sinkronisasi kebijakan.", date: "Setiap Awal Bulan" },
-      { title: "Monitoring dan Evaluasi Kinerja Sekolah", desc: "Pelaporan dan penjaminan mutu rutin.", date: "Tiap Semester" },
-      { title: "Pembinaan Manajerial", desc: "Pelatihan administrasi sekolah bagi staf dan pimpinan.", date: "Agustus 2024" }
-    ],
+    sejarah: "",
+    visi: "",
+    misi: [],
+    tujuan: [],
+    tahunBerdiri: "",
+    sekolahInti: "",
+    wilayahKerja: "",
+    struktur: [],
+    programs: [],
     dokumen: []
   },
   agenda: [
@@ -256,9 +204,13 @@ export const defaultContent = {
     { title: 'Batas Upload Nilai Akhir', time: 'Senin Depan', location: 'Daring (Sistem)' },
   ],
   announcement: {
-    title: "Pengumuman Penting",
-    subtitle: "Pendaftaran Peserta Didik Baru Telah Dibuka!",
-    desc: "Mari daftarkan putra/putri Anda di sekolah-sekolah unggulan Gugus 03 Melati Kecamatan Jenu. Kuota terbatas!"
+    active: true,
+    title: "Pengumuman & Informasi",
+    subtitle: "Gugus 03 Melati Kecamatan Jenu",
+    desc: "Mari ikuti berbagai kegiatan dan program unggulan komunitas pendidik Gugus 03 Melati Kecamatan Jenu.",
+    imageUrl: "https://images.unsplash.com/photo-1577896851231-70ef18881754?auto=format&fit=crop&q=80&w=1200",
+    linkUrl: "",
+    buttonText: "Lihat Selengkapnya"
   },
   activeMenus: {
     overview: true,
@@ -280,6 +232,102 @@ export const defaultContent = {
 
 export type SiteContent = typeof defaultContent;
 
+const recursivelyReplaceGugus3 = (obj: any): any => {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') {
+    return obj.replace(/Gugus 3(?!\d)/gi, (match) => {
+      if (match.toUpperCase() === match) return 'GUGUS 03';
+      if (match.toLowerCase() === match) return 'gugus 03';
+      return 'Gugus 03';
+    });
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(item => recursivelyReplaceGugus3(item));
+  }
+  if (typeof obj === 'object') {
+    const newObj: any = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        newObj[key] = recursivelyReplaceGugus3(obj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+};
+
+const sanitizeSiteContent = (raw: any): any => {
+  if (!raw || typeof raw !== 'object') return raw;
+  const copy = JSON.parse(JSON.stringify(raw));
+
+  // 1. Strip heavy certificate configs from site_settings so each config is stored separately in training_certificates SQL table
+  delete copy.certificate_configs;
+  delete copy.certificate_config;
+
+  // 2. Strip heavy arrays that belong in separate SQL tables
+  delete copy.schools;
+  delete copy.news;
+  delete copy.gallery;
+
+  // 3. Clean up oversized Base64 strings (>250KB) anywhere inside JSON
+  const cleanOversizedBase64 = (obj: any) => {
+    if (!obj || typeof obj !== 'object') return;
+    for (const key of Object.keys(obj)) {
+      if (typeof obj[key] === 'string' && obj[key].startsWith('data:') && obj[key].length > 2500000) {
+        obj[key] = '';
+      } else if (typeof obj[key] === 'object') {
+        cleanOversizedBase64(obj[key]);
+      }
+    }
+  };
+  cleanOversizedBase64(copy);
+
+  return copy;
+};
+
+const mergeContent = (base: any, incomingRaw: any) => {
+  if (!incomingRaw) return base;
+  const incoming = recursivelyReplaceGugus3(incomingRaw);
+  return {
+    ...base,
+    ...incoming,
+    hero: base.hero && incoming.hero ? { ...base.hero, ...incoming.hero } : (incoming.hero || base.hero),
+    profil: base.profil && incoming.profil ? { ...base.profil, ...incoming.profil } : (incoming.profil || base.profil),
+    footer: base.footer && incoming.footer ? { ...base.footer, ...incoming.footer } : (incoming.footer || base.footer),
+    kkg: base.kkg && incoming.kkg ? {
+      ...base.kkg,
+      ...incoming.kkg,
+      programs: incoming.kkg.programs || base.kkg.programs,
+      programCategories: incoming.kkg.programCategories || base.kkg.programCategories,
+      statistikKkg: incoming.kkg.statistikKkg || base.kkg.statistikKkg,
+      dokumen: incoming.kkg.dokumen || base.kkg.dokumen,
+    } : (incoming.kkg || base.kkg),
+    gugus: base.gugus && incoming.gugus ? {
+      ...base.gugus,
+      ...incoming.gugus,
+      programs: incoming.gugus.programs || base.gugus.programs,
+      dokumen: incoming.gugus.dokumen || base.gugus.dokumen,
+    } : (incoming.gugus || base.gugus),
+    announcement: base.announcement && incoming.announcement ? { ...base.announcement, ...incoming.announcement } : (incoming.announcement || base.announcement),
+    activeMenus: base.activeMenus && incoming.activeMenus ? { ...base.activeMenus, ...incoming.activeMenus } : (incoming.activeMenus || base.activeMenus),
+  };
+};
+
+const getInitialContent = (): SiteContent => {
+  if (typeof window !== 'undefined') {
+    try {
+      const local = localStorage.getItem('siteContent');
+      if (local) {
+        const parsed = JSON.parse(local);
+        return mergeContent(defaultContent, parsed);
+      }
+    } catch (e) {
+      console.warn("Failed to load initial site content from localStorage:", e);
+    }
+  }
+  return defaultContent;
+};
+
 interface SiteContextType {
   content: SiteContent;
   updateContent: (newContent: Partial<SiteContent>) => Promise<void>;
@@ -297,115 +345,352 @@ const SiteContext = createContext<SiteContextType>({
 export const useSiteContent = () => useContext(SiteContext);
 
 export const SiteProvider = ({ children }: { children: React.ReactNode }) => {
-  const [content, setContent] = useState<SiteContent>(defaultContent);
+  const [content, setContent] = useState<SiteContent>(getInitialContent);
   const [isLoading, setIsLoading] = useState(true);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadContent();
-  }, []);
-
-  const recursivelyReplaceGugus3 = (obj: any): any => {
-    if (obj === null || obj === undefined) return obj;
-    if (typeof obj === 'string') {
-      return obj.replace(/Gugus 3(?!\d)/gi, (match) => {
-        if (match.toUpperCase() === match) return 'GUGUS 03';
-        if (match.toLowerCase() === match) return 'gugus 03';
-        return 'Gugus 03';
-      });
-    }
-    if (Array.isArray(obj)) {
-      return obj.map(item => recursivelyReplaceGugus3(item));
-    }
-    if (typeof obj === 'object') {
-      const newObj: any = {};
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          newObj[key] = recursivelyReplaceGugus3(obj[key]);
-        }
-      }
-      return newObj;
-    }
-    return obj;
-  };
-
-  const mergeContent = (base: any, incomingRaw: any) => {
-    if (!incomingRaw) return base;
-    const incoming = recursivelyReplaceGugus3(incomingRaw);
-    return {
-      ...base,
-      ...incoming,
-      hero: base.hero && incoming.hero ? { ...base.hero, ...incoming.hero } : (incoming.hero || base.hero),
-      profil: base.profil && incoming.profil ? { ...base.profil, ...incoming.profil } : (incoming.profil || base.profil),
-      footer: base.footer && incoming.footer ? { ...base.footer, ...incoming.footer } : (incoming.footer || base.footer),
-      kkg: base.kkg && incoming.kkg ? { ...base.kkg, ...incoming.kkg } : (incoming.kkg || base.kkg),
-      gugus: base.gugus && incoming.gugus ? { ...base.gugus, ...incoming.gugus } : (incoming.gugus || base.gugus),
-      announcement: base.announcement && incoming.announcement ? { ...base.announcement, ...incoming.announcement } : (incoming.announcement || base.announcement),
-      activeMenus: base.activeMenus && incoming.activeMenus ? { ...base.activeMenus, ...incoming.activeMenus } : (incoming.activeMenus || base.activeMenus),
-    };
-  };
-
-  const loadContent = async () => {
-    setIsLoading(true);
-    const local = localStorage.getItem('siteContent');
-    if (local) {
-      try {
-        setContent(mergeContent(defaultContent, JSON.parse(local)));
-      } catch(e) {}
-    }
-
+  const loadContent = async (retryCount = 0) => {
     try {
       if (supabase) {
-        const { data, error } = await supabase.from('site_settings').select('content').eq('id', 1).single();
-        if (data && data.content) {
-          const merged = mergeContent(defaultContent, data.content);
-          setContent(merged);
-          try {
-            localStorage.setItem('siteContent', JSON.stringify(merged));
-          } catch (storageError) {
-            console.warn("Failed to store siteContent in localStorage (quota exceeded):", storageError);
-          }
+        const { data: siteData, error: siteError } = await supabase.from('site_settings').select('content').eq('id', 1).single();
+        let rawContent = siteData?.content ? { ...siteData.content } : {};
+        delete rawContent.kkg;
+        delete rawContent.gugus;
+
+        const { data: kkgData } = await supabase.from('kkg_settings').select('content').eq('id', 1).single();
+        let kkgParsed = kkgData?.content ? { ...kkgData.content } : {};
+        const { data: kkgDocData } = await supabase.from('kkg_documents').select('content').eq('id', 1).single();
+        if (kkgDocData && kkgDocData.content) {
+          kkgParsed.dokumen = kkgDocData.content;
+        }
+        const { data: kkgProgRows } = await supabase.from('kkg_programs').select('*');
+        const kkgProgramsMapped: any = {
+          tahunan: [],
+          workshop: [],
+          supervisi: [],
+          media: []
+        };
+        if (kkgProgRows) {
+          kkgProgRows.forEach((row: any) => {
+            const cat = row.category_id || 'tahunan';
+            if (!kkgProgramsMapped[cat]) {
+              kkgProgramsMapped[cat] = [];
+            }
+            kkgProgramsMapped[cat].push({
+              id: row.id,
+              title: row.title || '',
+              desc: row.desc_text || '',
+              date: row.execution_date || '',
+              status: row.status || 'rencana'
+            });
+          });
+        }
+        kkgParsed.programs = kkgProgramsMapped;
+        rawContent.kkg = kkgParsed;
+
+        const { data: gugusData } = await supabase.from('gugus_settings').select('content').eq('id', 1).single();
+        let gugusParsed = gugusData?.content ? { ...gugusData.content } : {};
+        const { data: gugusDocData } = await supabase.from('gugus_documents').select('content').eq('id', 1).single();
+        if (gugusDocData && gugusDocData.content) {
+          gugusParsed.dokumen = gugusDocData.content;
+        }
+        const { data: gugusProgRows } = await supabase.from('gugus_programs').select('*').order('created_at', { ascending: true });
+        const gugusProgramsMapped: any[] = [];
+        if (gugusProgRows) {
+          gugusProgRows.forEach((row: any) => {
+            gugusProgramsMapped.push({
+              id: row.id,
+              title: row.title || '',
+              desc: row.desc_text || '',
+              date: row.execution_date || '',
+              status: row.status || 'rencana'
+            });
+          });
+        }
+        gugusParsed.programs = gugusProgramsMapped;
+        rawContent.gugus = gugusParsed;
+
+        const merged = mergeContent(defaultContent, rawContent);
+        setContent(merged);
+        try {
+          localStorage.setItem('siteContent', JSON.stringify(merged));
+        } catch (storageError) {
+          console.warn("Failed to store siteContent in localStorage:", storageError);
         }
       }
     } catch (e) {
       console.error("Backend load error:", e);
+      if (retryCount < 3) {
+        setTimeout(() => loadContent(retryCount + 1), 800 * (retryCount + 1));
+        return;
+      }
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
+  useEffect(() => {
+    loadContent();
+
+    let channelSite: any = null;
+    let channelKkg: any = null;
+    let channelGugus: any = null;
+    let channelKkgDoc: any = null;
+    let channelKkgProg: any = null;
+    let channelGugusDoc: any = null;
+    let channelGugusProg: any = null;
+    if (supabase) {
+      channelSite = supabase
+        .channel('realtime_site_settings')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'site_settings', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelKkg = supabase
+        .channel('realtime_kkg_settings')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'kkg_settings', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelGugus = supabase
+        .channel('realtime_gugus_settings')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'gugus_settings', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelKkgDoc = supabase
+        .channel('realtime_kkg_documents')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'kkg_documents', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelKkgProg = supabase
+        .channel('realtime_kkg_programs')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'kkg_programs' },
+          () => {
+            loadContent();
+          }
+        )
+        .subscribe();
+
+      channelGugusDoc = supabase
+        .channel('realtime_gugus_documents')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'gugus_documents', filter: 'id=eq.1' },
+          (payload) => {
+            if (payload.new && (payload.new as any).content) {
+              loadContent();
+            }
+          }
+        )
+        .subscribe();
+
+      channelGugusProg = supabase
+        .channel('realtime_gugus_programs')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'gugus_programs' },
+          () => {
+            loadContent();
+          }
+        )
+        .subscribe();
+    }
+
+    const handleOnline = () => {
+      loadContent();
+    };
+
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      if (channelSite && supabase) supabase.removeChannel(channelSite);
+      if (channelKkg && supabase) supabase.removeChannel(channelKkg);
+      if (channelGugus && supabase) supabase.removeChannel(channelGugus);
+      if (channelKkgDoc && supabase) supabase.removeChannel(channelKkgDoc);
+      if (channelKkgProg && supabase) supabase.removeChannel(channelKkgProg);
+      if (channelGugusDoc && supabase) supabase.removeChannel(channelGugusDoc);
+      if (channelGugusProg && supabase) supabase.removeChannel(channelGugusProg);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, []);
+
   const updateContent = async (newContent: Partial<SiteContent>) => {
-    const updated = { ...content, ...newContent };
+    const updated = mergeContent(content, newContent);
+    const cleanPayload = sanitizeSiteContent(updated);
+
+    const isValidUUID = (str: string) => {
+      if (!str) return false;
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+    };
+
     setContent(updated);
     try {
-      localStorage.setItem('siteContent', JSON.stringify(updated));
+      localStorage.setItem('siteContent', JSON.stringify(cleanPayload));
     } catch (storageError) {
-      console.warn("Failed to store siteContent in localStorage (quota exceeded):", storageError);
+      console.warn("Failed to store siteContent in localStorage:", storageError);
     }
     setSaveMessage("Menyimpan...");
     
     try {
       if (supabase) {
-        const { error } = await supabase.from('site_settings').upsert({ id: 1, content: updated });
+        if (newContent.kkg) {
+          const kkgObj = { ...updated.kkg };
+          const kkgDokumen = kkgObj.dokumen || [];
+          const kkgPrograms = kkgObj.programs || {};
+          delete kkgObj.dokumen;
+          delete kkgObj.programs;
+          const cleanKkg = sanitizeSiteContent(kkgObj);
+          const { error: kkgErr } = await supabase.from('kkg_settings').upsert({ id: 1, content: cleanKkg });
+          if (kkgErr) {
+            console.error("Error saving kkg_settings:", kkgErr);
+            throw new Error("Gagal menyimpan kkg_settings: " + kkgErr.message);
+          }
+
+          const { error: kkgDocErr } = await supabase.from('kkg_documents').upsert({ id: 1, content: kkgDokumen });
+          if (kkgDocErr) {
+            console.error("Error saving kkg_documents:", kkgDocErr);
+            throw new Error("Gagal menyimpan kkg_documents: " + kkgDocErr.message);
+          }
+
+          const kkgProgRows: any[] = [];
+          Object.keys(kkgPrograms).forEach((catId) => {
+            const list = kkgPrograms[catId] || [];
+            list.forEach((item: any) => {
+              const row: any = {
+                category_id: catId,
+                title: item.title || '',
+                desc_text: item.desc || '',
+                execution_date: item.date || '',
+                status: item.status || 'rencana'
+              };
+              if (item.id && isValidUUID(item.id)) {
+                row.id = item.id;
+              }
+              kkgProgRows.push(row);
+            });
+          });
+
+          const { error: kkgDelErr } = await supabase.from('kkg_programs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          if (kkgDelErr) {
+            console.error("Error deleting old kkg_programs:", kkgDelErr);
+            throw new Error("Gagal mengosongkan tabel kkg_programs: " + kkgDelErr.message);
+          }
+          
+          if (kkgProgRows.length > 0) {
+            const { error: kkgInsErr } = await supabase.from('kkg_programs').insert(kkgProgRows);
+            if (kkgInsErr) {
+              console.error("Error inserting kkg_programs:", kkgInsErr);
+              throw new Error("Gagal memasukkan data program KKG baru: " + kkgInsErr.message);
+            }
+          }
+        }
+
+        if (newContent.gugus) {
+          const gugusObj = { ...updated.gugus };
+          const gugusDokumen = gugusObj.dokumen || [];
+          const gugusPrograms = gugusObj.programs || [];
+          delete gugusObj.dokumen;
+          delete gugusObj.programs;
+          const cleanGugus = sanitizeSiteContent(gugusObj);
+          const { error: gugusErr } = await supabase.from('gugus_settings').upsert({ id: 1, content: cleanGugus });
+          if (gugusErr) {
+            console.error("Error saving gugus_settings:", gugusErr);
+            throw new Error("Gagal menyimpan gugus_settings: " + gugusErr.message);
+          }
+
+          const { error: gugusDocErr } = await supabase.from('gugus_documents').upsert({ id: 1, content: gugusDokumen });
+          if (gugusDocErr) {
+            console.error("Error saving gugus_documents:", gugusDocErr);
+            throw new Error("Gagal menyimpan gugus_documents: " + gugusDocErr.message);
+          }
+
+          const gugusProgRows: any[] = [];
+          const list = gugusPrograms || [];
+          list.forEach((item: any) => {
+            const row: any = {
+              title: item.title || '',
+              desc_text: item.desc || '',
+              execution_date: item.date || '',
+              status: item.status || 'rencana'
+            };
+            if (item.id && isValidUUID(item.id)) {
+              row.id = item.id;
+            }
+            gugusProgRows.push(row);
+          });
+
+          const { error: gugusDelErr } = await supabase.from('gugus_programs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+          if (gugusDelErr) {
+            console.error("Error deleting old gugus_programs:", gugusDelErr);
+            throw new Error("Gagal mengosongkan tabel gugus_programs: " + gugusDelErr.message);
+          }
+          
+          if (gugusProgRows.length > 0) {
+            const { error: gugusInsErr } = await supabase.from('gugus_programs').insert(gugusProgRows);
+            if (gugusInsErr) {
+              console.error("Error inserting gugus_programs:", gugusInsErr);
+              throw new Error("Gagal memasukkan data program Gugus baru: " + gugusInsErr.message);
+            }
+          }
+        }
+
+        const sitePayload = { ...cleanPayload };
+        delete sitePayload.kkg;
+        delete sitePayload.gugus;
+
+        const { error } = await supabase.from('site_settings').upsert({ id: 1, content: sitePayload });
         if (!error) {
           setSaveMessage("Berhasil tersimpan!");
         } else {
-          console.error(error);
-          setSaveMessage("Disimpan ke browser (Backend error).");
+          console.error("Supabase site_settings error:", error);
+          setSaveMessage("Gagal menyimpan ke server.");
+          throw new Error("Gagal menyimpan ke server database: " + (error.message || "Unknown error"));
         }
       } else {
-        setSaveMessage("Disimpan ke browser (Cek koneksi).");
+        setSaveMessage("Disimpan ke browser.");
       }
-    } catch (e) {
-      console.error(e);
-      setSaveMessage("Disimpan ke browser (Cek koneksi).");
+    } catch (e: any) {
+      console.error("Error in updateContent:", e);
+      setSaveMessage("Gagal menyimpan.");
+      throw e;
     }
 
     setTimeout(() => {
       setSaveMessage(null);
     }, 3000);
   };
-
 
   return (
     <SiteContext.Provider value={{ content, updateContent, isLoading, saveMessage }}>

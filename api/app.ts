@@ -9,7 +9,53 @@ dotenv.config();
 export const app = express();
 const PORT = 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ limit: "25mb", extended: true }));
+
+// File Upload Endpoint using Supabase Storage
+app.post("/api/upload", async (req, res) => {
+  const { fileData, fileName, fileType } = req.body;
+  if (!fileData) {
+    return res.status(400).json({ error: "File data kosong (fileData is required)" });
+  }
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    
+    // Convert base64 data to buffer
+    let base64String = fileData;
+    if (base64String.includes(";base64,")) {
+      base64String = base64String.split(";base64,").pop();
+    }
+    const buffer = Buffer.from(base64String, 'base64');
+    
+    // Generate secure clean filename
+    const cleanFileName = (fileName || "document").replace(/[^a-zA-Z0-9.-]/g, "_");
+    const uniquePath = `${Date.now()}_${cleanFileName}`;
+    
+    // Upload to 'documents' bucket
+    const { data, error } = await supabaseAdmin.storage
+      .from('documents')
+      .upload(uniquePath, buffer, {
+        contentType: fileType || 'application/octet-stream',
+        upsert: true
+      });
+      
+    if (error) {
+      console.error("Error uploading to Supabase Storage:", error);
+      return res.status(500).json({ error: "Gagal menyimpan file ke cloud storage: " + error.message });
+    }
+    
+    const { data: publicUrlData } = supabaseAdmin.storage
+      .from('documents')
+      .getPublicUrl(uniquePath);
+      
+    console.log("File successfully uploaded to Storage. Public URL:", publicUrlData.publicUrl);
+    res.json({ url: publicUrlData.publicUrl, fileName: cleanFileName });
+  } catch (err: any) {
+    console.error("General error in /api/upload:", err);
+    res.status(500).json({ error: "Sistem error saat upload: " + err.message });
+  }
+});
 
 // Lazy initialization for Supabase Admin client
 let _supabaseAdmin: any = null;
@@ -571,6 +617,18 @@ if (process.env.NODE_ENV === "production") {
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
     });
+} else {
+    // For development, mount Vite's middleware
+    const { createServer: createViteServer } = await import("vite");
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
 }
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 export default app;

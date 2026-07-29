@@ -18,7 +18,7 @@ export default function PraktikBaikPage() {
   };
 
   useEffect(() => {
-    async function loadPractices() {
+    async function loadPractices(retry = 0) {
       if (!supabase) return;
       try {
         const { data: practicesData, error: practicesError } = await supabase
@@ -34,14 +34,13 @@ export default function PraktikBaikPage() {
         }
 
         const userIds = [...new Set(practicesData.map(p => p.user_id).filter(Boolean))];
-        const { data: profilesData, error: profilesError } = await supabase
-          .from("user_profiles")
-          .select("id, nama, username, foto")
-          .in("id", userIds);
-
-        if (profilesError) {
-          setPractices(practicesData);
-          return;
+        let profilesData: any[] = [];
+        if (userIds.length > 0) {
+          const { data: pData } = await supabase
+            .from("user_profiles")
+            .select("id, nama, username, foto")
+            .in("id", userIds);
+          if (pData) profilesData = pData;
         }
 
         const joinedData = practicesData.map(practice => ({
@@ -52,11 +51,24 @@ export default function PraktikBaikPage() {
         setPractices(joinedData);
       } catch (err: any) {
         console.error("Error fetching sharing practices:", err);
+        if (retry < 3) {
+          setTimeout(() => loadPractices(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } finally {
         setIsLoading(false);
       }
     }
+    
     loadPractices();
+
+    const handleSync = () => loadPractices();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   const filteredPractices = practices.filter(p => {

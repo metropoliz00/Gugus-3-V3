@@ -29,48 +29,78 @@ function Counter({ end, suffix = "", duration = 2 }: { end: number, suffix?: str
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
+const getInitialDynamicStats = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_dynamic_stats');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function Stats() {
   const { content } = useSiteContent();
-  const [dynamicStats, setDynamicStats] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dynamicStats, setDynamicStats] = useState<any[]>(getInitialDynamicStats);
+  const [isLoading, setIsLoading] = useState<boolean>(() => dynamicStats.length === 0);
 
   useEffect(() => {
-    async function fetchDynamicStats() {
+    async function fetchDynamicStats(retry = 0) {
       if (!supabase) return;
       try {
         const [
           { data: schoolsData },
           { count: teacherCount }
         ] = await Promise.all([
-          supabase.from('schools').select('student_count, teacher_count, jenis_sekolah').throwOnError(),
-          supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('role', 'guru').throwOnError()
+          supabase.from('schools').select('student_count, teacher_count, jenis_sekolah'),
+          supabase.from('user_profiles').select('*', { count: 'exact', head: true }).eq('role', 'guru')
         ]);
 
-        if (!schoolsData) return; // If null, skip setting dynamic stats, fallback will trigger
+        if (schoolsData && schoolsData.length > 0) {
+          const totalStudents = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.student_count) || 0), 0);
+          const schoolIntiCount = schoolsData.filter((s: any) => s.jenis_sekolah === 'Sekolah Inti').length;
+          const schoolImbasCount = schoolsData.filter((s: any) => s.jenis_sekolah !== 'Sekolah Inti').length;
+          const totalTeachers = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.teacher_count) || 0), 0);
 
-        const totalStudents = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.student_count) || 0), 0);
-        const schoolIntiCount = schoolsData.filter((s: any) => s.jenis_sekolah === 'Sekolah Inti').length;
-        const schoolImbasCount = schoolsData.filter((s: any) => s.jenis_sekolah !== 'Sekolah Inti').length;
-        
-        const totalTeachers = schoolsData.reduce((acc: number, curr: any) => acc + (Number(curr.teacher_count) || 0), 0);
+          const newStats = [
+            { label: 'Sekolah Inti', value: schoolIntiCount, suffix: "", color: 'text-main-blue' },
+            { label: 'Sekolah Imbas', value: schoolImbasCount, suffix: "", color: 'text-dark-green' },
+            { label: 'Total Guru', value: totalTeachers, suffix: "+", color: 'text-leaf-green' },
+            { label: 'Total Murid', value: totalStudents, suffix: "+", color: 'text-accent-orange' },
+          ];
 
-        setDynamicStats([
-          { label: 'Sekolah Inti', value: schoolIntiCount, suffix: "", color: 'text-main-blue' },
-          { label: 'Sekolah Imbas', value: schoolImbasCount, suffix: "", color: 'text-dark-green' },
-          { label: 'Total Guru', value: totalTeachers, suffix: "+", color: 'text-leaf-green' },
-          { label: 'Total Murid', value: totalStudents, suffix: "+", color: 'text-accent-orange' },
-        ]);
+          setDynamicStats(newStats);
+          try {
+            localStorage.setItem('cached_dynamic_stats', JSON.stringify(newStats));
+          } catch (e) {}
+        } else if (retry < 3) {
+          setTimeout(() => fetchDynamicStats(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } catch (err) {
         console.error("Error fetching dynamic stats:", err);
+        if (retry < 3) {
+          setTimeout(() => fetchDynamicStats(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } finally {
         setIsLoading(false);
       }
     }
+
     fetchDynamicStats();
+
+    const handleSync = () => fetchDynamicStats();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
-  // Fallback to content.stats if dynamic fails or loading
-  const stats = (!isLoading && dynamicStats.length > 0) ? dynamicStats : content.stats;
+  // Use dynamicStats if available, otherwise fallback to content.stats
+  const stats = dynamicStats.length > 0 ? dynamicStats : content.stats;
 
   return (
     <section className="py-12 bg-light-gray relative z-20">

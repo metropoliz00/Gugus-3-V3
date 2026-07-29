@@ -43,26 +43,55 @@ interface Slide {
   items: any[];
 }
 
+const getInitialGallery = (): any[] => {
+  if (typeof window !== 'undefined') {
+    try {
+      const cached = localStorage.getItem('cached_gallery');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+  }
+  return [];
+};
+
 export default function Gallery() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>(getInitialGallery);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => items.length === 0);
 
   useEffect(() => {
-    async function fetchGallery() {
+    async function fetchGallery(retry = 0) {
       if (!supabase) return;
       try {
         const { data, error } = await supabase.from('gallery').select('*').order('created_at', { ascending: false });
-        if (error) throw error;
-        setItems(data || []);
+        if (data && data.length > 0) {
+          setItems(data);
+          try {
+            localStorage.setItem('cached_gallery', JSON.stringify(data));
+          } catch (e) {}
+        } else if ((error || !data) && retry < 3) {
+          setTimeout(() => fetchGallery(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } catch (err) {
-        console.error("Gagal memuat galeri:", err);
+        if (retry < 3) {
+          setTimeout(() => fetchGallery(retry + 1), 800 * (retry + 1));
+          return;
+        }
       } finally {
         setIsLoading(false);
       }
     }
+
     fetchGallery();
+
+    const handleSync = () => fetchGallery();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
   }, []);
 
   const slides: Slide[] = useMemo(() => {

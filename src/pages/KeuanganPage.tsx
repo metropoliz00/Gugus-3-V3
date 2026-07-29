@@ -12,11 +12,7 @@ export default function KeuanganPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
 
-  useEffect(() => {
-    fetchRecords();
-  }, []);
-
-  const fetchRecords = async () => {
+  const fetchRecords = async (retry = 0) => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -28,10 +24,26 @@ export default function KeuanganPage() {
       setRecords(data || []);
     } catch (err) {
       console.error("Error fetching finance records:", err);
+      if (retry < 3) {
+        setTimeout(() => fetchRecords(retry + 1), 800 * (retry + 1));
+        return;
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchRecords();
+
+    const handleSync = () => fetchRecords();
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('online', handleSync);
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('online', handleSync);
+    };
+  }, []);
 
   const getAvailableMonths = () => {
     const months = new Set<string>();
