@@ -3582,7 +3582,7 @@ function AdminSettingsForm() {
             <Globe className="w-5 h-5" /> Tampilan Menu Website Publik (Navbar)
           </h3>
           <p className="text-xs text-gray-500 -mt-4">
-            Berikan tombol tampil/tidak pada menu laporan keuangan di dalam navigasi website.
+            Berikan tombol tampil/tidak pada menu di dalam navigasi website publik.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6 bg-gray-50/50 rounded-2xl border border-gray-100">
             <label className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 cursor-pointer hover:border-main-blue/30 transition-all shadow-sm">
@@ -3603,6 +3603,28 @@ function AdminSettingsForm() {
                 </span>
                 <span className="text-xs text-gray-400">
                   Aktifkan atau nonaktifkan menu Keuangan pada navbar situs publik.
+                </span>
+              </div>
+            </label>
+            
+            <label className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 cursor-pointer hover:border-main-blue/30 transition-all shadow-sm">
+              <input
+                type="checkbox"
+                className="w-5 h-5 rounded accent-main-blue"
+                checked={activeMenusForm.registrasi_tamu !== false}
+                onChange={(e) =>
+                  setActiveMenusForm({
+                    ...activeMenusForm,
+                    registrasi_tamu: e.target.checked,
+                  })
+                }
+              />
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-gray-700">
+                  Tampilkan Menu Registrasi Tamu
+                </span>
+                <span className="text-xs text-gray-400">
+                  Aktifkan atau nonaktifkan menu Registrasi Tamu pada navbar situs publik.
                 </span>
               </div>
             </label>

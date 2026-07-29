@@ -61,6 +61,11 @@ export default function Navbar({ onLoginClick, user }: { onLoginClick: () => voi
       if (!activeMenus || activeMenus.keuangan === undefined) return true;
       return activeMenus.keuangan === true;
     }
+    if (item.label === "Registrasi Tamu") {
+      const activeMenus = (content as any)?.activeMenus;
+      if (!activeMenus || activeMenus.registrasi_tamu === undefined) return true;
+      return activeMenus.registrasi_tamu === true;
+    }
     return true;
   });
 
